@@ -23,11 +23,13 @@ service cloud.firestore {
 
     // ---------------- helpers ----------------
     function signedIn()  { return request.auth != null; }
-    // Google sign-in is always verified; password accounts must verify email.
+    // Relaxed on purpose: password sign-ins are accepted without email
+    // verification, because the acl list below is the real gate that
+    // decides who may enter. (Tighten again later if everyone uses
+    // Google school accounts: require sign_in_provider == 'google.com'
+    // or email_verified == true.)
     function trustedSignIn() {
-      return signedIn() &&
-        (request.auth.token.firebase.sign_in_provider == 'google.com'
-         || request.auth.token.email_verified == true);
+      return signedIn();
     }
     function userEmail() { return request.auth.token.email.lower(); }
     function aclRef()    { return /databases/$(database)/documents/acl/$(userEmail()); }

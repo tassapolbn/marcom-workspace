@@ -1716,7 +1716,7 @@ function savePcExpense(){
   if(pettyRef)pettyRef.add(data).catch(e=>syncErr(e));
   closePcExpense();
 }
-function deletePcExpense(id){if(!confirm('Delete this expense?'))return;if(pettyRef)pettyRef.doc(id).delete().catch(e=>syncErr(e));}
+function deletePcExpense(id){var it=(pettyExpenses||[]).find(function(x){return x.id===id;});uiConfirm({title:'Delete expense',message:'This petty cash expense will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){if(!ok||!pettyRef)return;deleteWithUndo(pettyRef,id,it,'Expense deleted');});}
 function openPcSettings(){
   document.getElementById('pc-start').value=(pettyMeta.startingBalance!=null?pettyMeta.startingBalance:10000);
   document.getElementById('pc-sheet').value=pettyMeta.sheetUrl||'';
@@ -1950,7 +1950,8 @@ function moveCardTo(fromWho,taskId,target){
   if(!srcRef||!dstRef)return;
   var t=(tasksOf(fromWho)).find(function(x){return x.id===taskId;});
   if(!t)return;
-  if(!confirm('Move "'+(t.topic||t.title||'this task')+'" to '+memberName(target)+'\'s board?'))return;
+  uiConfirm({title:'Move task',message:'Move "'+(t.topic||t.title||'this task')+'" to '+memberName(target)+"'s board?",okLabel:'Move',icon:'ti-arrows-exchange'}).then(function(__ok){
+  if(!__ok)return;
   var data={};Object.keys(t).forEach(function(k){if(k!=='id')data[k]=t[k];});
   var _sharedPair=((fromWho==='boss'&&target==='junior')||(fromWho==='junior'&&target==='boss'));
   if(!_sharedPair){data.eventId='';data.eventName='';}
@@ -1959,8 +1960,9 @@ function moveCardTo(fromWho,taskId,target){
     var batch=db.batch();
     batch.set(newRef,data);
     batch.delete(srcRef.doc(taskId));
-    batch.commit().catch(function(){try{alert('Move failed. Please try again.');}catch(e){}});
-  }catch(e){try{alert('Move failed. Please try again.');}catch(_){}}
+    batch.commit().then(function(){uiToast('Task moved to '+memberName(target));}).catch(function(){uiToast('Move failed. Please try again.');});
+  }catch(e){uiToast('Move failed. Please try again.');}
+  });
 }
 function openLinksHub(){
   var m=document.getElementById('links-hub-modal');
@@ -2030,6 +2032,100 @@ function whenAuthed(fn){
   if(window.__cur){try{fn();}catch(e){console.error(e);}return;}
   var h=function(){ if(window.__cur){ window.removeEventListener('authchanged',h); try{fn();}catch(e){console.error(e);} } };
   window.addEventListener('authchanged',h);
+}
+/* ===== UXP: styled dialogs, toasts and undo (replaces native confirm/prompt) ===== */
+var __uiLastFocus=null,__uiResolve=null,__uiKind=null;
+function uiModalRoot(){
+  var m=document.getElementById('uxp-modal');
+  if(m)return m;
+  m=document.createElement('div');
+  m.id='uxp-modal';m.className='modal-overlay';
+  m.innerHTML='<div class="modal uxp-modal" role="dialog" aria-modal="true" aria-labelledby="uxp-modal-title">'
+    +'<div class="modal-header"><div class="modal-title" id="uxp-modal-title"></div><button type="button" class="modal-close uxp-x" aria-label="Close dialog" onclick="uiModalClose(__uiKind===\'prompt\'?null:false)"><i class="ti ti-x"></i></button></div>'
+    +'<div class="modal-body" id="uxp-modal-body"></div>'
+    +'<div class="uxp-modal-foot" id="uxp-modal-foot"></div></div>';
+  document.body.appendChild(m);
+  m.addEventListener('mousedown',function(e){ if(e.target===m)uiModalClose(__uiKind==='prompt'?null:false); });
+  return m;
+}
+function uiModalClose(val){
+  var m=document.getElementById('uxp-modal'); if(m)m.classList.remove('open');
+  document.removeEventListener('keydown',__uiKeys,true);
+  var r=__uiResolve;__uiResolve=null;
+  if(__uiLastFocus){try{__uiLastFocus.focus();}catch(e){}}
+  __uiLastFocus=null;
+  if(r)r(val);
+}
+function __uiKeys(e){
+  if(e.key==='Escape'){e.preventDefault();uiModalClose(__uiKind==='prompt'?null:false);}
+  else if(e.key==='Enter'&&__uiKind==='confirm'){e.preventDefault();uiModalClose(true);}
+  else if(e.key==='Tab'){
+    var f=document.querySelectorAll('#uxp-modal .uxp-x, #uxp-modal input, #uxp-modal textarea, #uxp-modal .uxp-modal-foot button');
+    if(!f.length)return;
+    var first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  }
+}
+function uiConfirm(o){
+  o=o||{};
+  return new Promise(function(res){
+    __uiLastFocus=document.activeElement;__uiResolve=res;__uiKind='confirm';
+    var m=uiModalRoot();
+    document.getElementById('uxp-modal-title').innerHTML='<i class="ti '+(o.icon||(o.danger?'ti-trash':'ti-help-circle'))+'"></i> '+escHtml(o.title||'Please confirm');
+    document.getElementById('uxp-modal-body').innerHTML='<div class="uxp-msg">'+escHtml(o.message||'Are you sure?')+'</div>';
+    document.getElementById('uxp-modal-foot').innerHTML=
+      '<button type="button" class="btn btn-ghost" onclick="uiModalClose(false)">'+escHtml(o.cancelLabel||'Cancel')+'</button>'
+     +'<button type="button" class="btn '+(o.danger?'uxp-btn-danger':'btn-navy')+'" id="uxp-ok" onclick="uiModalClose(true)">'+escHtml(o.okLabel||'Confirm')+'</button>';
+    m.classList.add('open');
+    document.addEventListener('keydown',__uiKeys,true);
+    setTimeout(function(){var b=document.getElementById('uxp-ok');if(b)b.focus();},30);
+  });
+}
+function uiPrompt(o){
+  o=o||{};
+  return new Promise(function(res){
+    __uiLastFocus=document.activeElement;__uiResolve=res;__uiKind='prompt';
+    var m=uiModalRoot();
+    document.getElementById('uxp-modal-title').innerHTML='<i class="ti '+(o.icon||'ti-pencil')+'"></i> '+escHtml(o.title||'Edit');
+    document.getElementById('uxp-modal-body').innerHTML=(o.label?'<label class="form-label" for="uxp-in">'+escHtml(o.label)+'</label>':'')
+      +(o.multiline?'<textarea class="form-textarea" id="uxp-in" rows="4"></textarea>':'<input class="form-input" id="uxp-in" type="text">');
+    document.getElementById('uxp-modal-foot').innerHTML=
+      '<button type="button" class="btn btn-ghost" onclick="uiModalClose(null)">'+escHtml(o.cancelLabel||'Cancel')+'</button>'
+     +'<button type="button" class="btn btn-navy" id="uxp-ok">'+escHtml(o.okLabel||'Save')+'</button>';
+    var inp=document.getElementById('uxp-in'); inp.value=(o.value==null?'':o.value);
+    document.getElementById('uxp-ok').onclick=function(){uiModalClose(inp.value);};
+    if(!o.multiline)inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();uiModalClose(inp.value);}});
+    m.classList.add('open');
+    document.addEventListener('keydown',__uiKeys,true);
+    setTimeout(function(){inp.focus();try{inp.select();}catch(e){}},30);
+  });
+}
+function uiToast(msg,opts){
+  opts=opts||{};
+  var host=document.getElementById('uxp-toasts');
+  if(!host){host=document.createElement('div');host.id='uxp-toasts';host.setAttribute('aria-live','polite');document.body.appendChild(host);}
+  var t=document.createElement('div');t.className='uxp-toast';
+  var sp=document.createElement('span');sp.className='uxp-toast-msg';sp.textContent=msg||'';t.appendChild(sp);
+  var done=false;
+  function kill(){ if(t.parentNode)t.parentNode.removeChild(t); }
+  if(opts.undo){
+    var b=document.createElement('button');b.className='uxp-undo';b.type='button';b.textContent=opts.undoLabel||'Undo';
+    b.setAttribute('aria-label','Undo last action');
+    b.onclick=function(){ if(done)return; done=true; try{opts.undo();}catch(e){console.error(e);} kill(); };
+    t.appendChild(b);
+  }
+  host.appendChild(t);
+  setTimeout(function(){ t.classList.add('out'); setTimeout(kill,320); }, opts.duration||5000);
+}
+function deleteWithUndo(colRef,id,item,label){
+  if(!colRef)return;
+  var data=null;
+  if(item){ data={}; Object.keys(item).forEach(function(k){ if(k!=='id')data[k]=item[k]; }); }
+  colRef.doc(id).delete().then(function(){
+    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).catch(function(e){ console.error(e); uiToast('Could not restore the item.'); }); }});
+    else uiToast(label||'Deleted');
+  }).catch(function(e){ console.error(e); uiToast('Delete failed. Please try again.'); });
 }
 
 // TASK MODAL
@@ -2183,8 +2279,11 @@ function saveTask(){
   if(window.__sopBatch&&window.__sopOpenNext)window.__sopOpenNext();
 }
 function deleteTask(who,id){
-  if(!confirm('Delete this task?'))return;
-  (refOf(who)).doc(id).delete();
+  var t=(tasksOf(who)||[]).find(function(x){return x.id===id;});
+  uiConfirm({title:'Delete task',message:'"'+((t&&(t.topic||t.title))||'This task')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
+    if(!ok)return;
+    deleteWithUndo(refOf(who),id,t,'Task deleted');
+  });
 }
 function duplicateTask(who,id){
   const task=(tasksOf(who)).find(t=>t.id===id);if(!task)return;
@@ -2419,8 +2518,11 @@ function saveLink(){
   closeLinkModal();
 }
 function deleteLink(who,id){
-  if(!confirm('Remove this link?'))return;
-  (linksRefOf(who)).doc(id).delete();
+  var l=(linksOf(who)||[]).find(function(x){return x.id===id;});
+  uiConfirm({title:'Remove link',message:'"'+((l&&(l.title||l.url))||'This link')+'" will be removed.',okLabel:'Remove',danger:true}).then(function(ok){
+    if(!ok)return;
+    deleteWithUndo(linksRefOf(who),id,l,'Link removed');
+  });
 }
 var _linkDrag={who:null,id:null};
 function linkOrderVal(l){return (typeof l.order==='number')?l.order:1e9;}
@@ -2481,8 +2583,11 @@ function saveNote(){
   closeNoteModal();
 }
 function deleteNote(who,id){
-  if(!confirm('Delete this note?'))return;
-  (notesRefOf(who)).doc(id).delete();
+  var n=(notesOf(who)||[]).find(function(x){return x.id===id;});
+  uiConfirm({title:'Delete note',message:'"'+((n&&n.title)||'This note')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
+    if(!ok)return;
+    deleteWithUndo(notesRefOf(who),id,n,'Note deleted');
+  });
 }
 function copyNote(who,id,btn){
   const notes=notesOf(who);
@@ -2645,7 +2750,7 @@ function saveLieu(){
   });
   closeLieu();
 }
-function deleteLieu(id,who){if(!confirm('Delete record?'))return;const ref=lieuRefOf(who||'boss');if(ref)ref.doc(id).delete();}
+function deleteLieu(id,who){var w=who||'boss';var r=(lieuOf(w)||[]).find(function(x){return x.id===id;});uiConfirm({title:'Delete TOIL record',message:'This time off in lieu record will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){if(!ok)return;deleteWithUndo(lieuRefOf(w),id,r,'Record deleted');});}
 function renderLieu(who){
   who=who||'boss';
   const bal=document.getElementById(who+'-lieu-balance');if(!bal)return;
@@ -3545,7 +3650,13 @@ function saveEvent(){
 function deleteEvent(){
   if(!eventEditId)return;
   const ref=eventsRefOf(eventModalWho);if(!ref)return;
-  if(confirm('Delete this event? This cannot be undone.')){ref.doc(eventEditId).delete();closeEventModal();}
+  const ev=(eventsOf(eventModalWho)||[]).find(x=>x.id===eventEditId);
+  const evId=eventEditId;
+  uiConfirm({title:'Delete event',message:'"'+((ev&&ev.name)||'This event')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
+    if(!ok)return;
+    deleteWithUndo(ref,evId,ev,'Event deleted');
+    closeEventModal();
+  });
 }
 function createTaskForEvent(id,who){
   const ev=eventsOf(who).find(e=>e.id===id);
@@ -3867,6 +3978,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
    +'</div>'
    +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
+   +'<div id="uxp-today"></div>'
    +'<div class="ov-ann-row">'
    +'<div class="ov-card ov-ann">'
    +  '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div></div>'
@@ -4244,7 +4356,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     saveAnn([item].concat(annItems||[])); ta.value=''; if(pin)pin.checked=false;
   };
   window.ovTogglePin=function(id){ saveAnn((annItems||[]).map(function(a){ return a.id===id?Object.assign({},a,{pinned:!a.pinned}):a; })); };
-  window.ovDeleteAnn=function(id){ if(!confirm('Delete this announcement?'))return; saveAnn((annItems||[]).filter(function(a){ return a.id!==id; })); };
+  window.ovDeleteAnn=function(id){ uiConfirm({title:'Delete announcement',message:'This announcement will be removed for the whole team.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var prev=(annItems||[]).slice(); saveAnn(prev.filter(function(a){ return a.id!==id; })); uiToast('Announcement deleted',{undo:function(){ saveAnn(prev); }}); }); };
   window.ovOpenResources=function(){ buildResModal(); RES_DEFS.forEach(function(r){ if(r[0]==='links')return; var i=document.getElementById('ovres-'+r[0]); if(i)i.value=(ovRes[r[0]]||''); }); var m=document.getElementById('ov-res-modal'); if(m)m.classList.add('open'); };
   window.ovCloseResources=function(){ var m=document.getElementById('ov-res-modal'); if(m)m.classList.remove('open'); };
   window.ovSaveResources=function(){ var obj={}; RES_DEFS.forEach(function(r){ if(r[0]==='links')return; var i=document.getElementById('ovres-'+r[0]); if(i)obj[r[0]]=i.value.trim(); }); var d=db(); if(d)d.collection('dept_settings').doc('resources').set(obj,{merge:true}).catch(function(e){ console.error(e); }); window.ovCloseResources(); };
@@ -4696,7 +4808,7 @@ body.auth-locked{overflow:hidden;}
     if(!em){ alert('Enter an email address.'); return; }
     f.collection('acl').doc(em).set({role:role,workspace:(ROLE_WS[role]||null),disabled:false},{merge:true}).then(function(){ var i=el('u-email'); if(i)i.value=''; }).catch(function(e){ alert('Could not save (admin only): '+((e&&e.message)||e)); }); };
   window.usersToggle=function(em,dis){ var f=FS(); if(!f)return; f.collection('acl').doc(em).set({disabled:(dis===true||dis==='true')},{merge:true}).catch(function(e){ console.error(e); }); };
-  window.usersDel=function(em){ if(!confirm('Remove access for '+em+'?'))return; var f=FS(); if(!f)return; f.collection('acl').doc(em).delete().catch(function(e){ console.error(e); }); };
+  window.usersDel=function(em){ uiConfirm({title:'Remove access',message:em+' will no longer be able to sign in to the workspace.',okLabel:'Remove access',danger:true}).then(function(ok){ if(!ok)return; var f=FS(); if(!f)return; f.collection('acl').doc(em).delete().then(function(){uiToast('Access removed for '+em);}).catch(function(e){ console.error(e); uiToast('Could not remove access.'); }); }); };
 
   function boot(){
     var a=A();
@@ -5029,7 +5141,7 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
   window.tplNew=function(){ buildTplModal(); tplEditId=null; el('tpl-title').textContent='New Template'; fillTpl({recurType:'once'}); el('tpl-modal').classList.add('open'); };
   window.tplEdit=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; buildTplModal(); tplEditId=id; el('tpl-title').textContent='Edit Template'; fillTpl(t); el('tpl-modal').classList.add('open'); };
   window.tplDup=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; buildTplModal(); tplEditId=null; el('tpl-title').textContent='Duplicate Template'; fillTpl(Object.assign({},t,{name:(t.name||'')+' (copy)'})); el('tpl-modal').classList.add('open'); };
-  window.tplDel=function(id){ if(!confirm('Delete this template?'))return; var f=FS(); if(f)f.collection('o_templates').doc(id).delete().catch(function(e){console.error(e);}); };
+  window.tplDel=function(id){ var t=(templates||[]).find(function(x){return x.id===id;}); uiConfirm({title:'Delete template',message:'"'+((t&&t.name)||'This recurring template')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var f=FS(); if(f)deleteWithUndo(f.collection('o_templates'),id,t,'Template deleted'); }); };
   window.tplSave=function(){ var name=((el('tpl-name')||{}).value||'').trim(); if(!name){ alert('Enter an event / task name.'); return; }
     var rec=(el('tpl-recur')||{}).value||'once';
     var data={name:name,category:((el('tpl-cat')||{}).value||'').trim(),recurType:rec,days:(rec==='weekly'?getDays():[]),dayOfMonth:(rec==='monthly'?(parseInt((el('tpl-dom')||{}).value)||1):null),notes:((el('tpl-notes')||{}).value||'').trim()};
@@ -5276,12 +5388,16 @@ html.dark .tc-author{color:#8fb4dc;}
     i.value=''; i.focus();
   }
   window.tcEdit=function(id){ var m=msgs.filter(function(x){return x.id===id;})[0]; if(!m||!ref)return; if(m.authorEmail!==myEmail()&&!isAdmin())return;
-    var nv=prompt('Edit your message:', m.text||''); if(nv===null)return; nv=nv.trim(); if(!nv)return;
-    ref.doc(id).update({ text:nv, editedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); alert('Could not edit this message.'); });
+    uiPrompt({title:'Edit message',multiline:true,value:m.text||''}).then(function(nv){
+      if(nv==null)return; nv=nv.trim(); if(!nv)return;
+      ref.doc(id).update({ text:nv, editedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); uiToast('Could not edit this message.'); });
+    });
   };
   window.tcDel=function(id){ var m=msgs.filter(function(x){return x.id===id;})[0]; if(!m||!ref)return; if(m.authorEmail!==myEmail()&&!isAdmin())return;
-    if(!confirm('Delete this message?'))return;
-    ref.doc(id).delete().catch(function(e){ console.error(e); alert('Could not delete this message.'); });
+    uiConfirm({title:'Delete message',message:'This chat message will be deleted for everyone.',okLabel:'Delete',danger:true}).then(function(ok){
+      if(!ok)return;
+      ref.doc(id).delete().then(function(){uiToast('Message deleted');}).catch(function(e){ console.error(e); uiToast('Could not delete this message.'); });
+    });
   };
   function render(){ var box=document.getElementById('tc-messages'); if(!box)return;
     if(!msgs.length){ box.innerHTML='<div class="tc-empty"><i class="ti ti-messages" style="font-size:26px;opacity:.5;display:block;margin-bottom:6px;"></i>No messages yet.<br>Start the conversation.</div>'; }
@@ -5373,12 +5489,16 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
     i.value='';
   }
   window.trqEdit=function(id){ var m=items.filter(function(x){return x.id===id;})[0]; if(!m||!ref)return; if(m.authorEmail!==myEmail()&&!isAdmin())return;
-    var nv=prompt('Edit your request:', m.text||''); if(nv===null)return; nv=nv.trim(); if(!nv)return;
-    ref.doc(id).update({ text:nv, editedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); alert('Could not edit this request.'); });
+    uiPrompt({title:'Edit request',multiline:true,value:m.text||''}).then(function(nv){
+      if(nv==null)return; nv=nv.trim(); if(!nv)return;
+      ref.doc(id).update({ text:nv, editedAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); uiToast('Could not edit this request.'); });
+    });
   };
   window.trqDel=function(id){ var m=items.filter(function(x){return x.id===id;})[0]; if(!m||!ref)return; if(m.authorEmail!==myEmail()&&!isAdmin())return;
-    if(!confirm('Delete this request?'))return;
-    ref.doc(id).delete().catch(function(e){ console.error(e); alert('Could not delete this request.'); });
+    uiConfirm({title:'Delete request',message:'This team request will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
+      if(!ok)return;
+      ref.doc(id).delete().then(function(){uiToast('Request deleted');}).catch(function(e){ console.error(e); uiToast('Could not delete this request.'); });
+    });
   };
   window.trqStatus=function(id){ if(!isAdmin()||!ref)return; var m=items.filter(function(x){return x.id===id;})[0]; if(!m)return;
     var order=['open','in_progress','done']; var idx=order.indexOf(m.status||'open'); var next=order[(idx+1)%order.length];
@@ -5681,17 +5801,17 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
   window.__sopSelect=function(tid,eid){ sel={termId:tid,eventId:eid}; renderAll(); };
 
   /* ---- editing (owner/admin) ---- */
-  window.__sopAddTerm=function(){ if(!canEdit())return; var n=prompt('New term name:','Term '+(data().terms.length+1)); if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(DEFAULT_SOP)); sopData.terms.push({id:uid('t'),name:n,events:[]}); save(); renderAll(); };
-  window.__sopRenameTerm=function(id){ if(!canEdit())return; var t=findTerm(id); if(!t)return; var n=prompt('Rename term:',t.name); if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); findTerm(id).name=n; save(); renderAll(); };
-  window.__sopDelTerm=function(id){ if(!canEdit())return; var t=findTerm(id); if(!t)return; if(!confirm('Delete term "'+t.name+'" and all of its events?'))return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); sopData.terms=sopData.terms.filter(function(x){return x.id!==id;}); if(sel.termId===id)sel={termId:null,eventId:null}; save(); ensureDefaultSelection(); renderAll(); };
+  window.__sopAddTerm=function(){ if(!canEdit())return; uiPrompt({title:'New term',label:'Term name',value:'Term '+(data().terms.length+1)}).then(function(n){ if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(DEFAULT_SOP)); sopData.terms.push({id:uid('t'),name:n,events:[]}); save(); renderAll(); }); };
+  window.__sopRenameTerm=function(id){ if(!canEdit())return; var t=findTerm(id); if(!t)return; uiPrompt({title:'Rename term',label:'Term name',value:t.name}).then(function(n){ if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); findTerm(id).name=n; save(); renderAll(); }); };
+  window.__sopDelTerm=function(id){ if(!canEdit())return; var t=findTerm(id); if(!t)return; uiConfirm({title:'Delete term',message:'Term "'+t.name+'" and all of its events will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var prev=JSON.parse(JSON.stringify(data())); if(!sopData)sopData=JSON.parse(JSON.stringify(data())); sopData.terms=sopData.terms.filter(function(x){return x.id!==id;}); if(sel.termId===id)sel={termId:null,eventId:null}; save(); ensureDefaultSelection(); renderAll(); uiToast('Term deleted',{undo:function(){ sopData=prev; save(); ensureDefaultSelection(); renderAll(); }}); }); };
   window.__sopMoveTerm=function(id,dir){ if(!canEdit())return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var a=sopData.terms,i=a.findIndex(function(x){return x.id===id;}),j=i+dir; if(i<0||j<0||j>=a.length)return; var tmp=a[i];a[i]=a[j];a[j]=tmp; save(); renderAll(); };
-  window.__sopAddEvent=function(tid){ if(!canEdit())return; var n=prompt('New event name:',''); if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var t=findTerm(tid); if(!t)return; t.events=t.events||[]; var id=uid('e'); t.events.push({id:id,name:n,tasks:[]}); sel={termId:tid,eventId:id}; save(); renderAll(); };
-  window.__sopRenameEvent=function(tid,eid){ if(!canEdit())return; var e=findEvent(tid,eid); if(!e)return; var n=prompt('Rename event:',e.name); if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); findEvent(tid,eid).name=n; save(); renderAll(); };
-  window.__sopDelEvent=function(tid,eid){ if(!canEdit())return; var e=findEvent(tid,eid); if(!e)return; if(!confirm('Delete event "'+e.name+'"?'))return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var t=findTerm(tid); t.events=(t.events||[]).filter(function(x){return x.id!==eid;}); if(sel.eventId===eid)sel={termId:null,eventId:null}; save(); ensureDefaultSelection(); renderAll(); };
+  window.__sopAddEvent=function(tid){ if(!canEdit())return; uiPrompt({title:'New event',label:'Event name',value:''}).then(function(n){ if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var t=findTerm(tid); if(!t)return; t.events=t.events||[]; var id=uid('e'); t.events.push({id:id,name:n,tasks:[]}); sel={termId:tid,eventId:id}; save(); renderAll(); }); };
+  window.__sopRenameEvent=function(tid,eid){ if(!canEdit())return; var e=findEvent(tid,eid); if(!e)return; uiPrompt({title:'Rename event',label:'Event name',value:e.name}).then(function(n){ if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); findEvent(tid,eid).name=n; save(); renderAll(); }); };
+  window.__sopDelEvent=function(tid,eid){ if(!canEdit())return; var e=findEvent(tid,eid); if(!e)return; uiConfirm({title:'Delete event',message:'Event "'+e.name+'" and its template tasks will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var prev=JSON.parse(JSON.stringify(data())); if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var t=findTerm(tid); t.events=(t.events||[]).filter(function(x){return x.id!==eid;}); if(sel.eventId===eid)sel={termId:null,eventId:null}; save(); ensureDefaultSelection(); renderAll(); uiToast('Event deleted',{undo:function(){ sopData=prev; save(); ensureDefaultSelection(); renderAll(); }}); }); };
   window.__sopMoveEvent=function(tid,eid,dir){ if(!canEdit())return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var t=findTerm(tid); var a=t.events||[],i=a.findIndex(function(x){return x.id===eid;}),j=i+dir; if(i<0||j<0||j>=a.length)return; var tmp=a[i];a[i]=a[j];a[j]=tmp; save(); renderAll(); };
-  window.__sopAddTask=function(eid){ if(!canEdit())return; var n=prompt('Template task title:',''); if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var e=findEventById(eid); if(!e)return; e.tasks=e.tasks||[]; e.tasks.push({id:uid('k'),title:n}); save(); renderAll(); };
-  window.__sopEditTask=function(eid,kid){ if(!canEdit())return; var e=findEventById(eid); if(!e)return; var k=(e.tasks||[]).find(function(x){return x.id===kid;}); if(!k)return; var n=prompt('Edit template task:',k.title); if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); findEventById(eid).tasks.find(function(x){return x.id===kid;}).title=n; save(); renderAll(); };
-  window.__sopDelTask=function(eid,kid){ if(!canEdit())return; var e=findEventById(eid); if(!e)return; var k=(e.tasks||[]).find(function(x){return x.id===kid;}); if(!k)return; if(!confirm('Delete template task "'+k.title+'"?'))return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var ee=findEventById(eid); ee.tasks=(ee.tasks||[]).filter(function(x){return x.id!==kid;}); save(); renderAll(); };
+  window.__sopAddTask=function(eid){ if(!canEdit())return; uiPrompt({title:'New template task',label:'Task title',value:''}).then(function(n){ if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var e=findEventById(eid); if(!e)return; e.tasks=e.tasks||[]; e.tasks.push({id:uid('k'),title:n}); save(); renderAll(); }); };
+  window.__sopEditTask=function(eid,kid){ if(!canEdit())return; var e=findEventById(eid); if(!e)return; var k=(e.tasks||[]).find(function(x){return x.id===kid;}); if(!k)return; uiPrompt({title:'Edit template task',label:'Task title',value:k.title}).then(function(n){ if(n==null)return; n=n.trim(); if(!n)return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); findEventById(eid).tasks.find(function(x){return x.id===kid;}).title=n; save(); renderAll(); }); };
+  window.__sopDelTask=function(eid,kid){ if(!canEdit())return; var e=findEventById(eid); if(!e)return; var k=(e.tasks||[]).find(function(x){return x.id===kid;}); if(!k)return; uiConfirm({title:'Delete template task',message:'"'+k.title+'" will be deleted from this event template.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var prev=JSON.parse(JSON.stringify(data())); if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var ee=findEventById(eid); ee.tasks=(ee.tasks||[]).filter(function(x){return x.id!==kid;}); save(); renderAll(); uiToast('Template task deleted',{undo:function(){ sopData=prev; save(); renderAll(); }}); }); };
   window.__sopMoveTask=function(eid,kid,dir){ if(!canEdit())return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var e=findEventById(eid); var a=e.tasks||[],i=a.findIndex(function(x){return x.id===kid;}),j=i+dir; if(i<0||j<0||j>=a.length)return; var tmp=a[i];a[i]=a[j];a[j]=tmp; save(); renderAll(); };
 
   /* ---- generation (everyone) ---- */
@@ -6761,10 +6881,14 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     renderPanel(w);
   };
   window.evwsDelSupplier=function(w,id,sid){
-    if(!confirm('Remove this supplier?'))return;
-    var ev=evById(w,id); if(!ev)return;
-    saveField(w,id,'suppliers',(ev.suppliers||[]).filter(function(x){return x.id!==sid;}));
-    renderPanel(w);
+    uiConfirm({title:'Remove supplier',message:'This supplier will be removed from the event.',okLabel:'Remove',danger:true}).then(function(ok){
+      if(!ok)return;
+      var ev=evById(w,id); if(!ev)return;
+      var prev=(ev.suppliers||[]).slice();
+      saveField(w,id,'suppliers',prev.filter(function(x){return x.id!==sid;}));
+      renderPanel(w);
+      uiToast('Supplier removed',{undo:function(){ saveField(w,id,'suppliers',prev); renderPanel(w); }});
+    });
   };
   window.evwsSupStatus=function(w,id,sid,val){
     var ev=evById(w,id); if(!ev)return;
@@ -6789,10 +6913,14 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     renderPanel(w);
   };
   window.evwsDelFile=function(w,id,fid){
-    if(!confirm('Remove this file link?'))return;
-    var ev=evById(w,id); if(!ev)return;
-    saveField(w,id,'files',(ev.files||[]).filter(function(x){return x.id!==fid;}));
-    renderPanel(w);
+    uiConfirm({title:'Remove file link',message:'This file link will be removed from the event.',okLabel:'Remove',danger:true}).then(function(ok){
+      if(!ok)return;
+      var ev=evById(w,id); if(!ev)return;
+      var prev=(ev.files||[]).slice();
+      saveField(w,id,'files',prev.filter(function(x){return x.id!==fid;}));
+      renderPanel(w);
+      uiToast('File link removed',{undo:function(){ saveField(w,id,'files',prev); renderPanel(w); }});
+    });
   };
 
   /* ---------- notes ---------- */
@@ -6807,10 +6935,14 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     renderPanel(w);
   };
   window.evwsDelNote=function(w,id,nid){
-    if(!confirm('Delete this note?'))return;
-    var ev=evById(w,id); if(!ev)return;
-    saveField(w,id,'enotes',(ev.enotes||[]).filter(function(x){return x.id!==nid;}));
-    renderPanel(w);
+    uiConfirm({title:'Delete note',message:'This event note will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
+      if(!ok)return;
+      var ev=evById(w,id); if(!ev)return;
+      var prev=(ev.enotes||[]).slice();
+      saveField(w,id,'enotes',prev.filter(function(x){return x.id!==nid;}));
+      renderPanel(w);
+      uiToast('Note deleted',{undo:function(){ saveField(w,id,'enotes',prev); renderPanel(w); }});
+    });
   };
 
   /* ---------- General Tasks hint ---------- */
@@ -7091,10 +7223,14 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     renderPanel(w);
   };
   window.evwsDelBudgetItem=function(w,id,c,iid){
-    if(!confirm('Remove this budget item?'))return;
-    var ev=evById(w,id); if(!ev)return;
-    saveBudget(w,id,c,{items:bgOf(ev,c).items.filter(function(x){return x.id!==iid;})});
-    renderPanel(w);
+    uiConfirm({title:'Remove budget item',message:'This budget line will be removed.',okLabel:'Remove',danger:true}).then(function(ok){
+      if(!ok)return;
+      var ev=evById(w,id); if(!ev)return;
+      var prev=bgOf(ev,c).items.slice();
+      saveBudget(w,id,c,{items:prev.filter(function(x){return x.id!==iid;})});
+      renderPanel(w);
+      uiToast('Budget item removed',{undo:function(){ saveBudget(w,id,c,{items:prev}); renderPanel(w); }});
+    });
   };
   window.evwsSetBudgetTotal=function(w,id,c,val){
     var ev=evById(w,id); if(!ev)return;
@@ -7620,6 +7756,46 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   function dU(x){try{return daysUntil(x);}catch(e){return null;}}
   function rcUrl(){return location.origin+location.pathname+'?request=1';}
 
+  /* ---------------- language support (public page only) ---------------- */
+  function rcLang(){ if(!RC_MODE)return 'en'; try{return localStorage.getItem('rc_lang')==='th'?'th':'en';}catch(e){return 'en';} }
+  var RC_UI={
+   en:{back:'Back',next:'Next',review:'Review & Submit',submit:'Submit Request',submitting:'Submitting...',edit:'Edit',section:'Section',of:'of',select:'Select...',required:'Fields marked * are required.',review_title:'Review your request',review_note:'Please check the details below. Tap Edit to change any section.',confirm_note:'By submitting, you confirm the details above are correct.',copy:'Copy reference number',copied:'Copied!',keep_ref:'Please keep this reference number. Use it together with your email address to track the status below at any time.',links_lbl:'Attached links',track_title:'Track My Requests',track_btn:'Track',track_ph_ref:'Reference no. (REQ-...)',track_ph_email:'Your email address',track_note:'Enter the reference number from your confirmation together with the email you used. Requests submitted from this device are checked automatically below.',track_none:'Requests you submit from this device will appear here automatically.',track_checking:'Checking...',track_checking_recent:'Checking your recent requests...',track_nf:'No request was found for that reference number and email combination.',track_none_recent:'No recent requests to show. Use the tracker above with your reference number.',track_both:'Enter both the reference number and the email address used on the request.',success_t:'Request received. Thank you!',another:'Submit another request',choose:'What would you like to request?',start:'Start request',step1:'Choose a request type',step2:'Fill in the form · under 3 minutes',step3:'Track it with your reference number',hero_i:'The official portal for graphic design and photography requests. Submissions go directly to the MARCOM team and can be tracked with your reference number.',fail:'Your request could not be submitted. Please check your connection and try again, or contact the MARCOM team directly.',missing:'Please complete the highlighted required fields.',dw1:'This deadline is only ',dw2:' day(s) away. Short-notice requests may need to be discussed with the MARCOM team first.',links_note:'Make sure sharing is set so the MARCOM team can open the links.'},
+   th:{back:'ย้อนกลับ',next:'ถัดไป',review:'ตรวจสอบและส่ง',submit:'ส่งคำขอ',submitting:'กำลังส่ง...',edit:'แก้ไข',section:'ส่วนที่',of:'จาก',select:'เลือก...',required:'ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก',review_title:'ตรวจสอบคำขอของคุณ',review_note:'กรุณาตรวจสอบข้อมูลด้านล่าง กด "แก้ไข" หากต้องการเปลี่ยนแปลง',confirm_note:'เมื่อกดส่ง ถือว่าคุณยืนยันว่าข้อมูลข้างต้นถูกต้อง',copy:'คัดลอกหมายเลขอ้างอิง',copied:'คัดลอกแล้ว!',keep_ref:'กรุณาเก็บหมายเลขอ้างอิงนี้ไว้ ใช้คู่กับอีเมลของคุณเพื่อติดตามสถานะได้ตลอดเวลา',links_lbl:'ลิงก์ที่แนบ',track_title:'ติดตามคำขอของฉัน',track_btn:'ตรวจสอบ',track_ph_ref:'หมายเลขอ้างอิง (REQ-...)',track_ph_email:'อีเมลของคุณ',track_note:'กรอกหมายเลขอ้างอิงจากหน้ายืนยัน พร้อมอีเมลที่ใช้ส่งคำขอ คำขอที่ส่งจากเครื่องนี้จะแสดงอัตโนมัติด้านล่าง',track_none:'คำขอที่ส่งจากอุปกรณ์นี้จะแสดงที่นี่โดยอัตโนมัติ',track_checking:'กำลังตรวจสอบ...',track_checking_recent:'กำลังตรวจสอบคำขอล่าสุดของคุณ...',track_nf:'ไม่พบคำขอสำหรับหมายเลขอ้างอิงและอีเมลนี้',track_none_recent:'ยังไม่มีคำขอล่าสุด กรุณาใช้ช่องด้านบนพร้อมหมายเลขอ้างอิง',track_both:'กรุณากรอกทั้งหมายเลขอ้างอิงและอีเมลที่ใช้ส่งคำขอ',success_t:'ได้รับคำขอเรียบร้อยแล้ว ขอบคุณค่ะ',another:'ส่งคำขอใหม่อีกครั้ง',choose:'ต้องการขอบริการด้านใด?',start:'เริ่มกรอกคำขอ',step1:'เลือกประเภทคำขอ',step2:'กรอกแบบฟอร์ม · ใช้เวลาไม่ถึง 3 นาที',step3:'ติดตามสถานะด้วยหมายเลขอ้างอิง',hero_i:'ช่องทางอย่างเป็นทางการสำหรับขอออกแบบกราฟิกและถ่ายภาพ คำขอจะส่งตรงถึงทีม MARCOM และติดตามสถานะได้ด้วยหมายเลขอ้างอิง',fail:'ไม่สามารถส่งคำขอได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือติดต่อทีม MARCOM โดยตรง',missing:'กรุณากรอกช่องที่จำเป็น (ไฮไลต์สีแดง) ให้ครบถ้วน',dw1:'เหลือเวลาเพียง ',dw2:' วันถึงกำหนดส่ง งานเร่งด่วนอาจต้องปรึกษาทีม MARCOM ก่อน',links_note:'กรุณาตั้งค่าการแชร์ลิงก์ให้ทีม MARCOM สามารถเปิดดูได้'}
+  };
+  function U(k){var l=rcLang();return (RC_UI[l]&&RC_UI[l][k])||RC_UI.en[k]||k;}
+  var RC_TH={
+   'Graphic Design Request':'คำขอออกแบบกราฟิก','Photography Request':'คำขอถ่ายภาพ','Graphic Design':'งานออกแบบกราฟิก','Photography':'งานถ่ายภาพ',
+   'Posters, banners, social media graphics, certificates and more.':'โปสเตอร์ แบนเนอร์ กราฟิกโซเชียลมีเดีย เกียรติบัตร และอื่นๆ',
+   'Event coverage, group photos, marketing shots and activities.':'ถ่ายภาพงานกิจกรรม ภาพหมู่ ภาพการตลาด และกิจกรรมต่างๆ',
+   'Requester Information':'ข้อมูลผู้ขอ','Event Information':'ข้อมูลงาน / กิจกรรม','Design Information':'ข้อมูลงานออกแบบ','Design Preferences':'ความต้องการด้านดีไซน์','Content & Files':'เนื้อหาและไฟล์','Deadline & Approval':'กำหนดส่งและผู้อนุมัติ','Event & Location':'งานและสถานที่','Photography Details':'รายละเอียดการถ่ายภาพ','Deadline':'กำหนดส่ง','Additional Notes & Files':'หมายเหตุและไฟล์เพิ่มเติม',
+   "Requester's Name":'ชื่อผู้ขอ','Department':'แผนก / ฝ่าย','Email Address':'อีเมล','Event Name':'ชื่องาน / กิจกรรม','Event Date (optional)':'วันที่จัดงาน (ถ้ามี)','Event Date':'วันที่จัดงาน','Purpose of the design':'วัตถุประสงค์ของงานออกแบบ','Design Type':'ประเภทงานออกแบบ','Design Format':'รูปแบบ / ขนาดงาน','Width':'ความกว้าง','Height':'ความสูง','Unit':'หน่วย','Preferred Colours':'โทนสีที่ต้องการ','Preferred Fonts':'ฟอนต์ที่ต้องการ','Preferred Style':'สไตล์ที่ต้องการ','Wording to include':'ข้อความที่ต้องใส่ในงาน','Additional Instructions':'รายละเอียดเพิ่มเติม','Images & supporting documents':'รูปภาพและไฟล์ประกอบ','Expected Completion Date':'วันที่ต้องการรับงาน','Who will approve the design?':'ผู้อนุมัติงานออกแบบ','Any other comments':'ความคิดเห็นเพิ่มเติม','Venue':'สถานที่','Start Time':'เวลาเริ่ม','End Time':'เวลาสิ้นสุด','Photography Type (select all that apply)':'ประเภทการถ่ายภาพ (เลือกได้หลายข้อ)','Deliverables':'สิ่งที่ต้องการรับ','Intended Usage':'นำไปใช้งานด้าน','Expected Delivery Date':'วันที่ต้องการรับไฟล์','Special guests to photograph':'แขกพิเศษที่ต้องถ่ายภาพ','Important moments not to miss':'ช่วงเวลาสำคัญที่ห้ามพลาด','Photography restrictions':'ข้อจำกัดในการถ่ายภาพ','Other comments':'ความคิดเห็นเพิ่มเติม','Reference files':'ไฟล์อ้างอิง',
+   'Submitted':'ส่งแล้ว','Under Review':'กำลังตรวจสอบ','Needs Clarification':'ต้องการข้อมูลเพิ่ม','Accepted':'รับงานแล้ว','In Progress':'กำลังดำเนินการ','Awaiting Approval':'รออนุมัติ','Completed':'เสร็จสิ้น','Rejected':'ปฏิเสธ',
+   'Poster':'โปสเตอร์','Digital Screen':'จอดิจิทัล','Social Media Post':'โพสต์โซเชียลมีเดีย','Banner':'แบนเนอร์','Backdrop':'แบ็คดรอป','Certificate':'เกียรติบัตร','Flyer':'ใบปลิว','Invitation':'บัตรเชิญ','Programme':'สูจิบัตร','Other':'อื่นๆ',
+   'Portrait':'แนวตั้ง','Landscape':'แนวนอน','Square':'จัตุรัส','Custom Size':'กำหนดขนาดเอง',
+   'Modern':'โมเดิร์น','Elegant':'หรูหรา','Minimal':'มินิมอล','Fun':'สนุกสนาน','Corporate':'ทางการ',
+   'Group Photo':'ภาพหมู่','Atmosphere':'ภาพบรรยากาศ','Activities':'กิจกรรม','Meeting':'การประชุม','Performance':'การแสดง','Awards':'มอบรางวัล','Guest Speakers':'วิทยากร','Classroom':'ในห้องเรียน','Sports':'กีฬา','Candid':'ภาพแคนดิด','Marketing Photos':'ภาพเพื่อการตลาด',
+   'Edited Photos':'ไฟล์ภาพแต่งแล้ว','Raw Photos':'ไฟล์ภาพต้นฉบับ',
+   'Social Media':'โซเชียลมีเดีย','Website':'เว็บไซต์','Newsletter':'จดหมายข่าว','Yearbook':'หนังสือรุ่น','Internal Use':'ใช้ภายใน','Marketing Materials':'สื่อการตลาด','Archive':'จัดเก็บ'
+  };
+  function LT(x){ if(rcLang()!=='th')return x; return RC_TH[x]||x; }
+  function LO(o){ if(rcLang()!=='th')return o; var t=RC_TH[o]; return t?(t+' ('+o+')'):o; }
+  var RC_HINTS={
+   'Requester Information':{en:'Use your school email address so the team can contact you about this request.',th:'กรุณาใช้อีเมลโรงเรียน เพื่อให้ทีมติดต่อกลับเกี่ยวกับคำขอนี้ได้'},
+   'Content & Files':{en:'Paste Google Drive links and set sharing so the MARCOM team can open them.',th:'วางลิงก์ Google Drive และตั้งค่าการแชร์ให้ทีม MARCOM เปิดดูได้'},
+   'Deadline & Approval':{en:'Design work needs at least 5 working days. For urgent jobs, please talk to the team first.',th:'งานออกแบบใช้เวลาอย่างน้อย 5 วันทำการ งานเร่งด่วนกรุณาปรึกษาทีมก่อน'},
+   'Deadline':{en:'Photo editing and delivery usually takes 2 to 3 working days after the event.',th:'การแต่งภาพและส่งไฟล์ปกติใช้เวลา 2-3 วันทำการหลังจบงาน'},
+   'Photography Details':{en:'Select everything that applies. The more we know, the better the coverage.',th:'เลือกได้หลายข้อ ยิ่งให้ข้อมูลครบ ทีมยิ่งเก็บภาพได้ครบถ้วน'}
+  };
+  function rcHint(t){ var h=RC_HINTS[t]; if(!h)return ''; return rcLang()==='th'?h.th:h.en; }
+  function rcTodayStr(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
+  function rcLangHTML(){ var l=rcLang(); return '<div class="rc-lang" role="group" aria-label="Language / ภาษา"><button type="button" class="'+(l==='en'?'on':'')+'" onclick="rcSetLang(\'en\')" aria-pressed="'+(l==='en')+'">EN</button><button type="button" class="'+(l==='th'?'on':'')+'" onclick="rcSetLang(\'th\')" aria-pressed="'+(l==='th')+'">ไทย</button></div>'; }
+  var rcView='home';
+  window.rcSetLang=function(l){ try{localStorage.setItem('rc_lang',l==='th'?'th':'en');}catch(e){}
+    if(rcView==='form'&&rcCurT){ rcReadStep(); rcRenderStep(); }
+    else if(rcView==='home'){ rcHome(); }
+    else if(rcView==='success'){ rcHome(); }
+  };
+
   var RC_STATUSES=['Submitted','Under Review','Needs Clarification','Accepted','In Progress','Awaiting Approval','Completed','Rejected'];
   var RC_ST={
     'Submitted':['var(--gray-light)','var(--gray)','ti-inbox'],
@@ -7631,7 +7807,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     'Completed':['var(--green-light)','var(--st-done)','ti-circle-check'],
     'Rejected':['var(--danger-light)','var(--st-cancel)','ti-circle-x']
   };
-  function stChip(s){var c=RC_ST[s]||RC_ST.Submitted;return '<span class="rc-st" style="background:'+c[0]+';color:'+c[1]+';"><i class="ti '+c[2]+'"></i>'+esc(s)+'</span>';}
+  function stChip(s){var c=RC_ST[s]||RC_ST.Submitted;return '<span class="rc-st" style="background:'+c[0]+';color:'+c[1]+';"><i class="ti '+c[2]+'"></i>'+esc(RC_MODE?LT(s):s)+'</span>';}
 
   /* ---------------- request type registry (extensible) ---------------- */
   var REQ_FIELDS={t:'Requester Information',icon:'ti-user',fields:[
@@ -7641,6 +7817,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   var RC_TYPES=[
     {key:'design',label:'Graphic Design Request',short:'Graphic Design',icon:'ti-palette',color:'#e8850c',ws:'dew',
      desc:'Posters, banners, social media graphics, certificates and more.',
+     lead:{en:'Please allow at least 5 working days for design work. Earlier is always better.',th:'กรุณาส่งคำขอล่วงหน้าอย่างน้อย 5 วันทำการ ยิ่งเร็วยิ่งดี'},
      tags:['Posters','Banners','Social Media','Certificates','Invitations','Backdrops'],
      sections:[REQ_FIELDS,
       {t:'Event Information',icon:'ti-confetti',fields:[
@@ -7668,6 +7845,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
      ]},
     {key:'photo',label:'Photography Request',short:'Photography',icon:'ti-camera',color:'#5d4037',ws:'o',
      desc:'Event coverage, group photos, marketing shots and activities.',
+     lead:{en:'Please book photography as early as possible, at least 3 working days ahead.',th:'กรุณาแจ้งล่วงหน้าอย่างน้อย 3 วันทำการ และยิ่งเร็วยิ่งดี'},
      tags:['Event coverage','Group photos','Activities','Performances','Marketing shots'],
      sections:[REQ_FIELDS,
       {t:'Event & Location',icon:'ti-confetti',fields:[
@@ -7699,17 +7877,19 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   var rcLinks=[];
   function rcHome(){
     var root=document.getElementById('rc-root');if(!root)return;
+    rcView='home';
     var cards=RC_TYPES.map(function(T){
       return '<button class="rc-type-card" style="--rc-c:'+T.color+';" onclick="rcOpenForm(\''+T.key+'\')">'
         +'<div class="rc-type-ic"><i class="ti '+T.icon+'"></i></div>'
-        +'<div class="rc-type-t">'+esc(T.label)+'</div>'
-        +'<div class="rc-type-s">'+esc(T.desc)+'</div>'
+        +'<div class="rc-type-t">'+esc(LT(T.label))+'</div>'
+        +'<div class="rc-type-s">'+esc(LT(T.desc))+'</div>'
         +((T.tags&&T.tags.length)?'<div class="rc-type-tags">'+T.tags.map(function(g){return '<span>'+esc(g)+'</span>';}).join('')+'</div>':'')
-        +'<div class="rc-type-go">Start request <i class="ti ti-arrow-right"></i></div>'
+        +'<div class="rc-type-go">'+esc(U('start'))+' <i class="ti ti-arrow-right"></i></div>'
         +'</button>';
     }).join('');
     root.innerHTML=''
       +'<div class="rc-hero"><div class="rc-hero-band"></div>'
+      +  rcLangHTML()
       +  '<div class="rc-hero-top">'
       +    '<span class="rc-logo-wrap">'+logoImg()+'</span>'
       +    '<div class="rc-hero-main">'
@@ -7718,18 +7898,18 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       +    '</div>'
       +  '</div>'
       +  '<div class="rc-hero-body">'
-      +    '<div class="rc-hero-i">The official portal for graphic design and photography requests. Submissions go directly to the MARCOM team and can be tracked with your reference number.</div>'
+      +    '<div class="rc-hero-i">'+esc(U('hero_i'))+'</div>'
       +  '</div>'
       +  '<div class="rc-steps">'
-      +    '<div class="rc-step"><b>1</b> Choose a request type</div>'
-      +    '<div class="rc-step"><b>2</b> Fill in the form \u00b7 under 3 minutes</div>'
-      +    '<div class="rc-step"><b>3</b> Track it with your reference number</div>'
+      +    '<div class="rc-step"><b>1</b> '+esc(U('step1'))+'</div>'
+      +    '<div class="rc-step"><b>2</b> '+esc(U('step2'))+'</div>'
+      +    '<div class="rc-step"><b>3</b> '+esc(U('step3'))+'</div>'
       +  '</div>'
       +'</div>'
-      +'<div class="rc-choose-h"><i class="ti ti-hand-click"></i> What would you like to request?</div>'
+      +'<div class="rc-choose-h"><i class="ti ti-hand-click"></i> '+esc(U('choose'))+'</div>'
       +'<div class="rc-type-grid">'+cards+'</div>'
       +histHTML()
-      +'<div class="rc-foot"><i class="ti ti-heart" style="font-size:11px;color:var(--coral);"></i> HeadStart International School, Phuket \u00b7 Marketing &amp; Communications Team</div>';
+      +'<div class="rc-foot"><i class="ti ti-heart" style="font-size:11px;color:var(--coral);"></i> HeadStart International School, Phuket · Marketing &amp; Communications Team</div>';
     rcRenderHist();
   }
   var RC_LOGO_URL='https://headstartphuket.com/assets/top/headstart-international-school-phuket-74639d3b8a4f5593024de37e9eb3cad3006abe9f8a2b1085869d45297ee665db.png';
@@ -7750,46 +7930,158 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   function fieldHTML(T,f){
     var req=f.req?' <span class="rc-req">*</span>':'';
     var show=f.showIf?' data-showif="'+f.showIf[0]+'::'+esc(f.showIf[1])+'" style="display:none;"':'';
+    var ph=esc(LT(f.ph||'')||'');
     var inner='';
     if(f.type==='select'){
-      inner='<select class="form-select" id="rcf-'+f.k+'" onchange="rcOnChange()"><option value="">Select...</option>'+f.opts.map(function(o){return '<option>'+esc(o)+'</option>';}).join('')+'</select>';
+      inner='<select class="form-select" id="rcf-'+f.k+'" onchange="rcOnChange()"><option value="">'+esc(U('select'))+'</option>'+f.opts.map(function(o){return '<option value="'+esc(o)+'">'+esc(LO(o))+'</option>';}).join('')+'</select>';
     }else if(f.type==='textarea'){
-      inner='<textarea class="form-textarea" id="rcf-'+f.k+'" placeholder="'+esc(f.ph||'')+'" style="min-height:64px;"></textarea>';
+      inner='<textarea class="form-textarea" id="rcf-'+f.k+'" placeholder="'+ph+'" style="min-height:64px;"></textarea>';
     }else if(f.type==='multi'){
-      inner='<div class="rc-chips">'+f.opts.map(function(o,i){return '<label class="rc-chip"><input type="checkbox" data-multi="'+f.k+'" value="'+esc(o)+'"><span>'+esc(o)+'</span></label>';}).join('')+'</div>';
+      inner='<div class="rc-chips">'+f.opts.map(function(o){return '<label class="rc-chip"><input type="checkbox" data-multi="'+f.k+'" value="'+esc(o)+'"><span>'+esc(LO(o))+'</span></label>';}).join('')+'</div>';
     }else if(f.type==='links'){
       inner='<div id="rc-links-box"></div><button type="button" class="btn btn-ghost btn-sm" onclick="rcAddLink()"><i class="ti ti-plus"></i> Add link</button>'
-        +'<div class="rc-note" style="margin-top:6px;"><i class="ti ti-info-circle"></i> '+esc(f.ph||'Paste Google Drive links')+' · make sure sharing is set so the MARCOM team can open them.</div>';
+        +'<div class="rc-note" style="margin-top:6px;"><i class="ti ti-info-circle"></i> '+esc(U('links_note'))+'</div>';
     }else{
-      inner='<input class="form-input" id="rcf-'+f.k+'" type="'+(f.type||'text')+'" placeholder="'+esc(f.ph||'')+'" />';
+      inner='<input class="form-input" id="rcf-'+f.k+'" type="'+(f.type||'text')+'"'+(f.type==='date'?' min="'+rcTodayStr()+'"':'')+' placeholder="'+ph+'" />';
     }
-    return '<div class="form-group rc-field"'+show+' data-k="'+f.k+'"><label class="form-label">'+esc(f.l)+req+'</label>'+inner+'</div>';
+    return '<div class="form-group rc-field"'+show+' data-k="'+f.k+'"><label class="form-label" for="rcf-'+f.k+'">'+esc(LT(f.l))+req+'</label>'+inner+'</div>';
   }
+  var rcValues={}, rcStep=0, rcCurT=null;
   window.rcOpenForm=function(key){
     var T=typeOf(key);if(!T)return;
-    var root=document.getElementById('rc-root');if(!root)return;
-    rcLinks=[];
-    var secs=T.sections.map(function(s){
+    rcCurT=T; rcValues={}; rcLinks=[]; rcStep=0; rcView='form';
+    rcRenderStep();
+  };
+  function rcStepCount(T){ return T.sections.length+1; }
+  function rcReadStep(){
+    var T=rcCurT; if(!T||rcStep>=T.sections.length)return;
+    T.sections[rcStep].fields.forEach(function(f){
+      if(f.type==='links'){ rcValues.links=rcLinks.slice(); return; }
+      if(f.type==='multi'){ rcValues[f.k]=[].slice.call(document.querySelectorAll('input[data-multi="'+f.k+'"]:checked')).map(function(c){return c.value;}); return; }
+      var el=document.getElementById('rcf-'+f.k); if(el)rcValues[f.k]=el.value;
+    });
+  }
+  function rcFillStep(){
+    var T=rcCurT; if(!T||rcStep>=T.sections.length)return;
+    T.sections[rcStep].fields.forEach(function(f){
+      if(f.type==='links'){ rcLinks=(rcValues.links||[]).slice(); return; }
+      if(f.type==='multi'){
+        var vals=rcValues[f.k]||[];
+        [].slice.call(document.querySelectorAll('input[data-multi="'+f.k+'"]')).forEach(function(c){ c.checked=vals.indexOf(c.value)>=0; });
+        return;
+      }
+      var el=document.getElementById('rcf-'+f.k);
+      if(el&&rcValues[f.k]!=null)el.value=rcValues[f.k];
+    });
+    if(rcStep===0){ var em=localStorage.getItem('rc_email')||''; var emf=document.getElementById('rcf-email'); if(emf&&!emf.value&&em)emf.value=em; }
+  }
+  function rcHiddenNow(f){
+    if(!f.showIf)return false;
+    var src=document.getElementById('rcf-'+f.showIf[0]);
+    var v=src?src.value:(rcValues[f.showIf[0]]||'');
+    return v!==f.showIf[1];
+  }
+  function rcValidateStep(){
+    var T=rcCurT, missing=[];
+    if(!T||rcStep>=T.sections.length)return missing;
+    T.sections[rcStep].fields.forEach(function(f){
+      if(f.type==='links'||f.type==='multi')return;
+      var el=document.getElementById('rcf-'+f.k); if(!el)return;
+      el.classList.remove('rc-err');
+      if(f.req&&!rcHiddenNow(f)&&!(el.value||'').trim()){ missing.push(f.k); el.classList.add('rc-err'); }
+    });
+    return missing;
+  }
+  window.rcNext=function(){
+    var T=rcCurT; if(!T)return;
+    var missing=rcValidateStep();
+    var errBox=document.getElementById('rc-step-err');
+    if(missing.length){
+      if(errBox){ errBox.textContent=U('missing'); errBox.style.display='block'; }
+      var first=document.getElementById('rcf-'+missing[0]);
+      if(first){ first.focus(); try{first.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){} }
+      return;
+    }
+    if(errBox)errBox.style.display='none';
+    rcReadStep();
+    rcStep=Math.min(rcStep+1,T.sections.length);
+    rcRenderStep();
+  };
+  window.rcBack=function(){
+    rcReadStep();
+    if(rcStep<=0){ rcHomeGo(); return; }
+    rcStep=rcStep-1;
+    rcRenderStep();
+  };
+  window.rcJump=function(i){ rcStep=i; rcRenderStep(); };
+  function rcReviewHTML(T){
+    var out='<div class="rc-card"><div class="rc-sec-h"><i class="ti ti-clipboard-check"></i> '+esc(U('review_title'))+'</div>'
+      +'<div class="rc-note" style="margin-bottom:11px;">'+esc(U('review_note'))+'</div>';
+    T.sections.forEach(function(sec,i){
+      var items='';
+      sec.fields.forEach(function(f){
+        if(f.type==='links')return;
+        var v=rcValues[f.k];
+        if(Array.isArray(v))v=v.join(', ');
+        if(v)items+='<div class="rc-review-item"><b>'+esc(LT(f.l).replace(/ \(.*?\)/,''))+'</b><span>'+esc(String(v))+'</span></div>';
+      });
+      var hasLinks=sec.fields.some(function(f){return f.type==='links';})&&(rcValues.links||[]).length;
+      if(hasLinks){
+        items+='<div class="rc-review-item"><b>'+esc(U('links_lbl'))+'</b><span>'+(rcValues.links||[]).map(function(l){return esc(l.title||l.url);}).join(' · ')+'</span></div>';
+      }
+      if(!items)return;
+      out+='<div class="rc-review-sec"><div class="rc-review-sec-h"><i class="ti '+(sec.icon||'ti-forms')+'"></i> '+esc(LT(sec.t))
+        +'<button type="button" class="rc-review-edit" onclick="rcJump('+i+')"><i class="ti ti-pencil"></i> '+esc(U('edit'))+'</button></div>'+items+'</div>';
+    });
+    out+='<div class="rc-note" style="margin-top:10px;"><i class="ti ti-shield-check"></i> '+esc(U('confirm_note'))+'</div></div>';
+    return out;
+  }
+  function rcRenderStep(){
+    var T=rcCurT; if(!T)return;
+    var root=document.getElementById('rc-root'); if(!root)return;
+    rcView='form';
+    var total=rcStepCount(T), isReview=rcStep>=T.sections.length;
+    var pct=Math.round(((Math.min(rcStep,total-1)+1)/total)*100);
+    var label=isReview?U('review_title'):LT(T.sections[rcStep].t);
+    var head=brandHTML()
+      +'<div class="rc-form-head" style="--rc-c:'+T.color+';position:relative;"><button class="rc-back" onclick="rcBack()" title="'+esc(U('back'))+'" aria-label="'+esc(U('back'))+'"><i class="ti ti-arrow-left"></i></button>'
+      +'<div class="rc-form-title" style="--rc-c:'+T.color+';"><i class="ti '+T.icon+'"></i> '+esc(LT(T.label))+'</div>'
+      +'<div style="margin-left:auto;">'+rcLangHTML().replace('class="rc-lang"','class="rc-lang" style="position:static;"')+'</div></div>'
+      +'<div class="rc-progress"><div class="rc-progress-top"><span class="rc-progress-label">'+esc(label)+'</span><span class="rc-progress-count">'+esc(U('section'))+' '+(Math.min(rcStep,total-1)+1)+' '+esc(U('of'))+' '+total+'</span></div>'
+      +'<div class="rc-progress-bar" role="progressbar" aria-valuemin="1" aria-valuemax="'+total+'" aria-valuenow="'+(Math.min(rcStep,total-1)+1)+'"><div class="rc-progress-fill" style="width:'+pct+'%"></div></div></div>';
+    var body='',nav='';
+    if(isReview){
+      body=rcReviewHTML(T);
+      nav='<div class="rc-wiz-nav"><button type="button" class="btn rc-wiz-back" onclick="rcBack()"><i class="ti ti-arrow-left"></i> '+esc(U('back'))+'</button>'
+        +'<button type="button" class="btn btn-navy rc-submit-btn" id="rc-submit-btn" style="background-image:none;background:'+T.color+';" onclick="rcSubmit(\''+T.key+'\')"><i class="ti ti-send"></i> '+esc(U('submit'))+'</button></div>';
+    }else{
+      var sec=T.sections[rcStep];
       var rows=[],half=[];
-      s.fields.forEach(function(f){
+      sec.fields.forEach(function(f){
         var h=fieldHTML(T,f);
         if(f.half){half.push(h);if(half.length===2){rows.push('<div class="form-row">'+half.join('')+'</div>');half=[];}}
         else{if(half.length){rows.push('<div class="form-row">'+half.join('')+'</div>');half=[];}rows.push(h);}
       });
       if(half.length)rows.push('<div class="form-row">'+half.join('')+'</div>');
-      return '<div class="rc-card"><div class="rc-sec-h"><i class="ti '+(s.icon||'ti-forms')+'"></i> '+esc(s.t)+'</div>'+rows.join('')+'</div>';
-    }).join('');
-    root.innerHTML=brandHTML()
-      +'<div class="rc-form-head" style="--rc-c:'+T.color+';"><button class="rc-back" onclick="rcHomeGo()" title="Back"><i class="ti ti-arrow-left"></i></button>'
-      +'<div class="rc-form-title" style="--rc-c:'+T.color+';"><i class="ti '+T.icon+'"></i> '+esc(T.label)+'</div></div>'
-      +'<div id="rc-form" style="--rc-c:'+T.color+';">'+secs
-      +'<div class="rc-submit-bar"><button class="btn btn-navy rc-submit-btn" id="rc-submit-btn" style="background-image:none;background:'+T.color+';" onclick="rcSubmit(\''+T.key+'\')"><i class="ti ti-send"></i> Submit Request</button>'
-      +'<div class="rc-note">Fields marked <span class="rc-req">*</span> are required.</div></div></div>';
-    var em=localStorage.getItem('rc_email')||'';var emf=document.getElementById('rcf-email');if(emf&&em)emf.value=em;
+      var hint=rcHint(sec.t);
+      body=(rcStep===0&&T.lead?'<div class="rc-lead"><i class="ti ti-clock-exclamation"></i>'+esc(rcLang()==='th'?T.lead.th:T.lead.en)+'</div>':'')
+        +'<div class="rc-card"><div class="rc-sec-h"><i class="ti '+(sec.icon||'ti-forms')+'"></i> '+esc(LT(sec.t))+'</div>'
+        +(hint?'<div class="rc-sec-hint"><i class="ti ti-bulb"></i>'+esc(hint)+'</div>':'')
+        +rows.join('')+'</div>';
+      var lastSec=rcStep===T.sections.length-1;
+      nav='<div class="rc-wiz-nav">'
+        +(rcStep>0?'<button type="button" class="btn rc-wiz-back" onclick="rcBack()"><i class="ti ti-arrow-left"></i> '+esc(U('back'))+'</button>':'<span></span>')
+        +'<button type="button" class="btn btn-navy" style="background-image:none;background:'+T.color+';min-height:48px;" onclick="rcNext()">'+esc(lastSec?U('review'):U('next'))+' <i class="ti ti-arrow-right"></i></button></div>';
+    }
+    root.innerHTML=head+'<div id="rc-form" style="--rc-c:'+T.color+';">'+body
+      +'<input type="text" id="rcf-website" name="website" value="" style="position:absolute;left:-5000px;top:-5000px;height:1px;width:1px;opacity:0;" tabindex="-1" aria-hidden="true" autocomplete="off">'
+      +'<div class="rc-note" id="rc-step-err" style="display:none;color:#b91c1c;font-weight:700;margin-top:8px;"></div>'
+      +nav+'<div class="rc-note" style="margin-top:9px;">'+esc(U('required'))+'</div></div>';
+    rcFillStep();
     rcRenderLinks();rcOnChange();
     var dlEl=document.getElementById('rcf-deadline');if(dlEl)dlEl.addEventListener('change',rcOnChange);
     try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
-  };
+  }
   window.rcHomeGo=function(){rcHome();try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}};
   window.rcOnChange=function(){
     document.querySelectorAll('#rc-form [data-showif]').forEach(function(el){
@@ -7803,7 +8095,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       if(dl.value){var t=new Date(dl.value+'T00:00:00'),now=new Date();now.setHours(0,0,0,0);days=Math.round((t-now)/86400000);}
       var need=(days!==null&&days>=0&&days<5);
       if(need&&!w){w=document.createElement('div');w.id='rc-deadline-warn';w.className='rc-note';w.style.cssText='color:#b45309;font-weight:600;margin-top:6px;';var fw=dl.closest('.rc-field')||dl.parentNode;if(fw)fw.appendChild(w);}
-      if(w){if(need){w.innerHTML='<i class="ti ti-alert-triangle"></i> This deadline is only '+days+' day'+(days===1?'':'s')+' away. Short-notice requests may need to be discussed with the MARCOM team first.';w.style.display='';}else{w.style.display='none';}}
+      if(w){if(need){w.innerHTML='<i class="ti ti-alert-triangle"></i> '+U('dw1')+days+U('dw2');w.style.display='';}else{w.style.display='none';}}
     }
   };
   window.rcAddLink=function(){rcLinks.push({title:'',url:''});rcRenderLinks();};
@@ -7851,17 +8143,30 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   }
   window.rcSubmit=function(key){
     var T=typeOf(key);if(!T)return;
-    var r=collect(T);
-    if(r.missing.length){
-      var first=document.getElementById('rcf-'+r.missing[0]);
-      if(first){first.focus();try{first.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
+    rcReadStep();
+    var d={};
+    allFields(T).forEach(function(f){
+      if(f.type==='links'){ d.links=(rcValues.links||[]).filter(function(l){return (l.url||'').trim();}); return; }
+      if(f.type==='multi'){ d[f.k]=rcValues[f.k]||[]; return; }
+      d[f.k]=String(rcValues[f.k]==null?'':rcValues[f.k]).trim();
+    });
+    var missing=[];
+    T.sections.forEach(function(sec,i){
+      sec.fields.forEach(function(f){
+        if(!f.req)return;
+        var hidden=f.showIf&&(d[f.showIf[0]]!==f.showIf[1]);
+        if(!hidden&&!d[f.k])missing.push({k:f.k,sec:i});
+      });
+    });
+    if(missing.length){
+      rcJump(missing[0].sec);
+      setTimeout(function(){ var el=document.getElementById('rcf-'+missing[0].k); if(el){el.classList.add('rc-err');try{el.focus();}catch(e){}} },90);
       return;
     }
-    var d=r.data;
     try{localStorage.setItem('rc_email',(d.email||'').toLowerCase());}catch(e){}
-    var btn=document.getElementById('rc-submit-btn');if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> Submitting...';}
+    var btn=document.getElementById('rc-submit-btn');if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> '+esc(U('submitting'));}
     /* Submissions go through a server endpoint: the browser has no direct database access. */
-    var payload={type:T.key,data:d,links:d.links||[],website:''};
+    var payload={type:T.key,data:d,links:d.links||[],website:((document.getElementById('rcf-website')||{}).value||'')};
     fetch('/.netlify/functions/submit-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(j){return {ok:res.ok,j:j};});})
       .then(function(x){
@@ -7876,25 +8181,46 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       })
       .catch(function(e){
         console.error(e);
-        if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> Submit Request';}
-        rcFail('Your request could not be submitted. Please check your connection and try again, or contact the MARCOM team directly.');
+        if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> '+esc(U('submit'));}
+        rcFail(U('fail'));
       });
   };
-  function rcFail(msg){try{alert(msg);}catch(e){}}
+  function rcFail(msg){try{uiToast(msg,{duration:7000});}catch(e){try{alert(msg);}catch(_){}}}
   function rcSuccess(T,d){
     var root=document.getElementById('rc-root');if(!root)return;
+    rcView='success';
+    var name=nmW(T.ws);
+    var sent=(rcLang()==='th')
+      ? 'คำขอ'+esc(LT(T.short))+' สำหรับงาน <b>'+esc(d.eventName||'-')+'</b> ถูกส่งถึงทีมเรียบร้อยแล้ว'
+      : 'Your '+esc(T.short)+' request for <b>'+esc(d.eventName||'your event')+'</b> has been sent to '+esc(name)+'.';
     root.innerHTML=brandHTML()
       +'<div class="rc-card rc-success">'
       +'<div class="rc-success-ic"><i class="ti ti-circle-check"></i></div>'
-      +'<div class="rc-success-t">Request received. Thank you!</div>'
+      +'<div class="rc-success-t">'+esc(U('success_t'))+'</div>'
       +'<div class="rc-success-ref"><i class="ti ti-hash"></i>'+esc(d.refNo)+'</div>'
-      +'<div class="rc-success-s">Your '+esc(T.short)+' request for <b>'+esc(d.eventName||'your event')+'</b> has been sent to '+esc(nmW(T.ws))+'. Please keep the reference number. You can check the status below at any time using your email address.</div>'
+      +'<div style="margin:12px 0 6px;"><button type="button" class="rc-copy-btn" id="rc-copy-ref" onclick="rcCopyRef(\''+esc(d.refNo)+'\')"><i class="ti ti-copy"></i> '+esc(U('copy'))+'</button></div>'
+      +'<div class="rc-success-s">'+sent+'<br>'+esc(U('keep_ref'))+'</div>'
       +'<div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap;">'
-      +'<button class="btn btn-navy" onclick="rcHomeGo()"><i class="ti ti-plus"></i> Submit another request</button>'
+      +'<button class="btn btn-navy" onclick="rcHomeGo()"><i class="ti ti-plus"></i> '+esc(U('another'))+'</button>'
       +'</div></div>'
       +histHTML();
+    var rf=document.getElementById('rc-hist-ref'); if(rf)rf.value=d.refNo;
     rcRenderHist();
   }
+  window.rcCopyRef=function(ref){
+    var btn=document.getElementById('rc-copy-ref');
+    function done(){ if(btn){ btn.classList.add('done'); btn.innerHTML='<i class="ti ti-check"></i> '+esc(U('copied'))+' · '+esc(ref); } }
+    function fallback(){
+      try{
+        var ta=document.createElement('textarea'); ta.value=ref; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+      }catch(e){}
+    }
+    try{
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ref).then(done,fallback);
+      else fallback();
+    }catch(e){ fallback(); }
+  };
   function rcBrief(T,d){
     var L=[];
     if(T.key==='design'){
@@ -7971,11 +8297,11 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   var rcAllReqs=null; /* retained for the internal workspace queue below */
   function histHTML(){
     var em=localStorage.getItem('rc_email')||'';
-    return '<div class="rc-card"><div class="rc-sec-h"><i class="ti ti-history"></i> Track My Requests</div>'
-      +'<div class="rc-email-row"><input class="form-input" id="rc-hist-ref" type="text" placeholder="Reference no. (REQ-...)" style="max-width:200px;" />'
-      +'<input class="form-input" id="rc-hist-email" type="email" placeholder="Your email address" value="'+esc(em)+'" />'
-      +'<button class="btn btn-ghost" onclick="rcTrackOne()"><i class="ti ti-search"></i> Track</button></div>'
-      +'<div class="rc-note" style="margin-top:7px;">Enter the reference number from your confirmation together with the email address you used. Requests submitted from this device are checked automatically below.</div>'
+    return '<div class="rc-card"><div class="rc-sec-h"><i class="ti ti-history"></i> '+esc(U('track_title'))+'</div>'
+      +'<div class="rc-email-row"><input class="form-input" id="rc-hist-ref" type="text" placeholder="'+esc(U('track_ph_ref'))+'" style="max-width:200px;" aria-label="'+esc(U('track_ph_ref'))+'" />'
+      +'<input class="form-input" id="rc-hist-email" type="email" placeholder="'+esc(U('track_ph_email'))+'" value="'+esc(em)+'" aria-label="'+esc(U('track_ph_email'))+'" />'
+      +'<button class="btn btn-ghost" onclick="rcTrackOne()"><i class="ti ti-search"></i> '+esc(U('track_btn'))+'</button></div>'
+      +'<div class="rc-note" style="margin-top:7px;">'+esc(U('track_note'))+'</div>'
       +'<div id="rc-hist-list" style="margin-top:11px;"></div></div>';
   }
   function rcStatusLookup(ref,em){
@@ -7986,7 +8312,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   }
   function rcHistRow(r){
     return '<div class="rc-hist-row"><span class="rq-ref">'+esc(r.refNo||'')+'</span>'
-      +'<span style="font-weight:700;font-size:12.5px;flex:1;min-width:140px;">'+esc(r.eventName||'Request')+'<span style="color:var(--muted);font-weight:600;"> &middot; '+esc(r.typeLabel||'')+'</span></span>'
+      +'<span style="font-weight:700;font-size:12.5px;flex:1;min-width:140px;">'+esc(r.eventName||'Request')+'<span style="color:var(--muted);font-weight:600;"> &middot; '+esc(LT(r.typeLabel||''))+'</span></span>'
       +'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+(r.createdAtIso?new Date(r.createdAtIso).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'')+'</span>'
       +stChip(r.status||'Submitted')+'</div>';
   }
@@ -7994,11 +8320,11 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     var box=document.getElementById('rc-hist-list');if(!box)return;
     var ref=((document.getElementById('rc-hist-ref')||{}).value||'').trim().toUpperCase();
     var em=((document.getElementById('rc-hist-email')||{}).value||'').trim().toLowerCase();
-    if(!ref||!em){box.innerHTML='<div class="rc-note">Enter both the reference number and the email address used on the request.</div>';return;}
+    if(!ref||!em){box.innerHTML='<div class="rc-note">'+esc(U('track_both'))+'</div>';return;}
     try{localStorage.setItem('rc_email',em);}catch(e){}
-    box.innerHTML='<div class="rc-note">Checking...</div>';
+    box.innerHTML='<div class="rc-note">'+esc(U('track_checking'))+'</div>';
     rcStatusLookup(ref,em).then(function(r){
-      if(!r){box.innerHTML='<div class="rc-note">No request was found for that reference number and email combination.</div>';return;}
+      if(!r){box.innerHTML='<div class="rc-note">'+esc(U('track_nf'))+'</div>';return;}
       box.innerHTML=rcHistRow(r);
     });
   };
@@ -8006,11 +8332,11 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     var box=document.getElementById('rc-hist-list');if(!box)return;
     var em=(localStorage.getItem('rc_email')||'').toLowerCase();
     var refs=[];try{refs=JSON.parse(localStorage.getItem('rc_refs')||'[]');}catch(e){}
-    if(!em||!refs.length){box.innerHTML='<div class="rc-note">Requests you submit from this device will appear here automatically.</div>';return;}
-    box.innerHTML='<div class="rc-note">Checking your recent requests...</div>';
+    if(!em||!refs.length){box.innerHTML='<div class="rc-note">'+esc(U('track_none'))+'</div>';return;}
+    box.innerHTML='<div class="rc-note">'+esc(U('track_checking_recent'))+'</div>';
     Promise.all(refs.slice(0,8).map(function(x){return rcStatusLookup(x.ref,em);})).then(function(rows){
       rows=rows.filter(Boolean);
-      if(!rows.length){box.innerHTML='<div class="rc-note">No recent requests to show. Use the tracker above with your reference number.</div>';return;}
+      if(!rows.length){box.innerHTML='<div class="rc-note">'+esc(U('track_none_recent'))+'</div>';return;}
       box.innerHTML=rows.map(rcHistRow).join('');
     });
   };
@@ -8074,8 +8400,10 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     f.collection(w+'_tasks').add(task).then(function(tr){f.collection('requests').doc(r.id).update({taskId:tr.id}).catch(function(){});}).catch(function(){try{alert('Could not create the task.');}catch(e){}});
   };
   window.rcDelete=function(w,id){
-    if(!confirm('Delete this request? This cannot be undone.'))return;
-    var f=FS();if(f)f.collection('requests').doc(id).delete().catch(function(){});
+    uiConfirm({title:'Delete request',message:'The request and its details will be permanently deleted. This cannot be undone.',okLabel:'Delete permanently',danger:true}).then(function(ok){
+      if(!ok)return;
+      var f=FS();if(f)f.collection('requests').doc(id).delete().then(function(){uiToast('Request deleted');}).catch(function(){uiToast('Could not delete this request.');});
+    });
   };
   window.rcCopyLink=function(btn){
     var url=rcUrl();
@@ -8252,6 +8580,13 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       f.collection('requests').onSnapshot(function(s){
         reqs=s.docs.map(function(x){return Object.assign({id:x.id},x.data());});
         reqsLoaded=true;rcAllReqs=reqs;
+        try{
+          window.__rcCounts={
+            unread:reqs.filter(function(r){var st=r.status||'Submitted';return !r.readByAssignee&&st!=='Completed'&&st!=='Rejected';}).length,
+            waiting:reqs.filter(function(r){return r.status==='Awaiting Approval'||r.status==='Needs Clarification';}).length
+          };
+          window.dispatchEvent(new CustomEvent('uxp-rccounts'));
+        }catch(e){}
         renderQueue('dew');renderQueue('o');renderBadges();renderDashCard();
         rcCleanup();
       },function(e){console.error(e);});
@@ -8279,6 +8614,190 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
 })();
 </script>
 
+<style id="uxp-style">
+/* ===== UXP Priority 0: dialogs, toasts, today strip, collapse, wizard ===== */
+#uxp-modal{z-index:720;}
+.uxp-modal{max-width:430px;}
+.uxp-msg{font-size:13.5px;line-height:1.6;color:var(--text);}
+.uxp-modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:6px 22px 18px;}
+.uxp-modal-foot .btn{min-height:44px;min-width:100px;font-size:13.5px;}
+.uxp-btn-danger{background:#c2410c;color:#fff;border:none;}
+.uxp-btn-danger:hover{background:#9a3412;color:#fff;}
+.uxp-modal-foot .btn:focus-visible,.uxp-col-btn:focus-visible,.uxp-chip:focus-visible,.uxp-undo:focus-visible{outline:3px solid #6096d2;outline-offset:2px;}
+#uxp-toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:760;display:flex;flex-direction:column;gap:8px;align-items:center;width:max-content;max-width:94vw;}
+.uxp-toast{display:flex;align-items:center;gap:6px;background:#152238;color:#fff;border-radius:13px;padding:12px 18px;font-size:13.5px;font-weight:600;box-shadow:0 12px 34px -10px rgba(8,18,38,.55);animation:pop .18s ease;}
+html.dark .uxp-toast{background:#e8edf6;color:#14213c;}
+.uxp-toast.out{opacity:0;transition:opacity .3s;}
+.uxp-undo{background:transparent;border:none;color:#ffd056;font-weight:800;font-size:13.5px;cursor:pointer;padding:8px 12px;min-height:44px;font-family:inherit;border-radius:8px;}
+html.dark .uxp-undo{color:#b45309;}
+/* Today strip */
+#uxp-today-card{margin-bottom:14px;}
+.uxp-today-row{display:flex;flex-wrap:wrap;gap:9px;}
+.uxp-chip{flex:1;min-width:128px;min-height:64px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding:10px 14px;border-radius:13px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:inherit;text-align:left;transition:all .13s;}
+.uxp-chip:hover{transform:translateY(-1px);box-shadow:0 6px 16px -8px rgba(15,25,45,.25);}
+.uxp-chip-n{font-size:23px;font-weight:800;line-height:1.1;color:var(--text);}
+.uxp-chip-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.uxp-chip.bad{background:var(--danger-light,#fdecec);border-color:transparent;}
+.uxp-chip.bad .uxp-chip-n{color:#b91c1c;}
+.uxp-chip.warn{background:var(--amber-light,#fdf3e0);border-color:transparent;}
+.uxp-chip.warn .uxp-chip-n{color:#b45309;}
+.uxp-chip.info{background:var(--blue-light,#e8f0fb);border-color:transparent;}
+.uxp-chip.info .uxp-chip-n{color:#1d4ed8;}
+.uxp-chip.ok{background:var(--green-light,#e7f6ec);border-color:transparent;}
+.uxp-chip.ok .uxp-chip-n{color:#147c3b;}
+html.dark .uxp-chip.bad .uxp-chip-n{color:#f87171;}
+html.dark .uxp-chip.warn .uxp-chip-n{color:#fbbf24;}
+html.dark .uxp-chip.info .uxp-chip-n{color:#93b8e8;}
+html.dark .uxp-chip.ok .uxp-chip-n{color:#5fcf85;}
+.uxp-avail{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.uxp-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:7px 12px;border-radius:99px;border:1px solid var(--border);background:var(--surface);}
+.uxp-dot{width:8px;height:8px;border-radius:50%;background:#22a05a;flex-shrink:0;}
+.uxp-pill.away .uxp-dot{background:#d97706;}
+.uxp-pill.away{color:var(--muted);}
+/* collapsible overview cards */
+.uxp-col-btn{margin-left:auto;background:var(--gray-light);border:1px solid var(--border);border-radius:9px;width:32px;height:32px;min-width:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:all .13s;}
+.uxp-col-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+.uxp-col-btn i{transition:transform .18s;font-size:15px;}
+.ov-card.uxp-collapsed .uxp-col-btn i{transform:rotate(180deg);}
+.ov-card.uxp-collapsed>*:not(.ov-card-head){display:none!important;}
+.ov-card.uxp-collapsed{padding-bottom:10px;}
+/* request centre wizard */
+.rc-progress{margin:0 0 14px;}
+.rc-progress-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;}
+.rc-progress-label{font-size:12.5px;font-weight:800;color:#fff;}
+body:not(.request-mode) .rc-progress-label{color:var(--text);}
+.rc-progress-count{font-size:12px;font-weight:700;color:rgba(255,255,255,.75);}
+.rc-progress-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden;}
+.rc-progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#e6a417,#ffd056);transition:width .25s ease;}
+.rc-wiz-nav{display:flex;justify-content:space-between;gap:10px;margin-top:4px;}
+.rc-wiz-nav .btn{min-height:48px;min-width:120px;font-size:14px;font-weight:700;}
+.rc-wiz-back{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;}
+.rc-wiz-back:hover{background:#fff;color:#003057;}
+.rc-sec-hint{font-size:12.5px;color:var(--muted);line-height:1.55;background:var(--gray-light);border-radius:9px;padding:9px 12px;margin:-2px 0 13px;display:flex;gap:8px;align-items:flex-start;}
+.rc-sec-hint i{flex-shrink:0;margin-top:1px;color:#b45309;}
+.rc-lead{font-size:12.5px;font-weight:600;color:#ffffff;background:rgba(230,164,23,.25);border:1px solid rgba(255,208,86,.5);border-radius:10px;padding:10px 13px;margin-bottom:13px;display:flex;gap:8px;align-items:flex-start;}
+.rc-lead i{color:#ffd056;flex-shrink:0;margin-top:1px;}
+.rc-review-sec{border:1px solid var(--border);border-radius:11px;padding:11px 13px;margin-bottom:9px;}
+.rc-review-sec-h{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:7px;}
+.rc-review-sec-h .rc-review-edit{margin-left:auto;background:none;border:none;color:#1d4ed8;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;padding:6px 8px;min-height:36px;}
+html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
+.rc-review-item{display:flex;gap:10px;font-size:13px;padding:3px 0;line-height:1.5;}
+.rc-review-item b{min-width:150px;max-width:190px;color:var(--muted);font-weight:600;flex-shrink:0;}
+.rc-review-item span{word-break:break-word;}
+.rc-copy-btn{display:inline-flex;align-items:center;gap:7px;min-height:46px;padding:0 18px;border-radius:11px;border:1.5px dashed #b8860b;background:rgba(230,164,23,.09);color:#8a6d1a;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;transition:all .13s;}
+.rc-copy-btn:hover{background:rgba(230,164,23,.2);}
+.rc-copy-btn.done{border-style:solid;background:var(--green-light,#e7f6ec);color:#147c3b;border-color:#147c3b;}
+.rc-lang{position:absolute;top:14px;right:14px;display:inline-flex;border:1px solid rgba(255,255,255,.35);border-radius:99px;overflow:hidden;background:rgba(255,255,255,.1);z-index:5;}
+.rc-lang button{background:transparent;border:none;color:rgba(255,255,255,.75);font-weight:800;font-size:12px;padding:9px 14px;cursor:pointer;font-family:inherit;min-height:38px;}
+.rc-lang button.on{background:#ffd056;color:#003057;}
+.rc-hero{position:relative;}
+@media(max-width:640px){
+  .uxp-chip{min-width:104px;}
+  .uxp-col-btn{width:40px;height:40px;min-width:40px;}
+  .rc-wiz-nav .btn{flex:1;min-width:0;}
+  .uxp-modal-foot .btn{flex:1;}
+  .rc-review-item{flex-direction:column;gap:1px;}
+  .rc-review-item b{min-width:0;max-width:none;}
+}
+</style>
+<script id="uxp-script">
+/* ===== UXP Priority 0: Today strip + collapsible overview cards ===== */
+(function(){
+  if(window.__uxpInit)return; window.__uxpInit=true;
+  function uxpToday(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
+  function plusDays(d){var n=new Date();n.setDate(n.getDate()+d);return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
+  function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
+  function members(){try{return MEMBER_ORDER.slice();}catch(e){return ['boss','dew','o','junior'];}}
+  function nameOf(w){try{return tabLabel(w);}catch(e){return w;}}
+  function activeTasks(w){try{return (tasksOf(w)||[]).filter(function(t){return t.status!=='done'&&t.status!=='canceled';});}catch(e){return [];}}
+  function awayInfo(w){
+    var today=uxpToday();
+    try{ if((sickOf(w)||[]).some(function(r){return r.date===today;}))return 'sick'; }catch(e){}
+    try{ if((lieuOf(w)||[]).some(function(r){return (r.type==='used'||r.used===true)&&r.date===today;}))return 'toil'; }catch(e){}
+    return null;
+  }
+  function scrollToEl(sel){
+    var el=document.querySelector(sel);
+    if(el){ try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){el.scrollIntoView();} }
+  }
+  window.uxpGoto=function(sel){ scrollToEl(sel); };
+  function render(){
+    var host=document.getElementById('uxp-today'); if(!host)return;
+    var today=uxpToday(), limit=plusDays(7);
+    var overdue=0, week=0;
+    members().forEach(function(w){
+      activeTasks(w).forEach(function(t){
+        if(!t.dueDate)return;
+        if(t.dueDate<today)overdue++;
+        else if(t.dueDate<=limit)week++;
+      });
+    });
+    var rc=window.__rcCounts||{unread:0,waiting:0};
+    var pills=members().map(function(w){
+      var a=awayInfo(w), nm=nameOf(w); if(!nm)return '';
+      return '<span class="uxp-pill'+(a?' away':'')+'"><span class="uxp-dot"></span>'+esc(nm)+(a?' &middot; '+(a==='sick'?'Sick':'TOIL'):'')+'</span>';
+    }).join('');
+    host.innerHTML=''
+      +'<div class="ov-card" id="uxp-today-card">'
+      +'<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-sun-high"></i> Today at a Glance</div></div>'
+      +'<div class="uxp-today-row">'
+      +'<button type="button" class="uxp-chip '+(overdue?'bad':'ok')+'" onclick="uxpGoto(\'#ov-deadlines\')" aria-label="'+overdue+' overdue tasks. Go to deadlines."><span class="uxp-chip-n">'+overdue+'</span><span class="uxp-chip-l">Overdue</span></button>'
+      +'<button type="button" class="uxp-chip '+(week?'warn':'ok')+'" onclick="uxpGoto(\'#ov-deadlines\')" aria-label="'+week+' tasks due within 7 days. Go to deadlines."><span class="uxp-chip-n">'+week+'</span><span class="uxp-chip-l">Due in 7 days</span></button>'
+      +'<button type="button" class="uxp-chip '+(rc.unread?'info':'ok')+'" onclick="uxpGoto(\'.ov-col-side\')" aria-label="'+(rc.unread||0)+' new requests. Go to requests."><span class="uxp-chip-n">'+(rc.unread||0)+'</span><span class="uxp-chip-l">New requests</span></button>'
+      +'<button type="button" class="uxp-chip '+(rc.waiting?'warn':'ok')+'" onclick="uxpGoto(\'.ov-col-side\')" aria-label="'+(rc.waiting||0)+' requests waiting for approval or clarification."><span class="uxp-chip-n">'+(rc.waiting||0)+'</span><span class="uxp-chip-l">Waiting / clarify</span></button>'
+      +'</div>'
+      +'<div class="uxp-avail" role="list" aria-label="Team availability today">'+pills+'</div>'
+      +'</div>';
+  }
+  /* collapsible cards */
+  var COLKEY='uxp_collapsed';
+  function colState(){try{return JSON.parse(localStorage.getItem(COLKEY)||'{}');}catch(e){return {};}}
+  function slug(t){return (t||'card').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,42);}
+  function decorate(){
+    var panel=document.getElementById('panel-overview'); if(!panel)return;
+    panel.querySelectorAll('.ov-card').forEach(function(card){
+      if(card.id==='uxp-today-card')return;
+      var head=card.querySelector(':scope>.ov-card-head'); if(!head)return;
+      if(head.querySelector('.uxp-col-btn'))return;
+      var titleEl=head.querySelector('.ov-card-title');
+      var key=slug(titleEl?titleEl.textContent:card.id);
+      var b=document.createElement('button');
+      b.type='button'; b.className='uxp-col-btn';
+      b.setAttribute('aria-label','Collapse or expand this card');
+      b.innerHTML='<i class="ti ti-chevron-up"></i>';
+      b.onclick=function(ev){
+        ev.stopPropagation();
+        var st=colState();
+        var v=!card.classList.contains('uxp-collapsed');
+        card.classList.toggle('uxp-collapsed',v);
+        st[key]=v?1:0;
+        try{localStorage.setItem(COLKEY,JSON.stringify(st));}catch(e){}
+        b.setAttribute('aria-expanded',v?'false':'true');
+      };
+      head.appendChild(b);
+      if(colState()[key]){card.classList.add('uxp-collapsed');b.setAttribute('aria-expanded','false');}
+      else b.setAttribute('aria-expanded','true');
+    });
+  }
+  var pend=false;
+  function tick(){ if(pend)return; pend=true; requestAnimationFrame(function(){ pend=false; decorate(); }); }
+  function boot(){
+    render(); decorate();
+    try{
+      var mo=new MutationObserver(tick);
+      mo.observe(document.body,{childList:true,subtree:true});
+    }catch(e){}
+    window.addEventListener('uxp-rccounts',render);
+    setInterval(render,30000);
+    if(typeof window.renderOverview==='function'){
+      var _ro=window.renderOverview;
+      window.renderOverview=function(){ var r=_ro.apply(this,arguments); try{render();}catch(e){} return r; };
+    }
+  }
+  function start(){ whenAuthed(boot); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
 </body>
 
 </html>
