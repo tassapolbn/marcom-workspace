@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HeadStart Marcom Workspace</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#003057">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
@@ -818,6 +823,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     </div>
     <div class="header-right">
       <button class="cmdk-trigger" onclick="openCmdk()" title="Search and commands (Ctrl K)"><i class="ti ti-search"></i><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="dm-toggle" id="uxp-bell" onclick="uxpBellToggle()" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" style="position:relative;"><i class="ti ti-bell"></i><span class="uxp-bell-badge" id="uxp-bell-badge" style="display:none;">0</span></button>
       <button class="dm-toggle" id="dm-btn" onclick="toggleDark()" title="Toggle dark mode"><i class="ti ti-moon" id="dm-icon"></i></button>
       <button class="dm-toggle" id="settings-btn" onclick="openSettings()" title="Team settings"><i class="ti ti-settings"></i></button>
       <div class="sync-pill"><span class="sdot" id="sdot"></span><span id="sync-text">Connecting...</span></div>
@@ -2372,6 +2378,15 @@ function taskColOver(e){e.preventDefault();try{e.dataTransfer.dropEffect='move';
 function taskColLeave(e){var c=e.currentTarget;if(c&&c.classList&&!c.contains(e.relatedTarget))c.classList.remove('kb-over');}
 function taskColDrop(e,who,status){e.preventDefault();var c=e.currentTarget;if(c&&c.classList)c.classList.remove('kb-over');var d=_taskDrag;if(!d.id||d.who!==who)return;var t=(tasksOf(who)).find(function(x){return x.id===d.id;});if(t&&(t.status||'pending')===status)return;setTaskStatus(who,d.id,status);}
 function taskCardClick(e,who,id){ if(e.target&&e.target.closest&&e.target.closest('button,select,a,input,label,.tcard-sel'))return; openEdit(who,id); }
+window.__tcOpen={};
+window.tcToggleDetails=function(btn,key){
+  var det=btn.nextElementSibling;
+  var open=!(det&&det.classList.contains('open'));
+  if(det)det.classList.toggle('open',open);
+  btn.classList.toggle('open',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  window.__tcOpen[key]=open;
+};
 function kbFilterPass(t,filter){
   if(filter==='soon')return isSoon(t);
   if(filter==='done')return t.status==='done';
@@ -2426,6 +2441,9 @@ function taskCardHTML(task,who){
   const linksHtml=(task.links&&task.links.length)?
     '<div class="task-links">'+task.links.filter(l=>l.url).map(l=>`<a class="task-link" draggable="false" href="${escHtml(safeUrl(l.url))}" target="_blank" rel="noopener"><i class="ti ti-link" style="font-size:11px;"></i>${escHtml(l.title||l.url)}</a>`).join('')+'</div>':'';
   const roleHtml=who==='o'?oCardExtra(task):(who==='dew'?dewCardExtra(task):'');
+  const descHtml=task.description?'<div class="task-desc">'+escHtml(task.description)+'</div>':'';
+  const detHtml=descHtml+linksHtml; /* role controls stay visible on the card */
+  const detOpen=!!(window.__tcOpen&&window.__tcOpen[who+'_'+task.id]);
   return '<div class="task-card tc-'+status+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-top"><div class="task-badges">'
       +statusIconHTML(status)
@@ -2439,11 +2457,12 @@ function taskCardHTML(task,who){
       +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete"><i class="ti ti-trash"></i></button>'
     +'</div></div>'
     +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
-    +(task.description?'<div class="task-desc" title="'+escHtml(task.description)+'">'+escHtml(task.description)+'</div>':'')
     +'<div class="task-meta">'+dueLabel+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
       +prBadge
-    +'</div>'+roleHtml+linksHtml+'</div>';
+    +'</div>'+roleHtml
+    +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button><div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
+    +'</div>';
 }
 function kanbanHTML(tasks,who,filter){
   return '<div class="kanban-board">'+KB_STATUS_ORDER.map(function(S){
@@ -3998,16 +4017,16 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'<div class="ov-card ov-focus-card" id="ov-focus" style="display:none;"></div>'
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
+   +    '<div class="ov-main-list-grid">'
+   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div></div><div id="ov-deadlines"></div></div>'
+   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown Hub</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
+   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
+   +    '</div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button class="cal-arrow" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title"></span><button class="cal-arrow" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
    +      '<div class="ov-cal-filters" id="ov-cal-filters"></div>'
    +      '<div class="cal-grid ov-cal-grid" id="ov-cal-grid"></div>'
    +      '<div class="ov-cal-legend" id="ov-cal-legend"></div>'
    +      '<div class="ov-cal-detail" id="ov-cal-detail" style="display:none;"></div>'
-   +    '</div>'
-   +    '<div class="ov-main-list-grid">'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div></div><div id="ov-deadlines"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown Hub</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
    +    '</div>'
    +  '</div>'
    +  '<div class="ov-col-side">'
@@ -5504,7 +5523,10 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
     var order=['open','in_progress','done']; var idx=order.indexOf(m.status||'open'); var next=order[(idx+1)%order.length];
     ref.doc(id).update({ status:next }).catch(function(e){ console.error(e); alert('Could not update status.'); });
   };
-  function badge(st){ st=st||'open'; if(st==='done')return '<span class="trq-status s-done">Done</span>'; if(st==='in_progress')return '<span class="trq-status s-progress">In progress</span>'; return '<span class="trq-status s-open">Open</span>'; }
+  function badge(st){ st=st||'open';
+    if(st==='done')return '<span class="trq-status s-done"><i class="ti ti-circle-check"></i> Done</span>';
+    if(st==='in_progress')return '<span class="trq-status s-progress"><i class="ti ti-player-play"></i> In progress</span>';
+    return '<span class="trq-status s-open"><i class="ti ti-circle"></i> New</span>'; }
   function render(){ var box=document.getElementById('trq-list'); if(!box)return;
     if(!items.length){ box.innerHTML='<div class="trq-empty">No requests yet. Submit the first one above.</div>'; return; }
     box.innerHTML=items.map(function(m){
@@ -8581,9 +8603,14 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
         reqs=s.docs.map(function(x){return Object.assign({id:x.id},x.data());});
         reqsLoaded=true;rcAllReqs=reqs;
         try{
+          var __un=reqs.filter(function(r){var st=r.status||'Submitted';return !r.readByAssignee&&st!=='Completed'&&st!=='Rejected';});
+          var __wa=reqs.filter(function(r){return r.status==='Awaiting Approval'||r.status==='Needs Clarification';});
+          function __mini(r){return {ref:r.refNo||'',ev:r.eventName||'Request',ws:r.assignedTo||'',st:r.status||'Submitted'};}
           window.__rcCounts={
-            unread:reqs.filter(function(r){var st=r.status||'Submitted';return !r.readByAssignee&&st!=='Completed'&&st!=='Rejected';}).length,
-            waiting:reqs.filter(function(r){return r.status==='Awaiting Approval'||r.status==='Needs Clarification';}).length
+            unread:__un.length,
+            waiting:__wa.length,
+            unreadList:__un.slice(0,6).map(__mini),
+            waitingList:__wa.slice(0,6).map(__mini)
           };
           window.dispatchEvent(new CustomEvent('uxp-rccounts'));
         }catch(e){}
@@ -8793,6 +8820,181 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
       var _ro=window.renderOverview;
       window.renderOverview=function(){ var r=_ro.apply(this,arguments); try{render();}catch(e){} return r; };
     }
+  }
+  function start(){ whenAuthed(boot); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
+<style id="uxp-style2">
+/* ===== UXP P1-P3: cards, statuses, bell, readability, touch ===== */
+.tc-more{display:inline-flex;align-items:center;gap:5px;background:var(--gray-light);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11.5px;font-weight:700;padding:5px 10px;margin-top:8px;cursor:pointer;font-family:inherit;min-height:30px;}
+.tc-more:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+.tc-more i{transition:transform .16s;font-size:13px;}
+.tc-more.open i{transform:rotate(180deg);}
+.tc-details{display:none;}
+.tc-details.open{display:block;}
+.tc-details .task-desc{margin-top:8px;}
+/* one status language: "new" is neutral, "active" is blue everywhere */
+.trq-status{font-size:11px;display:inline-flex;align-items:center;gap:4px;}
+.trq-status i{font-size:11px;}
+.trq-status.s-open{background:var(--gray-light);color:var(--st-pending,var(--gray));}
+.trq-status.s-progress{background:var(--blue-light);color:var(--st-progress);}
+/* notification bell */
+.uxp-bell-badge{position:absolute;top:2px;right:2px;min-width:17px;height:17px;border-radius:99px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;}
+#uxp-bell-panel{position:fixed;top:64px;right:14px;width:340px;max-width:94vw;max-height:min(480px,72vh);overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 22px 55px -18px rgba(10,20,40,.45);z-index:640;display:none;padding:6px 0 8px;}
+#uxp-bell-panel.open{display:block;animation:pop .16s ease;}
+.uxp-nt-h{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:10px 16px 4px;}
+.uxp-nt{display:flex;align-items:flex-start;gap:10px;width:100%;background:none;border:none;text-align:left;padding:9px 16px;cursor:pointer;font-family:inherit;min-height:44px;}
+.uxp-nt:hover{background:var(--gray-light);}
+.uxp-nt i{font-size:15px;margin-top:1px;flex-shrink:0;}
+.uxp-nt.bad i{color:#dc2626;}
+.uxp-nt.warn i{color:#b45309;}
+.uxp-nt.info i{color:#1d4ed8;}
+.uxp-nt-t{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.35;}
+.uxp-nt-s{font-size:11.5px;color:var(--muted);margin-top:1px;}
+.uxp-nt-empty{padding:22px 16px;text-align:center;color:var(--muted);font-size:12.5px;}
+.uxp-nt-empty i{font-size:22px;display:block;margin-bottom:6px;opacity:.6;}
+/* readability: raise frequently read text to 12.5px minimum */
+.task-desc,.rq-dl-item,.rc-note,.trq-text,.tc-b,.ov-sr-label,.uxp-msg{font-size:12.5px!important;}
+.form-label{font-size:12.5px;}
+.task-topic{font-size:13.5px;}
+/* mobile touch targets and spacing */
+@media(max-width:640px){
+  .icon-btn{min-width:40px;min-height:40px;}
+  .task-check{min-width:40px;min-height:40px;}
+  .tcard-sel{min-height:38px;}
+  .tc-more{min-height:38px;}
+  .dm-toggle{min-width:42px;min-height:42px;}
+  #uxp-bell-panel{right:6px;left:6px;width:auto;}
+}
+button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #6096d2;outline-offset:1px;}
+</style>
+<script id="uxp-script2">
+/* ===== UXP P1-P3: notification bell, page titles, aria + Esc helpers ===== */
+(function(){
+  if(window.__uxp2Init)return; window.__uxp2Init=true;
+  function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
+  function tdy(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
+  function members(){try{return MEMBER_ORDER.slice();}catch(e){return ['boss','dew','o','junior'];}}
+  function nameOf(w){try{return tabLabel(w);}catch(e){return w;}}
+  function fdt(d){try{return fmtDate(d);}catch(e){return d||'';}}
+  function activeTasks(w){try{return (tasksOf(w)||[]).filter(function(t){return t.status!=='done'&&t.status!=='canceled';});}catch(e){return [];}}
+  function scopeWs(){
+    var c=window.__cur||{};
+    if(c.role==='admin')return members();
+    return c.workspace?[c.workspace]:[];
+  }
+  function reqVisible(ws){
+    var c=window.__cur||{};
+    if(c.role==='admin')return true;
+    return c.workspace===ws;
+  }
+  function items(){
+    var out=[],today=tdy();
+    var rc=window.__rcCounts||{};
+    (rc.unreadList||[]).forEach(function(r){
+      if(!reqVisible(r.ws))return;
+      out.push({g:'New requests',cls:'info',ic:'ti-inbox',t:r.ev,s:(r.ref?r.ref+' · ':'')+'for '+nameOf(r.ws),go:r.ws});
+    });
+    (rc.waitingList||[]).forEach(function(r){
+      if(!reqVisible(r.ws))return;
+      out.push({g:'Waiting / needs clarification',cls:'warn',ic:'ti-hourglass-high',t:r.ev,s:(r.ref?r.ref+' · ':'')+r.st,go:r.ws});
+    });
+    scopeWs().forEach(function(w){
+      activeTasks(w).forEach(function(t){
+        if(!t.dueDate)return;
+        var topic=t.topic||t.title||'Task';
+        if(t.dueDate<today)out.push({g:'Overdue',cls:'bad',ic:'ti-alert-triangle',t:topic,s:nameOf(w)+' · was due '+fdt(t.dueDate),go:w});
+        else if(t.dueDate===today)out.push({g:'Due today',cls:'warn',ic:'ti-calendar-due',t:topic,s:nameOf(w),go:w});
+      });
+    });
+    return out;
+  }
+  function renderPanel(){
+    var p=document.getElementById('uxp-bell-panel');
+    if(!p){
+      p=document.createElement('div');
+      p.id='uxp-bell-panel';
+      p.setAttribute('role','region');
+      p.setAttribute('aria-label','Notifications');
+      document.body.appendChild(p);
+    }
+    var list=items();
+    if(!list.length){
+      p.innerHTML='<div class="uxp-nt-empty"><i class="ti ti-bell-check"></i>All clear. Nothing needs your attention right now.</div>';
+      return p;
+    }
+    var groups=['Overdue','Due today','New requests','Waiting / needs clarification'];
+    var html='';
+    groups.forEach(function(g){
+      var gi=list.filter(function(x){return x.g===g;}).slice(0,6);
+      if(!gi.length)return;
+      html+='<div class="uxp-nt-h">'+esc(g)+'</div>'+gi.map(function(x){
+        return '<button type="button" class="uxp-nt '+x.cls+'" onclick="uxpBellGo(\''+esc(x.go)+'\')"><i class="ti '+x.ic+'"></i><span><span class="uxp-nt-t">'+esc(x.t)+'</span><br><span class="uxp-nt-s">'+esc(x.s)+'</span></span></button>';
+      }).join('');
+    });
+    p.innerHTML=html;
+    return p;
+  }
+  function badge(){
+    var b=document.getElementById('uxp-bell-badge');
+    if(!b)return;
+    var n=items().length;
+    b.style.display=n?'inline-flex':'none';
+    b.textContent=n>99?'99+':n;
+  }
+  window.uxpBellGo=function(w){
+    uxpBellToggle(true);
+    try{ if(typeof switchTab==='function')switchTab(w); }catch(e){}
+  };
+  window.uxpBellToggle=function(forceClose){
+    var p=renderPanel();
+    var btn=document.getElementById('uxp-bell');
+    var open=forceClose===true?false:!p.classList.contains('open');
+    p.classList.toggle('open',open);
+    if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+  };
+  document.addEventListener('mousedown',function(e){
+    var p=document.getElementById('uxp-bell-panel');
+    if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!(e.target.closest&&e.target.closest('#uxp-bell')))uxpBellToggle(true);
+  });
+  /* page titles per tab */
+  function uxpTitle(t){
+    if(window.__rcMode)return;
+    var label=t==='overview'?'Overview':(function(){try{return tabLabel(t);}catch(e){return '';}})();
+    document.title=(label?label+' · ':'')+'MARCOM Workspace';
+  }
+  /* Esc closes any open legacy modal; aria labels from titles */
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    var p=document.getElementById('uxp-bell-panel');
+    if(p&&p.classList.contains('open')){uxpBellToggle(true);return;}
+    var um=document.getElementById('uxp-modal');
+    if(um&&um.classList.contains('open'))return; /* handles its own Esc */
+    var open=document.querySelectorAll('.modal-overlay.open');
+    if(!open.length)return;
+    var m=open[open.length-1];
+    var x=m.querySelector('.modal-close');
+    if(x)x.click(); else m.classList.remove('open');
+  });
+  function ariaPass(){
+    document.querySelectorAll('button[title]:not([aria-label]),a[title]:not([aria-label])').forEach(function(el){
+      el.setAttribute('aria-label',el.getAttribute('title'));
+    });
+  }
+  function boot(){
+    badge();
+    ariaPass();
+    setInterval(function(){badge();ariaPass();},20000);
+    window.addEventListener('uxp-rccounts',badge);
+    if(typeof window.switchTab==='function'){
+      var _st=window.switchTab;
+      window.switchTab=function(t){var r=_st.apply(this,arguments);try{uxpTitle(t);}catch(e){}return r;};
+    }
+    try{
+      var active=((document.body.className.match(/theme-(overview|boss|dew|o|junior)/)||[])[1])||'overview';
+      uxpTitle(active);
+    }catch(e){}
   }
   function start(){ whenAuthed(boot); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
