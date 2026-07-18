@@ -9282,6 +9282,36 @@ html.dark .uxp-mi i{color:#8fb4dc;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
+<style id="uxp-style5">
+/* ===== Readability fix: salary strip on the light page background ===== */
+.salary-dock .salary-strip{background:linear-gradient(135deg,rgba(230,164,23,.16),rgba(230,164,23,.05));border-color:rgba(184,134,11,.38);}
+.salary-dock .salary-days-big{color:#8a5b00;}
+.salary-dock .salary-days-label{color:#7a5c1e;}
+.salary-dock .sal-cell-label{color:#7a5c1e;}
+.salary-dock .sal-cell-value{color:var(--text);}
+.salary-dock .sal-cell-sub{color:var(--muted);}
+.salary-dock .salary-info-text{color:var(--text);}
+.salary-dock .salary-info-sub{color:var(--muted);}
+.salary-dock .salary-divider{background:rgba(20,30,50,.16);}
+.salary-dock .sal-ring-bg{stroke:rgba(20,30,50,.12);}
+.salary-dock .sal-bar{background:rgba(20,30,50,.14);}
+.salary-dock .salary-badge.sb-reg{background:var(--green-light,#e7f6ec);color:#147c3b;}
+.salary-dock .salary-badge.sb-soon{background:var(--amber-light,#fdf3e0);color:#b45309;}
+.salary-dock .salary-badge.sb-pay{background:var(--gold);color:#003057;}
+/* dark mode: the page behind it is dark, so the original light text returns */
+html.dark .salary-dock .salary-strip{border-color:rgba(230,164,23,.35);}
+html.dark .salary-dock .salary-days-big{color:#ffd569;}
+html.dark .salary-dock .salary-days-label,
+html.dark .salary-dock .sal-cell-label{color:rgba(255,255,255,.66);}
+html.dark .salary-dock .sal-cell-value,
+html.dark .salary-dock .salary-info-text{color:#fff;}
+html.dark .salary-dock .sal-cell-sub,
+html.dark .salary-dock .salary-info-sub{color:rgba(255,255,255,.6);}
+html.dark .salary-dock .salary-divider{background:rgba(255,255,255,.15);}
+html.dark .salary-dock .sal-ring-bg{stroke:rgba(255,255,255,.15);}
+html.dark .salary-dock .sal-bar{background:rgba(255,255,255,.16);}
+html.dark .salary-dock .salary-badge.sb-reg{background:rgba(255,255,255,.14);color:#d9f2e2;}
+</style>
 </body>
 
 </html>
