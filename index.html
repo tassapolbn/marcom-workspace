@@ -820,13 +820,16 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="app-logo">
       <div class="logo-icon"><i class="ti ti-briefcase" style="font-size:16px;"></i></div>
       <div><div class="app-name">HeadStart Marcom Workspace</div><div class="app-tagline">Marketing &amp; Communications Department</div></div>
+      <span class="hdr-context" id="hdr-context" style="display:none;"></span>
     </div>
     <div class="header-right">
       <button class="cmdk-trigger" onclick="openCmdk()" title="Search and commands (Ctrl K)"><i class="ti ti-search"></i><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="dm-toggle" id="hdr-add" onclick="uxpQuickAdd()" title="New task" aria-label="New task"><i class="ti ti-plus"></i></button>
       <button class="dm-toggle" id="uxp-bell" onclick="uxpBellToggle()" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" style="position:relative;"><i class="ti ti-bell"></i><span class="uxp-bell-badge" id="uxp-bell-badge" style="display:none;">0</span></button>
       <button class="dm-toggle" id="dm-btn" onclick="toggleDark()" title="Toggle dark mode"><i class="ti ti-moon" id="dm-icon"></i></button>
       <button class="dm-toggle" id="settings-btn" onclick="openSettings()" title="Team settings"><i class="ti ti-settings"></i></button>
       <div class="sync-pill"><span class="sdot" id="sdot"></span><span id="sync-text">Connecting...</span></div>
+      <button class="dm-toggle" id="hdr-more" onclick="uxpMoreToggle()" title="More options" aria-label="More options" aria-haspopup="true" aria-expanded="false"><i class="ti ti-dots"></i></button>
     </div>
   </div>
   <div class="salary-strip" id="salary-card">
@@ -9104,6 +9107,179 @@ html.dark .uxp-rail-btn{color:#8fb4dc;}
   }
   function start(){ whenAuthed(boot); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
+<style id="uxp-style4">
+/* ===== P0 Header: compact, reliable sticky, responsive ===== */
+html{scroll-padding-top:118px;}
+.app-header{z-index:300;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-top:env(safe-area-inset-top);}
+.header-top{transition:padding .22s ease;}
+.app-logo .logo-icon{transition:transform .22s ease;}
+.app-tagline{transition:opacity .18s ease;}
+body.hdr-scrolled .header-top{padding:8px 18px 7px;}
+body.hdr-scrolled .app-tagline{display:none;}
+body.hdr-scrolled .app-logo .logo-icon{transform:scale(.92);}
+body.hdr-scrolled .app-header{box-shadow:0 10px 34px -12px rgba(10,22,40,.62);}
+.hdr-context{display:inline-flex;align-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.3px;border-radius:99px;padding:5px 12px;margin-left:10px;white-space:nowrap;}
+/* salary strip lives BELOW the sticky header now, inside a collapsible dock */
+.salary-dock{max-width:min(98vw,2560px);margin:10px auto 0;padding:0 14px;}
+.salary-dock .salary-strip{margin:0 auto;}
+.uxp-sal-bar{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 8px;}
+.uxp-sal-toggle{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:99px;color:var(--muted);font-size:11.5px;font-weight:700;padding:7px 14px;min-height:36px;cursor:pointer;font-family:inherit;box-shadow:var(--shadow);}
+.uxp-sal-toggle:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+body.uxp-sal-collapsed .salary-dock .salary-strip{display:none;}
+/* header overflow menu */
+#hdr-more{display:none;}
+#uxp-more-panel{position:fixed;top:60px;right:10px;width:230px;max-width:92vw;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 22px 55px -18px rgba(10,20,40,.45);z-index:641;display:none;padding:6px;}
+#uxp-more-panel.open{display:block;animation:pop .16s ease;}
+.uxp-mi{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;text-align:left;padding:11px 12px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);min-height:44px;}
+.uxp-mi:hover{background:var(--gray-light);}
+.uxp-mi i{font-size:16px;color:var(--navy);width:20px;text-align:center;}
+html.dark .uxp-mi i{color:#8fb4dc;}
+.uxp-mi-sync{font-size:11.5px;color:var(--muted);padding:8px 12px 4px;display:flex;align-items:center;gap:7px;}
+/* responsive header */
+@media(max-width:900px){
+  .cmdk-trigger{display:none;}
+  #hdr-more{display:inline-flex;}
+  .sync-pill #sync-text{display:none;}
+  .sync-pill{padding:6px;}
+  .app-tagline{display:none;}
+  .header-top{padding:9px 12px 8px;}
+  .tab-nav{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .tab-nav::-webkit-scrollbar{display:none;}
+  .tab-btn{flex:0 0 auto;padding:12px 15px 13px;min-height:46px;font-size:13px;}
+  html{scroll-padding-top:104px;}
+}
+@media(max-width:560px){
+  #settings-btn,#hdr-add{display:none;}
+  .hdr-context{display:none!important;}
+  .auth-banner .auth-banner-em{display:none;}
+  .app-name{font-size:14px;}
+  .header-right{gap:6px;}
+}
+/* motion respect */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
+}
+</style>
+<script id="uxp-script4">
+/* ===== P0 Header behaviour: salary dock, scrolled state, overflow menu, quick add, context ===== */
+(function(){
+  if(window.__uxpHdrInit||window.__rcMode)return; window.__uxpHdrInit=true;
+  function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
+
+  /* move the salary strip out of the sticky header into a collapsible dock */
+  function dockSalary(){
+    var sal=document.getElementById('salary-card');
+    var hdr=document.querySelector('.app-header');
+    if(!sal||!hdr||document.getElementById('uxp-salary-dock'))return;
+    var dock=document.createElement('div');
+    dock.id='uxp-salary-dock'; dock.className='salary-dock';
+    var bar=document.createElement('div'); bar.className='uxp-sal-bar';
+    var b=document.createElement('button');
+    b.type='button'; b.className='uxp-sal-toggle'; b.id='uxp-sal-toggle';
+    b.onclick=function(){
+      var v=!document.body.classList.contains('uxp-sal-collapsed');
+      document.body.classList.toggle('uxp-sal-collapsed',v);
+      try{localStorage.setItem('uxp_sal',v?'1':'0');}catch(e){}
+      paint();
+    };
+    bar.appendChild(b);
+    dock.appendChild(bar);
+    hdr.insertAdjacentElement('afterend',dock);
+    dock.appendChild(sal);
+    function paint(){
+      var c=document.body.classList.contains('uxp-sal-collapsed');
+      var days=(document.getElementById('sal-days')||{}).textContent||'--';
+      b.setAttribute('aria-expanded',c?'false':'true');
+      b.innerHTML=c
+        ?'<i class="ti ti-cash-banknote"></i> Salary period · '+esc(days)+' days left <i class="ti ti-chevron-down"></i>'
+        :'<i class="ti ti-chevron-up"></i> Hide salary period';
+    }
+    try{ if(localStorage.getItem('uxp_sal')==='1')document.body.classList.add('uxp-sal-collapsed'); }catch(e){}
+    paint();
+    setInterval(paint,60000);
+  }
+
+  /* condensed header after scrolling, rAF-throttled */
+  var tick=false;
+  function onScroll(){
+    if(tick)return; tick=true;
+    requestAnimationFrame(function(){
+      tick=false;
+      document.body.classList.toggle('hdr-scrolled',(window.scrollY||0)>10);
+    });
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+
+  /* quick add: opens the task form for the board you are on (or your own board) */
+  window.uxpQuickAdd=function(){
+    var m=(document.body.className.match(/theme-(boss|dew|o|junior)/)||[])[1];
+    var c=window.__cur||{};
+    var w=m||c.workspace||'boss';
+    try{ if(typeof MEMBERS==='object'&&!MEMBERS[w])w=c.workspace||'boss'; }catch(e){}
+    try{ openAdd(w); }catch(e){}
+    uxpMoreToggle(true);
+  };
+
+  /* overflow menu for small screens */
+  function morePanel(){
+    var p=document.getElementById('uxp-more-panel');
+    if(!p){
+      p=document.createElement('div');
+      p.id='uxp-more-panel';
+      p.setAttribute('role','menu');
+      p.setAttribute('aria-label','More options');
+      document.body.appendChild(p);
+    }
+    var admin=(window.__cur||{}).role==='admin';
+    var syncTxt=(document.getElementById('sync-text')||{}).textContent||'';
+    p.innerHTML=''
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search (Ctrl K)</button>'
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpQuickAdd()"><i class="ti ti-plus"></i> New task</button>'
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-moon"></i> Light / dark mode</button>'
+      +(admin?'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openSettings()"><i class="ti ti-settings"></i> Team settings</button>':'')
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);authSignOut()"><i class="ti ti-logout"></i> Sign out</button>'
+      +'<div class="uxp-mi-sync"><span class="sdot"></span>'+esc(syncTxt)+'</div>';
+    return p;
+  }
+  window.uxpMoreToggle=function(forceClose){
+    var p=morePanel();
+    var btn=document.getElementById('hdr-more');
+    var open=forceClose===true?false:!p.classList.contains('open');
+    p.classList.toggle('open',open);
+    if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+  };
+  document.addEventListener('mousedown',function(e){
+    var p=document.getElementById('uxp-more-panel');
+    if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!(e.target.closest&&e.target.closest('#hdr-more')))uxpMoreToggle(true);
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      var p=document.getElementById('uxp-more-panel');
+      if(p&&p.classList.contains('open'))uxpMoreToggle(true);
+    }
+  });
+
+  /* workspace context pill beside the logo */
+  function setContext(t){
+    var el=document.getElementById('hdr-context'); if(!el)return;
+    var label=t==='overview'?'Overview':(function(){try{return tabLabel(t);}catch(e){return '';}})();
+    if(label){el.textContent=label;el.style.display='inline-flex';}
+  }
+  function boot(){
+    dockSalary();
+    onScroll();
+    if(typeof window.switchTab==='function'){
+      var _st=window.switchTab;
+      window.switchTab=function(t){var r=_st.apply(this,arguments);try{setContext(t);}catch(e){}return r;};
+    }
+    try{
+      var active=((document.body.className.match(/theme-(overview|boss|dew|o|junior)/)||[])[1])||'overview';
+      setContext(active);
+    }catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
 </body>
