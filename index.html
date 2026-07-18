@@ -9331,6 +9331,18 @@ html.dark .evhub-title i{color:var(--accent-ondark,#8fb4dc);}
 html.dark #panel-boss .member-role{color:var(--accent-ondark,#8fb4dc) !important;}
 #panel-boss .member-avatar{background:var(--accent-ink,var(--navy)) !important;color:#fff !important;}
 </style>
+<style id="uxp-style7">
+/* ===== Equalized accent tint: same gradient strength on every tab ===== */
+/* Older hand-picked pastels varied a lot (Dew strong, Boss invisible).
+   Modern browsers now derive the band from each accent at one fixed 12%. */
+@supports (background: color-mix(in srgb, red 10%, transparent)){
+  .member-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent,#1f3a5f) 12%,transparent),transparent 62%);}
+  .evhub-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent,#1f3a5f) 12%,transparent),transparent 62%);}
+  .member-avatar{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#1f3a5f) 22%,transparent),0 7px 16px -4px var(--accent-shadow,rgba(20,30,50,.35));}
+  html.dark .member-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent-ondark,#8fb4dc) 14%,transparent),transparent 62%);}
+  html.dark .evhub-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent-ondark,#8fb4dc) 14%,transparent),transparent 62%);}
+}
+</style>
 </body>
 
 </html>
