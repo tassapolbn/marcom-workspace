@@ -9000,6 +9000,112 @@ button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,te
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
 })();
 </script>
+<style id="uxp-style3">
+/* ===== Collapsible right widget sidebar (all member tabs) ===== */
+.two-col{transition:grid-template-columns .28s ease;}
+.side-col{min-width:0;}
+.uxp-sb-head{display:flex;align-items:center;justify-content:flex-end;margin:0 0 10px;}
+.uxp-sb-toggle{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:12px;font-weight:700;padding:8px 12px;cursor:pointer;font-family:inherit;min-height:40px;box-shadow:var(--shadow);transition:all .14s;}
+.uxp-sb-toggle:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
+.uxp-sb-toggle i{font-size:15px;}
+body.uxp-sb-collapsed .two-col{grid-template-columns:minmax(0,1fr) 64px;}
+body.uxp-sb-collapsed .side-col>.widget,
+body.uxp-sb-collapsed .side-col>*:not(.uxp-sb-head):not(.uxp-sb-rail){display:none!important;}
+body.uxp-sb-collapsed .uxp-sb-head{justify-content:center;}
+body.uxp-sb-collapsed .uxp-sb-toggle{width:46px;justify-content:center;padding:8px 0;}
+body.uxp-sb-collapsed .uxp-sb-toggle .uxp-sb-lbl{display:none;}
+.uxp-sb-rail{display:none;flex-direction:column;gap:8px;align-items:center;}
+body.uxp-sb-collapsed .uxp-sb-rail{display:flex;}
+.uxp-rail-btn{width:46px;height:46px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--navy);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);transition:all .14s;}
+.uxp-rail-btn:hover,.uxp-rail-btn:focus-visible{background:var(--navy);color:#fff;border-color:var(--navy);transform:translateY(-1px);}
+html.dark .uxp-rail-btn{color:#8fb4dc;}
+.uxp-widget-flash{animation:uxpFlash 1.2s ease 1;}
+@keyframes uxpFlash{0%{box-shadow:0 0 0 3px rgba(230,164,23,.85);}100%{box-shadow:0 0 0 3px rgba(230,164,23,0);}}
+/* Tablet and phone: widgets stack under the board as before; the rail never overlays content */
+@media(max-width:980px){
+  .uxp-sb-head,.uxp-sb-rail{display:none!important;}
+  body.uxp-sb-collapsed .two-col{grid-template-columns:1fr;}
+  body.uxp-sb-collapsed .side-col>*:not(.uxp-sb-head):not(.uxp-sb-rail){display:block!important;}
+}
+</style>
+<script id="uxp-script3">
+/* ===== Collapsible right widget sidebar: expanded <-> icon rail, persisted ===== */
+(function(){
+  if(window.__uxpSbInit)return; window.__uxpSbInit=true;
+  var KEY='uxp_sb_collapsed';
+  function isCollapsed(){ try{return localStorage.getItem(KEY)==='1';}catch(e){return false;} }
+  function widgetsOf(col){ return [].slice.call(col.children).filter(function(el){ return el.classList&&el.classList.contains('widget'); }); }
+  function labelOf(w){
+    var t=w.querySelector('.widget-title');
+    var txt=t?t.textContent.replace(/\s+/g,' ').trim():'Widget';
+    var ic=t&&t.querySelector('i')?t.querySelector('i').className:'ti ti-apps';
+    return {txt:txt,ic:ic};
+  }
+  function buildRail(col){
+    var rail=col.querySelector(':scope>.uxp-sb-rail'); if(!rail)return;
+    rail.innerHTML='';
+    widgetsOf(col).forEach(function(w){
+      var m=labelOf(w);
+      var b=document.createElement('button');
+      b.type='button'; b.className='uxp-rail-btn';
+      b.title=m.txt; b.setAttribute('aria-label',m.txt+' (open widget)');
+      b.innerHTML='<i class="'+m.ic+'"></i>';
+      b.onclick=function(){
+        setCollapsed(false);
+        setTimeout(function(){
+          try{w.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){w.scrollIntoView();}
+          w.classList.remove('uxp-widget-flash'); void w.offsetWidth; w.classList.add('uxp-widget-flash');
+        },300);
+      };
+      rail.appendChild(b);
+    });
+  }
+  function paintToggles(){
+    var v=isCollapsed();
+    document.querySelectorAll('.uxp-sb-toggle').forEach(function(b){
+      b.setAttribute('aria-expanded',v?'false':'true');
+      b.setAttribute('aria-label',v?'Show widget sidebar':'Hide widget sidebar');
+      b.title=v?'Show widget sidebar':'Hide widget sidebar';
+      b.innerHTML=v?'<i class="ti ti-chevrons-left"></i>':'<i class="ti ti-chevrons-right"></i><span class="uxp-sb-lbl">Hide widgets</span>';
+    });
+  }
+  function setCollapsed(v){
+    document.body.classList.toggle('uxp-sb-collapsed',!!v);
+    try{localStorage.setItem(KEY,v?'1':'0');}catch(e){}
+    if(v)document.querySelectorAll('.side-col').forEach(buildRail);
+    paintToggles();
+  }
+  window.uxpSbToggle=function(){ setCollapsed(!isCollapsed()); };
+  function decorate(){
+    document.querySelectorAll('.tab-panel .two-col>.side-col').forEach(function(col){
+      if(col.querySelector(':scope>.uxp-sb-head'))return;
+      var head=document.createElement('div');
+      head.className='uxp-sb-head';
+      var b=document.createElement('button');
+      b.type='button'; b.className='uxp-sb-toggle'; b.onclick=window.uxpSbToggle;
+      head.appendChild(b);
+      var rail=document.createElement('div');
+      rail.className='uxp-sb-rail';
+      rail.setAttribute('role','navigation');
+      rail.setAttribute('aria-label','Collapsed widget shortcuts');
+      col.insertBefore(rail,col.firstChild);
+      col.insertBefore(head,col.firstChild);
+      buildRail(col);
+    });
+    paintToggles();
+  }
+  function boot(){
+    decorate();
+    if(isCollapsed())document.body.classList.add('uxp-sb-collapsed');
+    paintToggles();
+    document.querySelectorAll('.side-col').forEach(buildRail);
+    /* keep rails in sync when widgets are added later (asset library, templates, etc.) */
+    setInterval(function(){ if(isCollapsed())document.querySelectorAll('.side-col').forEach(buildRail); },10000);
+  }
+  function start(){ whenAuthed(boot); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
 </body>
 
 </html>
