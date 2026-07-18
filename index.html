@@ -868,6 +868,10 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
 
 <!-- ===== BOSS TAB ===== -->
 <div class="container tab-panel active" id="panel-boss">
+  <div class="member-head">
+    <div class="member-avatar"><i class="ti ti-user"></i></div>
+    <div class="member-head-text"><div class="member-name" id="boss-headname">Boss</div><div class="member-role">MARCOM Manager</div></div>
+  </div>
   <div class="two-col">
     <div class="main-col">
       <!-- Meeting Countdown -->
@@ -1739,7 +1743,7 @@ function savePcSettings(){
   closePcSettings();
 }
 function applyMemberNames(){
-  ['dew','o','junior'].forEach(w=>{
+  ['boss','dew','o','junior'].forEach(w=>{
     const lab=document.getElementById(w+'-tablabel');if(lab)lab.textContent=tabLabel(w);
     const hn=document.getElementById(w+'-headname');if(hn)hn.textContent=memberName(w)||'Name not set';
   });
@@ -9311,6 +9315,21 @@ html.dark .salary-dock .salary-divider{background:rgba(255,255,255,.15);}
 html.dark .salary-dock .sal-ring-bg{stroke:rgba(255,255,255,.15);}
 html.dark .salary-dock .sal-bar{background:rgba(255,255,255,.16);}
 html.dark .salary-dock .salary-badge.sb-reg{background:rgba(255,255,255,.14);color:#d9f2e2;}
+</style>
+<style id="uxp-style6">
+/* ===== One design format for the Name bar and the Event Hub bar (all tabs) ===== */
+/* Boss theme gains the same accent ink/on-dark variables the other members have */
+body.theme-boss{--accent-ink:#1f3a5f;--accent-ondark:#8fb4dc;}
+/* Event Hub bar adopts the exact member-head treatment: accent left border + soft accent band */
+.evhub{border-left:5px solid var(--accent,var(--navy));}
+.evhub-head{background-image:linear-gradient(90deg,var(--accent-light,transparent),transparent 62%);}
+.evhub-title i{color:var(--accent-ink,var(--navy));}
+html.dark .evhub-title{color:var(--accent-ondark,#e8edf6);}
+html.dark .evhub-title i{color:var(--accent-ondark,#8fb4dc);}
+/* Boss's name bar receives the same strong accent styling as Dew / O / Eye */
+#panel-boss .member-role{color:var(--accent-ink,var(--navy)) !important;}
+html.dark #panel-boss .member-role{color:var(--accent-ondark,#8fb4dc) !important;}
+#panel-boss .member-avatar{background:var(--accent-ink,var(--navy)) !important;color:#fff !important;}
 </style>
 </body>
 
