@@ -9460,7 +9460,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
     var greet=h<12?'Good morning':(h<17?'Good afternoon':'Good evening');
-    var title=isOwn(w)?(greet+', Khun '+esc(nm(w))):(esc(nm(w))+"'s day");
+    var title=isOwn(w)?(greet+', '+esc(nm(w))):(esc(nm(w))+"'s day");
     var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):(dueToday.length?'Focus: '+dueToday.length+' due today':'Here is the plan for today');
     var rc=window.__rcCounts||{};
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
