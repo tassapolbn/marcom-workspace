@@ -2469,6 +2469,7 @@ function taskCardHTML(task,who){
       +prBadge
     +'</div>'+roleHtml
     +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button><div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
+    +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
     +'</div>';
 }
 function kanbanHTML(tasks,who,filter){
@@ -9610,6 +9611,27 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
 })();
 </script>
+<style id="uxp-style9">
+/* ===== Grid-list design language applied to Kanban task cards =====
+   Borrowed: ringed icon chip, "opens" corner arrow, focus-within ring, calmer spacing.
+   Not borrowed: fused hairline tiles and the full-card link overlay (both would
+   break drag-and-drop and swallow the card's own buttons). */
+.task-card{position:relative;padding:15px 17px 17px;}
+/* ringed status chip: the ring colour is derived from the status colour automatically */
+.tcard-sicon{width:26px;height:26px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);}
+@supports (box-shadow: inset 0 0 0 2px color-mix(in srgb, red 30%, transparent)){
+  .tcard-sicon{box-shadow:inset 0 0 0 1.5px color-mix(in srgb, currentColor 34%, transparent);}
+}
+/* corner affordance: shows that clicking the card opens the task editor */
+.tc-open-hint{position:absolute;right:12px;bottom:11px;font-size:15px;color:var(--muted);opacity:0;transform:translate(-2px,2px);transition:opacity .16s ease,transform .16s ease;pointer-events:none;}
+.task-card:hover .tc-open-hint,.task-card:focus-within .tc-open-hint{opacity:.62;transform:translate(0,0);}
+html.dark .tc-open-hint{color:#9fb2c9;}
+/* keyboard users get the same visible boundary the grid list gives via focus-within */
+.task-card:focus-within{box-shadow:0 0 0 2px var(--accent,#2563eb),0 16px 34px -16px rgba(20,28,42,.26);}
+.task-topic{text-wrap:balance;}
+.task-desc{text-wrap:pretty;}
+@media(max-width:640px){.tc-open-hint{display:none;}}
+</style>
 </body>
 
 </html>
