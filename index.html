@@ -1098,6 +1098,21 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <div class="form-group" id="m-event-group" style="display:none;"><label class="form-label"><i class="ti ti-confetti" style="font-size:11px;"></i> Event</label>
         <select class="form-select" id="m-event"><option value="">None (General Task)</option></select>
       </div>
+      <div class="form-group evt-box" id="m-evt-group">
+        <label class="evt-toggle"><input type="checkbox" id="m-evt-on" onchange="evtToggle()"> <span><i class="ti ti-users-group"></i> Shared event task <em>visible to the whole team on the Event Board</em></span></label>
+        <div id="m-evt-fields" style="display:none;">
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="m-evt-label">Event name</label>
+              <input class="form-input" id="m-evt-label" list="m-evt-list" placeholder="e.g. Christmas Fair">
+              <datalist id="m-evt-list"></datalist>
+            </div>
+            <div class="form-group"><label class="form-label" for="m-evt-owner">Assigned to</label>
+              <select class="form-select" id="m-evt-owner"><option value="">Unassigned</option></select>
+            </div>
+          </div>
+          <div class="evt-stamp" id="m-evt-stamp" style="display:none;"></div>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Priority</label>
           <select class="form-select" id="m-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
@@ -1449,7 +1464,45 @@ const DATA={
   o:{tasks:[],links:[],notes:[],loaded:false,filter:'all',ref:null,linksRef:null,notesRef:null,events:[],eventsRef:null,eventsLoaded:false,sick:[],sickRef:null,lieu:[],lieuRef:null},
   junior:{tasks:[],links:[],notes:[],loaded:false,filter:'all',ref:null,linksRef:null,notesRef:null,events:[],eventsRef:null,eventsLoaded:false,sick:[],sickRef:null,lieu:[],lieuRef:null}
 };
-function tasksOf(w){return w==='boss'?bossTasks:(DATA[w]?DATA[w].tasks:[]);}
+let eventTasks=[],eventTasksRef=null,eventTasksLoaded=false;
+function ownTasksOf(w){return w==='boss'?bossTasks:(DATA[w]?DATA[w].tasks:[]);}
+/* A tab shows its own tasks PLUS the shared event tasks assigned to it. */
+function tasksOf(w){
+  var own=ownTasksOf(w)||[];
+  if(!eventTasks.length)return own;
+  var mine=eventTasks.filter(function(t){return (t.owner||'')===w;});
+  if(!mine.length)return own;
+  return own.concat(mine).sort(function(a,b){
+    var da=a.dueDate||'9999-12-31', db_=b.dueDate||'9999-12-31';
+    return da<db_?-1:(da>db_?1:0);
+  });
+}
+/* Every write goes through here, so a task is always saved back to the
+   collection it came from. __src is set by the listeners below. */
+function taskRef(taskOrId,who){
+  var t=taskOrId;
+  if(typeof taskOrId==='string'){
+    t=(tasksOf(who)||[]).find(function(x){return x.id===taskOrId;});
+  }
+  if(t&&t.__src==='event')return eventTasksRef||(db?db.collection('event_tasks'):null);
+  return refOf(who);
+}
+function isEventTask(t){return !!(t&&t.__src==='event');}
+/* Identity for change tracking, derived from the signed-in session. */
+function meEmail(){try{return (window.__cur&&window.__cur.email)||'';}catch(e){return '';}}
+function meName(){
+  try{
+    var c=window.__cur; if(!c)return '';
+    if(c.role==='admin')return memberName('boss')||'Boss';
+    if(c.workspace)return memberName(c.workspace)||c.workspace;
+    return (c.email||'').split('@')[0];
+  }catch(e){return '';}
+}
+function stampEdit(){
+  var o={lastEditedBy:meEmail(),lastEditedByName:meName()};
+  try{o.lastEditedAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
+  return o;
+}
 function refOf(w){return w==='boss'?bossRef:(DATA[w]?DATA[w].ref:null);}
 function filterOf(w){return w==='boss'?bossFilter:(DATA[w]?DATA[w].filter:'all');}
 function setFilterVar(w,f){if(w==='boss')bossFilter=f;else if(DATA[w])DATA[w].filter=f;}
@@ -1788,7 +1841,16 @@ try{
   bestNotesRef=db.collection('best_notes');
   sickRef=db.collection('sick_leave');
   eventsRef=db.collection('school_events');
-  bossRef.orderBy('createdAt','desc').onSnapshot(s=>{bossTasks=s.docs.map(d=>({id:d.id,...d.data()}));bossLoaded=true;reconcileDoneAt('boss');renderBoss();syncOk();},e=>syncErr(e));
+  bossRef.orderBy('createdAt','desc').onSnapshot(s=>{bossTasks=s.docs.map(d=>({id:d.id,__src:'own',...d.data()}));bossLoaded=true;reconcileDoneAt('boss');renderBoss();syncOk();},e=>syncErr(e));
+  /* Shared central board: every event task for the whole team. */
+  eventTasksRef=db.collection('event_tasks');
+  eventTasksRef.onSnapshot(s=>{
+    eventTasks=s.docs.map(d=>({id:d.id,__src:'event',...d.data()}));
+    eventTasksLoaded=true;
+    try{MEMBER_ORDER.forEach(function(w){ if(w==='boss')renderBoss(); else renderMember(w); });}catch(e){}
+    try{if(window.renderOverview)renderOverview();}catch(e){}
+    try{if(window.evbRender)evbRender();}catch(e){}
+  },e=>syncErr(e));
   bestRef.orderBy('createdAt','desc').onSnapshot(s=>{bestTasks=s.docs.map(d=>({id:d.id,...d.data()}));bestLoaded=true;renderBest();},e=>syncErr(e));
   lieuRef.orderBy('date','desc').onSnapshot(s=>{lieuRecords=s.docs.map(d=>({id:d.id,...d.data()}));renderLieu('boss');},e=>syncErr(e));
   chatRef.orderBy('createdAt','asc').onSnapshot(s=>{chatMessages=s.docs.map(d=>({id:d.id,...d.data()}));renderChat();},e=>syncErr(e));
@@ -1807,7 +1869,7 @@ try{
     DATA[k].eventsRef=db.collection(k+'_events');
     DATA[k].sickRef=db.collection(k+'_sick');
     DATA[k].lieuRef=db.collection(k+'_lieu');
-    DATA[k].ref.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].tasks=s.docs.map(d=>({id:d.id,...d.data()}));DATA[k].loaded=true;reconcileDoneAt(k);renderMember(k);},e=>syncErr(e));
+    DATA[k].ref.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].tasks=s.docs.map(d=>({id:d.id,__src:'own',...d.data()}));DATA[k].loaded=true;reconcileDoneAt(k);renderMember(k);},e=>syncErr(e));
     DATA[k].linksRef.orderBy('createdAt','asc').onSnapshot(s=>{DATA[k].links=s.docs.map(d=>({id:d.id,...d.data()}));renderLinks(k);},e=>syncErr(e));
     DATA[k].notesRef.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].notes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes(k);},e=>syncErr(e));
     DATA[k].eventsRef.onSnapshot(s=>{DATA[k].events=s.docs.map(d=>({id:d.id,...d.data()}));DATA[k].eventsLoaded=true;renderEvHub(k);},e=>syncErr(e));
@@ -1945,8 +2007,8 @@ function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--
 function statusIconHTML(s){const sc=SC[s]||SC.pending;const c=scColors(s);return '<span class="tcard-sicon" style="background-color:'+c[0]+';color:'+c[1]+';" title="'+sc.l+'"><i class="ti '+sc.i+'"></i></span>';}
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value)" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value)" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const ref=refOf(who);if(!ref)return;ref.doc(id).update({status:val,done:(val==='done')}).catch(e=>{try{syncErr(e);}catch(_){}});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
-function setDesignStatus(who,id,val){const ref=refOf(who);if(!ref)return;ref.doc(id).update({dzStatus:val}).catch(e=>{try{syncErr(e);}catch(_){}});}
+function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({status:val,done:(val==='done')},stampEdit())).catch(e=>{try{syncErr(e);}catch(_){}});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({dzStatus:val},stampEdit())).catch(e=>{try{syncErr(e);}catch(_){}});}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
   var opts=MEMBER_ORDER.filter(function(w){return w!==who;});
@@ -1959,10 +2021,23 @@ function moveCardTo(fromWho,taskId,target){
   if(!target)return;
   if(!(window.__cur&&window.__cur.role==='admin'))return;
   if(target===fromWho)return;
-  var srcRef=refOf(fromWho),dstRef=refOf(target);
-  if(!srcRef||!dstRef)return;
   var t=(tasksOf(fromWho)).find(function(x){return x.id===taskId;});
   if(!t)return;
+  if(isEventTask(t)){
+    /* Shared event task: reassignment is a field update, so nothing is lost. */
+    uiConfirm({title:'Reassign event task',icon:'ti-arrows-exchange',
+      message:'"'+(t.topic||t.title||'This task')+'" ('+(t.eventLabel||t.eventName||'event')+') will be reassigned to '+memberName(target)+'.',
+      okLabel:'Reassign'}).then(function(ok){
+      if(!ok)return;
+      var er=eventTasksRef||db.collection('event_tasks');
+      er.doc(taskId).update(Object.assign({owner:target},stampEdit()))
+        .then(function(){try{uiToast('Reassigned to '+memberName(target));}catch(e){}})
+        .catch(function(e){console.error(e);try{uiToast('Could not reassign: '+((e&&e.message)||''));}catch(_){}});
+    });
+    return;
+  }
+  var srcRef=refOf(fromWho),dstRef=refOf(target);
+  if(!srcRef||!dstRef)return;
   uiConfirm({title:'Move task',message:'Move "'+(t.topic||t.title||'this task')+'" to '+memberName(target)+"'s board?",okLabel:'Move',icon:'ti-arrows-exchange'}).then(function(__ok){
   if(!__ok)return;
   var data={};Object.keys(t).forEach(function(k){if(k!=='id')data[k]=t[k];});
@@ -2172,6 +2247,7 @@ function openAdd(who){
   document.getElementById('m-md-mailsent').checked=false;
   document.getElementById('m-dz-revisions').value='0';
   document.getElementById('m-dz-status').value='Brief Received';
+  try{evtFill(null,who);}catch(e){}
   renderModalLinks();
   styleModal(who);
   populateEventSelect(who,'');
@@ -2186,7 +2262,8 @@ function openEdit(who,id){
   modalState={who,editId:id};
   if(!window.__sopBatchOpening)window.__sopBatch=null;
   modalLinks=JSON.parse(JSON.stringify(task.links||[]));
-  document.getElementById('modal-title').textContent='Edit Task';
+  document.getElementById('modal-title').textContent=isEventTask(task)?'Edit Event Task':'Edit Task';
+  try{evtFill(task,who);}catch(e){}
   document.getElementById('m-topic').value=task.topic||task.title||'';
   document.getElementById('m-desc').value=task.description||'';
   document.getElementById('m-due').value=task.dueDate||'';
@@ -2280,15 +2357,35 @@ function saveTask(){
     const evObj=eventsOf(modalState.who).find(e=>e.id===data.eventId);
     data.eventName=evObj?(evObj.name||''):'';
   }
-  const ref=refOf(modalState.who);
-  if(modalState.editId){
-    const old=(tasksOf(modalState.who)).find(t=>t.id===modalState.editId);
+  const old=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
+  const evtOn=!!(document.getElementById('m-evt-on')||{}).checked;
+  const wasEvent=isEventTask(old);
+  if(evtOn){
+    data.eventLabel=((document.getElementById('m-evt-label')||{}).value||'').trim();
+    data.owner=((document.getElementById('m-evt-owner')||{}).value||'');
+  }
+  Object.assign(data,stampEdit());
+  const ref=(evtOn||wasEvent)?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
+  if(modalState.editId&&wasEvent===evtOn){
     if(old&&old.dueDate!==data.dueDate)data.sortOrder=firebase.firestore.FieldValue.delete();
     ref.doc(modalState.editId).update(data);
     try{if(old&&old.requestId&&old.status!==data.status&&window.rcMirrorStatus)rcMirrorStatus(old.requestId,data.status);}catch(e){}
   }
+  else if(modalState.editId&&wasEvent!==evtOn){
+    /* Task type changed: copy across, then remove the original. Never lose data. */
+    const srcRef=wasEvent?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
+    const keep={};Object.keys(old||{}).forEach(function(k){if(k!=='id'&&k!=='__src')keep[k]=old[k];});
+    const merged=Object.assign(keep,data);
+    if(!evtOn){delete merged.eventLabel;delete merged.owner;}
+    if(!merged.createdBy)merged.createdBy=meEmail();
+    ref.add(merged).then(function(){return srcRef.doc(modalState.editId).delete();})
+      .then(function(){try{uiToast(evtOn?'Moved to the shared Event Board':'Moved back to your own board');}catch(e){}})
+      .catch(function(e){console.error(e);try{uiToast('Could not change the task type: '+((e&&e.message)||''));}catch(_){}});
+  }
   else{
     data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+    data.createdBy=meEmail();
+    if(evtOn&&!data.owner)data.owner='';
     ref.add(data);
     try{ if(data.dueDate&&window.uxpOfferCalendar)uxpOfferCalendar({title:data.topic,date:data.dueDate,notes:data.description||data.notes||''}); }catch(e){}
   }
@@ -2297,9 +2394,13 @@ function saveTask(){
 }
 function deleteTask(who,id){
   var t=(tasksOf(who)||[]).find(function(x){return x.id===id;});
-  uiConfirm({title:'Delete task',message:'"'+((t&&(t.topic||t.title))||'This task')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
+  var _shared=isEventTask(t);
+  var _msg=_shared
+    ? '"'+((t&&(t.topic||t.title))||'This task')+'" belongs to the shared event "'+((t&&(t.eventLabel||t.eventName))||'Event')+'".\n\nThis is a shared team task on the central Event Board. Deleting it removes it for everyone, including '+((t&&t.owner)?(memberName(t.owner)||t.owner):'the whole team')+'.'
+    : '"'+((t&&(t.topic||t.title))||'This task')+'" will be deleted.';
+  uiConfirm({title:_shared?'Delete a shared event task':'Delete task',message:_msg,okLabel:'Delete',danger:true}).then(function(ok){
     if(!ok)return;
-    deleteWithUndo(refOf(who),id,t,'Task deleted');
+    deleteWithUndo(taskRef(t,who),id,t,'Task deleted');
   });
 }
 function duplicateTask(who,id){
@@ -2371,15 +2472,16 @@ function moveTask(who,id,dir){
   const ni=idx+dir;
   if(ni<0||ni>=visible.length)return;
   const a=visible[idx],b=visible[ni];
-  const ref=refOf(who);
-  ref.doc(a.id).update({sortOrder:taskOrder(b)});
-  ref.doc(b.id).update({sortOrder:taskOrder(a)});
+  const ra=taskRef(a,who),rb=taskRef(b,who);
+  if(ra)ra.doc(a.id).update({sortOrder:taskOrder(b)});
+  if(rb)rb.doc(b.id).update({sortOrder:taskOrder(a)});
 }
 function toggleTaskDone(who,id){
   const t=(tasksOf(who)).find(x=>x.id===id);
   if(!t)return;
   const newStatus=(t.status==='done')?'pending':'done';
-  (refOf(who)).doc(id).update({status:newStatus,done:newStatus==='done'});
+  const rf=taskRef(t,who); if(!rf)return;
+  rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()));
 }
 const KB_STATUS_ORDER=['pending','in-progress','waiting','on-hold','done','canceled'];
 var _taskDrag={who:null,id:null};
@@ -2420,7 +2522,7 @@ function isAutoArchived(t){ if(!t||t.status!=='done')return false; var d=doneDay
 function reconcileDoneAt(who){
   try{
     var ref=refOf(who); if(!ref)return;
-    var list=tasksOf(who)||[]; var batch=null,n=0;
+    var list=(ownTasksOf(who)||[]); var batch=null,n=0;
     list.forEach(function(t){
       var done=t.status==='done';
       if(done&&!t.doneAt){ if(!batch)batch=db.batch(); batch.update(ref.doc(t.id),{doneAt:firebase.firestore.FieldValue.serverTimestamp()}); n++; }
@@ -2440,7 +2542,9 @@ function taskCardHTML(task,who){
   let _evClr='',_evTc='';try{if(task.eventId){const _ev=eventsOf(who).find(e=>e.id===task.eventId);if(_ev&&evOkClr(_ev.color)){_evClr=_ev.color;if(evOkClr(_ev.textColor))_evTc=_ev.textColor;}}}catch(e){}
   let _evStyle='';
   if(_evClr)_evStyle=_evTc?(' style="background:'+_evClr+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
-  const evBadge=task.eventId?'<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>':'';
+  const evBadge=isEventTask(task)
+    ? '<span class="mb mb-evt"><i class="ti ti-users-group" style="font-size:11px;"></i> '+escHtml(task.eventLabel||task.eventName||'Event')+'</span>'
+    : (task.eventId?'<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>':'');
   const reqBadge=task.requestRef?'<span class="mb mb-req"><i class="ti ti-send" style="font-size:11px;"></i> '+escHtml(task.requestRef)+'</span>':'';
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
@@ -5886,25 +5990,32 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
   window.__sopMoveTask=function(eid,kid,dir){ if(!canEdit())return; if(!sopData)sopData=JSON.parse(JSON.stringify(data())); var e=findEventById(eid); var a=e.tasks||[],i=a.findIndex(function(x){return x.id===kid;}),j=i+dir; if(i<0||j<0||j>=a.length)return; var tmp=a[i];a[i]=a[j];a[j]=tmp; save(); renderAll(); };
 
   /* ---- generation (everyone) ---- */
-  function openForm(who,title){
+  function openForm(who,title,eventName){
     window.__sopBatchOpening=true;
     try{ openAdd(who); }catch(e){}
     window.__sopBatchOpening=false;
     var tf=document.getElementById('m-topic'); if(tf)tf.value=title;
+    /* SOP tasks belong to the shared Event Board, labelled with their event. */
+    if(eventName){
+      var cb=document.getElementById('m-evt-on'); if(cb)cb.checked=true;
+      var lb=document.getElementById('m-evt-label'); if(lb)lb.value=eventName;
+      var ow=document.getElementById('m-evt-owner'); if(ow)ow.value=(who&&who!=='unassigned')?who:'';
+      try{evtToggle();}catch(e){}
+    }
   }
-  window.__sopGenTask=function(who,eid,kid){ var e=findEventById(eid); if(!e)return; var k=(e.tasks||[]).find(function(x){return x.id===kid;}); if(!k)return; window.__sopBatch=null; openForm(who,e.name+': '+k.title); };
+  window.__sopGenTask=function(who,eid,kid){ var e=findEventById(eid); if(!e)return; var k=(e.tasks||[]).find(function(x){return x.id===kid;}); if(!k)return; window.__sopBatch=null; openForm(who,e.name+': '+k.title,e.name||''); };
   window.__sopOpenNext=function(){
     var b=window.__sopBatch;
     if(!b||b.idx>=b.items.length){ window.__sopBatch=null; return; }
     var item=b.items[b.idx]; b.idx++;
-    openForm(b.who,item);
+    openForm(b.who,item,b.eventName||'');
     var mt=document.getElementById('modal-title'); if(mt)mt.textContent='Add Task ('+b.idx+' of '+b.items.length+')';
   };
   window.__sopAddAll=function(who,tid,eid){
     var e=findEvent(tid,eid)||findEventById(eid); if(!e)return;
     var items=(e.tasks||[]).map(function(k){return e.name+': '+k.title;});
     if(!items.length)return;
-    window.__sopBatch={who:who,items:items,idx:0};
+    window.__sopBatch={who:who,items:items,idx:0,eventName:e.name||''};
     window.__sopOpenNext();
   };
 
@@ -9759,6 +9870,311 @@ html.dark .tc-open-hint{color:#9fb2c9;}
       try{ window.open(url,'_blank','noopener'); }catch(e){ location.href=url; }
     });
   };
+})();
+</script>
+<style id="evt-style">
+/* ===== Central Event Board ===== */
+.evt-box{border:1px dashed var(--border);border-radius:11px;padding:11px 12px;background:var(--gray-light);}
+.evt-toggle{display:flex;align-items:flex-start;gap:9px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;line-height:1.35;}
+.evt-toggle input{margin-top:2px;width:17px;height:17px;flex-shrink:0;}
+.evt-toggle em{display:block;font-style:normal;font-weight:600;font-size:11.5px;color:var(--muted);margin-top:2px;}
+.evt-toggle i{color:var(--navy);}
+html.dark .evt-toggle i{color:#8fb4dc;}
+#m-evt-fields{margin-top:11px;}
+.evt-stamp{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;padding-top:4px;}
+.mb-evt{background:#ede9fe;color:#5b21b6;}
+html.dark .mb-evt{background:rgba(139,92,246,.22);color:#c4b5fd;}
+.evb-groups{display:flex;flex-direction:column;gap:11px;}
+.evb-g{border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.evb-g-h{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--gray-light);font-size:12.5px;font-weight:800;color:var(--text);}
+.evb-g-h i{color:#7c3aed;}
+.evb-g.unassigned .evb-g-h{background:var(--amber-light,#fdf3e0);color:#b45309;}
+.evb-g.unassigned .evb-g-h i{color:#b45309;}
+.evb-count{margin-left:auto;font-size:11px;font-weight:800;color:var(--muted);}
+.evb-row{display:flex;align-items:center;gap:9px;padding:9px 12px;border-top:1px solid var(--border);font-size:12.5px;}
+.evb-row-main{flex:1;min-width:0;}
+.evb-t{font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.evb-s{font-size:11.5px;color:var(--muted);margin-top:1px;display:flex;gap:8px;flex-wrap:wrap;}
+.evb-own{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;background:var(--gray-light);color:var(--muted);white-space:nowrap;}
+.evb-own.has{background:var(--blue-light,#e8f0fb);color:#1d4ed8;}
+html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
+.evb-claim{background:var(--navy);color:#fff;border:none;border-radius:9px;font-size:11.5px;font-weight:700;padding:7px 12px;min-height:36px;cursor:pointer;font-family:inherit;}
+.evb-claim:hover{filter:brightness(1.08);}
+.evb-sel{font-size:11.5px;padding:6px 8px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;min-height:36px;}
+.evb-empty{padding:18px 12px;text-align:center;color:var(--muted);font-size:12.5px;}
+@media(max-width:640px){.evb-row{flex-wrap:wrap;}.evb-claim,.evb-sel{flex:1;}}
+</style>
+<script id="evt-script">
+/* ===== Central Event Board: modal fields, Overview board, SOP owner ===== */
+(function(){
+  if(window.__evtInit)return; window.__evtInit=true;
+  function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
+  function nm(w){try{return memberName(w)||tabLabel(w)||w;}catch(e){return w;}}
+  function order(){try{return MEMBER_ORDER.slice();}catch(e){return ['boss','dew','o','junior'];}}
+  function evtList(){try{return eventTasks||[];}catch(e){return [];}}
+  function fdt(d){try{return fmtDate(d);}catch(e){return d||'';}}
+  function stampText(t){
+    if(!t||!t.lastEditedBy)return '';
+    var who=t.lastEditedByName||String(t.lastEditedBy).split('@')[0];
+    var d=null,v=t.lastEditedAt;
+    try{ d=v&&v.toDate?v.toDate():(v&&v.seconds?new Date(v.seconds*1000):null); }catch(e){}
+    return 'Last edited by '+who+(d?(' · '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})):'');
+  }
+  /* known event names: from the shared board plus each member's Event Hub */
+  function knownEvents(){
+    var set={};
+    evtList().forEach(function(t){ if(t.eventLabel)set[t.eventLabel]=1; });
+    order().forEach(function(w){ try{(eventsOf(w)||[]).forEach(function(e){ if(e&&e.name)set[e.name]=1; });}catch(e){} });
+    return Object.keys(set).sort();
+  }
+  window.evtToggle=function(){
+    var on=!!(document.getElementById('m-evt-on')||{}).checked;
+    var box=document.getElementById('m-evt-fields'); if(box)box.style.display=on?'block':'none';
+  };
+  window.evtFill=function(task,who){
+    var on=!!(task&&task.__src==='event');
+    var cb=document.getElementById('m-evt-on'); if(cb)cb.checked=on;
+    var lab=document.getElementById('m-evt-label'); if(lab)lab.value=(task&&(task.eventLabel||task.eventName))||'';
+    var dl=document.getElementById('m-evt-list');
+    if(dl)dl.innerHTML=knownEvents().map(function(n){return '<option value="'+esc(n)+'">';}).join('');
+    var sel=document.getElementById('m-evt-owner');
+    if(sel){
+      sel.innerHTML='<option value="">Unassigned</option>'+order().map(function(w){
+        return '<option value="'+w+'">'+esc(nm(w))+'</option>';
+      }).join('');
+      sel.value=(task&&task.owner!==undefined)?(task.owner||''):(who||'');
+    }
+    var st=document.getElementById('m-evt-stamp');
+    if(st){var txt=stampText(task);st.innerHTML=txt?'<i class="ti ti-history"></i> '+esc(txt):'';st.style.display=txt?'flex':'none';}
+    evtToggle();
+  };
+  /* ---------- Overview: the shared Event Board ---------- */
+  var flt='';
+  window.evbFilter=function(v){flt=v;evbRender();};
+  window.evbAssign=function(id,owner){
+    var er=null;try{er=eventTasksRef||firebase.firestore().collection('event_tasks');}catch(e){}
+    if(!er)return;
+    er.doc(id).update(Object.assign({owner:owner||''},stampEdit()))
+      .then(function(){try{uiToast(owner?('Assigned to '+nm(owner)):'Set to unassigned');}catch(e){}})
+      .catch(function(e){console.error(e);try{uiToast('Could not assign: '+((e&&e.message)||''));}catch(_){}});
+  };
+  window.evbClaim=function(id){
+    var c=window.__cur||{};
+    var mine=c.role==='admin'?'boss':(c.workspace||'');
+    if(!mine){try{uiToast('Please sign in to claim a task.');}catch(e){}return;}
+    evbAssign(id,mine);
+  };
+  function card(){
+    var main=document.querySelector('#panel-overview .ov-col-main'); if(!main)return null;
+    var c=document.getElementById('evb-card');
+    if(!c){
+      c=document.createElement('div'); c.className='ov-card'; c.id='evb-card';
+      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users-group"></i> Event Board <span style="font-weight:600;color:var(--muted);font-size:11.5px;">· shared by the whole team</span></div>'
+        +'<select class="evb-sel" id="evb-filter" aria-label="Filter by event" onchange="evbFilter(this.value)" style="margin-left:auto;"></select></div>'
+        +'<div class="evb-groups" id="evb-body"></div>';
+      main.insertBefore(c,main.firstChild);
+    }
+    return c;
+  }
+  window.evbRender=function(){
+    var c=card(); if(!c)return;
+    var body=document.getElementById('evb-body'); if(!body)return;
+    var all=evtList();
+    var sel=document.getElementById('evb-filter');
+    if(sel){
+      var names=knownEvents();
+      var cur=flt;
+      sel.innerHTML='<option value="">All events</option>'+names.map(function(n){return '<option value="'+esc(n)+'"'+(n===cur?' selected':'')+'>'+esc(n)+'</option>';}).join('');
+    }
+    var list=flt?all.filter(function(t){return (t.eventLabel||'')===flt;}):all;
+    if(!list.length){
+      body.innerHTML='<div class="evb-empty"><i class="ti ti-calendar-star" style="font-size:24px;display:block;margin-bottom:6px;opacity:.6;"></i>'
+        +'No shared event tasks yet.<br>Create one from any board by ticking "Shared event task".</div>';
+      return;
+    }
+    var groups={};
+    list.forEach(function(t){var k=t.eventLabel||'Other';(groups[k]=groups[k]||[]).push(t);});
+    var keys=Object.keys(groups).sort();
+    var html=keys.map(function(k){
+      var items=groups[k].slice().sort(function(a,b){
+        var ua=(a.owner?1:0),ub=(b.owner?1:0);
+        if(ua!==ub)return ua-ub;
+        return (a.dueDate||'9999')<(b.dueDate||'9999')?-1:1;
+      });
+      var un=items.filter(function(t){return !t.owner;}).length;
+      return '<div class="evb-g'+(un?' unassigned':'')+'">'
+        +'<div class="evb-g-h"><i class="ti ti-confetti"></i>'+esc(k)+'<span class="evb-count">'+items.length+' task'+(items.length>1?'s':'')+(un?(' · '+un+' unassigned'):'')+'</span></div>'
+        +items.map(function(t){
+          var owner=t.owner||'';
+          var opts=['<option value="">Unassigned</option>'].concat(order().map(function(w){
+            return '<option value="'+w+'"'+(w===owner?' selected':'')+'>'+esc(nm(w))+'</option>';
+          })).join('');
+          return '<div class="evb-row">'
+            +'<div class="evb-row-main"><div class="evb-t">'+esc(t.topic||t.title||'Task')+'</div>'
+            +'<div class="evb-s">'+(t.dueDate?'<span><i class="ti ti-calendar" style="font-size:11px;"></i> '+esc(fdt(t.dueDate))+'</span>':'')
+            +'<span>'+esc((SC[t.status||'pending']||{l:'Pending'}).l)+'</span></div></div>'
+            +(owner?'<span class="evb-own has">'+esc(nm(owner))+'</span>':'<button type="button" class="evb-claim" onclick="evbClaim(\''+t.id+'\')"><i class="ti ti-hand-click"></i> Claim</button>')
+            +'<select class="evb-sel" aria-label="Assign this task" onchange="evbAssign(\''+t.id+'\',this.value)">'+opts+'</select>'
+            +'</div>';
+        }).join('')
+        +'</div>';
+    }).join('');
+    body.innerHTML=html;
+  };
+  function boot(){
+    evbRender();
+    if(typeof window.renderOverview==='function'){
+      var _ro=window.renderOverview;
+      window.renderOverview=function(){var r=_ro.apply(this,arguments);try{evbRender();}catch(e){}return r;};
+    }
+    var n=0,iv=setInterval(function(){evbRender();if(++n>20)clearInterval(iv);},700);
+  }
+  function start(){ whenAuthed(boot); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
+})();
+</script>
+<script id="evt-migrate-script">
+/* ===== One-time migration: event tasks -> central event_tasks (admin only) =====
+   Three deliberate steps, so nothing can be lost:
+     1. Dry run  - reads only, shows exactly what would move
+     2. Copy     - writes copies, ORIGINALS ARE KEPT
+     3. Clean up - deletes originals only after counts match
+   Open from Settings, or run evtMigrate() in the console. */
+(function(){
+  if(window.__evtMigInit)return; window.__evtMigInit=true;
+  var COLS={boss:'boss_tasks',dew:'dew_tasks',o:'o_tasks',junior:'junior_tasks'};
+  var plan=null;
+  function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
+  function nm(w){try{return memberName(w)||w;}catch(e){return w;}}
+  function FS(){try{return firebase.firestore();}catch(e){return null;}}
+  function isAdmin(){return (window.__cur||{}).role==='admin';}
+  function isEventy(t){ return !!(t&&((t.eventId&&t.eventName)||t.eventName)); }
+
+  function scan(){
+    var f=FS(); if(!f)return Promise.reject(new Error('not connected'));
+    var out=[];
+    return Promise.all(Object.keys(COLS).map(function(w){
+      return f.collection(COLS[w]).get().then(function(snap){
+        snap.docs.forEach(function(d){
+          var t=Object.assign({id:d.id},d.data());
+          if(!isEventy(t))return;
+          out.push({from:COLS[w],owner:w,id:d.id,topic:t.topic||t.title||'(untitled)',eventLabel:t.eventName||'',data:t});
+        });
+      });
+    })).then(function(){ plan=out; return out; });
+  }
+
+  function rowsHTML(list){
+    if(!list.length)return '<div class="rc-note">No event-related tasks were found. Nothing needs to move.</div>';
+    var byOwner={};
+    list.forEach(function(r){(byOwner[r.owner]=byOwner[r.owner]||[]).push(r);});
+    return '<div class="rc-note" style="margin-bottom:9px;"><b>'+list.length+'</b> task'+(list.length>1?'s':'')+' would move to the shared Event Board. Originals are kept until you press Clean up.</div>'
+      +Object.keys(byOwner).map(function(w){
+        return '<div class="evb-g"><div class="evb-g-h"><i class="ti ti-user"></i>'+esc(nm(w))+'<span class="evb-count">'+byOwner[w].length+'</span></div>'
+          +byOwner[w].map(function(r){
+            return '<div class="evb-row"><div class="evb-row-main"><div class="evb-t">'+esc(r.topic)+'</div>'
+              +'<div class="evb-s"><span>event: '+esc(r.eventLabel||'(none)')+'</span><span>from '+esc(r.from)+'</span></div></div></div>';
+          }).join('')+'</div>';
+      }).join('');
+  }
+
+  function panel(html,footer){
+    var m=document.getElementById('evt-mig-modal');
+    if(!m){
+      m=document.createElement('div'); m.className='modal-overlay'; m.id='evt-mig-modal';
+      m.innerHTML='<div class="modal" style="max-width:640px;" role="dialog" aria-modal="true" aria-labelledby="evt-mig-t">'
+        +'<div class="modal-header"><div class="modal-title" id="evt-mig-t"><i class="ti ti-database-import"></i> Move event tasks to the shared board</div>'
+        +'<button class="modal-close" aria-label="Close" onclick="evtMigClose()"><i class="ti ti-x"></i></button></div>'
+        +'<div class="modal-body" id="evt-mig-body"></div>'
+        +'<div class="uxp-modal-foot" id="evt-mig-foot"></div></div>';
+      document.body.appendChild(m);
+    }
+    document.getElementById('evt-mig-body').innerHTML=html;
+    document.getElementById('evt-mig-foot').innerHTML=footer;
+    m.classList.add('open');
+  }
+  window.evtMigClose=function(){var m=document.getElementById('evt-mig-modal');if(m)m.classList.remove('open');};
+
+  window.evtMigrate=function(){
+    if(!isAdmin()){try{uiToast('Only Boss can run the migration.');}catch(e){}return;}
+    panel('<div class="rc-note">Reading all four task collections. Nothing is being changed.</div>','');
+    scan().then(function(list){
+      panel(rowsHTML(list),
+        '<button type="button" class="btn btn-ghost" onclick="evtMigClose()">Close</button>'
+        +(list.length?'<button type="button" class="btn btn-navy" onclick="evtMigCopy()"><i class="ti ti-copy"></i> Step 2: copy to Event Board</button>':''));
+    }).catch(function(e){
+      panel('<div class="rc-note" style="color:#b91c1c;">Could not read the collections: '+esc((e&&e.message)||'')+'</div>',
+        '<button type="button" class="btn btn-ghost" onclick="evtMigClose()">Close</button>');
+    });
+  };
+
+  window.evtMigCopy=function(){
+    if(!plan||!plan.length)return;
+    var f=FS(); if(!f)return;
+    panel('<div class="rc-note">Copying '+plan.length+' task(s). Originals are being kept.</div>','');
+    var done=0,fail=0;
+    var seq=Promise.resolve();
+    plan.forEach(function(r){
+      seq=seq.then(function(){
+        var d={};Object.keys(r.data).forEach(function(k){if(k!=='id'&&k!=='__src')d[k]=r.data[k];});
+        d.eventLabel=r.eventLabel||'';
+        d.owner=r.owner;
+        d.migratedFrom=r.from+'/'+r.id;
+        if(!d.createdBy)d.createdBy=(window.__cur&&window.__cur.email)||'';
+        d.lastEditedBy=(window.__cur&&window.__cur.email)||'';
+        try{d.lastEditedAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
+        return f.collection('event_tasks').add(d).then(function(){done++;}).catch(function(e){console.error(e);fail++;});
+      });
+    });
+    seq.then(function(){
+      return f.collection('event_tasks').get().then(function(snap){
+        var copied=snap.docs.filter(function(d){return !!(d.data()||{}).migratedFrom;}).length;
+        var ok=(fail===0&&done===plan.length);
+        panel('<div class="rc-note"><b>Copied:</b> '+done+' of '+plan.length+(fail?(' · <span style="color:#b91c1c;">failed: '+fail+'</span>'):'')+'<br>'
+          +'<b>Verified on the Event Board:</b> '+copied+' migrated task(s).<br><br>'
+          +(ok?'The counts match. You can now remove the originals, or leave them and clean up later.'
+              :'The counts do NOT match. Nothing else will be deleted. Please send me this screen before continuing.')+'</div>',
+          '<button type="button" class="btn btn-ghost" onclick="evtMigClose()">Close for now</button>'
+          +(ok?'<button type="button" class="uxp-btn-danger btn" onclick="evtMigCleanup()"><i class="ti ti-trash"></i> Step 3: remove originals</button>':''));
+      });
+    });
+  };
+
+  window.evtMigCleanup=function(){
+    if(!plan||!plan.length)return;
+    uiConfirm({title:'Remove the original tasks',danger:true,okLabel:'Remove originals',
+      message:'The '+plan.length+' original task(s) will be deleted from the personal boards. Their copies stay on the shared Event Board. This cannot be undone.'
+    }).then(function(ok){
+      if(!ok)return;
+      var f=FS(); if(!f)return;
+      var seq=Promise.resolve(),del=0,fail=0;
+      plan.forEach(function(r){
+        seq=seq.then(function(){
+          return f.collection(r.from).doc(r.id).delete().then(function(){del++;}).catch(function(e){console.error(e);fail++;});
+        });
+      });
+      seq.then(function(){
+        panel('<div class="rc-note">Removed '+del+' original task(s)'+(fail?(', '+fail+' could not be removed'):'')+'. The migration is complete.</div>',
+          '<button type="button" class="btn btn-navy" onclick="evtMigClose()">Done</button>');
+        plan=null;
+      });
+    });
+  };
+
+  /* entry point in Settings, admin only */
+  function inject(){
+    var body=document.querySelector('#settings-modal .modal-body');
+    if(!body||document.getElementById('evt-mig-entry'))return;
+    if(!isAdmin())return;
+    var d=document.createElement('div'); d.id='evt-mig-entry';
+    d.style.cssText='margin-top:14px;padding-top:14px;border-top:1px solid var(--border);';
+    d.innerHTML='<label class="form-label"><i class="ti ti-database-import" style="margin-right:5px;"></i> Event Board migration</label>'
+      +'<button type="button" class="btn btn-ghost btn-sm" onclick="evtMigrate()"><i class="ti ti-list-check"></i> Review event tasks to move</button>'
+      +'<div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;">Shows what would move to the shared Event Board first. Nothing is changed until you confirm each step.</div>';
+    body.appendChild(d);
+  }
+  var _os=window.openSettings;
+  window.openSettings=function(){ try{if(_os)_os();}catch(e){} setTimeout(inject,60); };
 })();
 </script>
 </body>
