@@ -896,16 +896,16 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="evhub-body" id="boss-evhub-body"></div>
       </div>
       <div class="sub-nav">
-        <button class="sub-tab act act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
-        <button class="sub-tab act-boss st-tasks" onclick="switchSub('boss','tasks',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>
+        <button class="sub-tab act act-boss st-tasks" onclick="switchSub('boss','tasks',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>
+        <button class="sub-tab act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','links',this)"><i class="ti ti-link"></i> Links</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','notes',this)"><i class="ti ti-notes"></i> Notes</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','sop',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>
       </div>
       <!-- Events sub-panel (event-first workspace) -->
-      <div class="sub-panel" id="boss-sub-events"></div>
+      <div class="sub-panel" id="boss-sub-events" style="display:none;"></div>
       <!-- Tasks sub-panel -->
-      <div class="sub-panel" id="boss-sub-tasks" style="display:none;">
+      <div class="sub-panel" id="boss-sub-tasks">
         <div class="stats-row">
           <div class="stat-box sb-navy"><span class="stat-ic"><i class="ti ti-clipboard-list"></i></span><div class="stat-main"><div class="stat-num" id="bs-total">0</div><div class="stat-lbl">Active</div></div></div>
           <div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="bs-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>
@@ -1141,8 +1141,8 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-input" id="m-md-location" placeholder="e.g. Courtyard by Marriott" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Shoot Start (24h)</label><input type="time" class="form-input" id="m-md-start" step="300" /></div>
-          <div class="form-group"><label class="form-label">Shoot End (24h)</label><input type="time" class="form-input" id="m-md-end" step="300" /></div>
+          <div class="form-group"><label class="form-label">Shoot Start (24h)</label><span class="t24-mount" data-id="m-md-start"></span></div>
+          <div class="form-group"><label class="form-label">Shoot End (24h)</label><span class="t24-mount" data-id="m-md-end"></span></div>
         </div>
         <div class="form-group"><label class="form-label">File Location</label><input type="text" class="form-input" id="m-md-file" placeholder="Drive link or folder path" /></div>
         <div class="form-row">
@@ -1242,8 +1242,8 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <div class="form-group"><label class="form-label" id="l-date-label">Date Worked</label><input type="date" class="form-input" id="l-date" /></div>
       <div class="form-group"><label class="form-label">Event / Reason</label><input type="text" class="form-input" id="l-event" placeholder="e.g. 24 Hours to Make a Difference" /></div>
       <div class="form-row" id="l-time-row">
-        <div class="form-group"><label class="form-label">Time From</label><input type="time" class="form-input" id="l-from" /></div>
-        <div class="form-group"><label class="form-label">Time To</label><input type="time" class="form-input" id="l-to" /></div>
+        <div class="form-group"><label class="form-label">Time From</label><span class="t24-mount" data-id="l-from"></span></div>
+        <div class="form-group"><label class="form-label">Time To</label><span class="t24-mount" data-id="l-to"></span></div>
       </div>
       <div class="form-group" style="max-width:160px;"><label class="form-label">Number of Days</label><input type="number" class="form-input" id="l-days" value="1" min="0.5" step="0.5" /></div>
     </div>
@@ -1395,7 +1395,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <div class="form-group"><label class="form-label">Event name</label><input class="form-input" id="ev-name" placeholder="e.g. Graduation 2026" oninput="if(window.updateEvPreview)updateEvPreview()" /></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="ev-date" type="date" /></div>
-        <div class="form-group"><label class="form-label">Time (optional)</label><input class="form-input" id="ev-time" type="time" /></div>
+        <div class="form-group"><label class="form-label">Time (optional)</label><span class="t24-mount" data-id="ev-time"></span></div>
       </div>
       <div class="form-group"><label class="form-label">Category (optional)</label>
         <select class="form-select" id="ev-category">
@@ -1581,14 +1581,14 @@ function memberPanelHTML(w){
   +    '<div class="meet-card none" id="'+w+'-meet-card" onclick="openMeetingCal()"><div class="meet-ico"><i class="ti ti-calendar-time"></i></div><div class="meet-body"><div class="meet-label">Next Meeting</div><div class="meet-title">No upcoming meetings</div></div><div class="meet-sub"></div></div>'
   +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="sub-nav">'
-  +      (w==='junior'?'<button class="sub-tab act st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>':'')
-  +      '<button class="sub-tab'+(w==='junior'?'':' act')+' st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
+  +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
+  +      (w==='junior'?'<button class="sub-tab st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>':'')
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'links\',this)"><i class="ti ti-link"></i> Links</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'notes\',this)"><i class="ti ti-notes"></i> Notes</button>'
   +      (w==='junior'?'<button class="sub-tab" onclick="switchSub(\''+w+'\',\'sop\',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>':'')
   +    '</div>'
-  +    (w==='junior'?'<div class="sub-panel" id="'+w+'-sub-events"></div>':'')
-  +    '<div class="sub-panel" id="'+w+'-sub-tasks"'+(w==='junior'?' style="display:none;"':'')+'>'
+  +    (w==='junior'?'<div class="sub-panel" id="'+w+'-sub-events" style="display:none;"></div>':'')
+  +    '<div class="sub-panel" id="'+w+'-sub-tasks">'
   +      '<div class="stats-row">'
   +        '<div class="stat-box stat-accent"><span class="stat-ic"><i class="ti ti-clipboard-list"></i></span><div class="stat-main"><div class="stat-num" id="'+w+'-s-total">0</div><div class="stat-lbl">Active</div></div></div>'
   +        '<div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="'+w+'-s-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>'
@@ -2116,6 +2116,68 @@ function renderModalLinks(){
     </div>`).join('');
 }
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+/* ===== 24-hour time control =====
+   A native <input type="time"> follows the computer's regional setting, so it
+   shows AM/PM on many machines. These two dropdowns are always 24-hour, on
+   every device. A hidden input keeps the original id and "HH:MM" value, so
+   every existing read and write of that field keeps working unchanged. */
+function t24HTML(id,extraClass){
+  var hh='',mm='';
+  for(var h=0;h<24;h++){var v=(h<10?'0':'')+h;hh+='<option value="'+v+'">'+v+'</option>';}
+  for(var m=0;m<60;m+=5){var v2=(m<10?'0':'')+m;mm+='<option value="'+v2+'">'+v2+'</option>';}
+  return '<div class="t24'+(extraClass?(' '+extraClass):'')+'" data-for="'+id+'">'
+    +'<input type="hidden" id="'+id+'">'
+    +'<select class="form-select t24-h" aria-label="Hour, 24 hour clock" onchange="t24Compose(this)"><option value="">--</option>'+hh+'</select>'
+    +'<span class="t24-sep">:</span>'
+    +'<select class="form-select t24-m" aria-label="Minutes" onchange="t24Compose(this)"><option value="">--</option>'+mm+'</select>'
+    +'</div>';
+}
+function t24Compose(el){
+  var box=el.closest('.t24'); if(!box)return;
+  var hid=box.querySelector('input[type=hidden]');
+  var h=box.querySelector('.t24-h').value, m=box.querySelector('.t24-m').value;
+  var val=(h&&m)?(h+':'+m):'';
+  if(hid){
+    hid.value=val;
+    try{hid.dispatchEvent(new Event('change',{bubbles:true}));}catch(e){}
+    try{hid.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}
+  }
+}
+/* Push a stored "HH:MM" value into the dropdowns. */
+function t24Set(id,val){
+  var box=document.querySelector('.t24[data-for="'+id+'"]'); if(!box)return;
+  var hid=box.querySelector('input[type=hidden]');
+  val=String(val||'');
+  if(hid)hid.value=val;
+  var p=val.split(':');
+  var h=(p[0]||'').padStart(2,'0'), m=(p[1]||'').padStart(2,'0');
+  var hs=box.querySelector('.t24-h'), ms=box.querySelector('.t24-m');
+  if(hs)hs.value=(val&&/^\d{2}$/.test(h))?h:'';
+  if(ms){
+    if(val&&/^\d{2}$/.test(m)){
+      /* snap to the nearest five minutes so any legacy value still shows */
+      var mi=Math.round(parseInt(m,10)/5)*5; if(mi>55)mi=55;
+      ms.value=(mi<10?'0':'')+mi;
+    } else ms.value='';
+  }
+}
+/* Build any control marked with a placeholder in the static HTML. */
+function t24Mount(){
+  document.querySelectorAll('.t24-mount').forEach(function(sp){
+    var id=sp.getAttribute('data-id'); if(!id)return;
+    var d=document.createElement('div');
+    d.innerHTML=t24HTML(id);
+    sp.parentNode.replaceChild(d.firstChild,sp);
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',t24Mount); else t24Mount();
+/* Re-sync every control on screen from its hidden value. */
+function t24RefreshAll(){
+  document.querySelectorAll('.t24').forEach(function(b){
+    var hid=b.querySelector('input[type=hidden]');
+    if(hid)t24Set(b.getAttribute('data-for'),hid.value||'');
+  });
+}
 /* Only http(s), mailto, tel and site-relative URLs may become clickable links. */
 function safeUrl(u){
   u=String(u==null?'':u).trim();
@@ -2272,6 +2334,7 @@ function openAdd(who){
   document.getElementById('m-md-mailsent').checked=false;
   document.getElementById('m-dz-revisions').value='0';
   document.getElementById('m-dz-status').value='Brief Received';
+  try{t24Set('m-md-start','');t24Set('m-md-end','');}catch(e){}
   try{evtFill(null,who);}catch(e){}
   renderModalLinks();
   styleModal(who);
@@ -2302,8 +2365,8 @@ function openEdit(who,id){
   document.getElementById('m-notes').value=task.notes||'';
   document.getElementById('m-md-event').value=task.mdEvent||'';
   document.getElementById('m-md-taken').value=task.mdTaken||'';
-  document.getElementById('m-md-start').value=task.mdStart||'';
-  document.getElementById('m-md-end').value=task.mdEnd||'';
+  t24Set('m-md-start',task.mdStart||'');
+  t24Set('m-md-end',task.mdEnd||'');
   document.getElementById('m-md-location').value=task.mdLocation||'';
   document.getElementById('m-md-file').value=task.mdFile||'';
   document.getElementById('m-md-cat').value=task.mdCategory||'';
@@ -2463,8 +2526,8 @@ function duplicateTask(who,id){
   document.getElementById('m-notes').value=task.notes||'';
   document.getElementById('m-md-event').value=task.mdEvent||'';
   document.getElementById('m-md-taken').value=task.mdTaken||'';
-  document.getElementById('m-md-start').value=task.mdStart||'';
-  document.getElementById('m-md-end').value=task.mdEnd||'';
+  t24Set('m-md-start',task.mdStart||'');
+  t24Set('m-md-end',task.mdEnd||'');
   document.getElementById('m-md-location').value=task.mdLocation||'';
   document.getElementById('m-md-file').value=task.mdFile||'';
   document.getElementById('m-md-cat').value=task.mdCategory||'';
@@ -2919,8 +2982,8 @@ function openLieu(who){
   document.getElementById('l-type').value='earned';
   document.getElementById('l-date').value='';
   document.getElementById('l-event').value='';
-  document.getElementById('l-from').value='';
-  document.getElementById('l-to').value='';
+  document.getElementById('l-from').value='';t24Set('l-from','');
+  document.getElementById('l-to').value='';t24Set('l-to','');
   document.getElementById('l-days').value='1';
   lieuTypeChange();
   document.getElementById('lieu-modal').classList.add('open');
@@ -3808,7 +3871,7 @@ function openEventModal(id,who){
   document.getElementById('event-modal-title').textContent=(ev?'Edit Event':'Add Event')+' \u00b7 '+(memberName(eventModalWho)||eventModalWho);
   document.getElementById('ev-name').value=ev?(ev.name||''):'';
   document.getElementById('ev-date').value=ev?(ev.date||''):'';
-  document.getElementById('ev-time').value=ev?(ev.time||''):'';
+  document.getElementById('ev-time').value=ev?(ev.time||''):'';t24Set('ev-time',ev?(ev.time||''):'');
   document.getElementById('ev-category').value=ev?(ev.category||''):'';
   document.getElementById('ev-notes').value=ev?(ev.notes||''):'';
   renderEvColorRow(ev?(ev.color||''):'');
@@ -4779,7 +4842,7 @@ html.dark .l2-hint b{color:#2bb3a5;}
       +'<div class="l2-seg"><button type="button" class="l2-seg-btn" id="l2-seg-earn" onclick="lieu2Type(\'earned\')"><i class="ti ti-plus"></i> Earn hours</button><button type="button" class="l2-seg-btn" id="l2-seg-use" onclick="lieu2Type(\'used\')"><i class="ti ti-minus"></i> Use leave</button></div>'
       +'<div class="form-group"><label class="form-label" id="l2-date-lbl">Date worked</label><input type="date" class="form-input" id="l2-date"></div>'
       +'<div class="form-group"><label class="form-label">Event / Reason</label><input type="text" class="form-input" id="l2-event" placeholder="e.g. Year 13 Graduation"></div>'
-      +'<div id="l2-earn-sec"><div class="form-row"><div class="form-group"><label class="form-label">Time from</label><input type="time" class="form-input" id="l2-from"></div><div class="form-group"><label class="form-label">Time to</label><input type="time" class="form-input" id="l2-to"></div></div><div class="form-group" style="max-width:200px;"><label class="form-label">Hours earned</label><input type="number" class="form-input" id="l2-hours" min="0.5" step="0.25" value="4"></div></div>'
+      +'<div id="l2-earn-sec"><div class="form-row"><div class="form-group"><label class="form-label">Time from</label>'+t24HTML('l2-from')+'</div><div class="form-group"><label class="form-label">Time to</label>'+t24HTML('l2-to')+'</div></div><div class="form-group" style="max-width:200px;"><label class="form-label">Hours earned</label><input type="number" class="form-input" id="l2-hours" min="0.5" step="0.25" value="4"></div></div>'
       +'<div id="l2-use-sec" style="display:none;"><div class="form-group"><label class="form-label">How much to use</label><div class="l2-usemode"><button type="button" class="l2-mode-btn" id="l2-m-full" onclick="lieu2Use(\'full\')">Full day</button><button type="button" class="l2-mode-btn" id="l2-m-half" onclick="lieu2Use(\'half\')">Half day</button><button type="button" class="l2-mode-btn" id="l2-m-custom" onclick="lieu2Use(\'custom\')">Custom</button></div><input type="number" class="form-input" id="l2-usehours" min="0.5" step="0.5" value="1" style="max-width:200px;margin-top:8px;display:none;"></div></div>'
       +'<div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="l2-note" rows="2" placeholder="e.g. Stayed after event for venue pack down"></textarea></div>'
       +'<div class="l2-hint" id="l2-hint"></div>'
@@ -4818,8 +4881,9 @@ html.dark .l2-hint b{color:#2bb3a5;}
     var dd=document.getElementById('l2-date'); if(dd)dd.value=(typeof todayStr==='function'?todayStr():'');
     var ev=document.getElementById('l2-event'); if(ev)ev.value=''; var nt=document.getElementById('l2-note'); if(nt)nt.value='';
     var hh=document.getElementById('l2-hours'); if(hh){hh.value='4'; hh.oninput=updateHint;}
-    var ff=document.getElementById('l2-from'); if(ff){ff.value=''; ff.oninput=syncHoursFromTime;}
-    var tt=document.getElementById('l2-to'); if(tt){tt.value=''; tt.oninput=syncHoursFromTime;}
+    try{t24Set('l2-from','');t24Set('l2-to','');}catch(e){}
+    var ff=document.getElementById('l2-from'); if(ff){ff.onchange=syncHoursFromTime;}
+    var tt=document.getElementById('l2-to'); if(tt){tt.onchange=syncHoursFromTime;}
     var uh=document.getElementById('l2-usehours'); if(uh){uh.value='1'; uh.oninput=updateHint;}
     lieu2Type('earned'); lieu2Use('full');
     var ti=document.getElementById('lieu2-title'); if(ti)ti.textContent='Leave in Lieu · '+nm(who2);
@@ -5189,13 +5253,14 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     el('editrec-body').innerHTML='<div class="form-group"><label class="form-label">Type</label><select class="form-select" id="er-type" onchange="var tr=document.getElementById(\'er-time-row\'); if(tr)tr.style.display=this.value===\'used\'?\'none\':\'flex\';"><option value="earned">Earned (add hours)</option><option value="used">Used (deduct hours)</option></select></div>'
       +'<div class="form-group"><label class="form-label">Date</label><input type="date" class="form-input" id="er-date" value="'+esc(r.date||'')+'"></div>'
       +'<div class="form-group"><label class="form-label">Event / Reason</label><input type="text" class="form-input" id="er-event" value="'+esc(r.event||'')+'"></div>'
-      +'<div class="form-row" id="er-time-row" style="display:'+(r.type==='used'?'none':'flex')+';"><div class="form-group"><label class="form-label">Time from</label><input type="time" class="form-input" id="er-from" value="'+esc(r.timeFrom||'')+'"></div><div class="form-group"><label class="form-label">Time to</label><input type="time" class="form-input" id="er-to" value="'+esc(r.timeTo||'')+'"></div></div>'
+      +'<div class="form-row" id="er-time-row" style="display:'+(r.type==='used'?'none':'flex')+';"><div class="form-group"><label class="form-label">Time from</label>'+t24HTML('er-from')+'</div><div class="form-group"><label class="form-label">Time to</label>'+t24HTML('er-to')+'</div></div>'
       +'<div class="form-group" style="max-width:200px;"><label class="form-label">Hours</label><input type="number" class="form-input" id="er-hours" min="0.5" step="0.25" value="'+esc(String(hrs))+'"></div>'
       +'<div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="er-note" rows="2">'+esc(r.note||'')+'</textarea></div>';
     var ty=el('er-type'); if(ty)ty.value=(r.type==='used')?'used':'earned';
+    try{t24Set('er-from',r.timeFrom||'');t24Set('er-to',r.timeTo||'');}catch(e){}
     (function(){ var ef=el('er-from'), et=el('er-to'), eh=el('er-hours');
       function eCalc(){ var f=ef&&ef.value, t=et&&et.value; if(!f||!t)return; var fp=f.split(':'),tp=t.split(':'); var fm=parseInt(fp[0],10)*60+parseInt(fp[1],10),tm=parseInt(tp[0],10)*60+parseInt(tp[1],10); if(isNaN(fm)||isNaN(tm))return; var df=tm-fm; if(df<0)df+=1440; if(eh)eh.value=Math.round((df/60)*100)/100; }
-      if(ef)ef.oninput=eCalc; if(et)et.oninput=eCalc;
+      if(ef)ef.onchange=eCalc; if(et)et.onchange=eCalc;
     })();
     el('editrec-modal').classList.add('open'); };
   window.openEditAnn=function(id){ var r=annCache.find(function(x){return x.id===id;}); if(!r)return; editCtx={kind:'ann',id:id}; buildEditModal();
@@ -6486,7 +6551,7 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
     w.innerHTML='<div class="lc-title"><i class="ti ti-tools-kitchen-2"></i> Lunch reminder</div>'
       +'<div class="lc-hint">Shows a banner on every tab during the lunch window. Saved for everyone.</div>'
       +'<div class="lc-toggle" id="lc-toggle"><span class="lc-switch"></span><span>Enabled</span></div>'
-      +'<div class="lc-row"><div class="lc-field"><label>Show from</label><input type="time" class="form-input" id="lc-start"></div><div class="lc-field"><label>Hide after</label><input type="time" class="form-input" id="lc-end"></div></div>'
+      +'<div class="lc-row"><div class="lc-field"><label>Show from</label>'+t24HTML('lc-start')+'</div><div class="lc-field"><label>Hide after</label>'+t24HTML('lc-end')+'</div></div>'
       +'<div class="lc-field" style="margin-bottom:6px;"><label>Message</label><input type="text" class="form-input" id="lc-label" placeholder="Lunch time"></div>'
       +'<label class="form-label" style="margin-top:8px;">Days</label><div class="lc-days" id="lc-days"></div>'
       +'<button class="btn btn-navy btn-full" id="lc-save" style="justify-content:center;"><i class="ti ti-check"></i> Save lunch reminder</button>';
@@ -6510,6 +6575,7 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
     var t=w.querySelector('#lc-toggle');if(t)t.classList.toggle('on',!!cfg.enabled);
     var st=w.querySelector('#lc-start');if(st)st.value=cfg.start||'11:00';
     var en=w.querySelector('#lc-end');if(en)en.value=cfg.end||'12:00';
+    try{t24Set('lc-start',cfg.start||'11:00');t24Set('lc-end',cfg.end||'12:00');}catch(e){}
     var lb=w.querySelector('#lc-label');if(lb)lb.value=cfg.label||'Lunch time';
     w.querySelectorAll('.lc-day').forEach(function(x){var d=+x.getAttribute('data-d');x.classList.toggle('on',Array.isArray(cfg.days)&&cfg.days.indexOf(d)>=0);});
   }
@@ -8177,6 +8243,8 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     }else if(f.type==='links'){
       inner='<div id="rc-links-box"></div><button type="button" class="btn btn-ghost btn-sm" onclick="rcAddLink()"><i class="ti ti-plus"></i> Add link</button>'
         +'<div class="rc-note" style="margin-top:6px;"><i class="ti ti-info-circle"></i> '+esc(U('links_note'))+'</div>';
+    }else if(f.type==='time'){
+      inner=t24HTML('rcf-'+f.k);
     }else{
       inner='<input class="form-input" id="rcf-'+f.k+'" type="'+(f.type||'text')+'"'+(f.type==='date'?' min="'+rcTodayStr()+'"':'')+' placeholder="'+ph+'" />';
     }
@@ -8314,6 +8382,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       +'<div class="rc-note" id="rc-step-err" style="display:none;color:#b91c1c;font-weight:700;margin-top:8px;"></div>'
       +nav+'<div class="rc-note" style="margin-top:9px;">'+esc(U('required'))+'</div></div>';
     rcFillStep();
+    try{t24RefreshAll();}catch(e){}
     rcRenderLinks();rcOnChange();
     var dlEl=document.getElementById('rcf-deadline');if(dlEl)dlEl.addEventListener('change',rcOnChange);
     try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
@@ -10511,6 +10580,12 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
 <style id="mdtime-style">
 .mb-time{background:var(--blue-light,#e8f0fb);color:#1d4ed8;font-variant-numeric:tabular-nums;}
 html.dark .mb-time{background:rgba(96,150,210,.22);color:#93b8e8;}
+</style>
+<style id="t24-style">
+.t24{display:flex;align-items:center;gap:6px;}
+.t24 .form-select{flex:1;min-width:64px;text-align:center;font-variant-numeric:tabular-nums;}
+.t24-sep{font-weight:800;color:var(--muted);}
+.t24:has(input.rc-err) .form-select{border-color:#dc2626;}
 </style>
 </body>
 
