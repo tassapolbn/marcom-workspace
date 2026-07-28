@@ -1523,7 +1523,7 @@ function tabLabel(w){const n=memberName(w);if(n)return n;return w==='junior'?'Ju
 function renderMember(who){
   if(who==='boss')return renderBoss();
   const d=DATA[who];if(!d)return;
-  const t=d.tasks;
+  const t=tasksOf(who);
   const active=t.filter(x=>x.status!=='done'&&x.status!=='canceled');
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   set(who+'-s-total',active.length);
@@ -3045,13 +3045,14 @@ function renderWidgets(tasks,who){
 }
 
 function renderBoss(){
-  const active=bossTasks.filter(t=>t.status!=='done'&&t.status!=='canceled');
+  const all=tasksOf('boss');
+  const active=all.filter(t=>t.status!=='done'&&t.status!=='canceled');
   document.getElementById('bs-total').textContent=active.length;
-  document.getElementById('bs-soon').textContent=bossTasks.filter(t=>isSoon(t)).length;
-  document.getElementById('bs-done').textContent=bossTasks.filter(t=>t.status==='done').length;
-  renderList(bossTasks,'boss','boss-list','boss-empty',bossFilter);
-  renderCalendar(bossTasks,'boss');
-  renderWidgets(bossTasks,'boss');
+  document.getElementById('bs-soon').textContent=all.filter(t=>isSoon(t)).length;
+  document.getElementById('bs-done').textContent=all.filter(t=>t.status==='done').length;
+  renderList(all,'boss','boss-list','boss-empty',bossFilter);
+  renderCalendar(all,'boss');
+  renderWidgets(all,'boss');
   if(window.evwsRefresh)try{evwsRefresh('boss');}catch(e){}
 }
 function renderBest(){
