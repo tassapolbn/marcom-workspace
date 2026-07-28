@@ -897,7 +897,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       </div>
       <div class="sub-nav">
         <button class="sub-tab act act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
-        <button class="sub-tab act-boss st-tasks" onclick="switchSub('boss','tasks',this)"><i class="ti ti-clipboard-list"></i> General Tasks</button>
+        <button class="sub-tab act-boss st-tasks" onclick="switchSub('boss','tasks',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','links',this)"><i class="ti ti-link"></i> Links</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','notes',this)"><i class="ti ti-notes"></i> Notes</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','sop',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>
@@ -913,7 +913,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         </div>
         <div style="margin-bottom:0.9rem;"><button class="btn btn-navy btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         <div class="filter-tabs">
-          <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All Tasks</button>
+          <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
           <button class="fpill" data-who="boss" data-f="in-progress" onclick="setFilter('boss','in-progress',this)">In Progress</button>
           <button class="fpill" data-who="boss" data-f="soon" onclick="setFilter('boss','soon',this)"><span class="pill-dot"></span>Due Soon</button>
@@ -1451,9 +1451,9 @@ const MEMBERS={
   boss:{role:'Marcom manager',icon:'ti-user',type:'legacy',def:'Boss'},
   dew:{role:'Graphic Designer',icon:'ti-palette',type:'standard',def:'Dew'},
   o:{role:'Photographer & Video Editor',icon:'ti-camera',type:'standard',def:'O'},
-  junior:{role:'Junior Events Coordinator',icon:'ti-user-plus',type:'standard',def:''}
+  junior:{role:'Junior Events Coordinator',icon:'ti-user-plus',type:'standard',def:'Eye'}
 };
-let memberNames={boss:'Boss',dew:'Dew',o:'O',junior:''};
+let memberNames={boss:'Boss',dew:'Dew',o:'O',junior:'Eye'};
 let teamRef=null;
 let pinSearchVal='';
 let deptAssets={};
@@ -1572,7 +1572,7 @@ function memberPanelHTML(w){
   +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="sub-nav">'
   +      (w==='junior'?'<button class="sub-tab act st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>':'')
-  +      '<button class="sub-tab'+(w==='junior'?'':' act')+' st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'General Tasks':'Tasks')+'</button>'
+  +      '<button class="sub-tab'+(w==='junior'?'':' act')+' st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'links\',this)"><i class="ti ti-link"></i> Links</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'notes\',this)"><i class="ti ti-notes"></i> Notes</button>'
   +      (w==='junior'?'<button class="sub-tab" onclick="switchSub(\''+w+'\',\'sop\',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>':'')
@@ -1879,7 +1879,7 @@ try{
   // Editable team member names (synced + persistent)
   teamRef=db.collection('dept_settings').doc('team');
   teamRef.onSnapshot(d=>{
-    if(d&&d.exists){const v=d.data()||{};memberNames=Object.assign({boss:'Boss',dew:'Dew',o:'O',junior:''},v.names||{});}
+    if(d&&d.exists){const v=d.data()||{};memberNames=Object.assign({boss:'Boss',dew:'Dew',o:'O',junior:'Eye'},v.names||{});}
     applyMemberNames();
   },e=>syncErr(e));
   assetsRef=db.collection('dew_assets').doc('library');
@@ -2040,9 +2040,12 @@ function moveCardTo(fromWho,taskId,target){
   if(!srcRef||!dstRef)return;
   uiConfirm({title:'Move task',message:'Move "'+(t.topic||t.title||'this task')+'" to '+memberName(target)+"'s board?",okLabel:'Move',icon:'ti-arrows-exchange'}).then(function(__ok){
   if(!__ok)return;
-  var data={};Object.keys(t).forEach(function(k){if(k!=='id')data[k]=t[k];});
+  var data={};Object.keys(t).forEach(function(k){if(k!=='id'&&k!=='__src')data[k]=t[k];});
   var _sharedPair=((fromWho==='boss'&&target==='junior')||(fromWho==='junior'&&target==='boss'));
-  if(!_sharedPair){data.eventId='';data.eventName='';}
+  /* The event LABEL always travels with the task. Only the workspace-specific
+     event id is dropped, because each workspace keeps its own event store. */
+  if(!_sharedPair){data.eventId='';}
+  Object.assign(data,stampEdit());
   try{
     var newRef=dstRef.doc();
     var batch=db.batch();
@@ -2228,7 +2231,19 @@ function autoGrowDesc(){
 function populateEventSelect(who,selId){
   const grp=document.getElementById('m-event-group'),sel=document.getElementById('m-event');
   if(!grp||!sel)return;
-  if(who!=='boss'&&who!=='junior'){grp.style.display='none';sel.innerHTML='<option value="">None (General Task)</option>';return;}
+  if(who!=='boss'&&who!=='junior'){
+    /* Dew / O: no picker, but show the tag the task carries so it is visible. */
+    var _t=modalState.editId?(tasksOf(who)||[]).find(function(x){return x.id===modalState.editId;}):null;
+    var _lbl=_t&&(_t.eventLabel||_t.eventName);
+    sel.innerHTML='<option value="">None (General Task)</option>';
+    if(_lbl){
+      grp.style.display='block';
+      sel.innerHTML='<option value="" selected>'+escHtml(_lbl)+'</option>';
+      sel.disabled=true;
+    } else { grp.style.display='none'; sel.disabled=false; }
+    return;
+  }
+  sel.disabled=false;
   const evs=(typeof evSorted==='function')?evSorted(who):eventsOf(who);
   let h='<option value="">None (General Task)</option>';
   evs.forEach(ev=>{h+='<option value="'+ev.id+'"'+(ev.id===selId?' selected':'')+'>'+escHtml(ev.name||'Untitled')+(ev.date?' \u00b7 '+fmtDate(ev.date):'')+'</option>';});
@@ -2352,12 +2367,19 @@ function saveTask(){
     data.dzRevisions=parseInt(document.getElementById('m-dz-revisions').value||'0',10)||0;
   }
   const evSel=document.getElementById('m-event');
+  const _prev=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
   if(evSel&&(modalState.who==='boss'||modalState.who==='junior')){
     data.eventId=evSel.value||'';
     const evObj=eventsOf(modalState.who).find(e=>e.id===data.eventId);
-    data.eventName=evObj?(evObj.name||''):'';
+    /* Keep an inherited label when the picker has no match, so an event tag
+       is never lost when a task is edited after being assigned onward. */
+    data.eventName=evObj?(evObj.name||''):(data.eventId?'':((_prev&&_prev.eventName)||''));
+  } else if(_prev){
+    /* Dew / O have no event picker: preserve whatever tag the task arrived with. */
+    if(_prev.eventId!==undefined)data.eventId=_prev.eventId||'';
+    if(_prev.eventName!==undefined)data.eventName=_prev.eventName||'';
   }
-  const old=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
+  const old=_prev;
   const evtOn=!!(document.getElementById('m-evt-on')||{}).checked;
   const wasEvent=isEventTask(old);
   if(evtOn){
@@ -2544,7 +2566,7 @@ function taskCardHTML(task,who){
   if(_evClr)_evStyle=_evTc?(' style="background:'+_evClr+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
   const evBadge=isEventTask(task)
     ? '<span class="mb mb-evt"><i class="ti ti-users-group" style="font-size:11px;"></i> '+escHtml(task.eventLabel||task.eventName||'Event')+'</span>'
-    : (task.eventId?'<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>':'');
+    : ((task.eventId||task.eventName)?'<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>':'');
   const reqBadge=task.requestRef?'<span class="mb mb-req"><i class="ti ti-send" style="font-size:11px;"></i> '+escHtml(task.requestRef)+'</span>':'';
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
@@ -2595,8 +2617,9 @@ function renderList(tasks,who,listId,emptyId,filter){
   if(!list)return;
   if(empty)empty.style.display='none';
   if(!loadedOf(who)){list.innerHTML=skeletonHTML();return;}
+  /* One board per tab: event-linked tasks are shown here too, tagged with
+     their event, so nothing is hidden inside a second board. */
   let pool=tasks;
-  if(who==='boss'||who==='junior')pool=tasks.filter(t=>!t.eventId);
   if(!pool.length&&empty){list.innerHTML='';empty.style.display='';return;}
   list.innerHTML=kanbanHTML(pool,who,filter);
 }
@@ -7129,6 +7152,10 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
 
   /* ---------- General Tasks hint ---------- */
   function updateGtHint(w){
+    /* Event tasks now appear on the single All Tasks board, so this
+       "they are hidden elsewhere" hint is retired. */
+    var old=document.getElementById(w+'-gt-hint'); if(old)old.remove();
+    if(true)return;
     var panel=document.getElementById(w+'-sub-tasks'); if(!panel)return;
     var n=0;
     try{n=tasksOf(w).filter(function(t){return !!t.eventId&&t.status!=='done'&&t.status!=='canceled';}).length;}catch(e){}
