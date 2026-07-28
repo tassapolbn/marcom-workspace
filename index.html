@@ -1140,6 +1140,10 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="form-group"><label class="form-label">Date Taken</label><input type="date" class="form-input" id="m-md-taken" /></div>
           <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-input" id="m-md-location" placeholder="e.g. Courtyard by Marriott" /></div>
         </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Shoot Start (24h)</label><input type="time" class="form-input" id="m-md-start" step="300" /></div>
+          <div class="form-group"><label class="form-label">Shoot End (24h)</label><input type="time" class="form-input" id="m-md-end" step="300" /></div>
+        </div>
         <div class="form-group"><label class="form-label">File Location</label><input type="text" class="form-input" id="m-md-file" placeholder="Drive link or folder path" /></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Media Category</label>
@@ -2264,7 +2268,7 @@ function openAdd(who){
   document.getElementById('m-status').value='pending';
   document.getElementById('m-cat').value='';
   document.getElementById('m-priority').value='medium';
-  ['m-md-event','m-md-taken','m-md-location','m-md-file','m-md-cat','m-md-upload','m-md-watermark','m-dz-type','m-dz-requestor','m-dz-brand','m-dz-file'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['m-md-event','m-md-taken','m-md-location','m-md-start','m-md-end','m-md-file','m-md-cat','m-md-upload','m-md-watermark','m-dz-type','m-dz-requestor','m-dz-brand','m-dz-file'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('m-md-mailsent').checked=false;
   document.getElementById('m-dz-revisions').value='0';
   document.getElementById('m-dz-status').value='Brief Received';
@@ -2298,6 +2302,8 @@ function openEdit(who,id){
   document.getElementById('m-notes').value=task.notes||'';
   document.getElementById('m-md-event').value=task.mdEvent||'';
   document.getElementById('m-md-taken').value=task.mdTaken||'';
+  document.getElementById('m-md-start').value=task.mdStart||'';
+  document.getElementById('m-md-end').value=task.mdEnd||'';
   document.getElementById('m-md-location').value=task.mdLocation||'';
   document.getElementById('m-md-file').value=task.mdFile||'';
   document.getElementById('m-md-cat').value=task.mdCategory||'';
@@ -2314,7 +2320,7 @@ function openEdit(who,id){
   styleModal(who);
   populateEventSelect(who,task.eventId||'');
   let _mode='standard';
-  if(who==='o')_mode=(task.mdCategory||task.mdUpload||task.mdEvent||task.mdFile||task.mdLocation||task.mdTaken||task.mdWatermark||task.mdMailSent)?'role':'standard';
+  if(who==='o')_mode=(task.mdCategory||task.mdUpload||task.mdEvent||task.mdFile||task.mdLocation||task.mdTaken||task.mdStart||task.mdEnd||task.mdWatermark||task.mdMailSent)?'role':'standard';
   else if(who==='dew')_mode=(task.dzType||task.dzBrand||task.dzRequestor||task.dzFile||(task.dzRevisions>0)||(task.dzStatus&&task.dzStatus!=='Brief Received'))?'role':'standard';
   setTaskType(_mode);
   if(window.rcTaskPanel)try{rcTaskPanel(task);}catch(e){}
@@ -2364,6 +2370,7 @@ function saveTask(){
   const gv=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
   if(modalState.who==='o'&&modalState.taskType==='role'){
     data.mdEvent=gv('m-md-event');data.mdTaken=gv('m-md-taken');data.mdLocation=gv('m-md-location');
+    data.mdStart=gv('m-md-start');data.mdEnd=gv('m-md-end');
     data.mdFile=gv('m-md-file');data.mdCategory=gv('m-md-cat');data.mdUpload=gv('m-md-upload');
     data.mdWatermark=gv('m-md-watermark');data.mdMailSent=document.getElementById('m-md-mailsent').checked;
   }
@@ -2456,6 +2463,8 @@ function duplicateTask(who,id){
   document.getElementById('m-notes').value=task.notes||'';
   document.getElementById('m-md-event').value=task.mdEvent||'';
   document.getElementById('m-md-taken').value=task.mdTaken||'';
+  document.getElementById('m-md-start').value=task.mdStart||'';
+  document.getElementById('m-md-end').value=task.mdEnd||'';
   document.getElementById('m-md-location').value=task.mdLocation||'';
   document.getElementById('m-md-file').value=task.mdFile||'';
   document.getElementById('m-md-cat').value=task.mdCategory||'';
@@ -2471,7 +2480,7 @@ function duplicateTask(who,id){
   modalLinks=JSON.parse(JSON.stringify(task.links||[]));renderModalLinks();
   populateEventSelect(who,task.eventId||'');
   let _mode='standard';
-  if(who==='o')_mode=(task.mdCategory||task.mdUpload||task.mdEvent||task.mdFile||task.mdLocation||task.mdTaken||task.mdWatermark||task.mdMailSent)?'role':'standard';
+  if(who==='o')_mode=(task.mdCategory||task.mdUpload||task.mdEvent||task.mdFile||task.mdLocation||task.mdTaken||task.mdStart||task.mdEnd||task.mdWatermark||task.mdMailSent)?'role':'standard';
   else if(who==='dew')_mode=(task.dzType||task.dzBrand||task.dzRequestor||task.dzFile||(task.dzRevisions>0)||(task.dzStatus&&task.dzStatus!=='Brief Received'))?'role':'standard';
   if(who==='o'||who==='dew')setTaskType(_mode);
   autoGrowDesc();
@@ -2642,6 +2651,7 @@ function renderList(tasks,who,listId,emptyId,filter){
 function isUrl(s){return s&&/^https?:\/\//i.test(s);}
 function oCardExtra(task){
   let h='<div class="role-row">';
+  if(task.mdStart)h+='<span class="mb mb-time"><i class="ti ti-clock" style="font-size:11px;"></i> '+escHtml(task.mdStart)+(task.mdEnd?('-'+escHtml(task.mdEnd)):'')+'</span>';
   if(task.mdCategory)h+='<span class="mb mb-media"><i class="ti ti-photo" style="font-size:11px;"></i> '+escHtml(task.mdCategory)+'</span>';
   if(task.mdUpload)h+='<span class="mb mb-uploaded"><i class="ti ti-cloud-check" style="font-size:11px;"></i> Uploaded '+fmtDate(task.mdUpload)+'</span>';
   else h+='<span class="mb mb-pending"><i class="ti ti-cloud-up" style="font-size:11px;"></i> Pending upload</span>';
@@ -7985,8 +7995,8 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   /* ---------------- language support (public page only) ---------------- */
   function rcLang(){ if(!RC_MODE)return 'en'; try{return localStorage.getItem('rc_lang')==='th'?'th':'en';}catch(e){return 'en';} }
   var RC_UI={
-   en:{back:'Back',next:'Next',review:'Review & Submit',submit:'Submit Request',submitting:'Submitting...',edit:'Edit',section:'Section',of:'of',select:'Select...',required:'Fields marked * are required.',review_title:'Review your request',review_note:'Please check the details below. Tap Edit to change any section.',confirm_note:'By submitting, you confirm the details above are correct.',copy:'Copy reference number',copied:'Copied!',keep_ref:'Please keep this reference number. Use it together with your email address to track the status below at any time.',links_lbl:'Attached links',track_title:'Track My Requests',track_btn:'Track',track_ph_ref:'Reference no. (REQ-...)',track_ph_email:'Your email address',track_note:'Enter the reference number from your confirmation together with the email you used. Requests submitted from this device are checked automatically below.',track_none:'Requests you submit from this device will appear here automatically.',track_checking:'Checking...',track_checking_recent:'Checking your recent requests...',track_nf:'No request was found for that reference number and email combination.',track_none_recent:'No recent requests to show. Use the tracker above with your reference number.',track_both:'Enter both the reference number and the email address used on the request.',success_t:'Request received. Thank you!',another:'Submit another request',choose:'What would you like to request?',start:'Start request',step1:'Choose a request type',step2:'Fill in the form · under 3 minutes',step3:'Track it with your reference number',hero_i:'The official portal for graphic design and photography requests. Submissions go directly to the MARCOM team and can be tracked with your reference number.',fail:'Your request could not be submitted. Please check your connection and try again, or contact the MARCOM team directly.',missing:'Please complete the highlighted required fields.',dw1:'This deadline is only ',dw2:' day(s) away. Short-notice requests may need to be discussed with the MARCOM team first.',links_note:'Make sure sharing is set so the MARCOM team can open the links.'},
-   th:{back:'ย้อนกลับ',next:'ถัดไป',review:'ตรวจสอบและส่ง',submit:'ส่งคำขอ',submitting:'กำลังส่ง...',edit:'แก้ไข',section:'ส่วนที่',of:'จาก',select:'เลือก...',required:'ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก',review_title:'ตรวจสอบคำขอของคุณ',review_note:'กรุณาตรวจสอบข้อมูลด้านล่าง กด "แก้ไข" หากต้องการเปลี่ยนแปลง',confirm_note:'เมื่อกดส่ง ถือว่าคุณยืนยันว่าข้อมูลข้างต้นถูกต้อง',copy:'คัดลอกหมายเลขอ้างอิง',copied:'คัดลอกแล้ว!',keep_ref:'กรุณาเก็บหมายเลขอ้างอิงนี้ไว้ ใช้คู่กับอีเมลของคุณเพื่อติดตามสถานะได้ตลอดเวลา',links_lbl:'ลิงก์ที่แนบ',track_title:'ติดตามคำขอของฉัน',track_btn:'ตรวจสอบ',track_ph_ref:'หมายเลขอ้างอิง (REQ-...)',track_ph_email:'อีเมลของคุณ',track_note:'กรอกหมายเลขอ้างอิงจากหน้ายืนยัน พร้อมอีเมลที่ใช้ส่งคำขอ คำขอที่ส่งจากเครื่องนี้จะแสดงอัตโนมัติด้านล่าง',track_none:'คำขอที่ส่งจากอุปกรณ์นี้จะแสดงที่นี่โดยอัตโนมัติ',track_checking:'กำลังตรวจสอบ...',track_checking_recent:'กำลังตรวจสอบคำขอล่าสุดของคุณ...',track_nf:'ไม่พบคำขอสำหรับหมายเลขอ้างอิงและอีเมลนี้',track_none_recent:'ยังไม่มีคำขอล่าสุด กรุณาใช้ช่องด้านบนพร้อมหมายเลขอ้างอิง',track_both:'กรุณากรอกทั้งหมายเลขอ้างอิงและอีเมลที่ใช้ส่งคำขอ',success_t:'ได้รับคำขอเรียบร้อยแล้ว ขอบคุณค่ะ',another:'ส่งคำขอใหม่อีกครั้ง',choose:'ต้องการขอบริการด้านใด?',start:'เริ่มกรอกคำขอ',step1:'เลือกประเภทคำขอ',step2:'กรอกแบบฟอร์ม · ใช้เวลาไม่ถึง 3 นาที',step3:'ติดตามสถานะด้วยหมายเลขอ้างอิง',hero_i:'ช่องทางอย่างเป็นทางการสำหรับขอออกแบบกราฟิกและถ่ายภาพ คำขอจะส่งตรงถึงทีม MARCOM และติดตามสถานะได้ด้วยหมายเลขอ้างอิง',fail:'ไม่สามารถส่งคำขอได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือติดต่อทีม MARCOM โดยตรง',missing:'กรุณากรอกช่องที่จำเป็น (ไฮไลต์สีแดง) ให้ครบถ้วน',dw1:'เหลือเวลาเพียง ',dw2:' วันถึงกำหนดส่ง งานเร่งด่วนอาจต้องปรึกษาทีม MARCOM ก่อน',links_note:'กรุณาตั้งค่าการแชร์ลิงก์ให้ทีม MARCOM สามารถเปิดดูได้'}
+   en:{back:'Back',next:'Next',review:'Review & Submit',submit:'Submit Request',submitting:'Submitting...',edit:'Edit',section:'Section',of:'of',select:'Select...',required:'Fields marked * are required.',review_title:'Review your request',review_note:'Please check the details below. Tap Edit to change any section.',confirm_note:'By submitting, you confirm the details above are correct.',copy:'Copy reference number',copied:'Copied!',keep_ref:'Please keep this reference number. Use it together with your email address to track the status below at any time.',links_lbl:'Attached links',track_title:'Track My Requests',track_btn:'Track',track_ph_ref:'Reference no. (REQ-...)',track_ph_email:'Your email address',track_note:'Enter the email address you used and every request from that address will be listed, newest first.',track_none:'Enter your email address above to see your requests.',track_checking:'Checking...',track_checking_recent:'Checking your recent requests...',track_nf:'No requests were found for that email address.',track_none_recent:'No recent requests to show. Use the tracker above with your reference number.',track_both:'Please enter your email address.',success_t:'Request received. Thank you!',another:'Submit another request',choose:'What would you like to request?',start:'Start request',step1:'Choose a request type',step2:'Fill in the form · under 3 minutes',step3:'Track it with your reference number',hero_i:'The official portal for graphic design and photography requests. Submissions go directly to the MARCOM team and can be tracked with your reference number.',fail:'Your request could not be submitted. Please check your connection and try again, or contact the MARCOM team directly.',missing:'Please complete the highlighted required fields.',dw1:'This deadline is only ',dw2:' day(s) away. Short-notice requests may need to be discussed with the MARCOM team first.',links_note:'Make sure sharing is set so the MARCOM team can open the links.',av_check:'Checking the photographer’s availability...',av_free:'This time looks free. Please continue.',av_busy:'Our photographer already has a booking at this time. You can still send this request: if the venues are close or the shoot is short, we may be able to cover both. Please add a note below, or message the MARCOM team so we can agree the timing.',av_note:'Availability is a guide only. The MARCOM team confirms every booking.'},
+   th:{back:'ย้อนกลับ',next:'ถัดไป',review:'ตรวจสอบและส่ง',submit:'ส่งคำขอ',submitting:'กำลังส่ง...',edit:'แก้ไข',section:'ส่วนที่',of:'จาก',select:'เลือก...',required:'ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก',review_title:'ตรวจสอบคำขอของคุณ',review_note:'กรุณาตรวจสอบข้อมูลด้านล่าง กด "แก้ไข" หากต้องการเปลี่ยนแปลง',confirm_note:'เมื่อกดส่ง ถือว่าคุณยืนยันว่าข้อมูลข้างต้นถูกต้อง',copy:'คัดลอกหมายเลขอ้างอิง',copied:'คัดลอกแล้ว!',keep_ref:'กรุณาเก็บหมายเลขอ้างอิงนี้ไว้ ใช้คู่กับอีเมลของคุณเพื่อติดตามสถานะได้ตลอดเวลา',links_lbl:'ลิงก์ที่แนบ',track_title:'ติดตามคำขอของฉัน',track_btn:'ตรวจสอบ',track_ph_ref:'หมายเลขอ้างอิง (REQ-...)',track_ph_email:'อีเมลของคุณ',track_note:'กรอกอีเมลที่ใช้ส่งคำขอ ระบบจะแสดงคำขอทั้งหมดของอีเมลนี้ เรียงจากล่าสุด',track_none:'กรอกอีเมลด้านบนเพื่อดูคำขอของท่าน',track_checking:'กำลังตรวจสอบ...',track_checking_recent:'กำลังตรวจสอบคำขอล่าสุดของคุณ...',track_nf:'ไม่พบคำขอสำหรับอีเมลนี้',track_none_recent:'ยังไม่มีคำขอล่าสุด กรุณาใช้ช่องด้านบนพร้อมหมายเลขอ้างอิง',track_both:'กรุณากรอกอีเมลของท่าน',success_t:'ได้รับคำขอเรียบร้อยแล้ว ขอบคุณค่ะ',another:'ส่งคำขอใหม่อีกครั้ง',choose:'ต้องการขอบริการด้านใด?',start:'เริ่มกรอกคำขอ',step1:'เลือกประเภทคำขอ',step2:'กรอกแบบฟอร์ม · ใช้เวลาไม่ถึง 3 นาที',step3:'ติดตามสถานะด้วยหมายเลขอ้างอิง',hero_i:'ช่องทางอย่างเป็นทางการสำหรับขอออกแบบกราฟิกและถ่ายภาพ คำขอจะส่งตรงถึงทีม MARCOM และติดตามสถานะได้ด้วยหมายเลขอ้างอิง',fail:'ไม่สามารถส่งคำขอได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือติดต่อทีม MARCOM โดยตรง',missing:'กรุณากรอกช่องที่จำเป็น (ไฮไลต์สีแดง) ให้ครบถ้วน',dw1:'เหลือเวลาเพียง ',dw2:' วันถึงกำหนดส่ง งานเร่งด่วนอาจต้องปรึกษาทีม MARCOM ก่อน',links_note:'กรุณาตั้งค่าการแชร์ลิงก์ให้ทีม MARCOM สามารถเปิดดูได้',av_check:'กำลังตรวจสอบคิวช่างภาพ...',av_free:'ช่วงเวลานี้ว่าง กรุณากรอกข้อมูลต่อ',av_busy:'ช่างภาพมีงานอื่นในช่วงเวลานี้แล้ว ท่านยังส่งคำขอได้ หากสถานที่ใกล้กันหรือใช้เวลาสั้น ทีมอาจดูแลได้ทั้งสองงาน กรุณาระบุในหมายเหตุหรือติดต่อทีม MARCOM เพื่อตกลงเวลา',av_note:'ข้อมูลนี้เป็นเพียงแนวทาง ทีม MARCOM จะยืนยันการจองอีกครั้ง'}
   };
   function U(k){var l=rcLang();return (RC_UI[l]&&RC_UI[l][k])||RC_UI.en[k]||k;}
   var RC_TH={
@@ -8078,8 +8088,8 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
         {k:'eventName',l:'Event Name',type:'text',req:1,ph:'e.g. Christmas Fair'},
         {k:'eventDate',l:'Event Date',type:'date',req:1,half:1},
         {k:'venue',l:'Venue',type:'text',half:1,ph:'e.g. Main Hall, HSC campus'},
-        {k:'startTime',l:'Start Time',type:'time',half:1},
-        {k:'endTime',l:'End Time',type:'time',half:1}]},
+        {k:'startTime',l:'Start Time (24h)',type:'time',req:1,half:1},
+        {k:'endTime',l:'End Time (24h)',type:'time',req:1,half:1}]},
       {t:'Photography Details',icon:'ti-camera',fields:[
         {k:'photoTypes',l:'Photography Type (select all that apply)',type:'multi',opts:['Group Photo','Atmosphere','Activities','Meeting','Performance','Awards','Guest Speakers','Classroom','Sports','Candid','Marketing Photos']},
         {k:'deliverables',l:'Deliverables',type:'multi',opts:['Edited Photos','Raw Photos']},
@@ -8315,6 +8325,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       var src=document.getElementById('rcf-'+p[0]);
       el.style.display=(src&&src.value===p[1])?'':'none';
     });
+    if(rcCurT&&rcCurT.key==='photo'&&window.rcCheckAvailability)rcCheckAvailability();
     var dl=document.getElementById('rcf-deadline');
     if(dl){
       var w=document.getElementById('rc-deadline-warn'),days=null;
@@ -8323,6 +8334,51 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       if(need&&!w){w=document.createElement('div');w.id='rc-deadline-warn';w.className='rc-note';w.style.cssText='color:#b45309;font-weight:600;margin-top:6px;';var fw=dl.closest('.rc-field')||dl.parentNode;if(fw)fw.appendChild(w);}
       if(w){if(need){w.innerHTML='<i class="ti ti-alert-triangle"></i> '+U('dw1')+days+U('dw2');w.style.display='';}else{w.style.display='none';}}
     }
+  };
+  /* ---- availability guide for photography requests (no calendar details are exposed) ---- */
+  var avTimer=null,avLast='';
+  function avBox(){
+    var anchor=document.getElementById('rcf-endTime')||document.getElementById('rcf-eventDate');
+    if(!anchor)return null;
+    var b=document.getElementById('rc-avail');
+    if(!b){
+      b=document.createElement('div');
+      b.id='rc-avail'; b.className='rc-sec-hint';
+      b.setAttribute('role','status'); b.setAttribute('aria-live','polite');
+      var wrap=anchor.closest('.rc-card')||anchor.parentNode;
+      if(wrap)wrap.appendChild(b);
+    }
+    return b;
+  }
+  function avPaint(state,msg){
+    var b=avBox(); if(!b)return;
+    var ic=state==='busy'?'ti-alert-triangle':(state==='free'?'ti-circle-check':'ti-loader-2');
+    b.style.display='flex';
+    b.style.background=state==='busy'?'var(--amber-light,#fdf3e0)':(state==='free'?'var(--green-light,#e7f6ec)':'var(--gray-light)');
+    b.style.color=state==='busy'?'#8a4b09':(state==='free'?'#0f6b34':'var(--muted)');
+    b.innerHTML='<i class="ti '+ic+'"></i><span>'+esc(msg)+(state!=='checking'?('<br><span style="opacity:.85;font-size:11.5px;">'+esc(U('av_note'))+'</span>'):'')+'</span>';
+  }
+  window.rcCheckAvailability=function(){
+    var d=(document.getElementById('rcf-eventDate')||{}).value||'';
+    var b0=document.getElementById('rc-avail');
+    if(!d){ if(b0)b0.style.display='none'; avLast=''; return; }
+    var st=(document.getElementById('rcf-startTime')||{}).value||'';
+    var en=(document.getElementById('rcf-endTime')||{}).value||'';
+    var key=d+'|'+st+'|'+en;
+    if(key===avLast)return;
+    avLast=key;
+    if(avTimer)clearTimeout(avTimer);
+    avPaint('checking',U('av_check'));
+    avTimer=setTimeout(function(){
+      fetch('/.netlify/functions/check-availability',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:d,startTime:st,endTime:en})})
+        .then(function(r){return r.json();})
+        .then(function(j){
+          var b=document.getElementById('rc-avail');
+          if(!j||j.ok!==true){ if(b)b.style.display='none'; return; }
+          avPaint(j.busy?'busy':'free',j.busy?U('av_busy'):U('av_free'));
+        })
+        .catch(function(){ var b=document.getElementById('rc-avail'); if(b)b.style.display='none'; });
+    },450);
   };
   window.rcAddLink=function(){rcLinks.push({title:'',url:''});rcRenderLinks();};
   window.rcRmLink=function(i){rcLinks.splice(i,1);rcRenderLinks();};
@@ -8430,7 +8486,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       +'<button class="btn btn-navy" onclick="rcHomeGo()"><i class="ti ti-plus"></i> '+esc(U('another'))+'</button>'
       +'</div></div>'
       +histHTML();
-    var rf=document.getElementById('rc-hist-ref'); if(rf)rf.value=d.refNo;
+    var rf=document.getElementById('rc-hist-email'); if(rf&&d.email)rf.value=d.email;
     try{if(window.uxpCelebrate)uxpCelebrate();}catch(e){}
     rcRenderHist();
   }
@@ -8525,17 +8581,21 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   function histHTML(){
     var em=localStorage.getItem('rc_email')||'';
     return '<div class="rc-card"><div class="rc-sec-h"><i class="ti ti-history"></i> '+esc(U('track_title'))+'</div>'
-      +'<div class="rc-email-row"><input class="form-input" id="rc-hist-ref" type="text" placeholder="'+esc(U('track_ph_ref'))+'" style="max-width:200px;" aria-label="'+esc(U('track_ph_ref'))+'" />'
-      +'<input class="form-input" id="rc-hist-email" type="email" placeholder="'+esc(U('track_ph_email'))+'" value="'+esc(em)+'" aria-label="'+esc(U('track_ph_email'))+'" />'
+      +'<div class="rc-email-row"><input class="form-input" id="rc-hist-email" type="email" placeholder="'+esc(U('track_ph_email'))+'" value="'+esc(em)+'" aria-label="'+esc(U('track_ph_email'))+'" />'
       +'<button class="btn btn-ghost" onclick="rcTrackOne()"><i class="ti ti-search"></i> '+esc(U('track_btn'))+'</button></div>'
       +'<div class="rc-note" style="margin-top:7px;">'+esc(U('track_note'))+'</div>'
       +'<div id="rc-hist-list" style="margin-top:11px;"></div></div>';
   }
-  function rcStatusLookup(ref,em){
-    return fetch('/.netlify/functions/request-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refNo:ref,email:em})})
+  /* One lookup by email returns everything that address has submitted. */
+  function rcStatusLookup(em){
+    return fetch('/.netlify/functions/request-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})})
       .then(function(res){return res.json().catch(function(){return null;});})
-      .then(function(j){return (j&&j.ok===true&&j.request)?j.request:null;})
-      .catch(function(){return null;});
+      .then(function(j){
+        if(!j||j.ok!==true)return [];
+        if(j.requests&&j.requests.length)return j.requests;
+        return j.request?[j.request]:[];
+      })
+      .catch(function(){return [];});
   }
   function rcHistRow(r){
     return '<div class="rc-hist-row"><span class="rq-ref">'+esc(r.refNo||'')+'</span>'
@@ -8545,24 +8605,21 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   }
   window.rcTrackOne=function(){
     var box=document.getElementById('rc-hist-list');if(!box)return;
-    var ref=((document.getElementById('rc-hist-ref')||{}).value||'').trim().toUpperCase();
     var em=((document.getElementById('rc-hist-email')||{}).value||'').trim().toLowerCase();
-    if(!ref||!em){box.innerHTML='<div class="rc-note">'+esc(U('track_both'))+'</div>';return;}
+    if(!em){box.innerHTML='<div class="rc-note">'+esc(U('track_both'))+'</div>';return;}
     try{localStorage.setItem('rc_email',em);}catch(e){}
     box.innerHTML='<div class="rc-note">'+esc(U('track_checking'))+'</div>';
-    rcStatusLookup(ref,em).then(function(r){
-      if(!r){box.innerHTML='<div class="rc-note">'+esc(U('track_nf'))+'</div>';return;}
-      box.innerHTML=rcHistRow(r);
+    rcStatusLookup(em).then(function(rows){
+      if(!rows.length){box.innerHTML='<div class="rc-note">'+esc(U('track_nf'))+'</div>';return;}
+      box.innerHTML=rows.map(rcHistRow).join('');
     });
   };
   window.rcRenderHist=function(){
     var box=document.getElementById('rc-hist-list');if(!box)return;
     var em=(localStorage.getItem('rc_email')||'').toLowerCase();
-    var refs=[];try{refs=JSON.parse(localStorage.getItem('rc_refs')||'[]');}catch(e){}
-    if(!em||!refs.length){box.innerHTML='<div class="rc-note">'+esc(U('track_none'))+'</div>';return;}
+    if(!em){box.innerHTML='<div class="rc-note">'+esc(U('track_none'))+'</div>';return;}
     box.innerHTML='<div class="rc-note">'+esc(U('track_checking_recent'))+'</div>';
-    Promise.all(refs.slice(0,8).map(function(x){return rcStatusLookup(x.ref,em);})).then(function(rows){
-      rows=rows.filter(Boolean);
+    rcStatusLookup(em).then(function(rows){
       if(!rows.length){box.innerHTML='<div class="rc-note">'+esc(U('track_none_recent'))+'</div>';return;}
       box.innerHTML=rows.map(rcHistRow).join('');
     });
@@ -8657,7 +8714,8 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       links:(r.links||[]).map(function(l){return {title:l.title||'Attachment',url:l.url};}),
       requestId:r.id,requestRef:r.refNo||'',requestType:T.key,requestData:d};
     if(T.key==='design'){task.dzType=d.designType||'';task.dzRequestor=(r.requester&&r.requester.name)||'';task.dzStatus='Brief Received';task.dzBrand=r.eventName||'';}
-    if(T.key==='photo'){task.mdEvent=r.eventName||'';task.mdLocation=d.venue||'';task.mdCategory='Photos';}
+    if(T.key==='photo'){task.mdEvent=r.eventName||'';task.mdLocation=d.venue||'';task.mdCategory='Photos';
+      task.mdTaken=r.eventDate||'';task.mdStart=d.startTime||'';task.mdEnd=d.endTime||'';}
     try{task.createdAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
     f.collection(w+'_tasks').add(task).then(function(tr){f.collection('requests').doc(r.id).update({taskId:tr.id}).catch(function(){});}).catch(function(){try{alert('Could not create the task.');}catch(e){}});
   };
@@ -10450,6 +10508,10 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
 })();
 </script>
+<style id="mdtime-style">
+.mb-time{background:var(--blue-light,#e8f0fb);color:#1d4ed8;font-variant-numeric:tabular-nums;}
+html.dark .mb-time{background:rgba(96,150,210,.22);color:#93b8e8;}
+</style>
 </body>
 
 </html>

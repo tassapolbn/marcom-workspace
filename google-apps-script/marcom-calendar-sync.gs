@@ -115,6 +115,31 @@ function doPost(e) {
       return json_({ ok: true, eventId: found.getId() });
     }
 
+    /* Availability check for the public Request Centre.
+       Returns ONLY whether the photographer is busy and how many bookings
+       overlap. It never returns titles, guests, locations or any other
+       calendar detail, so nothing private can leak to the public page. */
+    if (action === 'busy') {
+      if (!body.date) return json_({ ok: false, error: 'no date' });
+      var dayStart = new Date(body.date + 'T00:00:00');
+      var dayEnd = new Date(body.date + 'T23:59:59');
+      var evs = cal.getEvents(dayStart, dayEnd);
+      var count = 0;
+      if (body.startTime && body.endTime) {
+        var wantS = new Date(body.date + 'T' + body.startTime + ':00');
+        var wantE = new Date(body.date + 'T' + body.endTime + ':00');
+        for (var j = 0; j < evs.length; j++) {
+          var ev = evs[j], es, ee;
+          if (ev.isAllDayEvent()) { es = dayStart; ee = dayEnd; }
+          else { es = ev.getStartTime(); ee = ev.getEndTime(); }
+          if (es < wantE && ee > wantS) count++;
+        }
+      } else {
+        count = evs.length;
+      }
+      return json_({ ok: true, busy: count > 0, count: count });
+    }
+
     if (action === 'delete') {
       var target = findEvent_(cal, body);
       if (!target) return json_({ ok: true, deleted: 0, note: 'nothing to delete' });
