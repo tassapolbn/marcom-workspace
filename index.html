@@ -2287,7 +2287,11 @@ function saveTask(){
     ref.doc(modalState.editId).update(data);
     try{if(old&&old.requestId&&old.status!==data.status&&window.rcMirrorStatus)rcMirrorStatus(old.requestId,data.status);}catch(e){}
   }
-  else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref.add(data);}
+  else{
+    data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+    ref.add(data);
+    try{ if(data.dueDate&&window.uxpOfferCalendar)uxpOfferCalendar({title:data.topic,date:data.dueDate,notes:data.description||data.notes||''}); }catch(e){}
+  }
   window.__sopSaving=true;closeModal();window.__sopSaving=false;
   if(window.__sopBatch&&window.__sopOpenNext)window.__sopOpenNext();
 }
@@ -2692,12 +2696,22 @@ function toggleSickMode(){
   if(label)label.textContent='Tap dates to mark sick: '+(sickQuickMode?'ON':'OFF');
   if(grid)grid.classList.toggle('sick-mode-active',sickQuickMode);
 }
+function sickErr(e){
+  console.error('[sick] write failed',e);
+  var code=(e&&e.code)||'';
+  var msg=/permission|insufficient/i.test(code+' '+((e&&e.message)||''))
+    ? 'Saving was blocked by the database permissions for this workspace. Please ask Boss to re-publish the Firestore rules.'
+    : 'Could not save this sick leave record: '+((e&&e.message)||code||'unknown error');
+  try{uiToast(msg,{duration:9000});}catch(_){ alert(msg); }
+}
 function toggleSickDate(ds,who){
   who=who||'boss';if(!ds)return;
-  const ref=sickRefOf(who);if(!ref)return;
+  let ref=sickRefOf(who);
+  if(!ref){try{ref=firebase.firestore().collection(who==='boss'?'sick_leave':(who+'_sick'));}catch(e){}}
+  if(!ref){try{uiToast('The workspace is still connecting. Please try again in a moment.');}catch(e){}return;}
   const existing=sickOf(who).find(s=>s.date===ds);
-  if(existing)ref.doc(existing.id).delete();
-  else ref.doc(ds).set({date:ds,year:parseInt(ds.split('-')[0])});
+  if(existing)ref.doc(existing.id).delete().catch(sickErr);
+  else ref.doc(ds).set({date:ds,year:parseInt(ds.split('-')[0])}).catch(sickErr);
 }
 function addSickDay(who){
   who=who||'boss';
@@ -4546,7 +4560,15 @@ html.dark .l2-hint b{color:#2bb3a5;}
   var MORDER=(typeof MEMBER_ORDER!=='undefined')?MEMBER_ORDER:['boss','dew','o','junior'];
   function fdb(){ try{return firebase.firestore();}catch(e){return null;} }
   function lOf(w){ try{return lieuOf(w)||[];}catch(e){return [];} }
-  function refOfL(w){ try{return lieuRefOf(w);}catch(e){return null;} }
+  function refOfL(w){
+    var r=null;
+    try{ r=lieuRefOf(w); }catch(e){ r=null; }
+    if(r)return r;
+    /* Fallback: build the collection reference directly so a slow listener
+       start can never block the tab owner from saving their own record. */
+    try{ var d=fdb(); if(d)return d.collection(w==='boss'?'lieu_records':(w+'_lieu')); }catch(e){}
+    return null;
+  }
   function esc(s){ try{return escHtml(s);}catch(e){return (s==null?'':String(s));} }
   function fdt(d){ try{return fmtDate(d);}catch(e){return d||'';} }
   function nm(w){ try{return tabLabel(w);}catch(e){return w;} }
@@ -4608,7 +4630,7 @@ html.dark .l2-hint b{color:#2bb3a5;}
       +'<div class="form-group"><label class="form-label">Notes (optional)</label><textarea class="form-textarea" id="l2-note" rows="2" placeholder="e.g. Stayed after event for venue pack down"></textarea></div>'
       +'<div class="l2-hint" id="l2-hint"></div>'
       +'</div>'
-      +'<div class="modal-footer"><button class="btn btn-ghost" style="flex:0 0 auto;" onclick="lieu2Close()">Cancel</button><button class="btn btn-teal" style="flex:1;justify-content:center;" onclick="lieu2Save()"><i class="ti ti-check"></i> Save</button></div></div>';
+      +'<div class="modal-footer"><button class="btn btn-ghost" style="flex:0 0 auto;" onclick="lieu2Close()">Cancel</button><button class="btn btn-teal" style="flex:1;justify-content:center;" id="l2-save-btn" onclick="lieu2Save()"><i class="ti ti-check"></i> Save</button></div></div>';
     document.body.appendChild(m);
   }
   function currentHours(){
@@ -4657,8 +4679,26 @@ html.dark .l2-hint b{color:#2bb3a5;}
     var rec={type:l2type,date:date,event:((document.getElementById('l2-event')||{}).value||'').trim(),note:((document.getElementById('l2-note')||{}).value||'').trim(),hours:hours,days:Math.round((hours/HPD)*10000)/10000};
     if(l2type==='earned'){ rec.timeFrom=(document.getElementById('l2-from')||{}).value||''; rec.timeTo=(document.getElementById('l2-to')||{}).value||''; }
     try{ rec.createdAt=firebase.firestore.FieldValue.serverTimestamp(); }catch(e){}
-    try{ ref.add(rec); }catch(e){ console.error(e); }
-    lieu2Close(); };
+    try{ rec.createdBy=(window.__cur&&window.__cur.email)||''; }catch(e){}
+    var btn=document.getElementById('l2-save-btn');
+    if(btn){btn.disabled=true;}
+    var p=null;
+    try{ p=ref.add(rec); }catch(e){ console.error(e); }
+    if(!p||!p.then){ if(btn)btn.disabled=false; try{uiToast('Could not save: the workspace is still connecting. Please try again in a moment.');}catch(e){} return; }
+    p.then(function(){
+      try{uiToast((l2type==='earned'?'Added ':'Deducted ')+fmtNum(hours)+' hours of leave in lieu');}catch(e){}
+      if(btn)btn.disabled=false;
+      lieu2Close();
+    }).catch(function(e){
+      console.error('[lieu] save failed',e);
+      if(btn)btn.disabled=false;
+      var code=(e&&e.code)||'';
+      var msg=/permission|insufficient/i.test(code+' '+((e&&e.message)||''))
+        ? 'Saving was blocked by the database permissions for this workspace. Please ask Boss to re-publish the Firestore rules.'
+        : 'Could not save this record: '+((e&&e.message)||code||'unknown error');
+      try{uiToast(msg,{duration:9000});}catch(_){ alert(msg); }
+    });
+  };
 
   function injectSettings(){ var body=document.querySelector('#settings-modal .modal-body'); if(!body||document.getElementById('lieu-cfg'))return;
     var div=document.createElement('div'); div.id='lieu-cfg'; div.style.cssText='margin-top:14px;padding-top:14px;border-top:1px solid var(--border);';
@@ -8413,8 +8453,42 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       var t;try{t=(tasksOf(w)||[]).find(function(x){return x.id===r.taskId;});}catch(e){}
       if(t){try{switchTab(w);openEdit(w,r.taskId);}catch(e){}return;}
     }
+    /* Photography: warn about a possible double-booking BEFORE the task is created. */
+    var clash=(w==='o')?rcFindClash(r):null;
+    if(clash){
+      var d=r.data||{};
+      var when=[d.startTime,d.endTime].filter(Boolean).join(' - ');
+      uiConfirm({
+        title:'Possible double booking',
+        icon:'ti-alert-triangle',
+        message:'There is already something booked on '+(r.eventDate||r.deadline||'that date')+': "'+clash+'".'
+          +'\n\nThis request is for "'+(r.eventName||'the event')+'"'+(when?' at '+when:'')+'.'
+          +'\n\nThe shoots may still both be possible if the venues are close or one is short. Please message the requester to agree the timing, then decide whether to accept.',
+        okLabel:'Add anyway',
+        cancelLabel:'Not now'
+      }).then(function(ok){ if(ok)rcCreateTask(w,id); });
+      return;
+    }
     rcCreateTask(w,id);
   };
+  /* Returns the label of an existing commitment on the same date, or null. */
+  function rcFindClash(r){
+    var date=r.eventDate||r.deadline||'';
+    if(!date)return null;
+    var hit=null;
+    try{
+      (eventsOf('o')||[]).forEach(function(e){ if(!hit&&e.date===date)hit=e.name||'Event'; });
+    }catch(e){}
+    try{
+      (tasksOf('o')||[]).forEach(function(t){
+        if(hit)return;
+        if(t.status==='done'||t.status==='canceled')return;
+        if(t.requestId===r.id)return;
+        if((t.mdEvent||t.dueDate)&&t.dueDate===date&&(t.mdCategory||t.mdEvent))hit=t.topic||t.title||'Booked shoot';
+      });
+    }catch(e){}
+    return hit;
+  }
   window.rcCreateTask=function(w,id){
     var r=reqs.find(function(x){return x.id===id;});if(!r)return;
     var T=typeOf(r.type);if(!T)return;
@@ -9632,6 +9706,61 @@ html.dark .tc-open-hint{color:#9fb2c9;}
 .task-desc{text-wrap:pretty;}
 @media(max-width:640px){.tc-open-hint{display:none;}}
 </style>
+<script id="uxp-cal-script">
+/* ===== Consent-first "Add to Calendar" (never writes to any calendar) ===== */
+(function(){
+  if(window.__uxpCalInit)return; window.__uxpCalInit=true;
+  function pad(n){return String(n).padStart(2,'0');}
+  function stamp(dateStr,timeStr,fallbackHour){
+    var p=(dateStr||'').split('-');
+    if(p.length!==3)return null;
+    var hh=fallbackHour,mm=0;
+    if(timeStr&&/^\d{1,2}:\d{2}$/.test(timeStr)){var t=timeStr.split(':');hh=parseInt(t[0],10);mm=parseInt(t[1],10);}
+    return p[0]+pad(p[1])+pad(p[2])+'T'+pad(hh)+pad(mm)+'00';
+  }
+  function addHour(s,hours){
+    if(!s)return s;
+    var y=+s.slice(0,4),mo=+s.slice(4,6)-1,d=+s.slice(6,8),h=+s.slice(9,11),mi=+s.slice(11,13);
+    var dt=new Date(y,mo,d,h+hours,mi);
+    return dt.getFullYear()+pad(dt.getMonth()+1)+pad(dt.getDate())+'T'+pad(dt.getHours())+pad(dt.getMinutes())+'00';
+  }
+  window.uxpCalendarUrl=function(o){
+    o=o||{};
+    var start,end;
+    if(o.startTime){
+      start=stamp(o.date,o.startTime,9);
+      end=o.endTime?stamp(o.date,o.endTime,10):addHour(start,1);
+    }else{
+      var p=(o.date||'').split('-'); if(p.length!==3)return '';
+      start=p[0]+pad(p[1])+pad(p[2]);
+      var dt=new Date(+p[0],+p[1]-1,+p[2]+1);
+      end=dt.getFullYear()+pad(dt.getMonth()+1)+pad(dt.getDate());
+    }
+    if(!start||!end)return '';
+    var q='https://calendar.google.com/calendar/render?action=TEMPLATE'
+      +'&text='+encodeURIComponent(o.title||'MARCOM task')
+      +'&dates='+start+'/'+end;
+    if(o.notes)q+='&details='+encodeURIComponent(String(o.notes).slice(0,900));
+    if(o.location)q+='&location='+encodeURIComponent(o.location);
+    return q;
+  };
+  window.uxpOfferCalendar=function(o){
+    o=o||{}; if(!o.date)return;
+    var url=uxpCalendarUrl(o); if(!url)return;
+    var when=o.date+(o.startTime?(' at '+o.startTime+(o.endTime?' - '+o.endTime:'')):'');
+    uiConfirm({
+      title:'Add this to your calendar?',
+      icon:'ti-calendar-plus',
+      message:'"'+(o.title||'Task')+'" is set for '+when+'. Google Calendar will open with the details filled in. Nothing is saved to any calendar until you press Save there.',
+      okLabel:'Open Google Calendar',
+      cancelLabel:'No thanks'
+    }).then(function(ok){
+      if(!ok)return;
+      try{ window.open(url,'_blank','noopener'); }catch(e){ location.href=url; }
+    });
+  };
+})();
+</script>
 </body>
 
 </html>

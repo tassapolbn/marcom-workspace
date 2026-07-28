@@ -105,6 +105,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------------- shared central event task board ----------------
+    // Every authorised member may read and write every event task: this is a
+    // shared internal board. Deletion is confirmed in the UI, and every write
+    // is stamped with lastEditedBy so changes stay traceable.
+    match /event_tasks/{id} {
+      allow read:   if authorized();
+      allow create: if authorized()
+        && request.resource.data.get('createdBy','') == userEmail();
+      allow update: if authorized()
+        && request.resource.data.get('lastEditedBy','') == userEmail()
+        && request.resource.data.get('createdBy', resource.data.get('createdBy','')) == resource.data.get('createdBy','');
+      allow delete: if authorized();
+    }
+
     // ---------------- shared team chat ----------------
     // authorEmail must match the signed-in user and can never be changed,
     // so nobody can post or edit messages as someone else.
@@ -170,6 +184,9 @@ service cloud.firestore {
 
     // ---------------- Boss-owned ledgers (admin writes only) ----------------
     match /petty_cash/{id}   { allow read: if authorized(); allow write: if isAdmin(); }
+    // Boss's own leave ledgers. Boss is the admin, so these stay admin-writable;
+    // every other member owns their records in <workspace>_lieu / <workspace>_sick
+    // and writes them through the member-collection rule at the end of this file.
     match /lieu_records/{id} { allow read: if authorized(); allow write: if isAdmin(); }
     match /sick_leave/{id}   { allow read: if authorized(); allow write: if isAdmin(); }
 
@@ -186,6 +203,16 @@ service cloud.firestore {
       allow read:  if authorized();
       allow write: if isAdmin() || roleVal() == 'junior';
     }
+
+    // ---------------- per-member leave records (explicit) ----------------
+    // A tab owner always manages their own leave in lieu and sick leave.
+    // Stated explicitly so this can never depend on the whitelist below.
+    match /dew_lieu/{id}    { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'designer'; }
+    match /dew_sick/{id}    { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'designer'; }
+    match /o_lieu/{id}      { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'media'; }
+    match /o_sick/{id}      { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'media'; }
+    match /junior_lieu/{id} { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'junior'; }
+    match /junior_sick/{id} { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'junior'; }
 
     // ---------------- per-member workspace collections ----------------
     // Strict whitelist: unknown collection names are denied even for the
