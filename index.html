@@ -1285,6 +1285,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="closeSettings()">Cancel</button>
       <button class="btn btn-navy" id="set-save-names" style="flex:1;justify-content:center;" onclick="saveSettings()"><i class="ti ti-check"></i> Save Names</button>
+      <button class="btn btn-navy" id="set-save-cal" style="flex:1;justify-content:center;display:none;" onclick="settingsSaveAndClose()"><i class="ti ti-check"></i> Save &amp; Close</button>
     </div>
   </div>
 </div>
@@ -1819,12 +1820,18 @@ function openSettings(){
   const admin=((window.__cur||{}).role==='admin');
   const box=document.getElementById('set-admin-only'); if(box)box.style.display=admin?'':'none';
   const sv=document.getElementById('set-save-names'); if(sv)sv.style.display=admin?'':'none';
+  const sc=document.getElementById('set-save-cal'); if(sc)sc.style.display=admin?'none':'';
   const ti=document.getElementById('settings-title');
   if(ti)ti.innerHTML=admin?'<i class="ti ti-users" style="margin-right:6px;"></i> Team Settings'
                           :'<i class="ti ti-calendar-cog" style="margin-right:6px;"></i> My Settings';
   document.getElementById('settings-modal').classList.add('open');
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+/* Members save their calendar connection and close in one press. */
+function settingsSaveAndClose(){
+  try{ if(window.gcsSave)gcsSave(); }catch(e){}
+  setTimeout(closeSettings,350);
+}
 function saveSettings(){
   const names={};
   ['boss','dew','o','junior'].forEach(w=>{const inp=document.getElementById('set-name-'+w);names[w]=inp?inp.value.trim():(memberNames[w]||'');});
@@ -10424,20 +10431,22 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var o=payload(t,who);
     if(!o||!o.date){try{uiToast('Add a due date (or a shoot date) first, then this task can go to the calendar.',{duration:6000});}catch(e){}return;}
     var already=!!t.calendarAddedAt;
-    var synced=!!(window.gcsConfigured&&gcsConfigured(who));
+    var target=(window.gcsTargetWs?gcsTargetWs(who):'');
+    var synced=!!target;
+    var calName=synced?((typeof memberName==='function'?memberName(target):target)||target):'';
     var when=o.date+(o.startTime?(' at '+o.startTime+(o.endTime?' - '+o.endTime:'')):'');
     uiConfirm({
-      title:already?'Add to calendar again?':'Add this task to your calendar?',
+      title:already?'Add to calendar again?':'Add this task to the calendar?',
       icon:'ti-calendar-plus',
       message:'"'+o.title+'" ('+when+') will be added with all of its details.'
         +(already?' It has already been added once, so please check you are not creating a duplicate.':'')
-        +(synced?' The event is created in your connected Google Calendar straight away.'
-                :' Google Calendar opens with everything filled in; nothing is saved until you press Save there.'),
+        +(synced?(' The event is created in '+calName+"'s Google Calendar straight away, and it will be removed if this task is deleted.")
+                :' No Google Calendar is connected yet, so Google Calendar will open with everything filled in for you to save. Connect a calendar in Settings to have events created automatically.'),
       okLabel:synced?'Create the event':'Open Google Calendar',
       cancelLabel:'Cancel'
     }).then(function(ok){
       if(!ok)return;
-      if(synced&&window.gcsCreateFor){ gcsCreateFor(who,t,id,o); return; }
+      if(synced&&window.gcsCreateFor){ gcsCreateFor(target,t,id,o,who); return; }
       var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):''); if(!url)return;
       try{ window.open(url,'_blank','noopener'); }catch(e){ location.href=url; }
       try{
@@ -10478,6 +10487,18 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
   function cfgOf(w){return CFG[w]||null;}
   window.gcsConfigured=function(w){var c=cfgOf(w);return !!(c&&c.on&&c.url);};
+  /* Which calendar should this event go to?
+     1. the workspace that owns the task, if that member has connected theirs
+     2. otherwise the calendar of whoever is signed in
+     Returns '' when nobody has connected one, and only then does the app fall
+     back to opening Google Calendar for a manual save. */
+  window.gcsTargetWs=function(w){
+    if(gcsConfigured(w))return w;
+    var c=window.__cur||{};
+    var mine=c.role==='admin'?'boss':(c.workspace||'');
+    if(mine&&gcsConfigured(mine))return mine;
+    return '';
+  };
 
   function watch(){
     var d=null;try{d=firebase.firestore();}catch(e){}
@@ -10515,18 +10536,21 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     return {action:'create',taskId:taskId,title:o.title,date:o.date,startTime:o.startTime,endTime:o.endTime,location:o.location,notes:o.notes};
   }
   /* Used by the Add to Calendar button on the card. */
-  window.gcsCreateFor=function(who,task,id,o){
-    var body=payloadFor(task,id,who);
+  window.gcsCreateFor=function(targetWs,task,id,o,taskWs){
+    var owner=taskWs||targetWs;
+    var body=payloadFor(task,id,owner);
     if(o){body.title=o.title;body.date=o.date;body.startTime=o.startTime;body.endTime=o.endTime;body.location=o.location;body.notes=o.notes;}
-    call(who,body).then(function(res){
+    call(targetWs,body).then(function(res){
       if(res&&res.ok){
         try{
-          var ref=taskRef(task,who);
-          if(ref)ref.doc(id).update({gcalEventId:res.eventId||'',calendarAddedAt:new Date().toISOString()}).catch(function(){});
+          var ref=taskRef(task,owner);
+          /* gcalOwner records WHICH calendar holds it, so deleting the task
+             later removes the event from the right place. */
+          if(ref)ref.doc(id).update({gcalEventId:res.eventId||'',gcalOwner:targetWs,calendarAddedAt:new Date().toISOString()}).catch(function(){});
         }catch(e){}
-        try{uiToast('Added to '+(res.calendar||'your calendar'));}catch(e){}
+        try{uiToast('Added to '+(res.calendar||'the calendar'));}catch(e){}
       }else{
-        try{uiToast('Could not create the calendar event: '+((res&&res.error)||'unknown error'),{duration:8000});}catch(e){}
+        try{uiToast('Could not create the calendar event: '+((res&&res.error)||'unknown error'),{duration:9000});}catch(e){}
       }
     });
   };
@@ -10563,9 +10587,11 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
 
   /* Called when a task carrying a linked event is deleted. Undo restores both. */
   window.gcsDeleteFor=function(who,task,id){
-    if(!gcsConfigured(who))return;
-    call(who,{action:'delete',taskId:id,eventId:task.gcalEventId||'',date:task.dueDate||''}).then(function(res){
-      if(!(res&&res.ok))try{uiToast('The task was deleted, but the calendar event could not be removed.',{duration:8000});}catch(e){}
+    var target=task.gcalOwner||(window.gcsTargetWs?gcsTargetWs(who):'');
+    if(!target||!gcsConfigured(target))return;
+    call(target,{action:'delete',taskId:id,eventId:task.gcalEventId||'',date:task.mdTaken||task.dueDate||''}).then(function(res){
+      if(res&&res.ok)try{uiToast('Calendar event removed');}catch(e){}
+      else try{uiToast('The task was deleted, but the calendar event could not be removed.',{duration:9000});}catch(e){}
     });
   };
 
@@ -10574,12 +10600,13 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   window.deleteWithUndo=function(colRef,id,item,label){
     if(!(item&&item.gcalEventId))return _dwu.apply(this,arguments);
     var who=(item.owner||((window.__cur||{}).workspace)||'boss');
+    var calWs=item.gcalOwner||who;
     var data=null;if(item){data={};Object.keys(item).forEach(function(k){if(k!=='id'&&k!=='__src')data[k]=item[k];});}
     colRef.doc(id).delete().then(function(){
       uiToast(label||'Deleted',{undo:function(){
         colRef.doc(id).set(data).then(function(){
-          if(gcsConfigured(who))call(who,payloadFor(data,id,who)).then(function(res){
-            if(res&&res.ok)colRef.doc(id).update({gcalEventId:res.eventId||''}).catch(function(){});
+          if(gcsConfigured(calWs))call(calWs,payloadFor(data,id,who)).then(function(res){
+            if(res&&res.ok)colRef.doc(id).update({gcalEventId:res.eventId||'',gcalOwner:calWs}).catch(function(){});
           });
         }).catch(function(e){console.error(e);uiToast('Could not restore the item.');});
       }});
@@ -10596,8 +10623,16 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var d=null;try{d=firebase.firestore();}catch(e){}
     if(!d)return;
     d.collection(w+'_settings').doc('gcalsync').set({url:url,secret:sec,on:on},{merge:true})
-      .then(function(){try{uiToast('Calendar sync settings saved');}catch(e){}})
-      .catch(function(e){try{uiToast('Could not save: '+((e&&e.message)||''));}catch(_){}});
+      .then(function(){
+        try{uiToast('Calendar connection saved');}catch(e){}
+        var out=document.getElementById('gcs-test-out');
+        if(out){out.style.color='#147c3b';out.textContent='Saved. Tasks added from a card will now be created in this calendar.';}
+      })
+      .catch(function(e){
+        try{uiToast('Could not save: '+((e&&e.message)||''),{duration:9000});}catch(_){}
+        var out2=document.getElementById('gcs-test-out');
+        if(out2){out2.style.color='#b91c1c';out2.textContent='Could not save: '+((e&&e.message)||'unknown error');}
+      });
   };
   window.gcsTest=function(){
     var w=myWs(); if(!w)return;
