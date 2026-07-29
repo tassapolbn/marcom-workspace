@@ -2430,8 +2430,8 @@ function saveTaskAndCalendar(){
   var due=(document.getElementById('m-due')||{}).value||'';
   var shoot=(document.getElementById('m-md-taken')||{}).value||'';
   if(!due&&!shoot){
-    try{uiToast('Please set a due date (or a shoot date) before adding this to the calendar.',{duration:7000});}catch(e){}
-    var d=document.getElementById('m-due'); if(d)d.focus();
+    try{uiToast('Please fill in the Due Date field first (or Date Taken for a shoot). The calendar needs a date.',{duration:8000});}catch(e){}
+    var d=document.getElementById('m-due'); if(d){try{d.focus();d.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
     return;
   }
   window.__calAfterSave=true;
@@ -2439,26 +2439,7 @@ function saveTaskAndCalendar(){
 }
 function calAfterSave(ref,id,data,who){
   var task=Object.assign({},data,{id:id});
-  if(task.gcalEventId){
-    try{uiToast('This task is already in the calendar. Delete the task to remove the event.',{duration:6000});}catch(e){}
-    return;
-  }
-  var o=(window.taskCalendarPayload?taskCalendarPayload(task,who):null);
-  if(!o||!o.date)return;
-  var target=(window.gcsTargetWs?gcsTargetWs(who):'');
-  if(target&&window.gcsCreateFor){ gcsCreateFor(target,task,id,o,who); return; }
-  /* Nothing is connected: say so plainly instead of a look-alike popup. */
-  uiConfirm({
-    title:'No Google Calendar is connected',
-    icon:'ti-plug-x',
-    message:'The task was saved, but no calendar is connected for '+( (typeof memberName==='function'&&memberName(who))||who)+' or for your own account, so the event could not be created automatically. Open Settings (gear icon), section Google Calendar sync, paste the Web app URL and secret, then press Save. Or add this one manually now.',
-    okLabel:'Add manually',
-    cancelLabel:'Close'
-  }).then(function(ok){
-    if(!ok)return;
-    var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):'');
-    if(url){try{window.open(url,'_blank','noopener');}catch(e){location.href=url;}}
-  });
+  if(window.calOfferForTask)calOfferForTask(who,id,task,{ask:false});
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');if(!window.__sopSaving&&window.__sopBatch)window.__sopBatch=null;}
 function saveTask(){
@@ -8892,7 +8873,13 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     if(T.key==='photo'){task.mdEvent=r.eventName||'';task.mdLocation=d.venue||'';task.mdCategory='Photos';
       task.mdTaken=r.eventDate||'';task.mdStart=d.startTime||'';task.mdEnd=d.endTime||'';}
     try{task.createdAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
-    f.collection(w+'_tasks').add(task).then(function(tr){f.collection('requests').doc(r.id).update({taskId:tr.id}).catch(function(){});}).catch(function(){try{alert('Could not create the task.');}catch(e){}});
+    f.collection(w+'_tasks').add(task).then(function(tr){
+      f.collection('requests').doc(r.id).update({taskId:tr.id}).catch(function(){});
+      try{uiToast('Task created for '+nmW(w));}catch(e){}
+      /* Design and photography requests become cards too, so they get the
+         same calendar option as any other task. */
+      try{ if(window.calOfferForTask)calOfferForTask(w,tr.id,Object.assign({},task,{id:tr.id}),{ask:true}); }catch(e){}
+    }).catch(function(){try{uiToast('Could not create the task.');}catch(e){}});
   };
   window.rcDelete=function(w,id){
     uiConfirm({title:'Delete request',message:'The request and its details will be permanently deleted. This cannot be undone.',okLabel:'Delete permanently',danger:true}).then(function(ok){
@@ -10467,32 +10454,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   /* Opens Google Calendar pre-filled, then remembers that it was added. */
   window.uxpTaskCalendar=function(who,id){
     var t=taskOf(who,id); if(!t)return;
-    var o=payload(t,who);
-    if(!o||!o.date){try{uiToast('Add a due date (or a shoot date) first, then this task can go to the calendar.',{duration:6000});}catch(e){}return;}
-    var already=!!t.calendarAddedAt;
-    var target=(window.gcsTargetWs?gcsTargetWs(who):'');
-    var synced=!!target;
-    var calName=synced?((typeof memberName==='function'?memberName(target):target)||target):'';
-    var when=o.date+(o.startTime?(' at '+o.startTime+(o.endTime?' - '+o.endTime:'')):'');
-    uiConfirm({
-      title:already?'Add to calendar again?':'Add this task to the calendar?',
-      icon:'ti-calendar-plus',
-      message:'"'+o.title+'" ('+when+') will be added with all of its details.'
-        +(already?' It has already been added once, so please check you are not creating a duplicate.':'')
-        +(synced?(' The event is created in '+calName+"'s Google Calendar straight away, and it will be removed if this task is deleted.")
-                :' No Google Calendar is connected yet, so Google Calendar will open with everything filled in for you to save. Connect a calendar in Settings to have events created automatically.'),
-      okLabel:synced?'Create the event':'Open Google Calendar',
-      cancelLabel:'Cancel'
-    }).then(function(ok){
-      if(!ok)return;
-      if(synced&&window.gcsCreateFor){ gcsCreateFor(target,t,id,o,who); return; }
-      var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):''); if(!url)return;
-      try{ window.open(url,'_blank','noopener'); }catch(e){ location.href=url; }
-      try{
-        var ref=taskRef(t,who);
-        if(ref)ref.doc(id).update(Object.assign({calendarAddedAt:new Date().toISOString()},stampEdit())).catch(function(){});
-      }catch(e){}
-    });
+    if(window.calOfferForTask)calOfferForTask(who,id,t,{ask:true});
   };
 })();
 </script>
@@ -10708,6 +10670,42 @@ html.dark .icon-btn.cal-on{color:#5fcf85;}
   function labelOfStatus(v){try{return (SC[v]||{}).l||v||'';}catch(e){return v||'';}}
   function line(label,val){return val?(label+': '+val):'';}
 
+  /* Every path that creates a card calls this: the task form (Save + Calendar),
+     the card button, and a Design or Photography request being accepted.
+     ask:true shows a short confirmation first. */
+  window.calOfferForTask=function(who,id,task,opts){
+    opts=opts||{};
+    if(!task)return;
+    if(task.gcalEventId){ try{uiToast('This task is already in the calendar.');}catch(e){} return; }
+    var o=taskCalendarPayload(task,who);
+    if(!o||!o.date){
+      if(opts.quiet)return;
+      try{uiToast('This task has no date yet, so it cannot go in the calendar. Add a due date (or a shoot date) and use the calendar button on the card.',{duration:8000});}catch(e){}
+      return;
+    }
+    var target=(window.gcsTargetWs?gcsTargetWs(who):'');
+    function go(){
+      if(target&&window.gcsCreateFor){ gcsCreateFor(target,task,id,o,who); return; }
+      uiConfirm({
+        title:'No Google Calendar is connected',
+        icon:'ti-plug-x',
+        message:'The task was saved, but no calendar is connected for '+((typeof memberName==='function'&&memberName(who))||who)+' or for your own account, so the event could not be created automatically. Open Settings (gear icon), section Google Calendar sync, paste the Web app URL and secret, then press Save. Or add this one manually now.',
+        okLabel:'Add manually', cancelLabel:'Close'
+      }).then(function(ok){
+        if(!ok)return;
+        var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):'');
+        if(url){try{window.open(url,'_blank','noopener');}catch(e){location.href=url;}}
+      });
+    }
+    if(!opts.ask){ go(); return; }
+    var when=o.date+(o.startTime?(' at '+o.startTime+(o.endTime?' - '+o.endTime:'')):'');
+    uiConfirm({
+      title:'Add this task to the calendar?',
+      icon:'ti-calendar-plus',
+      message:'"'+o.title+'" ('+when+') can be added to '+(target?(((typeof memberName==='function'&&memberName(target))||target)+"'s calendar"):'a calendar')+' with all of its details, and removed again if the task is deleted.',
+      okLabel:'Yes, add it', cancelLabel:'Not now'
+    }).then(function(ok){ if(ok)go(); });
+  };
   window.taskCalendarPayload=function(task,who){
     if(!task)return null;
     var t=task;
