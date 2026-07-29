@@ -1086,13 +1086,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="form-group"><label class="form-label">Assigned Date</label><input type="date" class="form-input" id="m-assigned" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Due Date</label>
-          <div style="display:flex;gap:7px;align-items:center;">
-            <input type="date" class="form-input" id="m-due" style="flex:1;min-width:0;" />
-            <button type="button" class="icon-btn" id="m-cal-btn" title="Add to Google Calendar" aria-label="Add this task to Google Calendar" onclick="uxpTaskCalendarFromModal()" style="min-width:38px;min-height:38px;border:1px solid var(--border);border-radius:9px;"><i class="ti ti-calendar-plus"></i></button>
-          </div>
-          <div id="m-cal-note" style="font-size:11px;color:var(--muted);margin-top:4px;display:none;"></div>
-        </div>
+        <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="m-due" /></div>
         <div class="form-group"><label class="form-label">Status</label>
           <select class="form-select" id="m-status">
             <option value="pending">Pending</option><option value="in-progress">In Progress</option>
@@ -1184,6 +1178,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="closeModal()">Cancel</button>
       <button class="btn btn-navy" id="modal-save" style="flex:1;justify-content:center;" onclick="saveTask()"><i class="ti ti-check"></i> Save</button>
+      <button class="btn btn-ghost" id="modal-save-cal" style="flex:0 0 auto;white-space:nowrap;" onclick="saveTaskAndCalendar()" title="Save this task and add it to the calendar"><i class="ti ti-calendar-plus"></i> Save + Calendar</button>
     </div>
   </div>
 </div>
@@ -2429,6 +2424,28 @@ function calcWatermarkDate(){
   if(u){const d=new Date(u+'T00:00:00');d.setDate(d.getDate()+14);wm.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   else wm.value='';
 }
+/* Save the task, then create the calendar event using the saved task id, so
+   the event can be removed again if the task is deleted. */
+function saveTaskAndCalendar(){
+  var due=(document.getElementById('m-due')||{}).value||'';
+  var shoot=(document.getElementById('m-md-taken')||{}).value||'';
+  if(!due&&!shoot){
+    try{uiToast('Please set a due date (or a shoot date) before adding this to the calendar.',{duration:7000});}catch(e){}
+    var d=document.getElementById('m-due'); if(d)d.focus();
+    return;
+  }
+  window.__calAfterSave=true;
+  saveTask();
+}
+function calAfterSave(ref,id,data,who){
+  var task=Object.assign({},data,{id:id});
+  var o=(window.taskCalendarPayload?taskCalendarPayload(task,who):null);
+  if(!o||!o.date)return;
+  var target=(window.gcsTargetWs?gcsTargetWs(who):'');
+  if(target&&window.gcsCreateFor){ gcsCreateFor(target,task,id,o,who); return; }
+  /* No calendar connected anywhere: fall back to the manual link. */
+  if(window.uxpOfferCalendar)uxpOfferCalendar(o);
+}
 function closeModal(){document.getElementById('modal').classList.remove('open');if(!window.__sopSaving&&window.__sopBatch)window.__sopBatch=null;}
 function saveTask(){
   const topic=document.getElementById('m-topic').value.trim();
@@ -2500,8 +2517,16 @@ function saveTask(){
     data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     data.createdBy=meEmail();
     if(evtOn&&!data.owner)data.owner='';
-    ref.add(data);
+    var _newP=ref.add(data);
+    if(window.__calAfterSave){
+      var _w=modalState.who,_d=data;
+      _newP.then(function(docRef){ try{calAfterSave(ref,docRef.id,_d,_w);}catch(e){console.error(e);} }).catch(function(){});
+    }
   }
+  if(window.__calAfterSave&&modalState.editId&&wasEvent===evtOn){
+    try{calAfterSave(ref,modalState.editId,Object.assign({},old||{},data),modalState.who);}catch(e){console.error(e);}
+  }
+  window.__calAfterSave=false;
   window.__sopSaving=true;closeModal();window.__sopSaving=false;
   if(window.__sopBatch&&window.__sopOpenNext)window.__sopOpenNext();
 }
