@@ -13,8 +13,8 @@ and Video Editor), Eye (Junior Events Coordinator).
 |---|---|
 | `index.html` | The whole application (internal workspace + public Request Centre) |
 | `assets/` | Static images (the support staff calendar was moved out of the HTML, saving ~650 KB per visit) |
-| `netlify/functions/submit-request.js` | Public request submission endpoint (validation, sanitising, rate limiting, honeypot, server reference number, task auto-creation, failure log, optional email notifications) |
-| `netlify/functions/request-status.js` | Secure status lookup: requires reference number AND requester email, returns a minimal summary only |
+| `netlify/functions/submit-request.js` | Public request submission endpoint (validation, sanitising, rate limiting, honeypot, server request number, task auto-creation, failure log, optional email notifications) |
+| `netlify/functions/request-status.js` | Secure status lookup by requester email, returns a minimal summary only |
 | `netlify/functions/lib/admin.js` | Shared Firebase Admin bootstrap and helpers |
 | `firestore.rules` | Least-privilege Firestore rules (deploy AFTER the site, see below) |
 | `tests/rules.test.mjs` | Emulator tests for every role |
@@ -63,7 +63,7 @@ function needs a Firebase service account:
 2. Set the environment variable above; trigger a redeploy.
 3. Test the Request Centre: submit a test request at `<site>?request=1`,
    confirm it appears in the workspace and the task is created, and test the
-   tracker with the reference number + email.
+   tracker with the requester's email address.
 4. ONLY THEN deploy the new rules:
    `npx firebase deploy --only firestore:rules` (or paste `firestore.rules`
    into Firebase Console -> Firestore -> Rules).
@@ -89,8 +89,8 @@ email/password, they must verify their email address first.
 - The public page has NO direct database access. Rules deny unauthenticated
   reads and writes everywhere; the Netlify Function validates and writes with
   the Admin SDK.
-- Request tracking needs the server-generated reference number AND the
-  requester's email, and returns only a minimal status summary.
+- Request tracking uses the requester's email address and returns only a
+  minimal status summary.
 - Every collection is explicitly matched or whitelisted; unknown collections
   are denied, including for the admin.
 - ACL: users read only their own record; only the admin lists or edits users.

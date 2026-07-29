@@ -1,6 +1,6 @@
 /* Public Request Centre submission endpoint.
    The browser never writes to Firestore: this function validates, sanitises,
-   rate limits, generates a secure reference number, creates the request and
+   rate limits, generates a secure request number, creates the request and
    the assigned task with the Admin SDK, and records any automation failure. */
 const crypto = require('crypto');
 const { admin, getDb, rateLimited, json, clientIp } = require('./lib/admin');
@@ -113,7 +113,7 @@ async function notify(refNo, T, d) {
     if (d.email) {
       await send([d.email], 'MARCOM received your request ' + refNo,
         'Dear Khun ' + (d.reqName || '') + ',\n\nThank you for your ' + T.short.toLowerCase() +
-        ' request. Your reference number is ' + refNo + '.\nTo check the progress at any time, open the Request Centre page and enter this email address under Track My Requests. Please quote the reference number if you contact the MARCOM team about this request.\n\nMARCOM Team, HeadStart International School Phuket');
+        ' request. Your request number is ' + refNo + '.\nTo check the progress at any time, open the Request Centre page and enter this email address under Track My Requests. Please quote the number above if you contact the MARCOM team about this request.\n\nMARCOM Team, HeadStart International School Phuket');
     }
   } catch (e) { /* notifications must never fail the submission */ }
 }

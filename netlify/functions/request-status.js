@@ -1,7 +1,6 @@
 /* Secure request status lookup for the public Request Centre.
-   Requires BOTH the server-generated reference number and the requester's
-   email address. Returns only a minimal status summary, never the full
-   request, and never lists other people's requests. */
+   Looks up requests by the requester's own email address and returns only a
+   minimal status summary, never the full request content. */
 const { getDb, rateLimited, json, clientIp } = require('./lib/admin');
 
 const REF_RE = /^REQ-[A-Z2-9]{4,12}$/;
