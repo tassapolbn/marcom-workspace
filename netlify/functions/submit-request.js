@@ -7,12 +7,12 @@ const { admin, getDb, rateLimited, json, clientIp } = require('./lib/admin');
 
 const TYPES = {
   design: { label: 'Graphic Design Request', short: 'Graphic Design', ws: 'dew',
-    required: ['reqName', 'department', 'email', 'eventName', 'designType', 'deadline'] },
+    required: ['reqName', 'department', 'email', 'eventName', 'deliverablesText', 'deadline'] },
   photo:  { label: 'Photography Request', short: 'Photography', ws: 'o',
-    required: ['reqName', 'department', 'email', 'eventName', 'eventDate', 'deadline'] }
+    required: ['reqName', 'department', 'email', 'eventName', 'eventDate', 'startTime', 'endTime', 'deadline'] }
 };
 
-const LONG = new Set(['purpose', 'wording', 'instructions', 'comments', 'moments']);
+const LONG = new Set(['purpose', 'wording', 'instructions', 'comments', 'moments', 'deliverablesText']);
 const SHORT_MAX = 300, LONG_MAX = 5000, NAME_MAX = 120;
 const ARRAY_FIELDS = new Set(['photoTypes', 'deliverables', 'usage']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -72,6 +72,7 @@ function sanitiseLinks(raw) {
 const FIELD_LABELS = {
   reqName: 'Requester', department: 'Department', email: 'Email',
   eventName: 'Event Name', eventDate: 'Event Date', purpose: 'Purpose',
+  deliverablesText: 'Deliverables requested', deliverablesShort: 'Deliverables (short)',
   designType: 'Design Type', format: 'Design Format', customW: 'Width', customH: 'Height', customU: 'Unit',
   colors: 'Preferred Colours', fonts: 'Preferred Fonts', style: 'Preferred Style',
   wording: 'Wording to include', instructions: 'Additional Instructions',

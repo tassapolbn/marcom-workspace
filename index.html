@@ -1270,19 +1270,21 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
 <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title"><i class="ti ti-users" style="margin-right:6px;"></i> Team Settings</div>
+      <div class="modal-title" id="settings-title"><i class="ti ti-users" style="margin-right:6px;"></i> Team Settings</div>
       <button class="modal-close" onclick="closeSettings()"><i class="ti ti-x"></i></button>
     </div>
     <div class="modal-body">
+      <div id="set-admin-only">
       <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Set the display name for each team member. These names appear on the tabs and headers and are saved for everyone.</p>
       <div class="form-group"><label class="form-label"><span class="set-dot" style="background:var(--navy);"></span> Boss &middot; Marcom manager</label><input type="text" class="form-input" id="set-name-boss" placeholder="Boss" /></div>
       <div class="form-group"><label class="form-label"><span class="set-dot" style="background:#e07a1f;"></span> Dew &middot; Graphic Designer</label><input type="text" class="form-input" id="set-name-dew" placeholder="Dew" /></div>
       <div class="form-group"><label class="form-label"><span class="set-dot" style="background:#d8381b;"></span> O &middot; Photographer &amp; Video Editor</label><input type="text" class="form-input" id="set-name-o" placeholder="O" /></div>
-      <div class="form-group"><label class="form-label"><span class="set-dot" style="background:#eab308;"></span> Junior Events Coordinator</label><input type="text" class="form-input" id="set-name-junior" placeholder="Enter name..." /></div>
+      <div class="form-group set-admin-last"><label class="form-label"><span class="set-dot" style="background:#eab308;"></span> Junior Events Coordinator</label><input type="text" class="form-input" id="set-name-junior" placeholder="Enter name..." /></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="closeSettings()">Cancel</button>
-      <button class="btn btn-navy" style="flex:1;justify-content:center;" onclick="saveSettings()"><i class="ti ti-check"></i> Save Names</button>
+      <button class="btn btn-navy" id="set-save-names" style="flex:1;justify-content:center;" onclick="saveSettings()"><i class="ti ti-check"></i> Save Names</button>
     </div>
   </div>
 </div>
@@ -1813,6 +1815,13 @@ function applyMemberNames(){
 }
 function openSettings(){
   ['boss','dew','o','junior'].forEach(w=>{const inp=document.getElementById('set-name-'+w);if(inp)inp.value=(memberNames[w]||'');});
+  /* Non-admins get a personal settings window: their calendar connection only. */
+  const admin=((window.__cur||{}).role==='admin');
+  const box=document.getElementById('set-admin-only'); if(box)box.style.display=admin?'':'none';
+  const sv=document.getElementById('set-save-names'); if(sv)sv.style.display=admin?'':'none';
+  const ti=document.getElementById('settings-title');
+  if(ti)ti.innerHTML=admin?'<i class="ti ti-users" style="margin-right:6px;"></i> Team Settings'
+                          :'<i class="ti ti-calendar-cog" style="margin-right:6px;"></i> My Settings';
   document.getElementById('settings-modal').classList.add('open');
 }
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
@@ -2484,11 +2493,7 @@ function saveTask(){
     data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     data.createdBy=meEmail();
     if(evtOn&&!data.owner)data.owner='';
-    var _addP=ref.add(data);
-    try{
-      if(data.dueDate&&window.gcsAfterCreate)gcsAfterCreate(_addP,ref,data,modalState.who);
-      else if(data.dueDate&&window.uxpOfferCalendar)uxpOfferCalendar({title:data.topic,date:data.dueDate,notes:data.description||data.notes||''});
-    }catch(e){}
+    ref.add(data);
   }
   window.__sopSaving=true;closeModal();window.__sopSaving=false;
   if(window.__sopBatch&&window.__sopOpenNext)window.__sopOpenNext();
@@ -2676,7 +2681,7 @@ function taskCardHTML(task,who){
       +(soon||overdue?'<span class="dl-dot" title="Close to deadline"></span>':'')
     +'</div><div class="task-actions">'
       +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+(status==='done'?'Mark as not done':'Mark as done')+'"><i class="ti ti-check"></i></button>'
-      +(task.dueDate?'<button class="icon-btn" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already added to a calendar. Open it again?':'Add to Google Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>':'')
+      +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
       +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate"><i class="ti ti-copy"></i></button>'
       +'<button class="icon-btn" onclick="event.stopPropagation();openEdit(\''+who+'\',\''+task.id+'\')" title="Edit"><i class="ti ti-edit"></i></button>'
       +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete"><i class="ti ti-trash"></i></button>'
@@ -5055,7 +5060,9 @@ body.auth-locked{overflow:hidden;}
     var role=cur.role, ws=(cur.workspace!==undefined&&cur.workspace!==null)?cur.workspace:ROLE_WS[role];
     var allowed = role==='admin' ? ALL_TABS.slice() : ['overview'].concat(ws?[ws]:[]);
     ALL_TABS.forEach(function(t){ var b=el('tab-'+t); if(b)b.style.display=(allowed.indexOf(t)>=0)?'':'none'; });
-    var sb=el('settings-btn'); if(sb)sb.style.display=(role==='admin')?'':'none';
+    /* Everyone can open Settings; non-admins see only their own calendar
+       connection, enforced by adminOnly() below and by the Firestore rules. */
+    var sb=el('settings-btn'); if(sb)sb.style.display='';
     var active=((document.body.className.match(/theme-(overview|boss|dew|o|junior)/)||[])[1])||'boss';
     if(allowed.indexOf(active)<0){ try{ if(allowed.indexOf('overview')>=0&&typeof ovGo==='function')ovGo(); else if(typeof switchTab==='function')switchTab(allowed[0]); }catch(e){} }
     buildBanner();
@@ -8061,8 +8068,14 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   /* ---------------- language support (public page only) ---------------- */
   function rcLang(){ if(!RC_MODE)return 'en'; try{return localStorage.getItem('rc_lang')==='th'?'th':'en';}catch(e){return 'en';} }
   var RC_UI={
-   en:{back:'Back',next:'Next',review:'Review & Submit',submit:'Submit Request',submitting:'Submitting...',edit:'Edit',section:'Section',of:'of',select:'Select...',required:'Fields marked * are required.',review_title:'Review your request',review_note:'Please check the details below. Tap Edit to change any section.',confirm_note:'By submitting, you confirm the details above are correct.',copy:'Copy reference number',copied:'Copied!',keep_ref:'Please keep this reference number. Use it together with your email address to track the status below at any time.',links_lbl:'Attached links',track_title:'Track My Requests',track_btn:'Track',track_ph_ref:'Reference no. (REQ-...)',track_ph_email:'Your email address',track_note:'Enter the email address you used and every request from that address will be listed, newest first.',track_none:'Enter your email address above to see your requests.',track_checking:'Checking...',track_checking_recent:'Checking your recent requests...',track_nf:'No requests were found for that email address.',track_none_recent:'No recent requests to show. Use the tracker above with your reference number.',track_both:'Please enter your email address.',success_t:'Request received. Thank you!',another:'Submit another request',choose:'What would you like to request?',start:'Start request',step1:'Choose a request type',step2:'Fill in the form · under 3 minutes',step3:'Track it with your reference number',hero_i:'The official portal for graphic design and photography requests. Submissions go directly to the MARCOM team and can be tracked with your reference number.',fail:'Your request could not be submitted. Please check your connection and try again, or contact the MARCOM team directly.',missing:'Please complete the highlighted required fields.',dw1:'This deadline is only ',dw2:' day(s) away. Short-notice requests may need to be discussed with the MARCOM team first.',links_note:'Make sure sharing is set so the MARCOM team can open the links.',av_check:'Checking the photographer’s availability...',av_free:'This time looks free. Please continue.',av_busy:'Our photographer already has a booking at this time. You can still send this request: if the venues are close or the shoot is short, we may be able to cover both. Please add a note below, or message the MARCOM team so we can agree the timing.',av_note:'Availability is a guide only. The MARCOM team confirms every booking.'},
-   th:{back:'ย้อนกลับ',next:'ถัดไป',review:'ตรวจสอบและส่ง',submit:'ส่งคำขอ',submitting:'กำลังส่ง...',edit:'แก้ไข',section:'ส่วนที่',of:'จาก',select:'เลือก...',required:'ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก',review_title:'ตรวจสอบคำขอของคุณ',review_note:'กรุณาตรวจสอบข้อมูลด้านล่าง กด "แก้ไข" หากต้องการเปลี่ยนแปลง',confirm_note:'เมื่อกดส่ง ถือว่าคุณยืนยันว่าข้อมูลข้างต้นถูกต้อง',copy:'คัดลอกหมายเลขอ้างอิง',copied:'คัดลอกแล้ว!',keep_ref:'กรุณาเก็บหมายเลขอ้างอิงนี้ไว้ ใช้คู่กับอีเมลของคุณเพื่อติดตามสถานะได้ตลอดเวลา',links_lbl:'ลิงก์ที่แนบ',track_title:'ติดตามคำขอของฉัน',track_btn:'ตรวจสอบ',track_ph_ref:'หมายเลขอ้างอิง (REQ-...)',track_ph_email:'อีเมลของคุณ',track_note:'กรอกอีเมลที่ใช้ส่งคำขอ ระบบจะแสดงคำขอทั้งหมดของอีเมลนี้ เรียงจากล่าสุด',track_none:'กรอกอีเมลด้านบนเพื่อดูคำขอของท่าน',track_checking:'กำลังตรวจสอบ...',track_checking_recent:'กำลังตรวจสอบคำขอล่าสุดของคุณ...',track_nf:'ไม่พบคำขอสำหรับอีเมลนี้',track_none_recent:'ยังไม่มีคำขอล่าสุด กรุณาใช้ช่องด้านบนพร้อมหมายเลขอ้างอิง',track_both:'กรุณากรอกอีเมลของท่าน',success_t:'ได้รับคำขอเรียบร้อยแล้ว ขอบคุณค่ะ',another:'ส่งคำขอใหม่อีกครั้ง',choose:'ต้องการขอบริการด้านใด?',start:'เริ่มกรอกคำขอ',step1:'เลือกประเภทคำขอ',step2:'กรอกแบบฟอร์ม · ใช้เวลาไม่ถึง 3 นาที',step3:'ติดตามสถานะด้วยหมายเลขอ้างอิง',hero_i:'ช่องทางอย่างเป็นทางการสำหรับขอออกแบบกราฟิกและถ่ายภาพ คำขอจะส่งตรงถึงทีม MARCOM และติดตามสถานะได้ด้วยหมายเลขอ้างอิง',fail:'ไม่สามารถส่งคำขอได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือติดต่อทีม MARCOM โดยตรง',missing:'กรุณากรอกช่องที่จำเป็น (ไฮไลต์สีแดง) ให้ครบถ้วน',dw1:'เหลือเวลาเพียง ',dw2:' วันถึงกำหนดส่ง งานเร่งด่วนอาจต้องปรึกษาทีม MARCOM ก่อน',links_note:'กรุณาตั้งค่าการแชร์ลิงก์ให้ทีม MARCOM สามารถเปิดดูได้',av_check:'กำลังตรวจสอบคิวช่างภาพ...',av_free:'ช่วงเวลานี้ว่าง กรุณากรอกข้อมูลต่อ',av_busy:'ช่างภาพมีงานอื่นในช่วงเวลานี้แล้ว ท่านยังส่งคำขอได้ หากสถานที่ใกล้กันหรือใช้เวลาสั้น ทีมอาจดูแลได้ทั้งสองงาน กรุณาระบุในหมายเหตุหรือติดต่อทีม MARCOM เพื่อตกลงเวลา',av_note:'ข้อมูลนี้เป็นเพียงแนวทาง ทีม MARCOM จะยืนยันการจองอีกครั้ง'}
+   en:{back:'Back',next:'Next',review:'Review & Submit',submit:'Submit Request',submitting:'Submitting...',edit:'Edit',section:'Section',of:'of',select:'Select...',required:'Fields marked * are required.',review_title:'Review your request',review_note:'Please check the details below. Tap Edit to change any section.',confirm_note:'By submitting, you confirm the details above are correct.',copy:'Copy reference number',copied:'Copied!',keep_ref:'Please keep this reference number. Use it together with your email address to track the status below at any time.',links_lbl:'Attached links',track_title:'Track My Requests',track_btn:'Track',track_ph_ref:'Reference no. (REQ-...)',track_ph_email:'Your email address',track_note:'Enter the email address you used and every request from that address will be listed, newest first.',track_none:'Enter your email address above to see your requests.',track_checking:'Checking...',track_checking_recent:'Checking your recent requests...',track_nf:'No requests were found for that email address.',track_none_recent:'No recent requests to show. Use the tracker above with your reference number.',track_both:'Please enter your email address.',success_t:'Request received. Thank you!',another:'Submit another request',choose:'What would you like to request?',start:'Start request',step1:'Choose a request type',step2:'Fill in the form · under 3 minutes',step3:'Track it with your reference number',hero_i:'The official portal for graphic design and photography requests. Submissions go directly to the MARCOM team and can be tracked with your reference number.',fail:'Your request could not be submitted. Please check your connection and try again, or contact the MARCOM team directly.',missing:'Please complete the highlighted required fields.',dw1:'This deadline is only ',dw2:' day(s) away. Short-notice requests may need to be discussed with the MARCOM team first.',links_note:'Make sure sharing is set so the MARCOM team can open the links.',av_check:'Checking the photographer’s availability...',av_free:'This time looks free. Please continue.',av_busy:'Our photographer already has a booking at this time. You can still send this request: if the venues are close or the shoot is short, we may be able to cover both. Please add a note below, or message the MARCOM team so we can agree the timing.',av_note:'Availability is a guide only. The MARCOM team confirms every booking.',
+dlv_add:'Add another deliverable',dlv_hint:'Add one row for each item you need. You can request several types, orientations and sizes in the same request.',
+dlv_type:'What is it?',dlv_orient:'Orientation',dlv_size:'Size',dlv_qty:'How many designs?',dlv_none:'No deliverables added yet. Tap "Add another deliverable" to begin.',
+dlv_w:'Width',dlv_h:'Height',dlv_u:'Unit',dlv_req:'Please add at least one deliverable.',dlv_remove:'Remove this deliverable'},
+   th:{back:'ย้อนกลับ',next:'ถัดไป',review:'ตรวจสอบและส่ง',submit:'ส่งคำขอ',submitting:'กำลังส่ง...',edit:'แก้ไข',section:'ส่วนที่',of:'จาก',select:'เลือก...',required:'ช่องที่มีเครื่องหมาย * จำเป็นต้องกรอก',review_title:'ตรวจสอบคำขอของคุณ',review_note:'กรุณาตรวจสอบข้อมูลด้านล่าง กด "แก้ไข" หากต้องการเปลี่ยนแปลง',confirm_note:'เมื่อกดส่ง ถือว่าคุณยืนยันว่าข้อมูลข้างต้นถูกต้อง',copy:'คัดลอกหมายเลขอ้างอิง',copied:'คัดลอกแล้ว!',keep_ref:'กรุณาเก็บหมายเลขอ้างอิงนี้ไว้ ใช้คู่กับอีเมลของคุณเพื่อติดตามสถานะได้ตลอดเวลา',links_lbl:'ลิงก์ที่แนบ',track_title:'ติดตามคำขอของฉัน',track_btn:'ตรวจสอบ',track_ph_ref:'หมายเลขอ้างอิง (REQ-...)',track_ph_email:'อีเมลของคุณ',track_note:'กรอกอีเมลที่ใช้ส่งคำขอ ระบบจะแสดงคำขอทั้งหมดของอีเมลนี้ เรียงจากล่าสุด',track_none:'กรอกอีเมลด้านบนเพื่อดูคำขอของท่าน',track_checking:'กำลังตรวจสอบ...',track_checking_recent:'กำลังตรวจสอบคำขอล่าสุดของคุณ...',track_nf:'ไม่พบคำขอสำหรับอีเมลนี้',track_none_recent:'ยังไม่มีคำขอล่าสุด กรุณาใช้ช่องด้านบนพร้อมหมายเลขอ้างอิง',track_both:'กรุณากรอกอีเมลของท่าน',success_t:'ได้รับคำขอเรียบร้อยแล้ว ขอบคุณค่ะ',another:'ส่งคำขอใหม่อีกครั้ง',choose:'ต้องการขอบริการด้านใด?',start:'เริ่มกรอกคำขอ',step1:'เลือกประเภทคำขอ',step2:'กรอกแบบฟอร์ม · ใช้เวลาไม่ถึง 3 นาที',step3:'ติดตามสถานะด้วยหมายเลขอ้างอิง',hero_i:'ช่องทางอย่างเป็นทางการสำหรับขอออกแบบกราฟิกและถ่ายภาพ คำขอจะส่งตรงถึงทีม MARCOM และติดตามสถานะได้ด้วยหมายเลขอ้างอิง',fail:'ไม่สามารถส่งคำขอได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ หรือติดต่อทีม MARCOM โดยตรง',missing:'กรุณากรอกช่องที่จำเป็น (ไฮไลต์สีแดง) ให้ครบถ้วน',dw1:'เหลือเวลาเพียง ',dw2:' วันถึงกำหนดส่ง งานเร่งด่วนอาจต้องปรึกษาทีม MARCOM ก่อน',links_note:'กรุณาตั้งค่าการแชร์ลิงก์ให้ทีม MARCOM สามารถเปิดดูได้',av_check:'กำลังตรวจสอบคิวช่างภาพ...',av_free:'ช่วงเวลานี้ว่าง กรุณากรอกข้อมูลต่อ',av_busy:'ช่างภาพมีงานอื่นในช่วงเวลานี้แล้ว ท่านยังส่งคำขอได้ หากสถานที่ใกล้กันหรือใช้เวลาสั้น ทีมอาจดูแลได้ทั้งสองงาน กรุณาระบุในหมายเหตุหรือติดต่อทีม MARCOM เพื่อตกลงเวลา',av_note:'ข้อมูลนี้เป็นเพียงแนวทาง ทีม MARCOM จะยืนยันการจองอีกครั้ง',
+dlv_add:'เพิ่มชิ้นงาน',dlv_hint:'เพิ่มหนึ่งแถวต่อหนึ่งชิ้นงาน สามารถขอได้หลายประเภท หลายแนว และหลายขนาดในคำขอเดียว',
+dlv_type:'ประเภทงาน',dlv_orient:'แนวงาน',dlv_size:'ขนาด',dlv_qty:'จำนวนแบบ',dlv_none:'ยังไม่มีชิ้นงาน กด "เพิ่มชิ้นงาน" เพื่อเริ่ม',
+dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'กรุณาเพิ่มอย่างน้อยหนึ่งชิ้นงาน',dlv_remove:'ลบชิ้นงานนี้'}
   };
   function U(k){var l=rcLang();return (RC_UI[l]&&RC_UI[l][k])||RC_UI.en[k]||k;}
   var RC_TH={
@@ -8126,12 +8139,8 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
         {k:'eventName',l:'Event Name',type:'text',req:1,ph:'e.g. Christmas Fair'},
         {k:'eventDate',l:'Event Date (optional)',type:'date',half:1},
         {k:'purpose',l:'Purpose of the design',type:'textarea',ph:'What is this design for?'}]},
-      {t:'Design Information',icon:'ti-palette',fields:[
-        {k:'designType',l:'Design Type',type:'select',req:1,half:1,opts:['Poster','Digital Screen','Social Media Post','Banner','Backdrop','Certificate','Flyer','Invitation','Programme','Other']},
-        {k:'format',l:'Design Format',type:'select',half:1,opts:['Portrait','Landscape','A4','A3','A5','16:9','9:16','Square','Custom Size']},
-        {k:'customW',l:'Width',type:'text',half:1,showIf:['format','Custom Size'],ph:'e.g. 120'},
-        {k:'customH',l:'Height',type:'text',half:1,showIf:['format','Custom Size'],ph:'e.g. 80'},
-        {k:'customU',l:'Unit',type:'select',half:1,showIf:['format','Custom Size'],opts:['mm','cm','px']}]},
+      {t:'What do you need?',icon:'ti-palette',fields:[
+        {k:'deliverables',l:'Design deliverables',type:'deliverables',req:1}]},
       {t:'Design Preferences',icon:'ti-brush',fields:[
         {k:'colors',l:'Preferred Colours',type:'text',half:1,ph:'e.g. Navy and gold'},
         {k:'fonts',l:'Preferred Fonts',type:'text',half:1,ph:'e.g. Modern sans-serif'},
@@ -8243,6 +8252,11 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     }else if(f.type==='links'){
       inner='<div id="rc-links-box"></div><button type="button" class="btn btn-ghost btn-sm" onclick="rcAddLink()"><i class="ti ti-plus"></i> Add link</button>'
         +'<div class="rc-note" style="margin-top:6px;"><i class="ti ti-info-circle"></i> '+esc(U('links_note'))+'</div>';
+    }else if(f.type==='deliverables'){
+      inner='<div id="rc-dlv-box"></div>'
+        +'<button type="button" class="btn btn-ghost btn-sm" onclick="rcDlvAdd()"><i class="ti ti-plus"></i> '+esc(U('dlv_add'))+'</button>'
+        +'<input type="hidden" id="rcf-'+f.k+'">'
+        +'<div class="rc-note" style="margin-top:6px;">'+esc(U('dlv_hint'))+'</div>';
     }else if(f.type==='time'){
       inner=t24HTML('rcf-'+f.k);
     }else{
@@ -8256,28 +8270,14 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     rcCurT=T; rcValues={}; rcLinks=[]; rcStep=0; rcView='form';
     rcRenderStep();
   };
-  function rcStepCount(T){ return T.sections.length+1; }
   function rcReadStep(){
-    var T=rcCurT; if(!T||rcStep>=T.sections.length)return;
-    T.sections[rcStep].fields.forEach(function(f){
+    var T=rcCurT; if(!T)return;
+    allFields(T).forEach(function(f){
       if(f.type==='links'){ rcValues.links=rcLinks.slice(); return; }
+      if(f.type==='deliverables'){ return; }
       if(f.type==='multi'){ rcValues[f.k]=[].slice.call(document.querySelectorAll('input[data-multi="'+f.k+'"]:checked')).map(function(c){return c.value;}); return; }
       var el=document.getElementById('rcf-'+f.k); if(el)rcValues[f.k]=el.value;
     });
-  }
-  function rcFillStep(){
-    var T=rcCurT; if(!T||rcStep>=T.sections.length)return;
-    T.sections[rcStep].fields.forEach(function(f){
-      if(f.type==='links'){ rcLinks=(rcValues.links||[]).slice(); return; }
-      if(f.type==='multi'){
-        var vals=rcValues[f.k]||[];
-        [].slice.call(document.querySelectorAll('input[data-multi="'+f.k+'"]')).forEach(function(c){ c.checked=vals.indexOf(c.value)>=0; });
-        return;
-      }
-      var el=document.getElementById('rcf-'+f.k);
-      if(el&&rcValues[f.k]!=null)el.value=rcValues[f.k];
-    });
-    if(rcStep===0){ var em=localStorage.getItem('rc_email')||''; var emf=document.getElementById('rcf-email'); if(emf&&!emf.value&&em)emf.value=em; }
   }
   function rcHiddenNow(f){
     if(!f.showIf)return false;
@@ -8285,81 +8285,17 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     var v=src?src.value:(rcValues[f.showIf[0]]||'');
     return v!==f.showIf[1];
   }
-  function rcValidateStep(){
-    var T=rcCurT, missing=[];
-    if(!T||rcStep>=T.sections.length)return missing;
-    T.sections[rcStep].fields.forEach(function(f){
-      if(f.type==='links'||f.type==='multi')return;
-      var el=document.getElementById('rcf-'+f.k); if(!el)return;
-      el.classList.remove('rc-err');
-      if(f.req&&!rcHiddenNow(f)&&!(el.value||'').trim()){ missing.push(f.k); el.classList.add('rc-err'); }
-    });
-    return missing;
-  }
-  window.rcNext=function(){
-    var T=rcCurT; if(!T)return;
-    var missing=rcValidateStep();
-    var errBox=document.getElementById('rc-step-err');
-    if(missing.length){
-      if(errBox){ errBox.textContent=U('missing'); errBox.style.display='block'; }
-      var first=document.getElementById('rcf-'+missing[0]);
-      if(first){ first.focus(); try{first.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){} }
-      return;
-    }
-    if(errBox)errBox.style.display='none';
-    rcReadStep();
-    rcStep=Math.min(rcStep+1,T.sections.length);
-    rcRenderStep();
-  };
-  window.rcBack=function(){
-    rcReadStep();
-    if(rcStep<=0){ rcHomeGo(); return; }
-    rcStep=rcStep-1;
-    rcRenderStep();
-  };
-  window.rcJump=function(i){ rcStep=i; rcRenderStep(); };
-  function rcReviewHTML(T){
-    var out='<div class="rc-card"><div class="rc-sec-h"><i class="ti ti-clipboard-check"></i> '+esc(U('review_title'))+'</div>'
-      +'<div class="rc-note" style="margin-bottom:11px;">'+esc(U('review_note'))+'</div>';
-    T.sections.forEach(function(sec,i){
-      var items='';
-      sec.fields.forEach(function(f){
-        if(f.type==='links')return;
-        var v=rcValues[f.k];
-        if(Array.isArray(v))v=v.join(', ');
-        if(v)items+='<div class="rc-review-item"><b>'+esc(LT(f.l).replace(/ \(.*?\)/,''))+'</b><span>'+esc(String(v))+'</span></div>';
-      });
-      var hasLinks=sec.fields.some(function(f){return f.type==='links';})&&(rcValues.links||[]).length;
-      if(hasLinks){
-        items+='<div class="rc-review-item"><b>'+esc(U('links_lbl'))+'</b><span>'+(rcValues.links||[]).map(function(l){return esc(l.title||l.url);}).join(' · ')+'</span></div>';
-      }
-      if(!items)return;
-      out+='<div class="rc-review-sec"><div class="rc-review-sec-h"><i class="ti '+(sec.icon||'ti-forms')+'"></i> '+esc(LT(sec.t))
-        +'<button type="button" class="rc-review-edit" onclick="rcJump('+i+')"><i class="ti ti-pencil"></i> '+esc(U('edit'))+'</button></div>'+items+'</div>';
-    });
-    out+='<div class="rc-note" style="margin-top:10px;"><i class="ti ti-shield-check"></i> '+esc(U('confirm_note'))+'</div></div>';
-    return out;
-  }
   function rcRenderStep(){
     var T=rcCurT; if(!T)return;
     var root=document.getElementById('rc-root'); if(!root)return;
     rcView='form';
-    var total=rcStepCount(T), isReview=rcStep>=T.sections.length;
-    var pct=Math.round(((Math.min(rcStep,total-1)+1)/total)*100);
-    var label=isReview?U('review_title'):LT(T.sections[rcStep].t);
     var head=brandHTML()
-      +'<div class="rc-form-head" style="--rc-c:'+T.color+';position:relative;"><button class="rc-back" onclick="rcBack()" title="'+esc(U('back'))+'" aria-label="'+esc(U('back'))+'"><i class="ti ti-arrow-left"></i></button>'
+      +'<div class="rc-form-head" style="--rc-c:'+T.color+';position:relative;"><button class="rc-back" onclick="rcHomeGo()" title="'+esc(U('back'))+'" aria-label="'+esc(U('back'))+'"><i class="ti ti-arrow-left"></i></button>'
       +'<div class="rc-form-title" style="--rc-c:'+T.color+';"><i class="ti '+T.icon+'"></i> '+esc(LT(T.label))+'</div>'
-      +'<div style="margin-left:auto;">'+rcLangHTML().replace('class="rc-lang"','class="rc-lang" style="position:static;"')+'</div></div>'
-      +'<div class="rc-progress"><div class="rc-progress-top"><span class="rc-progress-label">'+esc(label)+'</span><span class="rc-progress-count">'+esc(U('section'))+' '+(Math.min(rcStep,total-1)+1)+' '+esc(U('of'))+' '+total+'</span></div>'
-      +'<div class="rc-progress-bar" role="progressbar" aria-valuemin="1" aria-valuemax="'+total+'" aria-valuenow="'+(Math.min(rcStep,total-1)+1)+'"><div class="rc-progress-fill" style="width:'+pct+'%"></div></div></div>';
-    var body='',nav='';
-    if(isReview){
-      body=rcReviewHTML(T);
-      nav='<div class="rc-wiz-nav"><button type="button" class="btn rc-wiz-back" onclick="rcBack()"><i class="ti ti-arrow-left"></i> '+esc(U('back'))+'</button>'
-        +'<button type="button" class="btn btn-navy rc-submit-btn" id="rc-submit-btn" style="background-image:none;background:'+T.color+';" onclick="rcSubmit(\''+T.key+'\')"><i class="ti ti-send"></i> '+esc(U('submit'))+'</button></div>';
-    }else{
-      var sec=T.sections[rcStep];
+      +'<div style="margin-left:auto;">'+rcLangHTML().replace('class="rc-lang"','class="rc-lang" style="position:static;"')+'</div></div>';
+    /* Every question on one scrolling page: no Next buttons. */
+    var body=(T.lead?'<div class="rc-lead"><i class="ti ti-clock-exclamation"></i>'+esc(rcLang()==='th'?T.lead.th:T.lead.en)+'</div>':'');
+    T.sections.forEach(function(sec){
       var rows=[],half=[];
       sec.fields.forEach(function(f){
         var h=fieldHTML(T,f);
@@ -8368,24 +8304,40 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
       });
       if(half.length)rows.push('<div class="form-row">'+half.join('')+'</div>');
       var hint=rcHint(sec.t);
-      body=(rcStep===0&&T.lead?'<div class="rc-lead"><i class="ti ti-clock-exclamation"></i>'+esc(rcLang()==='th'?T.lead.th:T.lead.en)+'</div>':'')
-        +'<div class="rc-card"><div class="rc-sec-h"><i class="ti '+(sec.icon||'ti-forms')+'"></i> '+esc(LT(sec.t))+'</div>'
+      body+='<div class="rc-card"><div class="rc-sec-h"><i class="ti '+(sec.icon||'ti-forms')+'"></i> '+esc(LT(sec.t))+'</div>'
         +(hint?'<div class="rc-sec-hint"><i class="ti ti-bulb"></i>'+esc(hint)+'</div>':'')
         +rows.join('')+'</div>';
-      var lastSec=rcStep===T.sections.length-1;
-      nav='<div class="rc-wiz-nav">'
-        +(rcStep>0?'<button type="button" class="btn rc-wiz-back" onclick="rcBack()"><i class="ti ti-arrow-left"></i> '+esc(U('back'))+'</button>':'<span></span>')
-        +'<button type="button" class="btn btn-navy" style="background-image:none;background:'+T.color+';min-height:48px;" onclick="rcNext()">'+esc(lastSec?U('review'):U('next'))+' <i class="ti ti-arrow-right"></i></button></div>';
-    }
+    });
+    var nav='<div class="rc-submit-bar"><button type="button" class="btn btn-navy rc-submit-btn" id="rc-submit-btn" style="background-image:none;background:'+T.color+';" onclick="rcSubmit(\''+T.key+'\')"><i class="ti ti-send"></i> '+esc(U('submit'))+'</button></div>';
     root.innerHTML=head+'<div id="rc-form" style="--rc-c:'+T.color+';">'+body
       +'<input type="text" id="rcf-website" name="website" value="" style="position:absolute;left:-5000px;top:-5000px;height:1px;width:1px;opacity:0;" tabindex="-1" aria-hidden="true" autocomplete="off">'
       +'<div class="rc-note" id="rc-step-err" style="display:none;color:#b91c1c;font-weight:700;margin-top:8px;"></div>'
       +nav+'<div class="rc-note" style="margin-top:9px;">'+esc(U('required'))+'</div></div>';
-    rcFillStep();
+    rcFillAll();
     try{t24RefreshAll();}catch(e){}
     rcRenderLinks();rcOnChange();
+    try{rcDlvRender();}catch(e){}
     var dlEl=document.getElementById('rcf-deadline');if(dlEl)dlEl.addEventListener('change',rcOnChange);
+    ['rcf-eventDate','rcf-startTime','rcf-endTime'].forEach(function(id){
+      var el=document.getElementById(id); if(el)el.addEventListener('change',rcOnChange);
+    });
     try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+  }
+  /* Restore anything already typed (used when the language is switched). */
+  function rcFillAll(){
+    var T=rcCurT; if(!T)return;
+    allFields(T).forEach(function(f){
+      if(f.type==='links'||f.type==='deliverables')return;
+      if(f.type==='multi'){
+        var vals=rcValues[f.k]||[];
+        [].slice.call(document.querySelectorAll('input[data-multi="'+f.k+'"]')).forEach(function(c){c.checked=vals.indexOf(c.value)>=0;});
+        return;
+      }
+      var el=document.getElementById('rcf-'+f.k);
+      if(el&&rcValues[f.k]!=null)el.value=rcValues[f.k];
+    });
+    var em=localStorage.getItem('rc_email')||'';
+    var emf=document.getElementById('rcf-email'); if(emf&&!emf.value&&em)emf.value=em;
   }
   window.rcHomeGo=function(){rcHome();try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}};
   window.rcOnChange=function(){
@@ -8449,6 +8401,92 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
         .catch(function(){ var b=document.getElementById('rc-avail'); if(b)b.style.display='none'; });
     },450);
   };
+  /* ---- deliverables builder: type -> orientation -> size, repeatable ---- */
+  var DLV_TYPES={
+    'Poster':{orients:['Portrait','Landscape'],sizes:{'Portrait':['A4','A3','A2','A1','Custom'],'Landscape':['A4','A3','A2','A1','Custom']}},
+    'Banner':{orients:['Portrait','Landscape'],sizes:{'Portrait':['80 x 180 cm (roll-up)','60 x 160 cm','Custom'],'Landscape':['300 x 100 cm','200 x 100 cm','Custom']}},
+    'Digital Screen':{orients:['Portrait','Landscape'],sizes:{'Portrait':['9:16','1080 x 1920 px','Custom'],'Landscape':['16:9','1920 x 1080 px','Custom']}},
+    'Social Media Graphic':{orients:['Portrait','Landscape','Square'],sizes:{'Portrait':['4:5','1080 x 1350 px','Story 9:16','Custom'],'Landscape':['16:9','1200 x 630 px','Custom'],'Square':['1:1','1080 x 1080 px','Custom']}},
+    'Brochure':{orients:['Portrait','Landscape'],sizes:{'Portrait':['A4 bi-fold','A4 tri-fold','A5','Custom'],'Landscape':['A4 bi-fold','A5','Custom']}},
+    'Flyer':{orients:['Portrait','Landscape'],sizes:{'Portrait':['A4','A5','A6','Custom'],'Landscape':['A4','A5','Custom']}},
+    'Certificate':{orients:['Portrait','Landscape'],sizes:{'Portrait':['A4','Custom'],'Landscape':['A4','Custom']}},
+    'Invitation':{orients:['Portrait','Landscape'],sizes:{'Portrait':['A5','A6','Custom'],'Landscape':['A5','A6','Custom']}},
+    'Backdrop':{orients:['Landscape','Portrait'],sizes:{'Landscape':['400 x 250 cm','300 x 250 cm','Custom'],'Portrait':['250 x 400 cm','Custom']}},
+    'Programme':{orients:['Portrait','Landscape'],sizes:{'Portrait':['A4','A5','Custom'],'Landscape':['A4','A5','Custom']}},
+    'Other':{orients:['Portrait','Landscape','Square'],sizes:{'Portrait':['Custom'],'Landscape':['Custom'],'Square':['Custom']}}
+  };
+  var rcDlv=[];
+  function dlvRow(d,i){
+    var T=DLV_TYPES[d.type]||DLV_TYPES.Other;
+    var orients=T.orients||['Portrait','Landscape'];
+    var sizes=(T.sizes&&T.sizes[d.orient])||[];
+    var custom=(d.size==='Custom');
+    return '<div class="dlv-row">'
+      +'<div class="dlv-head"><span class="dlv-n">'+(i+1)+'</span>'
+      +'<button type="button" class="icon-btn del" onclick="rcDlvRemove('+i+')" title="'+esc(U('dlv_remove'))+'" aria-label="'+esc(U('dlv_remove'))+'"><i class="ti ti-trash"></i></button></div>'
+      +'<div class="form-row">'
+      +'<div class="form-group"><label class="form-label">'+esc(U('dlv_type'))+'</label>'
+      +'<select class="form-select" onchange="rcDlvSet('+i+',\'type\',this.value)">'
+      +Object.keys(DLV_TYPES).map(function(k){return '<option value="'+esc(k)+'"'+(k===d.type?' selected':'')+'>'+esc(LO(k))+'</option>';}).join('')
+      +'</select></div>'
+      +'<div class="form-group"><label class="form-label">'+esc(U('dlv_orient'))+'</label>'
+      +'<select class="form-select" onchange="rcDlvSet('+i+',\'orient\',this.value)">'
+      +orients.map(function(o){return '<option value="'+esc(o)+'"'+(o===d.orient?' selected':'')+'>'+esc(LO(o))+'</option>';}).join('')
+      +'</select></div></div>'
+      +'<div class="form-row">'
+      +'<div class="form-group"><label class="form-label">'+esc(U('dlv_size'))+'</label>'
+      +'<select class="form-select" onchange="rcDlvSet('+i+',\'size\',this.value)">'
+      +sizes.map(function(z){return '<option value="'+esc(z)+'"'+(z===d.size?' selected':'')+'>'+esc(LO(z))+'</option>';}).join('')
+      +'</select></div>'
+      +'<div class="form-group"><label class="form-label">'+esc(U('dlv_qty'))+'</label>'
+      +'<input class="form-input" type="number" min="1" max="20" value="'+(d.qty||1)+'" onchange="rcDlvSet('+i+',\'qty\',this.value)"></div>'
+      +'</div>'
+      +(custom?('<div class="form-row">'
+        +'<div class="form-group"><label class="form-label">'+esc(U('dlv_w'))+'</label><input class="form-input" value="'+esc(d.w||'')+'" placeholder="e.g. 120" oninput="rcDlvSet('+i+',\'w\',this.value)"></div>'
+        +'<div class="form-group"><label class="form-label">'+esc(U('dlv_h'))+'</label><input class="form-input" value="'+esc(d.h||'')+'" placeholder="e.g. 80" oninput="rcDlvSet('+i+',\'h\',this.value)"></div>'
+        +'<div class="form-group"><label class="form-label">'+esc(U('dlv_u'))+'</label>'
+        +'<select class="form-select" onchange="rcDlvSet('+i+',\'u\',this.value)">'
+        +['mm','cm','m','px','inch'].map(function(u){return '<option value="'+u+'"'+(u===(d.u||'cm')?' selected':'')+'>'+u+'</option>';}).join('')
+        +'</select></div></div>'):'')
+      +'</div>';
+  }
+  function dlvText(){
+    return rcDlv.map(function(d){
+      var size=(d.size==='Custom')?((d.w||'?')+' x '+(d.h||'?')+' '+(d.u||'cm')):(d.size||'');
+      return (d.qty>1?(d.qty+' x '):'')+[d.type,d.orient,size].filter(Boolean).join(' / ');
+    }).join('; ');
+  }
+  function dlvShort(){
+    var t={};rcDlv.forEach(function(d){t[d.type]=1;});
+    return Object.keys(t).join(' + ');
+  }
+  function rcDlvRender(){
+    var box=document.getElementById('rc-dlv-box');
+    if(box)box.innerHTML=rcDlv.length?rcDlv.map(dlvRow).join(''):('<div class="rc-note">'+esc(U('dlv_none'))+'</div>');
+    var hid=document.getElementById('rcf-deliverables');
+    if(hid)hid.value=dlvText();
+  }
+  window.rcDlvAdd=function(){
+    rcDlv.push({type:'Poster',orient:'Portrait',size:'A4',qty:1,u:'cm'});
+    rcDlvRender();
+  };
+  window.rcDlvRemove=function(i){ rcDlv.splice(i,1); rcDlvRender(); };
+  window.rcDlvSet=function(i,k,v){
+    var d=rcDlv[i]; if(!d)return;
+    if(k==='qty')v=Math.max(1,Math.min(20,parseInt(v,10)||1));
+    d[k]=v;
+    if(k==='type'){
+      var T=DLV_TYPES[v]||DLV_TYPES.Other;
+      d.orient=(T.orients||['Portrait'])[0];
+      d.size=((T.sizes||{})[d.orient]||['Custom'])[0];
+    }
+    if(k==='orient'){
+      var T2=DLV_TYPES[d.type]||DLV_TYPES.Other;
+      d.size=((T2.sizes||{})[v]||['Custom'])[0];
+    }
+    rcDlvRender();
+  };
+  window.rcDlvData=function(){ return {list:rcDlv.slice(),text:dlvText(),short:dlvShort()}; };
   window.rcAddLink=function(){rcLinks.push({title:'',url:''});rcRenderLinks();};
   window.rcRmLink=function(i){rcLinks.splice(i,1);rcRenderLinks();};
   window.rcLinkVal=function(i,f,v){if(rcLinks[i])rcLinks[i][f]=v;};
@@ -8499,21 +8537,43 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     allFields(T).forEach(function(f){
       if(f.type==='links'){ d.links=(rcValues.links||[]).filter(function(l){return (l.url||'').trim();}); return; }
       if(f.type==='multi'){ d[f.k]=rcValues[f.k]||[]; return; }
+      if(f.type==='deliverables'){ return; }
       d[f.k]=String(rcValues[f.k]==null?'':rcValues[f.k]).trim();
     });
+    if(T.key==='design'){
+      var dv=(window.rcDlvData?rcDlvData():{list:[],text:'',short:''});
+      d.deliverablesText=dv.text;
+      d.deliverablesShort=dv.short;
+      d.deliverablesList=dv.list.map(function(x){
+        var size=(x.size==='Custom')?((x.w||'?')+' x '+(x.h||'?')+' '+(x.u||'cm')):(x.size||'');
+        return [x.type,x.orient,size,(x.qty>1?('x'+x.qty):'')].filter(Boolean).join(' / ');
+      });
+      if(!d.deliverablesText){
+        var eb=document.getElementById('rc-step-err');
+        if(eb){eb.textContent=U('dlv_req');eb.style.display='block';}
+        try{document.getElementById('rc-dlv-box').scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
+        return;
+      }
+    }
     var missing=[];
     T.sections.forEach(function(sec,i){
       sec.fields.forEach(function(f){
         if(!f.req)return;
+        if(f.type==='deliverables')return;
         var hidden=f.showIf&&(d[f.showIf[0]]!==f.showIf[1]);
         if(!hidden&&!d[f.k])missing.push({k:f.k,sec:i});
       });
     });
     if(missing.length){
-      rcJump(missing[0].sec);
-      setTimeout(function(){ var el=document.getElementById('rcf-'+missing[0].k); if(el){el.classList.add('rc-err');try{el.focus();}catch(e){}} },90);
+      var errBox=document.getElementById('rc-step-err');
+      if(errBox){errBox.textContent=U('missing');errBox.style.display='block';}
+      document.querySelectorAll('.rc-err').forEach(function(e){e.classList.remove('rc-err');});
+      missing.forEach(function(m){var el=document.getElementById('rcf-'+m.k);if(el)el.classList.add('rc-err');});
+      var first=document.getElementById('rcf-'+missing[0].k);
+      if(first){try{first.focus();first.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
       return;
     }
+    var errBox0=document.getElementById('rc-step-err'); if(errBox0)errBox0.style.display='none';
     try{localStorage.setItem('rc_email',(d.email||'').toLowerCase());}catch(e){}
     var btn=document.getElementById('rc-submit-btn');if(btn){btn.disabled=true;btn.innerHTML='<i class="ti ti-loader-2"></i> '+esc(U('submitting'));}
     /* Submissions go through a server endpoint: the browser has no direct database access. */
@@ -8576,7 +8636,7 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
   function rcBrief(T,d){
     var L=[];
     if(T.key==='design'){
-      var spec=[d.designType,(d.format==='Custom Size'?((d.customW||'?')+' x '+(d.customH||'?')+' '+(d.customU||'')):d.format)].filter(Boolean).join(' \u00b7 ');
+      var spec=d.deliverablesText||[d.designType,(d.format==='Custom Size'?((d.customW||'?')+' x '+(d.customH||'?')+' '+(d.customU||'')):d.format)].filter(Boolean).join(' \u00b7 ');
       if(spec)L.push('Spec: '+spec);
       if(d.purpose)L.push('Purpose: '+d.purpose);
       if(d.style||d.colors||d.fonts)L.push('Look: '+[d.style,d.colors,d.fonts].filter(Boolean).join(' \u00b7 '));
@@ -8775,14 +8835,14 @@ body.request-mode .rc-hero-band{background:linear-gradient(90deg,#e6a417,#ffd056
     var T=typeOf(r.type);if(!T)return;
     var f=FS();if(!f)return;
     var d=r.data||{};d.refNo=r.refNo;
-    var title=(r.eventName||'Request')+': '+(T.key==='design'?('Design '+(d.designType||'Artwork')):'Photography Coverage');
+    var title=(r.eventName||'Request')+': '+(T.key==='design'?('Design '+(d.deliverablesShort||d.designType||'Artwork')):'Photography Coverage');
     var task={topic:title,description:rcBrief(T,d),dueDate:r.deadline||'',status:'pending',priority:'medium',category:'',
       assignedBy:(r.requester&&r.requester.name||'')+(r.requester&&r.requester.department?' ('+r.requester.department+')':''),
       assignedDate:(new Date()).toISOString().slice(0,10),
       notes:'Submitted via Request Centre · Ref '+(r.refNo||''),done:false,
       links:(r.links||[]).map(function(l){return {title:l.title||'Attachment',url:l.url};}),
       requestId:r.id,requestRef:r.refNo||'',requestType:T.key,requestData:d};
-    if(T.key==='design'){task.dzType=d.designType||'';task.dzRequestor=(r.requester&&r.requester.name)||'';task.dzStatus='Brief Received';task.dzBrand=r.eventName||'';}
+    if(T.key==='design'){task.dzType=d.deliverablesShort||d.designType||'';task.dzRequestor=(r.requester&&r.requester.name)||'';task.dzStatus='Brief Received';task.dzBrand=r.eventName||'';}
     if(T.key==='photo'){task.mdEvent=r.eventName||'';task.mdLocation=d.venue||'';task.mdCategory='Photos';
       task.mdTaken=r.eventDate||'';task.mdStart=d.startTime||'';task.mdEnd=d.endTime||'';}
     try{task.createdAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
@@ -10353,43 +10413,39 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
 (function(){
   if(window.__uxpCal2)return; window.__uxpCal2=true;
   function taskOf(who,id){ try{return (tasksOf(who)||[]).find(function(t){return t.id===id;});}catch(e){return null;} }
-  function payload(t){
+  function payload(t,who){
     if(!t)return null;
-    return {
-      title:t.topic||t.title||'MARCOM task',
-      date:t.dueDate||'',
-      startTime:t.mdStart||'',
-      endTime:t.mdEnd||'',
-      location:t.mdLocation||'',
-      notes:[t.description||'',t.notes||'',(t.eventLabel||t.eventName)?('Event: '+(t.eventLabel||t.eventName)):'']
-            .filter(Boolean).join('\n')
-    };
+    if(window.taskCalendarPayload)return taskCalendarPayload(t,who);
+    return {title:t.topic||t.title||'MARCOM task',date:t.mdTaken||t.dueDate||'',startTime:t.mdStart||'',endTime:t.mdEnd||'',location:t.mdLocation||'',notes:t.description||''};
   }
   /* Opens Google Calendar pre-filled, then remembers that it was added. */
   window.uxpTaskCalendar=function(who,id){
     var t=taskOf(who,id); if(!t)return;
-    if(!t.dueDate){try{uiToast('Add a due date first, then this task can go to the calendar.');}catch(e){}return;}
-    var o=payload(t);
-    var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):''); if(!url)return;
+    var o=payload(t,who);
+    if(!o||!o.date){try{uiToast('Add a due date (or a shoot date) first, then this task can go to the calendar.',{duration:6000});}catch(e){}return;}
     var already=!!t.calendarAddedAt;
+    var synced=!!(window.gcsConfigured&&gcsConfigured(who));
+    var when=o.date+(o.startTime?(' at '+o.startTime+(o.endTime?' - '+o.endTime:'')):'');
     uiConfirm({
-      title:already?'Open in Google Calendar again?':'Add this task to your calendar?',
+      title:already?'Add to calendar again?':'Add this task to your calendar?',
       icon:'ti-calendar-plus',
-      message:'"'+o.title+'" is due on '+o.date+'.'+(already?' It was already opened in Google Calendar once, so please check you are not creating a duplicate.':'')
-        +' Google Calendar opens with the details filled in. Nothing is saved to any calendar until you press Save there.',
-      okLabel:'Open Google Calendar',
+      message:'"'+o.title+'" ('+when+') will be added with all of its details.'
+        +(already?' It has already been added once, so please check you are not creating a duplicate.':'')
+        +(synced?' The event is created in your connected Google Calendar straight away.'
+                :' Google Calendar opens with everything filled in; nothing is saved until you press Save there.'),
+      okLabel:synced?'Create the event':'Open Google Calendar',
       cancelLabel:'Cancel'
     }).then(function(ok){
       if(!ok)return;
+      if(synced&&window.gcsCreateFor){ gcsCreateFor(who,t,id,o); return; }
+      var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):''); if(!url)return;
       try{ window.open(url,'_blank','noopener'); }catch(e){ location.href=url; }
-      /* Remember it, so the card shows a "calendar" tick instead of a plus. */
       try{
         var ref=taskRef(t,who);
         if(ref)ref.doc(id).update(Object.assign({calendarAddedAt:new Date().toISOString()},stampEdit())).catch(function(){});
       }catch(e){}
     });
   };
-  /* Same action from inside the task editor, using the values on screen. */
   window.uxpTaskCalendarFromModal=function(){
     var due=(document.getElementById('m-due')||{}).value||'';
     if(!due){
@@ -10451,18 +10507,29 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
       .catch(function(e){console.error('[gcs]',e);return {ok:false,error:(e&&e.message)||'network error'};});
   }
 
-  function payloadFor(task,taskId){
-    return {
-      action:'create',
-      taskId:taskId,
-      title:task.topic||task.title||'MARCOM task',
-      date:task.dueDate||'',
-      startTime:task.mdStart||'',
-      endTime:task.mdEnd||'',
-      location:task.mdLocation||'',
-      notes:[task.description||'',task.notes||'',(task.eventLabel||task.eventName)?('Event: '+(task.eventLabel||task.eventName)):''].filter(Boolean).join('\n')
+  function payloadFor(task,taskId,who){
+    var o=(window.taskCalendarPayload?taskCalendarPayload(task,who):null)||{
+      title:task.topic||task.title||'MARCOM task',date:task.mdTaken||task.dueDate||'',
+      startTime:task.mdStart||'',endTime:task.mdEnd||'',location:task.mdLocation||'',notes:task.description||''
     };
+    return {action:'create',taskId:taskId,title:o.title,date:o.date,startTime:o.startTime,endTime:o.endTime,location:o.location,notes:o.notes};
   }
+  /* Used by the Add to Calendar button on the card. */
+  window.gcsCreateFor=function(who,task,id,o){
+    var body=payloadFor(task,id,who);
+    if(o){body.title=o.title;body.date=o.date;body.startTime=o.startTime;body.endTime=o.endTime;body.location=o.location;body.notes=o.notes;}
+    call(who,body).then(function(res){
+      if(res&&res.ok){
+        try{
+          var ref=taskRef(task,who);
+          if(ref)ref.doc(id).update({gcalEventId:res.eventId||'',calendarAddedAt:new Date().toISOString()}).catch(function(){});
+        }catch(e){}
+        try{uiToast('Added to '+(res.calendar||'your calendar'));}catch(e){}
+      }else{
+        try{uiToast('Could not create the calendar event: '+((res&&res.error)||'unknown error'),{duration:8000});}catch(e){}
+      }
+    });
+  };
 
   /* Called right after a new task is written. */
   window.gcsAfterCreate=function(addPromise,ref,data,who){
@@ -10482,7 +10549,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         cancelLabel:'No thanks'
       }).then(function(ok){
         if(!ok)return;
-        call(who,payloadFor(data,id)).then(function(res){
+        call(who,payloadFor(data,id,who)).then(function(res){
           if(res&&res.ok){
             ref.doc(id).update({gcalEventId:res.eventId||'',gcalSyncedAt:new Date().toISOString()}).catch(function(){});
             try{uiToast('Added to '+(res.calendar||'your calendar'));}catch(e){}
@@ -10511,7 +10578,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     colRef.doc(id).delete().then(function(){
       uiToast(label||'Deleted',{undo:function(){
         colRef.doc(id).set(data).then(function(){
-          if(gcsConfigured(who))call(who,payloadFor(data,id)).then(function(res){
+          if(gcsConfigured(who))call(who,payloadFor(data,id,who)).then(function(res){
             if(res&&res.ok)colRef.doc(id).update({gcalEventId:res.eventId||''}).catch(function(){});
           });
         }).catch(function(e){console.error(e);uiToast('Could not restore the item.');});
@@ -10586,6 +10653,87 @@ html.dark .mb-time{background:rgba(96,150,210,.22);color:#93b8e8;}
 .t24 .form-select{flex:1;min-width:64px;text-align:center;font-variant-numeric:tabular-nums;}
 .t24-sep{font-weight:800;color:var(--muted);}
 .t24:has(input.rc-err) .form-select{border-color:#dc2626;}
+</style>
+<style id="calmap-style">
+.icon-btn.cal-on{color:#147c3b;}
+html.dark .icon-btn.cal-on{color:#5fcf85;}
+</style>
+<script id="calmap-script">
+/* ===== One calendar mapping for every kind of task card =====
+   Each tab stores different fields, so the event is assembled from whatever
+   the card actually has. The result is always a meaningful entry. */
+(function(){
+  if(window.__calMapInit)return; window.__calMapInit=true;
+  function nm(w){try{return memberName(w)||w;}catch(e){return w;}}
+  function fdt(d){try{return fmtDate(d);}catch(e){return d||'';}}
+  function labelOfStatus(v){try{return (SC[v]||{}).l||v||'';}catch(e){return v||'';}}
+  function line(label,val){return val?(label+': '+val):'';}
+
+  window.taskCalendarPayload=function(task,who){
+    if(!task)return null;
+    var t=task;
+    /* A shoot uses its own date and time; everything else uses the due date. */
+    var date=t.mdTaken||t.dueDate||'';
+    var start=t.mdStart||'';
+    var end=t.mdEnd||'';
+    var loc=t.mdLocation||'';
+    var assignee=nm(t.owner||who||'');
+    var pr=(t.priority==='high'?'High':(t.priority==='low'?'Low':'Medium'));
+
+    var parts=[];
+    parts.push(line('Task',t.topic||t.title||''));
+    if(t.description)parts.push('',t.description,'');
+    parts.push(line('Assigned to',assignee));
+    parts.push(line('Department','MARCOM'));
+    parts.push(line('Status',labelOfStatus(t.status)));
+    parts.push(line('Priority',pr));
+    parts.push(line('Deadline',t.dueDate?fdt(t.dueDate):''));
+    parts.push(line('Event',t.eventLabel||t.eventName||''));
+    parts.push(line('Category',t.category||''));
+    parts.push(line('Requested by',t.assignedBy||''));
+    parts.push(line('Request ref',t.requestRef||''));
+
+    /* Photography and video fields (O) */
+    parts.push(line('Shoot date',t.mdTaken?fdt(t.mdTaken):''));
+    parts.push(line('Shoot time',(start&&end)?(start+' - '+end):(start||'')));
+    parts.push(line('Location',loc));
+    parts.push(line('Media type',t.mdCategory||''));
+    parts.push(line('Upload by',t.mdUpload?fdt(t.mdUpload):''));
+    parts.push(line('Watermark removal',t.mdWatermark?fdt(t.mdWatermark):''));
+    parts.push(line('Files',t.mdFile||''));
+
+    /* Design fields (Dew) */
+    parts.push(line('Design type',t.dzType||''));
+    parts.push(line('Design stage',t.dzStatus||''));
+    parts.push(line('Brand / event',t.dzBrand||''));
+    parts.push(line('Requestor',t.dzRequestor||''));
+    if(t.dzRevisions)parts.push(line('Revisions',String(t.dzRevisions)));
+    parts.push(line('Design file',t.dzFile||''));
+
+    if(t.notes)parts.push('','Notes: '+t.notes);
+    if(t.links&&t.links.length){
+      parts.push('','Links:');
+      t.links.forEach(function(l){ if(l&&l.url)parts.push('  ' + ((l.title||'Link')+': '+l.url)); });
+    }
+    parts.push('','Created in the HeadStart MARCOM Workspace.');
+
+    return {
+      title:(t.topic||t.title||'MARCOM task'),
+      date:date,
+      startTime:start,
+      endTime:end,
+      location:loc,
+      notes:parts.filter(function(x){return x!==''||true;}).filter(function(x,i,a){return !(x===''&&a[i-1]==='');}).join('\n').replace(/\n{3,}/g,'\n\n').trim()
+    };
+  };
+})();
+</script>
+<style id="dlv-style">
+.dlv-row{border:1px solid var(--border);border-radius:12px;padding:11px 12px 4px;margin-bottom:9px;background:var(--surface);}
+.dlv-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.dlv-n{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dlv-head .icon-btn{margin-left:auto;min-width:38px;min-height:38px;}
+body.request-mode .dlv-row{background:rgba(255,255,255,.97);}
 </style>
 </body>
 
