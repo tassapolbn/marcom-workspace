@@ -113,7 +113,7 @@ async function notify(refNo, T, d) {
     if (d.email) {
       await send([d.email], 'MARCOM received your request ' + refNo,
         'Dear Khun ' + (d.reqName || '') + ',\n\nThank you for your ' + T.short.toLowerCase() +
-        ' request. Your reference number is ' + refNo + '.\nYou can track the status any time on the Request Centre page using this reference number and your email address.\n\nMARCOM Team, HeadStart International School Phuket');
+        ' request. Your reference number is ' + refNo + '.\nTo check the progress at any time, open the Request Centre page and enter this email address under Track My Requests. Please quote the reference number if you contact the MARCOM team about this request.\n\nMARCOM Team, HeadStart International School Phuket');
     }
   } catch (e) { /* notifications must never fail the submission */ }
 }
