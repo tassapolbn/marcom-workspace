@@ -2512,14 +2512,22 @@ function saveTask(){
     data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
     data.createdBy=meEmail();
     if(evtOn&&!data.owner)data.owner='';
-    var _newP=ref.add(data);
-    if(window.__calAfterSave){
-      var _w=modalState.who,_d=data;
-      _newP.then(function(docRef){ try{calAfterSave(ref,docRef.id,_d,_w);}catch(e){console.error(e);} }).catch(function(){});
+    /* The id is generated locally, so the calendar step can run at once
+       instead of waiting for the server. No silent failures. */
+    const newRef=ref.doc();
+    const wantCal=!!window.__calAfterSave, whoNow=modalState.who;
+    newRef.set(data).catch(function(e){
+      console.error('[task] save failed',e);
+      try{uiToast('Could not save the task: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){}
+    });
+    if(wantCal){
+      try{ calAfterSave(ref,newRef.id,data,whoNow); }
+      catch(e){ console.error('[calendar] step failed',e); try{uiToast('Calendar step failed: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){} }
     }
   }
   if(window.__calAfterSave&&modalState.editId&&wasEvent===evtOn){
-    try{calAfterSave(ref,modalState.editId,Object.assign({},old||{},data),modalState.who);}catch(e){console.error(e);}
+    try{calAfterSave(ref,modalState.editId,Object.assign({},old||{},data),modalState.who);}
+    catch(e){console.error('[calendar] step failed',e);try{uiToast('Calendar step failed: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){}}
   }
   window.__calAfterSave=false;
   window.__sopSaving=true;closeModal();window.__sopSaving=false;
@@ -10532,8 +10540,10 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         try{
           var ref=taskRef(task,owner);
           /* gcalOwner records WHICH calendar holds it, so deleting the task
-             later removes the event from the right place. */
-          if(ref)ref.doc(id).update({gcalEventId:res.eventId||'',gcalOwner:targetWs,calendarAddedAt:new Date().toISOString()}).catch(function(){});
+             later removes the event from the right place. set+merge is used so
+             this cannot fail if it arrives before the task document is written. */
+          if(ref)ref.doc(id).set({gcalEventId:res.eventId||'',gcalOwner:targetWs,calendarAddedAt:new Date().toISOString()},{merge:true})
+            .catch(function(e){console.error('[calendar] link write failed',e);});
         }catch(e){}
         try{uiToast('Added to '+(res.calendar||'the calendar'));}catch(e){}
       }else{
