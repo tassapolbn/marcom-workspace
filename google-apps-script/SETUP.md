@@ -59,12 +59,15 @@ Quick check: paste that URL into a new browser tab. You should see
 2. Scroll to **Google Calendar sync**.
 3. Paste the Web app URL, then the secret phrase from Step 2.
 4. Click **Test connection**. It should say "Connected to calendar: ...".
-5. Tick **Ask me to create calendar events for new tasks**, then click **Save**.
+5. Click **Save** (or **Save & Close** at the bottom). From that moment the
+   connection is active; there is nothing to switch on.
 
 ## How it behaves from now on
 
-- Create a task with a due date and press Save: a popup asks whether to add it
-  to your calendar. Press Yes and the event is created immediately.
+- Create a task, fill everything in, and press **Save + Calendar** at the
+  bottom of the form: the event is created in your calendar immediately.
+  Plain **Save** never touches the calendar.
+- Every task card also has a calendar button for adding it later.
 - Delete that task: the calendar event is removed with it. If you press Undo on
   the deletion, the event is put back.
 - Tasks without a due date never trigger anything.
@@ -78,7 +81,7 @@ Quick check: paste that URL into a new browser tab. You should see
 - To revoke access at any time: script.google.com, open the project,
   **Deploy > Manage deployments**, then archive the deployment. Sync stops
   immediately.
-- To pause without revoking: untick the box in Settings.
+- To pause without revoking: clear the URL box in Settings and press Save.
 
 ## If something does not work
 

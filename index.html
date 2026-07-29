@@ -2439,12 +2439,26 @@ function saveTaskAndCalendar(){
 }
 function calAfterSave(ref,id,data,who){
   var task=Object.assign({},data,{id:id});
+  if(task.gcalEventId){
+    try{uiToast('This task is already in the calendar. Delete the task to remove the event.',{duration:6000});}catch(e){}
+    return;
+  }
   var o=(window.taskCalendarPayload?taskCalendarPayload(task,who):null);
   if(!o||!o.date)return;
   var target=(window.gcsTargetWs?gcsTargetWs(who):'');
   if(target&&window.gcsCreateFor){ gcsCreateFor(target,task,id,o,who); return; }
-  /* No calendar connected anywhere: fall back to the manual link. */
-  if(window.uxpOfferCalendar)uxpOfferCalendar(o);
+  /* Nothing is connected: say so plainly instead of a look-alike popup. */
+  uiConfirm({
+    title:'No Google Calendar is connected',
+    icon:'ti-plug-x',
+    message:'The task was saved, but no calendar is connected for '+( (typeof memberName==='function'&&memberName(who))||who)+' or for your own account, so the event could not be created automatically. Open Settings (gear icon), section Google Calendar sync, paste the Web app URL and secret, then press Save. Or add this one manually now.',
+    okLabel:'Add manually',
+    cancelLabel:'Close'
+  }).then(function(ok){
+    if(!ok)return;
+    var url=(window.uxpCalendarUrl?uxpCalendarUrl(o):'');
+    if(url){try{window.open(url,'_blank','noopener');}catch(e){location.href=url;}}
+  });
 }
 function closeModal(){document.getElementById('modal').classList.remove('open');if(!window.__sopSaving&&window.__sopBatch)window.__sopBatch=null;}
 function saveTask(){
@@ -10480,22 +10494,6 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
       }catch(e){}
     });
   };
-  window.uxpTaskCalendarFromModal=function(){
-    var due=(document.getElementById('m-due')||{}).value||'';
-    if(!due){
-      var n=document.getElementById('m-cal-note');
-      if(n){n.textContent='Please choose a due date first.';n.style.display='block';}
-      var d=document.getElementById('m-due'); if(d)d.focus();
-      return;
-    }
-    var o={
-      title:((document.getElementById('m-topic')||{}).value||'MARCOM task'),
-      date:due,
-      location:((document.getElementById('m-md-location')||{}).value||''),
-      notes:((document.getElementById('m-desc')||{}).value||'')
-    };
-    if(window.uxpOfferCalendar)uxpOfferCalendar(o);
-  };
 })();
 </script>
 <script id="gcs-script">
@@ -10511,7 +10509,9 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   function nm(w){try{return memberName(w)||w;}catch(e){return w;}}
   function esc(x){try{return escHtml(x);}catch(e){return String(x==null?'':x);}}
   function cfgOf(w){return CFG[w]||null;}
-  window.gcsConfigured=function(w){var c=cfgOf(w);return !!(c&&c.on&&c.url);};
+  /* Connected means a URL is saved. The old "ask me" switch is gone; it
+     silently disabled the whole feature and caused ghost fallbacks. */
+  window.gcsConfigured=function(w){var c=cfgOf(w);return !!(c&&c.url);};
   /* Which calendar should this event go to?
      1. the workspace that owns the task, if that member has connected theirs
      2. otherwise the calendar of whoever is signed in
@@ -10575,40 +10575,20 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         }catch(e){}
         try{uiToast('Added to '+(res.calendar||'the calendar'));}catch(e){}
       }else{
-        try{uiToast('Could not create the calendar event: '+((res&&res.error)||'unknown error'),{duration:9000});}catch(e){}
+        var err=(res&&res.error)||'no response';
+        uiConfirm({
+          title:'Calendar event was NOT created',
+          icon:'ti-alert-triangle',
+          danger:true,
+          message:'Google answered: "'+err+'".\n\nMost common causes: the secret phrase in Settings does not match the SECRET line in the script, or the script was redeployed and its URL changed. Open Settings and press Test connection; it must show your calendar name.',
+          okLabel:'Understood',
+          cancelLabel:'Close'
+        });
       }
     });
   };
 
   /* Called right after a new task is written. */
-  window.gcsAfterCreate=function(addPromise,ref,data,who){
-    if(!addPromise||!addPromise.then)return;
-    addPromise.then(function(docRef){
-      var id=docRef&&docRef.id;
-      if(!id)return;
-      if(!gcsConfigured(who)){
-        if(window.uxpOfferCalendar)uxpOfferCalendar({title:data.topic,date:data.dueDate,notes:data.description||''});
-        return;
-      }
-      uiConfirm({
-        title:'Add this to your Google Calendar?',
-        icon:'ti-calendar-plus',
-        message:'"'+(data.topic||'Task')+'" is due on '+data.dueDate+'. The workspace will create the event in '+nm(who)+"'s calendar now. Deleting this task later will also remove that event.",
-        okLabel:'Yes, create it',
-        cancelLabel:'No thanks'
-      }).then(function(ok){
-        if(!ok)return;
-        call(who,payloadFor(data,id,who)).then(function(res){
-          if(res&&res.ok){
-            ref.doc(id).update({gcalEventId:res.eventId||'',gcalSyncedAt:new Date().toISOString()}).catch(function(){});
-            try{uiToast('Added to '+(res.calendar||'your calendar'));}catch(e){}
-          }else{
-            try{uiToast('Could not create the calendar event: '+((res&&res.error)||'unknown error'),{duration:8000});}catch(e){}
-          }
-        });
-      });
-    }).catch(function(){});
-  };
 
   /* Called when a task carrying a linked event is deleted. Undo restores both. */
   window.gcsDeleteFor=function(who,task,id){
@@ -10644,10 +10624,9 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var w=myWs(); if(!w)return;
     var url=((document.getElementById('gcs-url')||{}).value||'').trim();
     var sec=((document.getElementById('gcs-secret')||{}).value||'').trim();
-    var on=!!(document.getElementById('gcs-on')||{}).checked;
     var d=null;try{d=firebase.firestore();}catch(e){}
     if(!d)return;
-    d.collection(w+'_settings').doc('gcalsync').set({url:url,secret:sec,on:on},{merge:true})
+    d.collection(w+'_settings').doc('gcalsync').set({url:url,secret:sec,on:true},{merge:true})
       .then(function(){
         try{uiToast('Calendar connection saved');}catch(e){}
         var out=document.getElementById('gcs-test-out');
@@ -10678,7 +10657,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var c=cfgOf(w)||{};
     var u=document.getElementById('gcs-url'); if(u&&document.activeElement!==u)u.value=c.url||'';
     var s2=document.getElementById('gcs-secret'); if(s2&&document.activeElement!==s2)s2.value=c.secret||'';
-    var o=document.getElementById('gcs-on'); if(o)o.checked=!!c.on;
+
   };
   function inject(){
     var body=document.querySelector('#settings-modal .modal-body');
@@ -10690,7 +10669,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
       +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;">Create events automatically when you add a task, and remove them when the task is deleted. Follow google-apps-script/SETUP.md, then paste your Web app URL below.</div>'
       +'<input class="form-input" id="gcs-url" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:6px;">'
       +'<input class="form-input" id="gcs-secret" placeholder="Secret phrase (must match the script)" style="margin-bottom:6px;">'
-      +'<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;margin-bottom:8px;"><input type="checkbox" id="gcs-on" style="width:17px;height:17px;"> Ask me to create calendar events for new tasks</label>'
+
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost btn-sm" onclick="gcsTest()"><i class="ti ti-plug-connected"></i> Test connection</button>'
       +'<button type="button" class="btn btn-navy btn-sm" onclick="gcsSave()"><i class="ti ti-check"></i> Save</button></div>'
       +'<div id="gcs-test-out" style="font-size:11.5px;font-weight:700;margin-top:7px;"></div>';
