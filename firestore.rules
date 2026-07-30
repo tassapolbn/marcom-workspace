@@ -192,9 +192,11 @@ service cloud.firestore {
 
     // School events: shared store used by both Boss and the Junior Events
     // Coordinator (the app maps the junior workspace onto this collection).
+    // ONE shared Event Hub for the whole team: every authorised member may add
+    // and edit events, because an event belongs to the department, not a person.
     match /school_events/{id} {
       allow read:  if authorized();
-      allow write: if isAdmin() || roleVal() == 'junior';
+      allow write: if authorized();
     }
 
     // SOP task templates: shared; maintained by Boss and the Junior

@@ -140,6 +140,37 @@ function doPost(e) {
       return json_({ ok: true, busy: count > 0, count: count });
     }
 
+    /* Right-now availability for the team overview. Returns only a status word
+       and, when busy, the minutes left. No titles, guests or locations. */
+    if (action === 'status') {
+      var now = new Date();
+      var soon = new Date(now.getTime() + 60 * 60 * 1000);
+      var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      var list = cal.getEvents(todayStart, todayEnd);
+      var busyNow = 0, allDay = 0, nextIn = null, freeAfter = null;
+      for (var k = 0; k < list.length; k++) {
+        var e2 = list[k];
+        if (e2.isAllDayEvent()) { allDay++; continue; }
+        var st = e2.getStartTime(), en = e2.getEndTime();
+        if (st <= now && en > now) {
+          busyNow++;
+          if (!freeAfter || en > freeAfter) freeAfter = en;
+        } else if (st > now && st <= soon) {
+          if (!nextIn || st < nextIn) nextIn = st;
+        }
+      }
+      var out = { ok: true, state: 'free', allDayCount: allDay, eventsToday: list.length };
+      if (busyNow > 0) {
+        out.state = 'busy';
+        out.freeInMinutes = Math.max(1, Math.round((freeAfter - now) / 60000));
+      } else if (nextIn) {
+        out.state = 'soon';
+        out.startsInMinutes = Math.max(1, Math.round((nextIn - now) / 60000));
+      }
+      return json_(out);
+    }
+
     if (action === 'delete') {
       var target = findEvent_(cal, body);
       if (!target) return json_({ ok: true, deleted: 0, note: 'nothing to delete' });
