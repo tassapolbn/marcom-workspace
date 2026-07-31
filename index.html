@@ -1099,16 +1099,14 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <select class="form-select" id="m-event"><option value="">None (General Task)</option></select>
       </div>
       <div class="form-group evt-box" id="m-evt-group">
-        <label class="evt-toggle"><input type="checkbox" id="m-evt-on" onchange="evtToggle()"> <span><i class="ti ti-users-group"></i> Shared event task <em>visible to the whole team on the Event Board</em></span></label>
+        <label class="evt-toggle"><input type="checkbox" id="m-evt-on" onchange="evtToggle()"> <span><i class="ti ti-users-group"></i> Share this card with the team <em>appears on every assigned person's board; the status stays in sync for everyone</em></span></label>
         <div id="m-evt-fields" style="display:none;">
-          <div class="form-row">
-            <div class="form-group"><label class="form-label" for="m-evt-label">Event name</label>
-              <input class="form-input" id="m-evt-label" list="m-evt-list" placeholder="e.g. Christmas Fair">
-              <datalist id="m-evt-list"></datalist>
-            </div>
-            <div class="form-group"><label class="form-label" for="m-evt-owner">Assigned to</label>
-              <select class="form-select" id="m-evt-owner"><option value="">Unassigned</option></select>
-            </div>
+          <div class="form-group"><label class="form-label" for="m-evt-label">Event name <span class="form-hint">optional</span></label>
+            <input class="form-input" id="m-evt-label" list="m-evt-list" placeholder="e.g. Christmas Fair">
+            <datalist id="m-evt-list"></datalist>
+          </div>
+          <div class="form-group"><label class="form-label">Responsible people <span class="form-hint">tick everyone who should see this card on their board</span></label>
+            <div class="evt-people" id="m-evt-people"></div>
           </div>
           <div class="evt-stamp" id="m-evt-stamp" style="display:none;"></div>
         </div>
@@ -1474,16 +1472,45 @@ const DATA={
 };
 let eventTasks=[],eventTasksRef=null,eventTasksLoaded=false;
 function ownTasksOf(w){return w==='boss'?bossTasks:(DATA[w]?DATA[w].tasks:[]);}
-/* A tab shows its own tasks PLUS the shared event tasks assigned to it. */
+/* The people responsible for a shared card. A card can be assigned to more
+   than one person; it then appears on every one of their boards, and because
+   it is a single shared document, a status change by anyone is seen by all.
+   Falls back to the older single-owner field so existing cards keep working. */
+function taskAssignees(t){
+  if(!t)return [];
+  if(Array.isArray(t.assignees)&&t.assignees.length)return t.assignees.filter(Boolean);
+  if(t.owner)return [t.owner];
+  return [];
+}
+function isSharedToMany(t){return !!(t&&Array.isArray(t.assignees)&&t.assignees.length>1);}
+/* One canonical board a shared card is counted under in team roll-ups, so a
+   card shared with several people is not tallied several times on the Overview.
+   The card still SHOWS on every assignee's board (see tasksOf); this only
+   controls where it is COUNTED in cross-member totals. */
+function taskCanonicalWs(t){
+  if(!t||t.__src!=='event')return '';
+  var a=taskAssignees(t);
+  return a.length?a[0]:'';
+}
+/* A tab shows its own tasks PLUS the shared event tasks assigned to it
+   (matching any of its assignees, not just a single owner). */
 function tasksOf(w){
   var own=ownTasksOf(w)||[];
   if(!eventTasks.length)return own;
-  var mine=eventTasks.filter(function(t){return (t.owner||'')===w;});
+  var mine=eventTasks.filter(function(t){return taskAssignees(t).indexOf(w)>=0;});
   if(!mine.length)return own;
   return own.concat(mine).sort(function(a,b){
     var da=a.dueDate||'9999-12-31', db_=b.dueDate||'9999-12-31';
     return da<db_?-1:(da>db_?1:0);
   });
+}
+/* Own tasks plus shared cards counted under this member only once, for the
+   Team Overview roll-ups (totals, deadlines, heatmap, activity). */
+function ovTasksOf(w){
+  var own=ownTasksOf(w)||[];
+  if(!eventTasks.length)return own;
+  var mine=eventTasks.filter(function(t){return taskCanonicalWs(t)===w;});
+  return mine.length?own.concat(mine):own;
 }
 /* Every write goes through here, so a task is always saved back to the
    collection it came from. __src is set by the listeners below. */
@@ -1527,6 +1554,28 @@ function eventsOf(w){
   var own=(w!=='boss'&&DATA[w]&&DATA[w].events&&DATA[w].events.length)?DATA[w].events:[];
   if(!own.length)return schoolEvents;
   return schoolEvents.concat(own);
+}
+/* The whole team shares ONE event hub, so the Team Overview must show each
+   event ONCE, not once per member. This returns the shared events plus any
+   legacy per-member events, de-duplicated by id and by name+date, so three
+   copies of the same "Staff Induction" collapse into a single card. */
+function teamEvents(){
+  var out=[], byId={}, byKey={};
+  function add(e){
+    if(!e)return;
+    if(e.id&&byId[e.id])return;
+    var nm=(e.name||'').trim().toLowerCase();
+    var key=nm+'|'+(e.date||'');
+    if(nm&&byKey[key])return;
+    if(e.id)byId[e.id]=1;
+    if(nm)byKey[key]=1;
+    out.push(e);
+  }
+  (schoolEvents||[]).forEach(add);
+  ['dew','o','junior'].forEach(function(w){
+    var d=DATA[w]; if(d&&d.events&&d.events.length)d.events.forEach(add);
+  });
+  return out;
 }
 function eventsRefOf(w){return eventsRef;}
 function eventsLoadedOf(w){return eventsLoaded;}
@@ -2059,7 +2108,7 @@ function moveCardTo(fromWho,taskId,target){
       okLabel:'Reassign'}).then(function(ok){
       if(!ok)return;
       var er=eventTasksRef||db.collection('event_tasks');
-      er.doc(taskId).update(Object.assign({owner:target},stampEdit()))
+      er.doc(taskId).update(Object.assign({owner:target,assignees:[target]},stampEdit()))
         .then(function(){try{uiToast('Reassigned to '+memberName(target));}catch(e){}})
         .catch(function(e){console.error(e);try{uiToast('Could not reassign: '+((e&&e.message)||''));}catch(_){}});
     });
@@ -2496,7 +2545,13 @@ function saveTask(){
   const wasEvent=isEventTask(old);
   if(evtOn){
     data.eventLabel=((document.getElementById('m-evt-label')||{}).value||'').trim();
-    data.owner=((document.getElementById('m-evt-owner')||{}).value||'');
+    /* A shared card can name several responsible people. It then shows on each
+       of their boards, and because it is a single document the status stays in
+       sync for everyone. owner = the first person, kept for the Event Board's
+       per-owner grouping and older code paths. */
+    var _ppl=(window.evtPeopleGet?evtPeopleGet():[]);
+    data.assignees=_ppl;
+    data.owner=_ppl.length?_ppl[0]:'';
   }
   Object.assign(data,stampEdit());
   const ref=(evtOn||wasEvent)?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
@@ -2510,8 +2565,11 @@ function saveTask(){
     const srcRef=wasEvent?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
     const keep={};Object.keys(old||{}).forEach(function(k){if(k!=='id'&&k!=='__src')keep[k]=old[k];});
     const merged=Object.assign(keep,data);
-    if(!evtOn){delete merged.eventLabel;delete merged.owner;}
-    if(!merged.createdBy)merged.createdBy=meEmail();
+    if(!evtOn){delete merged.eventLabel;delete merged.owner;delete merged.assignees;}
+    /* Creating the shared copy: the security rules require createdBy to be the
+       signed-in user, so stamp it now (an admin may share another member's task). */
+    if(evtOn)merged.createdBy=meEmail();
+    else if(!merged.createdBy)merged.createdBy=meEmail();
     ref.add(merged).then(function(){return srcRef.doc(modalState.editId).delete();})
       .then(function(){try{uiToast(evtOn?'Moved to the shared Event Board':'Moved back to your own board');}catch(e){}})
       .catch(function(e){console.error(e);try{uiToast('Could not change the task type: '+((e&&e.message)||''));}catch(_){}});
@@ -2699,9 +2757,20 @@ function taskCardHTML(task,who){
   let _evClr='',_evTc='';try{if(task.eventId){const _ev=eventsOf(who).find(e=>e.id===task.eventId);if(_ev&&evOkClr(_ev.color)){_evClr=_ev.color;if(evOkClr(_ev.textColor))_evTc=_ev.textColor;}}}catch(e){}
   let _evStyle='';
   if(_evClr)_evStyle=_evTc?(' style="background:'+_evClr+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
-  const evBadge=isEventTask(task)
-    ? '<span class="mb mb-evt"><i class="ti ti-users-group" style="font-size:11px;"></i> '+escHtml(task.eventLabel||task.eventName||'Event')+'</span>'
-    : ((task.eventId||task.eventName)?'<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>':'');
+  let evBadge='';
+  if(isEventTask(task)){
+    const _evLbl=(task.eventLabel||task.eventName||'').trim();
+    if(_evLbl)evBadge+='<span class="mb mb-evt"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(_evLbl)+'</span>';
+    const _asg=taskAssignees(task);
+    if(_asg.length){
+      const _names=_asg.map(function(w){return memberName(w)||w;}).join(', ');
+      evBadge+='<span class="mb mb-shared" title="Shared card. A status change by anyone updates it for everyone."><i class="ti ti-users-group" style="font-size:11px;"></i> '+escHtml(_asg.length>1?('Shared · '+_names):_names)+'</span>';
+    } else {
+      evBadge+='<span class="mb mb-shared"><i class="ti ti-users-group" style="font-size:11px;"></i> Unassigned</span>';
+    }
+  } else if(task.eventId||task.eventName){
+    evBadge='<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>';
+  }
   const reqBadge=task.requestRef?'<span class="mb mb-req"><i class="ti ti-send" style="font-size:11px;"></i> '+escHtml(task.requestRef)+'</span>':'';
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
@@ -4263,8 +4332,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function nm(w){ if(typeof tabLabel==='function')return tabLabel(w)||w; if(typeof memberName==='function')return memberName(w)||w; return w; }
   function roleOf(w){ return (MEM[w]&&MEM[w].role)||''; }
   function iconOf(w){ return (MEM[w]&&MEM[w].icon)||'ti-user'; }
-  function tOf(w){ try{ return tasksOf(w)||[]; }catch(e){ return []; } }
-  function eOf(w){ if(w==='junior')return []; /* junior shares boss's events; avoid double counting */ try{ return eventsOf(w)||[]; }catch(e){ return []; } }
+  function tOf(w){ try{ return ovTasksOf(w)||[]; }catch(e){ return []; } }
+  /* Events are one shared team hub. Attribute the whole (de-duplicated) set to a
+     single slot so team roll-ups show each event once, never once per member. */
+  function eOf(w){ if(w!=='boss')return []; try{ return teamEvents()||[]; }catch(e){ return []; } }
   function sOf(w){ try{ return sickOf(w)||[]; }catch(e){ return []; } }
   function lOf(w){ try{ return lieuOf(w)||[]; }catch(e){ return []; } }
   function nOf(w){ try{ return notesOf(w)||[]; }catch(e){ return []; } }
@@ -4462,7 +4533,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     function row(c,a,b){ return '<div class="ov-det"><span class="ov-cd '+c+'"></span><div><div class="ov-det-a">'+esc(a)+'</div>'+(b?'<div class="ov-det-b">'+esc(b)+'</div>':'')+'</div></div>'; }
     var rows=[];
     dd.dl.forEach(function(o){ rows.push(row('ov-cd-dl',topicOf(o.t),nm(o.w)+' · deadline'+(o.t.priority==='high'?' · High priority':''))); });
-    dd.ev.forEach(function(o){ rows.push(row('ov-cd-ev',o.e.name||'Event',nm(o.w)+' · event'+(o.e.time?' · '+o.e.time:''))); });
+    dd.ev.forEach(function(o){ rows.push(row('ov-cd-ev',o.e.name||'Event','Team event'+(o.e.time?' · '+o.e.time:''))); });
     dd.sick.forEach(function(o){ rows.push(row('ov-cd-sick',nm(o.w)+' on sick leave','')); });
     dd.leave.forEach(function(o){ rows.push(row('ov-cd-leave',nm(o.w)+' on leave',o.r.event||'')); });
     el.innerHTML='<div class="ov-cal-detail-title">'+fdt(ovSel)+'</div>'+(rows.length?rows.join(''):'<div class="ov-empty-sm">Nothing scheduled.</div>');
@@ -4500,7 +4571,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':it.d+' days');
       var urg=it.d<=3?' urg':(it.d<=7?' soon':'');
       return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div class="ov-cdn-n"'+((it.e.color&&/^#[0-9a-fA-F]{6}$/.test(it.e.color))?' style="color:'+it.e.color+';"':'')+'>'+it.d+'</div><div class="ov-cdn-u">days</div></div>'
-        +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+' · '+esc(nm(it.w))+'</div></div>'
+        +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
         +'<div class="ov-cdn-tag">'+lbl+'</div></div>';
     }).join('');
   }
@@ -4511,7 +4582,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var acts=[];
     MORDER.forEach(function(w){
       tOf(w).forEach(function(t){ var dt=tsToDate(t.createdAt); if(dt)acts.push({dt:dt,i:'ti-clipboard-plus',txt:'<b>'+esc(nm(w))+'</b> created "'+esc(topicOf(t))+'"'}); });
-      eOf(w).forEach(function(e){ var dt=tsToDate(e.createdAt); if(dt)acts.push({dt:dt,i:'ti-calendar-plus',txt:'<b>'+esc(nm(w))+'</b> added event "'+esc(e.name||'')+'"'}); });
+      eOf(w).forEach(function(e){ var dt=tsToDate(e.createdAt); if(dt){ var by=(e.createdByName||e.lastEditedByName||'').trim(); acts.push({dt:dt,i:'ti-calendar-plus',txt:(by?'<b>'+esc(by)+'</b> added':'New')+' event "'+esc(e.name||'')+'"'}); } });
       lOf(w).forEach(function(r){ var dt=tsToDate(r.createdAt); if(dt)acts.push({dt:dt,i:'ti-beach',txt:'<b>'+esc(nm(w))+'</b> '+(r.type==='earned'?'earned a day-off in lieu':'logged leave taken')}); });
     });
     acts.sort(function(a,b){ return b.dt-a.dt; });
@@ -4625,7 +4696,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var res=[];
     MORDER.forEach(function(w){
       tOf(w).forEach(function(t){ if((topicOf(t)+' '+(t.description||'')+' '+(t.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Task',ic:'ti-clipboard-list',label:topicOf(t),sub:nm(w)}); });
-      eOf(w).forEach(function(e){ if(((e.name||'')+' '+(e.notes||'')+' '+(e.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Event',ic:'ti-confetti',label:e.name||'Event',sub:nm(w)+(e.date?' · '+fdt(e.date):'')}); });
+      eOf(w).forEach(function(e){ if(((e.name||'')+' '+(e.notes||'')+' '+(e.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Event',ic:'ti-confetti',label:e.name||'Event',sub:'Team event'+(e.date?' · '+fdt(e.date):'')}); });
       nOf(w).forEach(function(n){ if(((n.title||'')+' '+(n.content||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Note',ic:'ti-notes',label:n.title||'Untitled note',sub:nm(w)}); });
       lkOf(w).forEach(function(l){ if(((l.title||'')+' '+(l.url||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Link',ic:'ti-link',label:l.title||l.url||'Link',sub:nm(w)}); });
     });
@@ -6164,7 +6235,7 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
     if(eventName){
       var cb=document.getElementById('m-evt-on'); if(cb)cb.checked=true;
       var lb=document.getElementById('m-evt-label'); if(lb)lb.value=eventName;
-      var ow=document.getElementById('m-evt-owner'); if(ow)ow.value=(who&&who!=='unassigned')?who:'';
+      try{ if(window.evtPeopleSet)evtPeopleSet((who&&who!=='unassigned')?[who]:[]); }catch(e){}
       try{evtToggle();}catch(e){}
     }
   }
@@ -7813,8 +7884,9 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   function esc(s){try{return escHtml(s);}catch(e){return s==null?'':String(s);}}
   function nm(w){try{return tabLabel(w)||w;}catch(e){return w;}}
   function dU(d){try{return daysUntil(d);}catch(e){return null;}}
-  function tOf(w){try{return tasksOf(w)||[];}catch(e){return [];}}
-  function eOf(w){if(w==='junior')return [];/* shared with boss */try{return eventsOf(w)||[];}catch(e){return [];}}
+  function tOf(w){try{return ovTasksOf(w)||[];}catch(e){return [];}}
+  /* One shared event hub: count each event once, under a single slot. */
+  function eOf(w){if(w!=='boss')return [];try{return teamEvents()||[];}catch(e){return [];}}
   function myName(){
     var c=window.__cur;
     if(!c)return nm('boss')||'team';
@@ -10163,6 +10235,18 @@ html.dark .tc-open-hint{color:#9fb2c9;}
 html.dark .evt-toggle i{color:#8fb4dc;}
 #m-evt-fields{margin-top:11px;}
 .evt-stamp{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px;padding-top:4px;}
+.form-hint{font-weight:600;font-size:11px;color:var(--muted);}
+.evt-people{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+.evt-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border:1.5px solid var(--border);border-radius:9px;background:#fff;color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;user-select:none;line-height:1;transition:background .12s,border-color .12s,color .12s;}
+.evt-chip input{width:15px;height:15px;margin:0;cursor:pointer;accent-color:#fff;}
+.evt-chip:hover{border-color:var(--navy);}
+.evt-chip.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+.evt-chip.on i{color:#fff;}
+html.dark .evt-chip{background:rgba(255,255,255,.05);color:var(--text);border-color:var(--border);}
+html.dark .evt-chip:hover{border-color:#8fb4dc;}
+html.dark .evt-chip.on{background:#3f6ea5;border-color:#5f8cc4;color:#fff;}
+.mb-shared{background:#e0edff;color:#1e40af;}
+html.dark .mb-shared{background:rgba(59,110,165,.28);color:#cfe0f5;}
 .mb-evt{background:#ede9fe;color:#5b21b6;}
 html.dark .mb-evt{background:rgba(139,92,246,.22);color:#c4b5fd;}
 .evb-groups{display:flex;flex-direction:column;gap:11px;}
@@ -10218,16 +10302,44 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var lab=document.getElementById('m-evt-label'); if(lab)lab.value=(task&&(task.eventLabel||task.eventName))||'';
     var dl=document.getElementById('m-evt-list');
     if(dl)dl.innerHTML=knownEvents().map(function(n){return '<option value="'+esc(n)+'">';}).join('');
-    var sel=document.getElementById('m-evt-owner');
-    if(sel){
-      sel.innerHTML='<option value="">Unassigned</option>'+order().map(function(w){
-        return '<option value="'+w+'">'+esc(nm(w))+'</option>';
+    var pplBox=document.getElementById('m-evt-people');
+    if(pplBox){
+      var chosen=task?taskAssignees(task):[];
+      if(!chosen.length&&who)chosen=[who];
+      pplBox.innerHTML=order().map(function(w){
+        var on=chosen.indexOf(w)>=0;
+        var ic=(typeof iconOf==='function')?iconOf(w):'ti-user';
+        return '<label class="evt-chip'+(on?' on':'')+'" data-w="'+w+'">'
+          +'<input type="checkbox" value="'+w+'"'+(on?' checked':'')+' onchange="evtPeopleSync(this)">'
+          +'<i class="ti '+ic+'"></i>'+esc(nm(w))+'</label>';
       }).join('');
-      sel.value=(task&&task.owner!==undefined)?(task.owner||''):(who||'');
     }
     var st=document.getElementById('m-evt-stamp');
     if(st){var txt=stampText(task);st.innerHTML=txt?'<i class="ti ti-history"></i> '+esc(txt):'';st.style.display=txt?'flex':'none';}
     evtToggle();
+  };
+  /* keep the chip's highlight in step with its checkbox */
+  window.evtPeopleSync=function(inp){
+    try{var lab=inp.closest('.evt-chip'); if(lab)lab.classList.toggle('on',!!inp.checked);}catch(e){}
+  };
+  /* the people currently ticked in the share picker */
+  window.evtPeopleGet=function(){
+    var out=[];
+    try{
+      var box=document.getElementById('m-evt-people');
+      if(box){Array.prototype.forEach.call(box.querySelectorAll('input[type=checkbox]'),function(c){ if(c.checked&&c.value)out.push(c.value); });}
+    }catch(e){}
+    return out;
+  };
+  /* tick exactly the given people in the share picker */
+  window.evtPeopleSet=function(arr){
+    arr=arr||[];
+    try{
+      var box=document.getElementById('m-evt-people'); if(!box)return;
+      Array.prototype.forEach.call(box.querySelectorAll('input[type=checkbox]'),function(c){
+        c.checked=arr.indexOf(c.value)>=0; if(window.evtPeopleSync)evtPeopleSync(c);
+      });
+    }catch(e){}
   };
   /* ---------- Overview: the shared Event Board ---------- */
   var flt='';
@@ -10235,7 +10347,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   window.evbAssign=function(id,owner){
     var er=null;try{er=eventTasksRef||firebase.firestore().collection('event_tasks');}catch(e){}
     if(!er)return;
-    er.doc(id).update(Object.assign({owner:owner||''},stampEdit()))
+    er.doc(id).update(Object.assign({owner:owner||'',assignees:owner?[owner]:[]},stampEdit()))
       .then(function(){try{uiToast(owner?('Assigned to '+nm(owner)):'Set to unassigned');}catch(e){}})
       .catch(function(e){console.error(e);try{uiToast('Could not assign: '+((e&&e.message)||''));}catch(_){}});
   };
@@ -10278,23 +10390,27 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var keys=Object.keys(groups).sort();
     var html=keys.map(function(k){
       var items=groups[k].slice().sort(function(a,b){
-        var ua=(a.owner?1:0),ub=(b.owner?1:0);
+        var ua=(taskAssignees(a).length?1:0),ub=(taskAssignees(b).length?1:0);
         if(ua!==ub)return ua-ub;
         return (a.dueDate||'9999')<(b.dueDate||'9999')?-1:1;
       });
-      var un=items.filter(function(t){return !t.owner;}).length;
+      var un=items.filter(function(t){return !taskAssignees(t).length;}).length;
       return '<div class="evb-g'+(un?' unassigned':'')+'">'
         +'<div class="evb-g-h"><i class="ti ti-confetti"></i>'+esc(k)+'<span class="evb-count">'+items.length+' task'+(items.length>1?'s':'')+(un?(' · '+un+' unassigned'):'')+'</span></div>'
         +items.map(function(t){
-          var owner=t.owner||'';
+          var asg=taskAssignees(t);
+          var owner=asg[0]||'';
           var opts=['<option value="">Unassigned</option>'].concat(order().map(function(w){
             return '<option value="'+w+'"'+(w===owner?' selected':'')+'>'+esc(nm(w))+'</option>';
           })).join('');
+          var ownHtml=asg.length
+            ? '<span class="evb-own has"'+(asg.length>1?' title="Shared card"':'')+'>'+esc(asg.map(function(w){return nm(w);}).join(', '))+'</span>'
+            : '<button type="button" class="evb-claim" onclick="evbClaim(\''+t.id+'\')"><i class="ti ti-hand-click"></i> Claim</button>';
           return '<div class="evb-row">'
             +'<div class="evb-row-main"><div class="evb-t">'+esc(t.topic||t.title||'Task')+'</div>'
             +'<div class="evb-s">'+(t.dueDate?'<span><i class="ti ti-calendar" style="font-size:11px;"></i> '+esc(fdt(t.dueDate))+'</span>':'')
             +'<span>'+esc((SC[t.status||'pending']||{l:'Pending'}).l)+'</span></div></div>'
-            +(owner?'<span class="evb-own has">'+esc(nm(owner))+'</span>':'<button type="button" class="evb-claim" onclick="evbClaim(\''+t.id+'\')"><i class="ti ti-hand-click"></i> Claim</button>')
+            +ownHtml
             +'<select class="evb-sel" aria-label="Assign this task" onchange="evbAssign(\''+t.id+'\',this.value)">'+opts+'</select>'
             +'</div>';
         }).join('')
@@ -10400,6 +10516,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         var d={};Object.keys(r.data).forEach(function(k){if(k!=='id'&&k!=='__src')d[k]=r.data[k];});
         d.eventLabel=r.eventLabel||'';
         d.owner=r.owner;
+        d.assignees=r.owner?[r.owner]:[];
         d.migratedFrom=r.from+'/'+r.id;
         if(!d.createdBy)d.createdBy=(window.__cur&&window.__cur.email)||'';
         d.lastEditedBy=(window.__cur&&window.__cur.email)||'';
@@ -10809,7 +10926,8 @@ html.dark .icon-btn.cal-on{color:#5fcf85;}
     var start=t.mdStart||'';
     var end=t.mdEnd||'';
     var loc=t.mdLocation||'';
-    var assignee=nm(t.owner||who||'');
+    var _asg=(typeof taskAssignees==='function')?taskAssignees(t):(t.owner?[t.owner]:[]);
+    var assignee=_asg.length?_asg.map(function(w){return nm(w);}).join(', '):nm(who||'');
     var pr=(t.priority==='high'?'High':(t.priority==='low'?'Low':'Medium'));
 
     var parts=[];
