@@ -5737,6 +5737,21 @@ html.dark .tc-author{color:#8fb4dc;}
 .tc-act:hover{color:var(--navy);}
 .tc-act.del:hover{color:var(--danger);}
 .tc-edited{font-style:italic;opacity:.8;}
+/* presence strip: who is using the app right now */
+.tc-presence{display:flex;flex-wrap:wrap;gap:7px 12px;padding:9px 13px;border-bottom:1px solid var(--border);background:var(--gray-light);}
+.tc-pres{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);}
+.tc-pres .tc-dot{width:8px;height:8px;border-radius:50%;background:#c2c8d0;flex:0 0 auto;}
+.tc-pres.on{color:var(--text);}
+.tc-pres.on .tc-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.20);}
+html.dark .tc-presence{background:rgba(255,255,255,.04);}
+html.dark .tc-pres .tc-dot{background:#5a6472;}
+html.dark .tc-pres.on{color:#e8edf4;}
+html.dark .tc-pres.on .tc-dot{background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.24);}
+/* read receipt under my most recent sent message */
+.tc-receipt{font-size:9.5px;color:var(--muted);margin:2px 6px 0;display:flex;align-items:center;gap:4px;justify-content:flex-end;font-weight:700;}
+.tc-receipt i{font-size:12px;color:#22c55e;}
+.tc-receipt.pending i{color:var(--muted);}
+html.dark .tc-receipt i{color:#34d399;}
 </style>
 <script id="tc-script">
 /* ===== TEAM CHAT (auth-linked, additive) ===== */
@@ -5752,6 +5767,66 @@ html.dark .tc-author{color:#8fb4dc;}
   function myName(){ var c=me(); if(!c)return 'You'; if(c.role==='admin')return (mn('boss')||'Boss'); if(c.workspace)return (mn(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
   function myWs(){ var c=me(); if(!c)return ''; return c.role==='admin'?'boss':(c.workspace||''); }
   function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; var now=new Date(); var sd=d.toDateString()===now.toDateString(); return (sd?'':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' ')+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
+  /* ---- presence + read receipts ----
+     Each member writes a small heartbeat to their OWN {workspace}_settings
+     document (a doc every member is already allowed to write), so no extra
+     database rule is needed. "Online" means seen within the last two minutes.
+     Read receipts are worked out from each member's lastReadAt, so a message is
+     never written to when someone reads it. */
+  var presence={}, presUnsub=[], beatTimer=null;
+  var ONLINE_MS=120000, BEAT_MS=60000;
+  function mo(){ try{ return (typeof MEMBER_ORDER!=='undefined'&&MEMBER_ORDER)?MEMBER_ORDER.slice():['boss','dew','o','junior']; }catch(e){ return ['boss','dew','o','junior']; } }
+  function tsMs(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); return d?d.getTime():0; }catch(e){return 0;} }
+  function myPresRef(){ var f=FS(), w=myWs(); return (f&&w)?f.collection(w+'_settings').doc('presence'):null; }
+  function beat(markRead){
+    var r=myPresRef(); if(!r)return;
+    var o={email:myEmail(),name:myName(),ws:myWs()};
+    try{ o.lastSeen=firebase.firestore.FieldValue.serverTimestamp(); if(markRead)o.lastReadAt=firebase.firestore.FieldValue.serverTimestamp(); }catch(e){}
+    r.set(o,{merge:true}).catch(function(){});
+  }
+  function isOnline(p){ var ms=tsMs(p&&p.lastSeen); return !!(ms&&(Date.now()-ms<ONLINE_MS)); }
+  function seenText(p){
+    var ms=tsMs(p&&p.lastSeen); if(!ms)return 'not seen yet';
+    var diff=Date.now()-ms; if(diff<ONLINE_MS)return 'online now';
+    var m=Math.round(diff/60000); if(m<60)return 'last seen '+m+'m ago';
+    var h=Math.round(m/60); if(h<24)return 'last seen '+h+'h ago';
+    return 'last seen '+Math.round(h/24)+'d ago';
+  }
+  function readersOf(msg){
+    var mt=tsMs(msg.createdAt); if(!mt)return [];
+    var out=[];
+    mo().forEach(function(w){
+      var p=presence[w]; if(!p)return;
+      if((p.email||'')===(msg.authorEmail||''))return;   // the sender does not count as a reader
+      if(tsMs(p.lastReadAt)>=mt)out.push(mn(w)||p.name||w);
+    });
+    return out;
+  }
+  function renderPresence(){
+    var el=document.getElementById('tc-presence'); if(!el)return;
+    el.innerHTML=mo().map(function(w){
+      var p=presence[w], on=isOnline(p);
+      return '<span class="tc-pres'+(on?' on':'')+'" title="'+esc(seenText(p))+'"><span class="tc-dot"></span>'+esc(mn(w)||w)+'</span>';
+    }).join('');
+  }
+  function watchPresence(){
+    var f=FS(); if(!f||presUnsub.length)return;
+    mo().forEach(function(w){
+      try{
+        presUnsub.push(f.collection(w+'_settings').doc('presence').onSnapshot(function(doc){
+          presence[w]=(doc&&doc.exists)?(doc.data()||null):null;
+          renderPresence(); if(open)render();
+        },function(){}));
+      }catch(e){}
+    });
+  }
+  function startHeartbeat(){
+    if(beatTimer)return;
+    beat(open);
+    beatTimer=setInterval(function(){ beat(false); renderPresence(); },BEAT_MS);
+    try{ document.addEventListener('visibilitychange',function(){ if(!document.hidden)beat(open); }); }catch(e){}
+    try{ window.addEventListener('focus',function(){ beat(open); }); }catch(e){}
+  }
   function build(){
     if(document.getElementById('tc-fab'))return;
     var fab=document.createElement('button'); fab.className='chat-fab'; fab.id='tc-fab'; fab.title='Team chat';
@@ -5759,6 +5834,7 @@ html.dark .tc-author{color:#8fb4dc;}
     fab.onclick=toggle; document.body.appendChild(fab);
     var p=document.createElement('div'); p.className='chat-panel'; p.id='tc-panel';
     p.innerHTML='<div class="chat-header"><div class="chat-header-title"><i class="ti ti-messages"></i> Team Chat</div><button class="tc-x" id="tc-close"><i class="ti ti-x"></i></button></div>'
+      +'<div class="tc-presence" id="tc-presence"></div>'
       +'<div class="chat-messages" id="tc-messages"></div>'
       +'<div class="chat-input-row"><input class="chat-input" id="tc-input" placeholder="Message the team..." autocomplete="off"><button class="chat-send" id="tc-sendb"><i class="ti ti-send"></i></button></div>';
     document.body.appendChild(p);
@@ -5777,18 +5853,20 @@ html.dark .tc-author{color:#8fb4dc;}
   }
   function watch(){ var f=FS(); if(!f||unsub)return; ref=f.collection('chat_messages');
     try{ unsub=ref.orderBy('createdAt','asc').onSnapshot(function(s){
+      var gotNew=false;
       if(loaded){
         s.docChanges().forEach(function(ch){
-          if(ch.type==='added'){ var d=ch.doc.data()||{}; if(d.authorEmail && d.authorEmail!==myEmail()) notify(d); }
+          if(ch.type==='added'){ var d=ch.doc.data()||{}; if(d.authorEmail && d.authorEmail!==myEmail()){ notify(d); gotNew=true; } }
         });
       }
       msgs=s.docs.map(function(d){return Object.assign({id:d.id},d.data());});
       loaded=true; render();
+      if(open&&gotNew)beat(true);   // the chat is open, so these count as read by me
     },function(e){console.error(e);}); }catch(e){console.error(e);}
   }
   function toggle(){ open=!open; var p=document.getElementById('tc-panel'); if(p)p.classList.toggle('open',open);
     if(open){ try{ if(('Notification' in window) && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
-      seen=msgs.length; localStorage.setItem('tc_seen',seen); var b=document.getElementById('tc-unread'); if(b)b.style.display='none'; setTimeout(function(){ var m=document.getElementById('tc-messages'); if(m)m.scrollTop=m.scrollHeight; var i=document.getElementById('tc-input'); if(i)i.focus(); },40); render(); }
+      seen=msgs.length; localStorage.setItem('tc_seen',seen); var b=document.getElementById('tc-unread'); if(b)b.style.display='none'; beat(true); setTimeout(function(){ var m=document.getElementById('tc-messages'); if(m)m.scrollTop=m.scrollHeight; var i=document.getElementById('tc-input'); if(i)i.focus(); },40); render(); }
   }
   function send(){ var i=document.getElementById('tc-input'); if(!i)return; var t=i.value.trim(); if(!t)return;
     if(!me()){ alert('Please sign in to chat.'); return; } if(!ref){ var f=FS(); if(f)ref=f.collection('chat_messages'); } if(!ref)return;
@@ -5810,16 +5888,26 @@ html.dark .tc-author{color:#8fb4dc;}
   function render(){ var box=document.getElementById('tc-messages'); if(!box)return;
     if(!msgs.length){ box.innerHTML='<div class="tc-empty"><i class="ti ti-messages" style="font-size:26px;opacity:.5;display:block;margin-bottom:6px;"></i>No messages yet.<br>Start the conversation.</div>'; }
     else{
+      /* the read receipt is shown only under my most recent sent message */
+      var lastMineId=null;
+      for(var _i=msgs.length-1;_i>=0;_i--){ if(msgs[_i].authorEmail&&msgs[_i].authorEmail===myEmail()){ lastMineId=msgs[_i].id; break; } }
       box.innerHTML=msgs.map(function(m){
         var mine=m.authorEmail&&m.authorEmail===myEmail();
         var canMod=mine||isAdmin();
         var ed=m.editedAt?' <span class="tc-edited">(edited)</span>':'';
         var wsc=(['boss','dew','o','junior'].indexOf(m.authorWs)>=0)?(' tc-ws-'+m.authorWs):'';
         var acts=canMod?('<button class="tc-act" onclick="tcEdit(\''+m.id+'\')">Edit</button><button class="tc-act del" onclick="tcDel(\''+m.id+'\')">Delete</button>'):'';
+        var rc='';
+        if(mine&&m.id===lastMineId){
+          var rd=readersOf(m);
+          rc=rd.length
+            ? '<div class="tc-receipt"><i class="ti ti-checks"></i> Read by '+esc(rd.join(', '))+'</div>'
+            : '<div class="tc-receipt pending"><i class="ti ti-check"></i> Sent</div>';
+        }
         return '<div class="tc-msg '+(mine?'tc-mine':'tc-theirs')+'">'
           +(mine?'':'<div class="tc-author">'+esc(m.authorName||'Member')+'</div>')
           +'<div class="tc-bubble'+wsc+'">'+esc(m.text||'')+'</div>'
-          +'<div class="tc-meta">'+fmt(m.createdAt)+ed+(acts?' &middot; '+acts:'')+'</div></div>';
+          +'<div class="tc-meta">'+fmt(m.createdAt)+ed+(acts?' &middot; '+acts:'')+'</div>'+rc+'</div>';
       }).join('');
       box.scrollTop=box.scrollHeight;
     }
@@ -5827,8 +5915,8 @@ html.dark .tc-author{color:#8fb4dc;}
     if(open){ seen=msgs.length; localStorage.setItem('tc_seen',seen); if(badge)badge.style.display='none'; }
     else if(badge){ var u=msgs.length-seen; if(u>0){ badge.textContent=u>99?'99+':u; badge.style.display='flex'; } else badge.style.display='none'; }
   }
-  window.addEventListener('authchanged',render);
-  function boot(){ build(); watch(); }
+  window.addEventListener('authchanged',function(){ render(); renderPresence(); beat(open); });
+  function boot(){ build(); watch(); watchPresence(); startHeartbeat(); }
   var __gatedBoot=function(){whenAuthed(boot);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__gatedBoot); else __gatedBoot();
 })();
@@ -7218,10 +7306,20 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   function evById(w,id){return evArr(w).find(function(e){return e.id===id;})||null;}
   function tasksFor(w,id){
     try{
-      var out=[];
+      var out=[], seen={};
       WS.forEach(function(m){
         (tasksOf(m)||[]).forEach(function(t){
-          if(t.eventId===id){var c=Object.assign({},t);c.__own=m;out.push(c);}
+          if(t.eventId!==id)return;
+          /* A shared card is returned by tasksOf for every assignee, so it would
+             otherwise appear once per person on this board. Show it a single
+             time, grouped under its canonical owner (the first assignee). */
+          if(t.__src==='event'){
+            if(seen[t.id])return; seen[t.id]=1;
+            var own=(typeof taskCanonicalWs==='function'&&taskCanonicalWs(t))||m;
+            var ce=Object.assign({},t);ce.__own=own;out.push(ce);
+            return;
+          }
+          var c=Object.assign({},t);c.__own=m;out.push(c);
         });
       });
       return out;
@@ -10790,9 +10888,14 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         if(out){out.style.color='#147c3b';out.textContent='Saved. Tasks added from a card will now be created in this calendar.';}
       })
       .catch(function(e){
-        try{uiToast('Could not save: '+((e&&e.message)||''),{duration:9000});}catch(_){}
+        var msg=(e&&e.message)||'unknown error';
+        var perm=(e&&e.code==='permission-denied')||/insufficient permission|permission-denied|missing or insufficient/i.test(msg);
+        var friendly=perm
+          ? 'Could not save: your account does not have permission for this yet. Ask Boss to publish the latest security rules in the Firebase Console, and to confirm your role in Settings > Users, then try again. (The Web app URL and secret are fine; this is a database permission, not a calendar problem.)'
+          : ('Could not save: '+msg);
+        try{uiToast(friendly,{duration:12000});}catch(_){}
         var out2=document.getElementById('gcs-test-out');
-        if(out2){out2.style.color='#b91c1c';out2.textContent='Could not save: '+((e&&e.message)||'unknown error');}
+        if(out2){out2.style.color='#b91c1c';out2.textContent=friendly;}
       });
   };
   window.gcsTest=function(){
