@@ -1471,7 +1471,32 @@ const DATA={
   junior:{tasks:[],links:[],notes:[],loaded:false,filter:'all',ref:null,linksRef:null,notesRef:null,events:[],eventsRef:null,eventsLoaded:false,sick:[],sickRef:null,lieu:[],lieuRef:null}
 };
 let eventTasks=[],eventTasksRef=null,eventTasksLoaded=false;
-function ownTasksOf(w){return w==='boss'?bossTasks:(DATA[w]?DATA[w].tasks:[]);}
+/* Guard against a half-finished Event Board migration. Migration step 2
+   copies a task into event_tasks and records migratedFrom='<col>/<id>';
+   step 3 (deleting the original) is a separate button. Between the two steps
+   every migrated task exists TWICE, both copies feed the board, and a status
+   change on one copy appears to revert when the stale twin renders — on every
+   tab, for the admin too. The shared copy is authoritative, so any original
+   it names is hidden here until the cleanup really deletes it. */
+var __migCache={src:null,map:null,any:false};
+function migratedFromMap(){
+  if(__migCache.src===eventTasks)return __migCache;
+  var map={},any=false;
+  for(var i=0;i<eventTasks.length;i++){
+    var m=eventTasks[i]&&eventTasks[i].migratedFrom;
+    if(m&&typeof m==='string'){map[m]=1;any=true;}
+  }
+  __migCache={src:eventTasks,map:map,any:any};
+  return __migCache;
+}
+function ownTasksOf(w){
+  var list=w==='boss'?bossTasks:(DATA[w]?DATA[w].tasks:[]);
+  if(!list.length)return list;
+  var mig=migratedFromMap();
+  if(!mig.any)return list;
+  var col=w+'_tasks';
+  return list.filter(function(t){return !mig.map[col+'/'+t.id];});
+}
 /* The people responsible for a shared card. A card can be assigned to more
    than one person; it then appears on every one of their boards, and because
    it is a single shared document, a status change by anyone is seen by all.
@@ -1523,8 +1548,10 @@ function taskRef(taskOrId,who){
   return refOf(who);
 }
 function isEventTask(t){return !!(t&&t.__src==='event');}
-/* Identity for change tracking, derived from the signed-in session. */
-function meEmail(){try{return (window.__cur&&window.__cur.email)||'';}catch(e){return '';}}
+/* Identity for change tracking, derived from the signed-in session. Kept
+   lowercase because the security rules compare against
+   request.auth.token.email.lower(); a case mismatch would refuse the write. */
+function meEmail(){try{return String((window.__cur&&window.__cur.email)||'').toLowerCase();}catch(e){return '';}}
 function meName(){
   try{
     var c=window.__cur; if(!c)return '';
@@ -1997,6 +2024,23 @@ try{
 
 function syncOk(){document.getElementById('sync-text').textContent='Synced '+new Date().toLocaleTimeString();document.getElementById('sdot').style.background='#4ade80';}
 function syncErr(e){console.error(e);document.getElementById('sync-text').textContent='Error';document.getElementById('sdot').style.background='#f87171';}
+/* One voice for every failed database write: a red sync dot alone is not a
+   message. Detects a permission refusal (same wording as gcsSave) so a rules
+   problem always names itself instead of looking like data loss. */
+function dbErrIsPerm(e){
+  var msg=(e&&e.message)||'';
+  return (e&&e.code==='permission-denied')||/insufficient permission|permission-denied|missing or insufficient/i.test(msg);
+}
+function dbSaveFailed(e,what){
+  var msg=(e&&e.message)||'unknown error';
+  var text=dbErrIsPerm(e)
+    ? ('Could not save '+what+': your account does not have permission for this yet. Ask Boss to publish the latest security rules in the Firebase Console, and to confirm your role in Settings > Users, then try again.')
+    : ('Could not save '+what+': '+msg);
+  try{console.error('[save] '+what+' failed',e);}catch(_){}
+  try{syncErr(e);}catch(_){}
+  try{uiToast(text,{duration:12000});}catch(_){}
+  return text;
+}
 
 // SALARY
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -2083,10 +2127,13 @@ const DZ_STATUSES=['Waiting for Brief','Brief Received','In Progress','Review','
 function scColors(s){const m={'pending':['var(--gray-light)','var(--st-pending)'],'in-progress':['var(--blue-light)','var(--st-progress)'],'waiting':['var(--amber-light)','var(--st-waiting)'],'on-hold':['var(--purple-light)','var(--st-hold)'],'done':['var(--green-light)','var(--st-done)'],'canceled':['var(--danger-light)','var(--st-cancel)']};return m[s]||m.pending;}
 function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['#e6effd','#2563eb'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','#0f7a37'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
 function statusIconHTML(s){const sc=SC[s]||SC.pending;const c=scColors(s);return '<span class="tcard-sicon" style="background-color:'+c[0]+';color:'+c[1]+';" title="'+sc.l+'"><i class="ti '+sc.i+'"></i></span>';}
-function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value)" onclick="event.stopPropagation()">'+opts+'</select>';}
-function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value)" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({status:val,done:(val==='done')},stampEdit())).catch(e=>{try{syncErr(e);}catch(_){}});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
-function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({dzStatus:val},stampEdit())).catch(e=>{try{syncErr(e);}catch(_){}});}
+/* this.blur() after choosing: the board redraw is deferred while a select
+   inside it keeps focus, so releasing focus lets the card move to its new
+   column immediately instead of waiting for a click elsewhere. */
+function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
+function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
+function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({status:val,done:(val==='done')},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({dzStatus:val},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
   var opts=MEMBER_ORDER.filter(function(w){return w!==who;});
@@ -2352,9 +2399,18 @@ function uiToast(msg,opts){
 function deleteWithUndo(colRef,id,item,label){
   if(!colRef)return;
   var data=null;
-  if(item){ data={}; Object.keys(item).forEach(function(k){ if(k!=='id')data[k]=item[k]; }); }
+  if(item){ data={}; Object.keys(item).forEach(function(k){ if(k!=='id'&&k!=='__src')data[k]=item[k]; }); }
+  /* Undo re-creates the document, and the event_tasks create rule requires
+     createdBy to be the signed-in user. A shared card restored by someone
+     other than its creator would be refused, so the restorer becomes the
+     creator of record (the original author stays visible in lastEditedByName
+     history until this edit). */
+  if(data&&item&&item.__src==='event'){
+    var _me=meEmail();
+    if(_me){ data.createdBy=_me; Object.assign(data,stampEdit()); }
+  }
   colRef.doc(id).delete().then(function(){
-    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).catch(function(e){ console.error(e); uiToast('Could not restore the item.'); }); }});
+    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).catch(function(e){ console.error(e); dbSaveFailed(e,'the restored item'); }); }});
     else uiToast(label||'Deleted');
   }).catch(function(e){ console.error(e); uiToast('Delete failed. Please try again.'); });
 }
@@ -2557,7 +2613,10 @@ function saveTask(){
   const ref=(evtOn||wasEvent)?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
   if(modalState.editId&&wasEvent===evtOn){
     if(old&&old.dueDate!==data.dueDate)data.sortOrder=firebase.firestore.FieldValue.delete();
-    ref.doc(modalState.editId).update(data);
+    ref.doc(modalState.editId).update(data).catch(function(e){
+      console.error('[task] update failed',e);
+      dbSaveFailed(e,'your changes');
+    });
     try{if(old&&old.requestId&&old.status!==data.status&&window.rcMirrorStatus)rcMirrorStatus(old.requestId,data.status);}catch(e){}
   }
   else if(modalState.editId&&wasEvent!==evtOn){
@@ -2584,7 +2643,7 @@ function saveTask(){
     const wantCal=!!window.__calAfterSave, whoNow=modalState.who;
     newRef.set(data).catch(function(e){
       console.error('[task] save failed',e);
-      try{uiToast('Could not save the task: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){}
+      dbSaveFailed(e,'the task');
     });
     if(wantCal){
       try{ calAfterSave(ref,newRef.id,data,whoNow); }
@@ -2688,15 +2747,24 @@ function moveTask(who,id,dir){
   if(ni<0||ni>=visible.length)return;
   const a=visible[idx],b=visible[ni];
   const ra=taskRef(a,who),rb=taskRef(b,who);
-  if(ra)ra.doc(a.id).update({sortOrder:taskOrder(b)});
-  if(rb)rb.doc(b.id).update({sortOrder:taskOrder(a)});
+  /* stampEdit() is required here: taskRef() can return the shared event_tasks
+     collection, whose update rule refuses any write where lastEditedBy is not
+     the current user. Without the stamp, only the last editor could reorder. */
+  var _mtToldUser=false;
+  var _mtFail=function(e){
+    console.error('[task] reorder failed',e);
+    if(!_mtToldUser){_mtToldUser=true;dbSaveFailed(e,'the new order');}
+  };
+  if(ra)ra.doc(a.id).update(Object.assign({sortOrder:taskOrder(b)},stampEdit())).catch(_mtFail);
+  if(rb)rb.doc(b.id).update(Object.assign({sortOrder:taskOrder(a)},stampEdit())).catch(_mtFail);
 }
 function toggleTaskDone(who,id){
   const t=(tasksOf(who)).find(x=>x.id===id);
   if(!t)return;
   const newStatus=(t.status==='done')?'pending':'done';
   const rf=taskRef(t,who); if(!rf)return;
-  rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()));
+  rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()))
+    .catch(function(e){dbSaveFailed(e,newStatus==='done'?'the completed task':'the reopened task');});
 }
 const KB_STATUS_ORDER=['pending','in-progress','waiting','on-hold','done','canceled'];
 var _taskDrag={who:null,id:null};
@@ -2734,17 +2802,36 @@ function doneDaysAgo(t){
   return (Date.now()-ms)/86400000;
 }
 function isAutoArchived(t){ if(!t||t.status!=='done')return false; var d=doneDaysAgo(t); return d!==null&&d>DONE_ARCHIVE_DAYS; }
+/* reconcileDoneAt runs inside the task snapshot handlers. If its write is
+   refused by the server, the SDK's local-cache apply + rollback fires the
+   listener again and, unguarded, this retries forever: an unbounded
+   write-and-redraw loop that shakes the board and blocks every interaction.
+   Each task id therefore gets ONE attempt at a time, and after a refusal it
+   is left alone for the rest of the session. */
+var __doneAtPending={}, __doneAtFailed={}, __doneAtWarned=false;
 function reconcileDoneAt(who){
   try{
     var ref=refOf(who); if(!ref)return;
-    var list=(ownTasksOf(who)||[]); var batch=null,n=0;
+    var list=(ownTasksOf(who)||[]); var batch=null,keys=[];
     list.forEach(function(t){
       var done=t.status==='done';
-      if(done&&!t.doneAt){ if(!batch)batch=db.batch(); batch.update(ref.doc(t.id),{doneAt:firebase.firestore.FieldValue.serverTimestamp()}); n++; }
-      else if(!done&&t.doneAt){ if(!batch)batch=db.batch(); batch.update(ref.doc(t.id),{doneAt:firebase.firestore.FieldValue.delete()}); n++; }
+      if(done===!!t.doneAt)return;
+      var key=who+'/'+t.id;
+      if(__doneAtPending[key]||__doneAtFailed[key])return;
+      if(!batch)batch=db.batch();
+      batch.update(ref.doc(t.id),done
+        ?{doneAt:firebase.firestore.FieldValue.serverTimestamp()}
+        :{doneAt:firebase.firestore.FieldValue.delete()});
+      __doneAtPending[key]=1; keys.push(key);
     });
-    if(batch&&n)batch.commit().catch(function(){});
-  }catch(e){}
+    if(batch&&keys.length)batch.commit().then(function(){
+      keys.forEach(function(k){delete __doneAtPending[k];});
+    }).catch(function(e){
+      keys.forEach(function(k){delete __doneAtPending[k];__doneAtFailed[k]=1;});
+      console.error('[tasks] completion-timestamp update refused; will not retry this session',e);
+      if(!__doneAtWarned){__doneAtWarned=true;dbSaveFailed(e,'a completion timestamp');}
+    });
+  }catch(e){console.error(e);}
 }
 function taskCardHTML(task,who){
   const status=task.status||'pending',sc=SC[status],topic=task.topic||task.title||'';
@@ -2817,16 +2904,43 @@ function kanbanHTML(tasks,who,filter){
     return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
   }).join('')+'</div>';
 }
-function renderList(tasks,who,listId,emptyId,filter){
-  const list=document.getElementById(listId),empty=document.getElementById(emptyId);
-  if(!list)return;
+/* The board is rebuilt by replacing its markup wholesale, so a rebuild that
+   lands mid-interaction destroys the element being used: it cancels a drag,
+   closes an open status dropdown, and at listener speed reads as the whole
+   board vibrating. Rapid snapshots are therefore coalesced behind a short
+   debounce, and the swap is deferred while a drag is in progress or focus is
+   on a control inside the board, then drawn as soon as the interaction ends. */
+var __boardArgs={}, __boardTimer={};
+function boardBusy(list){
+  try{
+    if(list.querySelector('.task-card.kb-dragging'))return true;
+    var ae=document.activeElement;
+    if(ae&&list.contains(ae)){
+      var tag=(ae.tagName||'').toLowerCase();
+      if(tag==='select'||tag==='input'||tag==='textarea')return true;
+    }
+  }catch(e){}
+  return false;
+}
+function drawBoard(listId){
+  __boardTimer[listId]=null;
+  var a=__boardArgs[listId]; if(!a)return;
+  var list=document.getElementById(listId); if(!list)return;
+  if(boardBusy(list)){ __boardTimer[listId]=setTimeout(function(){drawBoard(listId);},150); return; }
+  var empty=a.emptyId?document.getElementById(a.emptyId):null;
   if(empty)empty.style.display='none';
-  if(!loadedOf(who)){list.innerHTML=skeletonHTML();return;}
+  if(!loadedOf(a.who)){list.innerHTML=skeletonHTML();return;}
   /* One board per tab: event-linked tasks are shown here too, tagged with
      their event, so nothing is hidden inside a second board. */
-  let pool=tasks;
+  var pool=a.tasks||[];
   if(!pool.length&&empty){list.innerHTML='';empty.style.display='';return;}
-  list.innerHTML=kanbanHTML(pool,who,filter);
+  list.innerHTML=kanbanHTML(pool,a.who,a.filter);
+}
+function renderList(tasks,who,listId,emptyId,filter){
+  if(!document.getElementById(listId))return;
+  __boardArgs[listId]={tasks:tasks,who:who,emptyId:emptyId,filter:filter};
+  if(__boardTimer[listId])return;
+  __boardTimer[listId]=setTimeout(function(){drawBoard(listId);},100);
 }
 function isUrl(s){return s&&/^https?:\/\//i.test(s);}
 function oCardExtra(task){
@@ -2878,8 +2992,8 @@ function saveLink(){
   if(!url){document.getElementById('lm-url').focus();return;}
   const ref=linksRefOf(linkModalState.who);
   const data={title:title||url,url,note:document.getElementById('lm-note').value.trim()};
-  if(linkModalState.editId)ref.doc(linkModalState.editId).update(data);
-  else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref.add(data);}
+  if(linkModalState.editId)ref.doc(linkModalState.editId).update(data).catch(function(e){dbSaveFailed(e,'the link');});
+  else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref.add(data).catch(function(e){dbSaveFailed(e,'the link');});}
   closeLinkModal();
 }
 function deleteLink(who,id){
@@ -2943,8 +3057,8 @@ function saveNote(){
   if(!content){document.getElementById('nm-content').focus();return;}
   const ref=notesRefOf(noteModalState.who);
   const data={title:document.getElementById('nm-title').value.trim(),content,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-  if(noteModalState.editId)ref.doc(noteModalState.editId).update(data);
-  else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref.add(data);}
+  if(noteModalState.editId)ref.doc(noteModalState.editId).update(data).catch(function(e){dbSaveFailed(e,'the note');});
+  else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref.add(data).catch(function(e){dbSaveFailed(e,'the note');});}
   closeNoteModal();
 }
 function deleteNote(who,id){
@@ -3071,7 +3185,7 @@ function renderSickWidget(who){
     <button class="icon-btn del" onclick="deleteSick('${s.id}','${who}')"><i class="ti ti-trash"></i></button>
   </div>`).join('');
 }
-function deleteSick(id,who){const ref=sickRefOf(who||'boss');if(ref)ref.doc(id).delete();}
+function deleteSick(id,who){const ref=sickRefOf(who||'boss');if(ref)ref.doc(id).delete().catch(sickErr);}
 let resetWho='boss';
 function confirmReset(who){
   who=who||'boss';resetWho=who;
@@ -3088,7 +3202,7 @@ function doReset(){
   const db=firebase.firestore();
   const batch=db.batch();
   sickOf(resetWho).forEach(s=>batch.delete(ref.doc(s.id)));
-  batch.commit();
+  batch.commit().catch(sickErr);
   closeConfirm();
 }
 
@@ -3122,7 +3236,7 @@ function saveLieu(){
     timeTo:document.getElementById('l-to').value||'',
     days:parseFloat(document.getElementById('l-days').value)||1,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  });
+  }).catch(function(e){dbSaveFailed(e,'the leave record');});
   closeLieu();
 }
 function deleteLieu(id,who){var w=who||'boss';var r=(lieuOf(w)||[]).find(function(x){return x.id===id;});uiConfirm({title:'Delete TOIL record',message:'This time off in lieu record will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){if(!ok)return;deleteWithUndo(lieuRefOf(w),id,r,'Record deleted');});}
@@ -3537,9 +3651,28 @@ function saveGCalUrl(who){
   const el=document.getElementById(who+'-gcal-url-input');
   const v=el?el.value.trim():'';
   if(!v)return;
+  const prev=(gcalUrls[who]||'').trim();
+  // The member's own record ({who}_settings/gcal) is the single source of
+  // truth: only a confirmed database write counts as saved. There is no
+  // browser-local backup copy any more — one used to hide refused writes.
+  if(!gcalDocRefs[who]){
+    try{uiToast('The workspace is still connecting to the database. Please try saving the calendar link again in a moment.',{duration:9000});}catch(e){}
+    return;
+  }
   gcalUrls[who]=v;
-  // Save to this member's own record so it persists for them across devices.
-  if(gcalDocRefs[who])gcalDocRefs[who].set({url:v},{merge:true}).catch(e=>syncErr(e));
+  gcalDocRefs[who].set({url:v},{merge:true}).then(function(){
+    try{uiToast('Calendar link saved. It is now available on every device and to the team.');}catch(e){}
+  }).catch(function(e){
+    /* The database refused the write, so the link is NOT saved. Roll the
+       panel back into edit mode with the attempted value still in the box,
+       so it is never presented as connected. */
+    gcalUrls[who]=prev;
+    gcalEditW[who]=true;gcalData[who]=null;
+    dbSaveFailed(e,'the calendar link');
+    renderGCal(who);renderUpcoming(who);
+    var el2=document.getElementById(who+'-gcal-url-input');
+    if(el2)el2.value=v;
+  });
   gcalEditW[who]=false;gcalData[who]=null;
   loadGCal(who);
 }
@@ -5630,8 +5763,6 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
 /* ===== FIXES: tab detection, theme cleanup, Google Calendar persistence, live Overview refresh (additive) ===== */
 (function(){
   if(window.__fix2)return; window.__fix2=true;
-  var lsGcal={};
-  try{ lsGcal=JSON.parse(localStorage.getItem('bb_gcal')||'{}')||{}; }catch(e){ lsGcal={}; }
 
   /* 1) The original switchTab predates the Overview tab and never clears 'theme-overview',
         so the body kept both classes after visiting Overview. Clear it on every non-overview switch. */
@@ -5647,21 +5778,11 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     return _ct?_ct():'boss';
   };
 
-  /* 3) Google Calendar link survives refresh via a local fallback (in addition to Firebase). */
-  var _get=window.getGCalUrl;
-  window.getGCalUrl=function(who){
-    try{
-      var v=(typeof gcalUrls!=='undefined'&&gcalUrls&&gcalUrls[who])?String(gcalUrls[who]).trim():'';
-      if(v)return v;
-      var ls=(lsGcal[who]||'').trim(); if(ls)return ls;
-    }catch(e){}
-    return _get?_get(who):'';
-  };
-  var _save=window.saveGCalUrl;
-  window.saveGCalUrl=function(who){
-    try{ var el=document.getElementById(who+'-gcal-url-input'); var v=el?el.value.trim():''; if(v){ lsGcal[who]=v; localStorage.setItem('bb_gcal',JSON.stringify(lsGcal)); } }catch(e){}
-    return _save?_save(who):undefined;
-  };
+  /* 3) REMOVED: the localStorage copy of the Google Calendar link (bb_gcal).
+        It made a refused database write look successful on the device that
+        made it, while every other device and member saw nothing. The link now
+        lives only in {who}_settings/gcal, and saveGCalUrl reports a refused
+        write instead of hiding it. The old bb_gcal key is simply ignored. */
 
   /* 4) Overview (countdown, stats, master calendar, deadlines) refreshes live when events change. */
   var roTimer=null;
@@ -5862,7 +5983,7 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
      database rule is needed. "Online" means seen within the last two minutes.
      Read receipts are worked out from each member's lastReadAt, so a message is
      never written to when someone reads it. */
-  var presence={}, presUnsub=[], beatTimer=null;
+  var presence={}, presUnsub=[], beatTimer=null, beatFailLogged=false;
   var ONLINE_MS=120000, BEAT_MS=60000;
   function mo(){ try{ return (typeof MEMBER_ORDER!=='undefined'&&MEMBER_ORDER)?MEMBER_ORDER.slice():['boss','dew','o','junior']; }catch(e){ return ['boss','dew','o','junior']; } }
   function tsMs(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); return d?d.getTime():0; }catch(e){return 0;} }
@@ -5871,7 +5992,13 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
     var r=myPresRef(); if(!r)return;
     var o={email:myEmail(),name:myName(),ws:myWs()};
     try{ o.lastSeen=firebase.firestore.FieldValue.serverTimestamp(); if(markRead)o.lastReadAt=firebase.firestore.FieldValue.serverTimestamp(); }catch(e){}
-    r.set(o,{merge:true}).catch(function(){});
+    /* A refused heartbeat means this member shows as permanently offline.
+       Log the first failure so the cause is visible; no toast, because the
+       heartbeat repeats every minute and would nag. */
+    r.set(o,{merge:true}).catch(function(e){
+      if(beatFailLogged)return; beatFailLogged=true;
+      console.error('[presence] heartbeat write refused; this member will appear offline to the team until it succeeds',e);
+    });
   }
   function isOnline(p){ var ms=tsMs(p&&p.lastSeen); return !!(ms&&(Date.now()-ms<ONLINE_MS)); }
   function seenText(p){
@@ -10687,19 +10814,53 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   function isAdmin(){return (window.__cur||{}).role==='admin';}
   function isEventy(t){ return !!(t&&((t.eventId&&t.eventName)||t.eventName)); }
 
+  /* Which originals have already been copied to the Event Board. Keyed by
+     '<collection>/<id>' as recorded in each copy's migratedFrom field. */
+  function migratedSet(f){
+    return f.collection('event_tasks').get().then(function(snap){
+      var s={};
+      snap.docs.forEach(function(d){var m=(d.data()||{}).migratedFrom;if(m)s[m]=1;});
+      return s;
+    });
+  }
+  /* fresh    = event-related tasks not yet copied (step 2 candidates)
+     leftover = tasks copied earlier whose original was never deleted, i.e. a
+                half-finished migration: both copies exist and the boards
+                would fight each other. Step 3 removes these originals. */
   function scan(){
     var f=FS(); if(!f)return Promise.reject(new Error('not connected'));
-    var out=[];
-    return Promise.all(Object.keys(COLS).map(function(w){
-      return f.collection(COLS[w]).get().then(function(snap){
-        snap.docs.forEach(function(d){
-          var t=Object.assign({id:d.id},d.data());
-          if(!isEventy(t))return;
-          out.push({from:COLS[w],owner:w,id:d.id,topic:t.topic||t.title||'(untitled)',eventLabel:t.eventName||'',data:t});
+    var fresh=[],leftover=[];
+    return migratedSet(f).then(function(done){
+      return Promise.all(Object.keys(COLS).map(function(w){
+        return f.collection(COLS[w]).get().then(function(snap){
+          snap.docs.forEach(function(d){
+            var t=Object.assign({id:d.id},d.data());
+            var row={from:COLS[w],owner:w,id:d.id,topic:t.topic||t.title||'(untitled)',eventLabel:t.eventName||'',data:t};
+            if(done[COLS[w]+'/'+d.id]){leftover.push(row);return;}
+            if(!isEventy(t))return;
+            fresh.push(row);
+          });
         });
-      });
-    })).then(function(){ plan=out; return out; });
+      }));
+    }).then(function(){ plan={fresh:fresh,leftover:leftover}; return plan; });
   }
+  /* The diagnosis query from the incident brief, runnable from the console:
+     lists every event_tasks copy that still has its source document present. */
+  window.evtMigCheck=function(){
+    var f=FS(); if(!f)return Promise.reject(new Error('not connected'));
+    return migratedSet(f).then(function(done){
+      var srcs=Object.keys(done);
+      if(!srcs.length){console.log('[evtMigCheck] no migrated tasks on the Event Board; nothing to check.');return {duplicates:[]};}
+      return Promise.all(srcs.map(function(path){
+        var p=path.split('/');
+        return f.collection(p[0]).doc(p[1]).get().then(function(d){return d&&d.exists?path:null;});
+      })).then(function(hits){
+        var dup=hits.filter(Boolean);
+        console.log('[evtMigCheck] '+srcs.length+' migrated task(s); '+dup.length+' original(s) still present (duplicates):',dup);
+        return {migrated:srcs.length,duplicates:dup};
+      });
+    });
+  };
 
   function rowsHTML(list){
     if(!list.length)return '<div class="rc-note">No event-related tasks were found. Nothing needs to move.</div>';
@@ -10732,13 +10893,19 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   }
   window.evtMigClose=function(){var m=document.getElementById('evt-mig-modal');if(m)m.classList.remove('open');};
 
+  function leftoverHTML(n){
+    if(!n)return '';
+    return '<div class="rc-note" style="color:#b45309;margin-bottom:9px;"><b>'+n+'</b> task'+(n>1?'s were':' was')+' already copied to the Event Board but the original'+(n>1?'s are':' is')+' still on the personal boards. '
+      +'Until Step 3 removes them, each of these shows twice and a status change looks like it reverts after a refresh. Press <b>Step 3</b> to finish the migration.</div>';
+  }
   window.evtMigrate=function(){
     if(!isAdmin()){try{uiToast('Only Boss can run the migration.');}catch(e){}return;}
     panel('<div class="rc-note">Reading all four task collections. Nothing is being changed.</div>','');
-    scan().then(function(list){
-      panel(rowsHTML(list),
+    scan().then(function(p){
+      panel(leftoverHTML(p.leftover.length)+rowsHTML(p.fresh),
         '<button type="button" class="btn btn-ghost" onclick="evtMigClose()">Close</button>'
-        +(list.length?'<button type="button" class="btn btn-navy" onclick="evtMigCopy()"><i class="ti ti-copy"></i> Step 2: copy to Event Board</button>':''));
+        +(p.leftover.length?'<button type="button" class="uxp-btn-danger btn" onclick="evtMigCleanup()"><i class="ti ti-trash"></i> Step 3: remove '+p.leftover.length+' duplicated original'+(p.leftover.length>1?'s':'')+'</button>':'')
+        +(p.fresh.length?'<button type="button" class="btn btn-navy" onclick="evtMigCopy()"><i class="ti ti-copy"></i> Step 2: copy to Event Board</button>':''));
     }).catch(function(e){
       panel('<div class="rc-note" style="color:#b91c1c;">Could not read the collections: '+esc((e&&e.message)||'')+'</div>',
         '<button type="button" class="btn btn-ghost" onclick="evtMigClose()">Close</button>');
@@ -10746,12 +10913,13 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   };
 
   window.evtMigCopy=function(){
-    if(!plan||!plan.length)return;
+    if(!plan||!plan.fresh.length)return;
     var f=FS(); if(!f)return;
-    panel('<div class="rc-note">Copying '+plan.length+' task(s). Originals are being kept.</div>','');
+    var batchRows=plan.fresh;
+    panel('<div class="rc-note">Copying '+batchRows.length+' task(s). Originals are being kept.</div>','');
     var done=0,fail=0;
     var seq=Promise.resolve();
-    plan.forEach(function(r){
+    batchRows.forEach(function(r){
       seq=seq.then(function(){
         var d={};Object.keys(r.data).forEach(function(k){if(k!=='id'&&k!=='__src')d[k]=r.data[k];});
         d.eventLabel=r.eventLabel||'';
@@ -10761,16 +10929,21 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         if(!d.createdBy)d.createdBy=(window.__cur&&window.__cur.email)||'';
         d.lastEditedBy=(window.__cur&&window.__cur.email)||'';
         try{d.lastEditedAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
-        return f.collection('event_tasks').add(d).then(function(){done++;}).catch(function(e){console.error(e);fail++;});
+        return f.collection('event_tasks').add(d).then(function(){
+          done++;
+          /* The copy exists, so the original is now a duplicate awaiting Step 3. */
+          plan.leftover.push(r);
+        }).catch(function(e){console.error(e);fail++;});
       });
     });
     seq.then(function(){
+      plan.fresh=batchRows.filter(function(r){return plan.leftover.indexOf(r)<0;});
       return f.collection('event_tasks').get().then(function(snap){
         var copied=snap.docs.filter(function(d){return !!(d.data()||{}).migratedFrom;}).length;
-        var ok=(fail===0&&done===plan.length);
-        panel('<div class="rc-note"><b>Copied:</b> '+done+' of '+plan.length+(fail?(' · <span style="color:#b91c1c;">failed: '+fail+'</span>'):'')+'<br>'
+        var ok=(fail===0&&done===batchRows.length);
+        panel('<div class="rc-note"><b>Copied:</b> '+done+' of '+batchRows.length+(fail?(' · <span style="color:#b91c1c;">failed: '+fail+'</span>'):'')+'<br>'
           +'<b>Verified on the Event Board:</b> '+copied+' migrated task(s).<br><br>'
-          +(ok?'The counts match. You can now remove the originals, or leave them and clean up later.'
+          +(ok?'The counts match. Step 3 removes the originals; until then each copied task exists twice.'
               :'The counts do NOT match. Nothing else will be deleted. Please send me this screen before continuing.')+'</div>',
           '<button type="button" class="btn btn-ghost" onclick="evtMigClose()">Close for now</button>'
           +(ok?'<button type="button" class="uxp-btn-danger btn" onclick="evtMigCleanup()"><i class="ti ti-trash"></i> Step 3: remove originals</button>':''));
@@ -10779,14 +10952,15 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   };
 
   window.evtMigCleanup=function(){
-    if(!plan||!plan.length)return;
+    if(!plan||!plan.leftover.length)return;
+    var rows=plan.leftover;
     uiConfirm({title:'Remove the original tasks',danger:true,okLabel:'Remove originals',
-      message:'The '+plan.length+' original task(s) will be deleted from the personal boards. Their copies stay on the shared Event Board. This cannot be undone.'
+      message:'The '+rows.length+' original task(s) will be deleted from the personal boards. Their copies stay on the shared Event Board. This cannot be undone.'
     }).then(function(ok){
       if(!ok)return;
       var f=FS(); if(!f)return;
       var seq=Promise.resolve(),del=0,fail=0;
-      plan.forEach(function(r){
+      rows.forEach(function(r){
         seq=seq.then(function(){
           return f.collection(r.from).doc(r.id).delete().then(function(){del++;}).catch(function(e){console.error(e);fail++;});
         });
@@ -10907,8 +11081,10 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
           var ref=taskRef(task,owner);
           /* gcalOwner records WHICH calendar holds it, so deleting the task
              later removes the event from the right place. set+merge is used so
-             this cannot fail if it arrives before the task document is written. */
-          if(ref)ref.doc(id).set({gcalEventId:res.eventId||'',gcalOwner:targetWs,calendarAddedAt:new Date().toISOString()},{merge:true})
+             this cannot fail if it arrives before the task document is written.
+             stampEdit() is required: on a shared event_tasks card the update
+             rule refuses any write whose lastEditedBy is not the current user. */
+          if(ref)ref.doc(id).set(Object.assign({gcalEventId:res.eventId||'',gcalOwner:targetWs,calendarAddedAt:new Date().toISOString()},stampEdit()),{merge:true})
             .catch(function(e){console.error('[calendar] link write failed',e);});
         }catch(e){}
         try{uiToast('Added to '+(res.calendar||'the calendar'));}catch(e){}
@@ -10943,7 +11119,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         if(res&&res.ok){
           try{
             var ref=taskRef(task,owner);
-            if(ref)ref.doc(id).set({gcalEventId:res.eventId||task.gcalEventId||'',gcalOwner:targetWs,calendarUpdatedAt:new Date().toISOString()},{merge:true}).catch(function(){});
+            if(ref)ref.doc(id).set(Object.assign({gcalEventId:res.eventId||task.gcalEventId||'',gcalOwner:targetWs,calendarUpdatedAt:new Date().toISOString()},stampEdit()),{merge:true}).catch(function(e){console.error('[calendar] link write failed',e);});
           }catch(e){}
           try{uiToast('Calendar event updated');}catch(e){}
         }else if(res&&res.error==='not found'){
@@ -10981,13 +11157,19 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var who=(item.owner||((window.__cur||{}).workspace)||'boss');
     var calWs=item.gcalOwner||who;
     var data=null;if(item){data={};Object.keys(item).forEach(function(k){if(k!=='id'&&k!=='__src')data[k]=item[k];});}
+    /* Same rule constraint as the base deleteWithUndo: undo re-creates the
+       document, and event_tasks requires createdBy to be the signed-in user. */
+    if(data&&item.__src==='event'){
+      var _me=meEmail();
+      if(_me){data.createdBy=_me;Object.assign(data,stampEdit());}
+    }
     colRef.doc(id).delete().then(function(){
       uiToast(label||'Deleted',{undo:function(){
         colRef.doc(id).set(data).then(function(){
           if(gcsConfigured(calWs))call(calWs,payloadFor(data,id,who)).then(function(res){
-            if(res&&res.ok)colRef.doc(id).update({gcalEventId:res.eventId||'',gcalOwner:calWs}).catch(function(){});
+            if(res&&res.ok)colRef.doc(id).update(Object.assign({gcalEventId:res.eventId||'',gcalOwner:calWs},stampEdit())).catch(function(e){console.error('[calendar] link write failed',e);});
           });
-        }).catch(function(e){console.error(e);uiToast('Could not restore the item.');});
+        }).catch(function(e){console.error(e);dbSaveFailed(e,'the restored item');});
       }});
     }).catch(function(e){console.error(e);uiToast('Delete failed. Please try again.');});
   };
