@@ -5752,12 +5752,101 @@ html.dark .tc-pres.on .tc-dot{background:#34d399;box-shadow:0 0 0 3px rgba(52,21
 .tc-receipt i{font-size:12px;color:#22c55e;}
 .tc-receipt.pending i{color:var(--muted);}
 html.dark .tc-receipt i{color:#34d399;}
+/* emoji + GIF tools */
+.tc-tool{background:transparent;border:1.5px solid var(--border);border-radius:9px;color:var(--muted);cursor:pointer;height:38px;min-width:38px;padding:0 9px;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-family:inherit;flex:0 0 auto;transition:background .12s,border-color .12s,color .12s;}
+.tc-tool:hover,.tc-tool:focus-visible{border-color:var(--navy);color:var(--navy);outline:none;}
+.tc-tool .tc-gif-lbl{font-size:12px;font-weight:800;letter-spacing:.4px;}
+html.dark .tc-tool:hover,html.dark .tc-tool:focus-visible{border-color:#8fb4dc;color:#8fb4dc;}
+.tc-pop{position:absolute;left:10px;right:10px;bottom:66px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 14px 36px -8px rgba(15,30,52,.45);padding:10px;display:none;z-index:6;max-height:300px;overflow:auto;}
+.tc-pop.open{display:block;}
+.tc-emoji-cat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin:7px 2px 4px;}
+.tc-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;}
+.tc-emoji{border:none;background:transparent;font-size:20px;line-height:1;padding:5px 0;border-radius:7px;cursor:pointer;font-family:inherit;}
+.tc-emoji:hover,.tc-emoji:focus-visible{background:var(--gray-light);outline:none;}
+html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,255,255,.07);}
+.tc-gif-search{display:flex;gap:6px;margin-bottom:8px;}
+.tc-gif-input{flex:1;border:1.5px solid var(--border);border-radius:9px;padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;}
+.tc-gif-input:focus{border-color:var(--navy);}
+.tc-gif-go{border:none;background:var(--navy);color:#fff;border-radius:9px;padding:0 13px;font-weight:700;cursor:pointer;font-family:inherit;font-size:12.5px;}
+.tc-gif-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.tc-gif-grid img{width:100%;border-radius:8px;cursor:pointer;display:block;background:var(--gray-light);min-height:60px;}
+.tc-gif-note{font-size:11.5px;color:var(--muted);padding:10px 4px;line-height:1.5;text-align:center;grid-column:1/-1;}
+.tc-gif-credit{font-size:9.5px;color:var(--muted);text-align:right;margin-top:7px;letter-spacing:.2px;}
+.tc-bubble.tc-media{padding:0;overflow:hidden;background:transparent;border:none;box-shadow:none;}
+.tc-bubble.tc-media img{display:block;max-width:220px;width:100%;height:auto;border-radius:12px;border:1px solid var(--border);}
 </style>
 <script id="tc-script">
 /* ===== TEAM CHAT (auth-linked, additive) ===== */
 (function(){
   if(window.__tcInit)return; window.__tcInit=true;
   var msgs=[], open=false, ref=null, seen=parseInt(localStorage.getItem('tc_seen')||'0',10), unsub=null, loaded=false;
+  /* GIF search uses the free Giphy API. Get a key at https://developers.giphy.com/
+     (sign in -> Create an App -> copy the API Key) and paste it below. GIFs are
+     shared as plain URLs, so no database rule depends on this key. Until a key is
+     added, the GIF button explains how to switch it on. */
+  var GIPHY_API_KEY=''; // <-- paste your free Giphy API key here to enable GIF search
+  var TC_EMOJI=[
+    ['Smileys',['😀','😃','😄','😁','😆','😅','😂','🤣','😊','🙂','😉','😍','😘','😜','🤪','🤔','🤗','😎','🥳','😏','😌','😔','😴','😮','😲','🥺','😢','😭','😤','😠','😡','🤯','😱','😳','🥵','🥶','😇','🙄','😬','🤭']],
+    ['Gestures',['👍','👎','👏','🙌','🙏','👌','✌️','🤞','🤙','💪','👋','🤝','☝️','👆','👇','✋','🔥','💯','👀','🎯']],
+    ['Hearts',['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💖','💗','💓','💞','💕','💔']],
+    ['Work & things',['✅','❌','⭐','🎉','🎊','🏆','📌','📝','✏️','📅','📆','⏰','🚀','💡','📣','📢','🔔','📷','🎥','📸','🖼️','🎨','☕','🍕','🎂']]
+  ];
+  function tcInsertEmoji(ch){
+    var i=document.getElementById('tc-input'); if(!i)return;
+    var s=(i.selectionStart==null)?i.value.length:i.selectionStart;
+    var e=(i.selectionEnd==null)?i.value.length:i.selectionEnd;
+    i.value=i.value.slice(0,s)+ch+i.value.slice(e);
+    var pos=s+ch.length; try{i.setSelectionRange(pos,pos);}catch(_){}
+    i.focus();
+  }
+  window.tcEmoji=function(ch){ tcInsertEmoji(ch); };
+  function buildEmojiPanel(){
+    var pop=document.getElementById('tc-emoji-pop'); if(!pop||pop.getAttribute('data-built'))return;
+    pop.setAttribute('data-built','1');
+    pop.innerHTML=TC_EMOJI.map(function(cat){
+      return '<div class="tc-emoji-cat">'+esc(cat[0])+'</div><div class="tc-emoji-grid">'
+        +cat[1].map(function(ch){ return '<button type="button" class="tc-emoji" aria-label="emoji" onclick="tcEmoji(\''+ch+'\')">'+ch+'</button>'; }).join('')
+        +'</div>';
+    }).join('');
+  }
+  function closePops(){ ['tc-emoji-pop','tc-gif-pop'].forEach(function(id){ var p=document.getElementById(id); if(p)p.classList.remove('open'); }); }
+  function toggleEmoji(){ var p=document.getElementById('tc-emoji-pop'), g=document.getElementById('tc-gif-pop'); if(g)g.classList.remove('open'); if(!p)return; var willOpen=!p.classList.contains('open'); if(willOpen)buildEmojiPanel(); p.classList.toggle('open',willOpen); }
+  function toggleGif(){ var p=document.getElementById('tc-gif-pop'), em=document.getElementById('tc-emoji-pop'); if(em)em.classList.remove('open'); if(!p)return; var willOpen=!p.classList.contains('open'); p.classList.toggle('open',willOpen); if(willOpen){ var q=document.getElementById('tc-gif-q'); if(q)q.focus(); } }
+  function tcGifSearch(){
+    var qEl=document.getElementById('tc-gif-q'), grid=document.getElementById('tc-gif-grid'); if(!grid)return;
+    var q=((qEl&&qEl.value)||'').trim();
+    if(!GIPHY_API_KEY){ grid.innerHTML='<div class="tc-gif-note">To turn on GIF search, add a free Giphy API key to <b>GIPHY_API_KEY</b> in the code. Get one at developers.giphy.com.</div>'; return; }
+    if(!q){ grid.innerHTML='<div class="tc-gif-note">Type a word to search for GIFs.</div>'; return; }
+    grid.innerHTML='<div class="tc-gif-note">Searching Giphy…</div>';
+    fetch('https://api.giphy.com/v1/gifs/search?api_key='+encodeURIComponent(GIPHY_API_KEY)+'&q='+encodeURIComponent(q)+'&limit=24&rating=pg')
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var arr=(j&&j.data)||[];
+        if(!arr.length){ grid.innerHTML='<div class="tc-gif-note">No GIFs found. Try another word.</div>'; return; }
+        grid.innerHTML=arr.map(function(g){
+          var im=g.images||{}; var thumb=im.fixed_width||im.downsized||im.original; var full=im.downsized_medium||im.fixed_width||im.original;
+          if(!thumb||!full||!thumb.url||!full.url)return '';
+          var w=parseInt(full.width,10)||0, h=parseInt(full.height,10)||0;
+          return '<img loading="lazy" src="'+esc(safeUrl(thumb.url))+'" alt="GIF" tabindex="0" role="button" data-url="'+esc(encodeURIComponent(full.url))+'" data-w="'+w+'" data-h="'+h+'" onclick="tcPickGif(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();tcPickGif(this);}">';
+        }).join('')+'<div class="tc-gif-credit">Powered by GIPHY</div>';
+      })
+      .catch(function(err){ console.error(err); grid.innerHTML='<div class="tc-gif-note">Could not load GIFs. Please check the connection and try again.</div>'; try{uiToast('GIF search failed.');}catch(_){} });
+  }
+  window.tcPickGif=function(el){
+    if(!el)return;
+    var url=decodeURIComponent(el.getAttribute('data-url')||'');
+    var w=parseInt(el.getAttribute('data-w'),10)||0, h=parseInt(el.getAttribute('data-h'),10)||0;
+    sendMedia('gif',url,w,h); closePops();
+  };
+  function sendMedia(type,url,w,h){
+    if(!me()){ try{uiToast('Please sign in to chat.');}catch(e){} return; }
+    if(!ref){ var f=FS(); if(f)ref=f.collection('chat_messages'); } if(!ref)return;
+    var clean=safeUrl(url); if(!clean||clean==='#'){ try{uiToast('That image link is not valid.');}catch(e){} return; }
+    var data={ text:'', authorEmail:myEmail(), authorName:myName(), authorWs:myWs(), createdAt:firebase.firestore.FieldValue.serverTimestamp(), type:type };
+    if(type==='gif')data.gifUrl=clean; else data.imageUrl=clean;
+    if(w>0)data.width=Math.round(w); if(h>0)data.height=Math.round(h);
+    ref.add(data).catch(function(e){ console.error(e); try{uiToast('Could not send: '+((e&&e.message)||'unknown error'));}catch(_){} });
+  }
   function FS(){ try{return firebase.firestore();}catch(e){return null;} }
   function esc(s){ try{return escHtml(s);}catch(e){return (s==null?'':String(s));} }
   function mn(w){ try{return (typeof memberName==='function')?memberName(w):w;}catch(e){return w;} }
@@ -5836,18 +5925,31 @@ html.dark .tc-receipt i{color:#34d399;}
     p.innerHTML='<div class="chat-header"><div class="chat-header-title"><i class="ti ti-messages"></i> Team Chat</div><button class="tc-x" id="tc-close"><i class="ti ti-x"></i></button></div>'
       +'<div class="tc-presence" id="tc-presence"></div>'
       +'<div class="chat-messages" id="tc-messages"></div>'
-      +'<div class="chat-input-row"><input class="chat-input" id="tc-input" placeholder="Message the team..." autocomplete="off"><button class="chat-send" id="tc-sendb"><i class="ti ti-send"></i></button></div>';
+      +'<div class="chat-input-row">'
+        +'<button class="tc-tool" id="tc-emojib" type="button" title="Emoji" aria-label="Insert emoji"><i class="ti ti-mood-smile"></i></button>'
+        +'<button class="tc-tool" id="tc-gifb" type="button" title="Search GIFs" aria-label="Search GIFs"><span class="tc-gif-lbl">GIF</span></button>'
+        +'<input class="chat-input" id="tc-input" placeholder="Message the team..." autocomplete="off">'
+        +'<button class="chat-send" id="tc-sendb" aria-label="Send message"><i class="ti ti-send"></i></button>'
+      +'</div>'
+      +'<div class="tc-pop" id="tc-emoji-pop"></div>'
+      +'<div class="tc-pop" id="tc-gif-pop"><div class="tc-gif-search"><input class="tc-gif-input" id="tc-gif-q" placeholder="Search GIFs…" autocomplete="off"><button class="tc-gif-go" id="tc-gif-go" type="button">Search</button></div><div class="tc-gif-grid" id="tc-gif-grid"><div class="tc-gif-note">Search Giphy for a GIF to share.</div></div></div>';
     document.body.appendChild(p);
     document.getElementById('tc-close').onclick=toggle;
     document.getElementById('tc-sendb').onclick=send;
+    var eb=document.getElementById('tc-emojib'); if(eb)eb.onclick=toggleEmoji;
+    var gb=document.getElementById('tc-gifb'); if(gb)gb.onclick=toggleGif;
+    var gg=document.getElementById('tc-gif-go'); if(gg)gg.onclick=tcGifSearch;
+    var gq=document.getElementById('tc-gif-q'); if(gq)gq.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); tcGifSearch(); } });
     var inp=document.getElementById('tc-input');
     inp.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+    inp.addEventListener('focus',closePops);
   }
   function notify(d){
     try{
       if(!('Notification' in window) || Notification.permission!=='granted') return;
       if(!document.hidden && open) return; // already viewing the chat
-      var n=new Notification((d.authorName||'Team member')+' \u00b7 Team Chat',{ body:(d.text||''), tag:'tc-msg', renotify:true });
+      var nbody=(d.type==='gif')?'Sent a GIF':((d.type==='image')?'Sent a photo':(d.text||''));
+      var n=new Notification((d.authorName||'Team member')+' \u00b7 Team Chat',{ body:nbody, tag:'tc-msg', renotify:true });
       n.onclick=function(){ try{window.focus();}catch(e){} if(!open){ toggle(); } try{this.close();}catch(e){} };
     }catch(e){}
   }
@@ -5870,8 +5972,8 @@ html.dark .tc-receipt i{color:#34d399;}
   }
   function send(){ var i=document.getElementById('tc-input'); if(!i)return; var t=i.value.trim(); if(!t)return;
     if(!me()){ alert('Please sign in to chat.'); return; } if(!ref){ var f=FS(); if(f)ref=f.collection('chat_messages'); } if(!ref)return;
-    ref.add({ text:t, authorEmail:myEmail(), authorName:myName(), authorWs:myWs(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); alert('Message could not be sent.'); });
-    i.value=''; i.focus();
+    ref.add({ text:t, authorEmail:myEmail(), authorName:myName(), authorWs:myWs(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); try{uiToast('Message could not be sent: '+((e&&e.message)||'unknown error'));}catch(_){ alert('Message could not be sent.'); } });
+    i.value=''; closePops(); i.focus();
   }
   window.tcEdit=function(id){ var m=msgs.filter(function(x){return x.id===id;})[0]; if(!m||!ref)return; if(m.authorEmail!==myEmail()&&!isAdmin())return;
     uiPrompt({title:'Edit message',multiline:true,value:m.text||''}).then(function(nv){
@@ -5896,7 +5998,14 @@ html.dark .tc-receipt i{color:#34d399;}
         var canMod=mine||isAdmin();
         var ed=m.editedAt?' <span class="tc-edited">(edited)</span>':'';
         var wsc=(['boss','dew','o','junior'].indexOf(m.authorWs)>=0)?(' tc-ws-'+m.authorWs):'';
-        var acts=canMod?('<button class="tc-act" onclick="tcEdit(\''+m.id+'\')">Edit</button><button class="tc-act del" onclick="tcDel(\''+m.id+'\')">Delete</button>'):'';
+        var isMedia=(m.type==='gif'||m.type==='image');
+        var murl=isMedia?safeUrl(m.gifUrl||m.imageUrl||''):'';
+        var okMedia=isMedia&&murl&&murl!=='#';
+        var acts='';
+        if(canMod){
+          if(!isMedia)acts+='<button class="tc-act" onclick="tcEdit(\''+m.id+'\')">Edit</button>';
+          acts+='<button class="tc-act del" onclick="tcDel(\''+m.id+'\')">Delete</button>';
+        }
         var rc='';
         if(mine&&m.id===lastMineId){
           var rd=readersOf(m);
@@ -5904,9 +6013,12 @@ html.dark .tc-receipt i{color:#34d399;}
             ? '<div class="tc-receipt"><i class="ti ti-checks"></i> Read by '+esc(rd.join(', '))+'</div>'
             : '<div class="tc-receipt pending"><i class="ti ti-check"></i> Sent</div>';
         }
+        var bubble=okMedia
+          ? '<div class="tc-bubble tc-media"><img loading="lazy" src="'+esc(murl)+'" alt="'+(m.type==='gif'?'GIF':'image')+'"'+((m.width>0&&m.height>0)?(' width="'+parseInt(m.width,10)+'" height="'+parseInt(m.height,10)+'"'):'')+'></div>'
+          : '<div class="tc-bubble'+wsc+'">'+esc(m.text||(isMedia?'[media]':''))+'</div>';
         return '<div class="tc-msg '+(mine?'tc-mine':'tc-theirs')+'">'
           +(mine?'':'<div class="tc-author">'+esc(m.authorName||'Member')+'</div>')
-          +'<div class="tc-bubble'+wsc+'">'+esc(m.text||'')+'</div>'
+          +bubble
           +'<div class="tc-meta">'+fmt(m.createdAt)+ed+(acts?' &middot; '+acts:'')+'</div>'+rc+'</div>';
       }).join('');
       box.scrollTop=box.scrollHeight;
@@ -5939,6 +6051,16 @@ html.dark #panel-overview .trq-cat{color:#8fb4dc;}
 #panel-overview .trq-status.s-progress{background:var(--gold-light);color:var(--gold2);}
 #panel-overview .trq-status.s-done{background:var(--green-light);color:#147c3b;}
 html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
+#panel-overview .trq-item.st-info{border-left-color:var(--purple);}
+#panel-overview .trq-item.st-reject{border-left-color:var(--danger);opacity:.9;}
+#panel-overview .trq-status.s-info{background:var(--purple-light);color:var(--purple);}
+html.dark #panel-overview .trq-status.s-info{color:#c4b5fd;}
+#panel-overview .trq-status.s-reject{background:var(--danger-light);color:var(--danger);}
+html.dark #panel-overview .trq-status.s-reject{color:#f4a3a3;}
+#panel-overview .trq-setwrap{display:inline-flex;align-items:center;gap:5px;margin-left:auto;}
+#panel-overview .trq-setlbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
+#panel-overview .trq-setsel{border:1.5px solid var(--border);border-radius:7px;padding:3px 7px;font-size:11px;font-family:inherit;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;}
+#panel-overview .trq-setsel:focus{border-color:var(--navy);}
 #panel-overview .trq-text{font-size:13.5px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word;}
 #panel-overview .trq-foot{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--muted);flex-wrap:wrap;}
 #panel-overview .trq-act{background:none;border:none;font-family:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;padding:0;}
@@ -5952,6 +6074,17 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
   if(window.__trqInit)return; window.__trqInit=true;
   var items=[], ref=null, unsub=null;
   var CATS=['App upgrade','Bug fix','New feature','Workflow','Other'];
+  /* Statuses the admin can set. Keys are the exact strings stored in the
+     database (the create rule still requires new items to start as 'open').
+     'done' is an older key that is treated as 'completed' for display. */
+  var TRQ_STATUS=[
+    {k:'open',        l:'New',             i:'ti-inbox',        c:'s-open',     it:''},
+    {k:'in_progress', l:'In progress',     i:'ti-player-play',  c:'s-progress', it:'st-progress'},
+    {k:'needs_info',  l:'Needs more info', i:'ti-help-circle',  c:'s-info',     it:'st-info'},
+    {k:'completed',   l:'Complete',        i:'ti-circle-check', c:'s-done',     it:'st-done'},
+    {k:'rejected',    l:'Rejected',        i:'ti-circle-x',     c:'s-reject',   it:'st-reject'}
+  ];
+  function trqStDef(st){ st=(st==='done')?'completed':(st||'open'); for(var i=0;i<TRQ_STATUS.length;i++){ if(TRQ_STATUS[i].k===st)return TRQ_STATUS[i]; } return TRQ_STATUS[0]; }
   function FS(){ try{return firebase.firestore();}catch(e){return null;} }
   function esc(s){ try{return escHtml(s);}catch(e){return (s==null?'':String(s));} }
   function mn(w){ try{return (typeof memberName==='function')?memberName(w):w;}catch(e){return w;} }
@@ -5996,24 +6129,33 @@ html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
       ref.doc(id).delete().then(function(){uiToast('Request deleted');}).catch(function(e){ console.error(e); uiToast('Could not delete this request.'); });
     });
   };
-  window.trqStatus=function(id){ if(!isAdmin()||!ref)return; var m=items.filter(function(x){return x.id===id;})[0]; if(!m)return;
-    var order=['open','in_progress','done']; var idx=order.indexOf(m.status||'open'); var next=order[(idx+1)%order.length];
-    ref.doc(id).update({ status:next }).catch(function(e){ console.error(e); alert('Could not update status.'); });
+  window.trqSetStatus=function(id,val){ if(!isAdmin()||!ref)return;
+    var allowed=TRQ_STATUS.map(function(s){return s.k;});
+    if(allowed.indexOf(val)<0)return;
+    var m=items.filter(function(x){return x.id===id;})[0]; if(!m)return;
+    if((m.status==='done'?'completed':(m.status||'open'))===val)return; /* no change */
+    ref.doc(id).update({ status:val })
+      .then(function(){ try{uiToast('Status set to “'+trqStDef(val).l+'”');}catch(e){} })
+      .catch(function(e){ console.error(e); try{uiToast('Could not update status: '+((e&&e.message)||'unknown error'));}catch(_){ alert('Could not update status.'); } });
   };
-  function badge(st){ st=st||'open';
-    if(st==='done')return '<span class="trq-status s-done"><i class="ti ti-circle-check"></i> Done</span>';
-    if(st==='in_progress')return '<span class="trq-status s-progress"><i class="ti ti-player-play"></i> In progress</span>';
-    return '<span class="trq-status s-open"><i class="ti ti-circle"></i> New</span>'; }
+  function badge(st){ var d=trqStDef(st); return '<span class="trq-status '+d.c+'"><i class="ti '+d.i+'"></i> '+esc(d.l)+'</span>'; }
   function render(){ var box=document.getElementById('trq-list'); if(!box)return;
     if(!items.length){ box.innerHTML='<div class="trq-empty">No requests yet. Submit the first one above.</div>'; return; }
     box.innerHTML=items.map(function(m){
       var mine=m.authorEmail&&m.authorEmail===myEmail();
-      var stCls=m.status==='done'?'st-done':(m.status==='in_progress'?'st-progress':'');
+      var d=trqStDef(m.status);
+      var top='<div class="trq-top"><span class="trq-cat">'+esc(m.category||'Other')+'</span>'+badge(m.status);
+      if(isAdmin()){
+        top+='<label class="trq-setwrap"><span class="trq-setlbl">Set</span>'
+          +'<select class="trq-setsel" aria-label="Set request status" onchange="trqSetStatus(\''+m.id+'\',this.value)">'
+          +TRQ_STATUS.map(function(s){ return '<option value="'+s.k+'"'+(s.k===d.k?' selected':'')+'>'+esc(s.l)+'</option>'; }).join('')
+          +'</select></label>';
+      }
+      top+='</div>';
       var acts='';
-      if(isAdmin()){ var lbl=m.status==='open'?'Mark in progress':(m.status==='in_progress'?'Mark done':'Reopen'); acts+='<button class="trq-act" onclick="trqStatus(\''+m.id+'\')">'+lbl+'</button>'; }
       if(mine||isAdmin()){ acts+='<button class="trq-act" onclick="trqEdit(\''+m.id+'\')">Edit</button><button class="trq-act del" onclick="trqDel(\''+m.id+'\')">Delete</button>'; }
       var ed=m.editedAt?' &middot; edited':'';
-      return '<div class="trq-item '+stCls+'"><div class="trq-top"><span class="trq-cat">'+esc(m.category||'Other')+'</span>'+badge(m.status)+'</div>'
+      return '<div class="trq-item '+d.it+'">'+top
         +'<div class="trq-text">'+esc(m.text||'')+'</div>'
         +'<div class="trq-foot"><i class="ti ti-user" style="font-size:12px;"></i> '+esc(m.authorName||'Member')+' &middot; '+fmt(m.createdAt)+ed+(acts?' &middot; '+acts:'')+'</div></div>';
     }).join('');

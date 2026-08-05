@@ -47,6 +47,7 @@ async function seed() {
     await db.doc('requests/r1').set({ refNo: 'REQ-TEST1234', status: 'Submitted', assignedTo: 'dew',
       requester: { name: 'T', department: 'Primary', email: 'teacher@headstartphuket.com' } });
     await db.doc('chat_messages/m1').set({ text: 'hello', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date() });
+    await db.doc('team_requests/tr1').set({ text: 'please add X', category: 'App upgrade', status: 'open', authorEmail: EYE, authorName: 'Eye', createdAt: new Date() });
     await db.doc('activity/a1').set({ actorEmail: BOSS, action: 'seeded' });
     await db.doc('petty_cash/p1').set({ amount: 100, date: '2026-07-01' });
     await db.doc('sick_leave/s1').set({ date: '2026-07-01' });
@@ -96,6 +97,13 @@ async function main() {
   await check('cannot edit activity entries', boss.doc('activity/a1').update({ action: 'rewritten' }), false);
   await check('can delete an activity entry', boss.doc('activity/a1').delete(), true);
   await check('cannot write unknown collection', boss.collection('random_stuff').add({ a: 1 }), false);
+  await check('sets team request status in_progress', boss.doc('team_requests/tr1').update({ status: 'in_progress' }), true);
+  await check('sets team request status needs_info', boss.doc('team_requests/tr1').update({ status: 'needs_info' }), true);
+  await check('sets team request status completed', boss.doc('team_requests/tr1').update({ status: 'completed' }), true);
+  await check('sets team request status rejected', boss.doc('team_requests/tr1').update({ status: 'rejected' }), true);
+  await check('sets team request status back to open', boss.doc('team_requests/tr1').update({ status: 'open' }), true);
+  await check('cannot set an unknown team request status', boss.doc('team_requests/tr1').update({ status: 'whatever' }), false);
+  await check('cannot set retired "done" team request status', boss.doc('team_requests/tr1').update({ status: 'done' }), false);
 
   console.log('Designer (Dew):');
   await check('writes own tasks', dew.collection('dew_tasks').add({ topic: 'mine' }), true);
@@ -113,6 +121,12 @@ async function main() {
   await check('posts chat as herself', dew.collection('chat_messages').add({ text: 'hi team', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date() }), true);
   await check('cannot post chat as someone else', dew.collection('chat_messages').add({ text: 'fake', authorEmail: BOSS, authorName: 'Boss', authorWs: 'boss', createdAt: new Date() }), false);
   await check('cannot add unexpected chat fields', dew.collection('chat_messages').add({ text: 'hi', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date(), evil: true }), false);
+  await check('posts an image message with media fields', dew.collection('chat_messages').add({ text: '', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date(), type: 'image', imageUrl: 'https://example.com/p.jpg', width: 800, height: 600 }), true);
+  await check('posts a GIF message with media fields', dew.collection('chat_messages').add({ text: '', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date(), type: 'gif', gifUrl: 'https://media.giphy.com/x.gif', width: 480, height: 270 }), true);
+  await check('cannot post media with an unexpected field', dew.collection('chat_messages').add({ text: '', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date(), type: 'gif', gifUrl: 'https://media.giphy.com/x.gif', evil: true }), false);
+  await check('cannot post media with a non-string url', dew.collection('chat_messages').add({ text: '', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date(), type: 'image', imageUrl: 123 }), false);
+  await check('cannot post an unknown message type', dew.collection('chat_messages').add({ text: '', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date(), type: 'video', imageUrl: 'https://example.com/v.mp4' }), false);
+  await check('cannot post empty text without a media type', dew.collection('chat_messages').add({ text: '', authorEmail: DEW, authorName: 'Dew', authorWs: 'dew', createdAt: new Date() }), false);
 
   console.log('Media (O):');
   await check('writes own recurring templates', o.collection('o_templates').add({ name: 'Weekly highlights' }), true);

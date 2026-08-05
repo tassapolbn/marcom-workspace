@@ -122,14 +122,25 @@ service cloud.firestore {
     // ---------------- shared team chat ----------------
     // authorEmail must match the signed-in user and can never be changed,
     // so nobody can post or edit messages as someone else.
+    // A message is either plain text, or an image/GIF whose URL is stored on the
+    // message (text may then be empty). Only the specific optional keys below are
+    // allowed, every URL must be a string, and authorEmail is still pinned to the
+    // signed-in user, so this stays least-privilege.
     match /chat_messages/{id} {
       allow read: if authorized();
       allow create: if authorized()
-        && request.resource.data.keys().hasOnly(['text','authorEmail','authorName','authorWs','createdAt'])
+        && request.resource.data.keys().hasOnly(['text','authorEmail','authorName','authorWs','createdAt','type','imageUrl','gifUrl','width','height'])
+        && request.resource.data.authorEmail == userEmail()
         && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
         && request.resource.data.text.size() <= 4000
-        && request.resource.data.authorEmail == userEmail();
+        && request.resource.data.get('type','text') in ['text','image','gif']
+        && (request.resource.data.get('type','text') == 'text'
+              ? request.resource.data.text.size() > 0
+              : true)
+        && (!('imageUrl' in request.resource.data) || request.resource.data.imageUrl is string)
+        && (!('gifUrl' in request.resource.data) || request.resource.data.gifUrl is string)
+        && (!('width' in request.resource.data) || request.resource.data.width is number)
+        && (!('height' in request.resource.data) || request.resource.data.height is number);
       allow update: if (isAdmin() || (authorized() && resource.data.get('authorEmail','') == userEmail()))
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt'])
         && request.resource.data.text is string
@@ -152,7 +163,7 @@ service cloud.firestore {
       allow update: if
         (isAdmin()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','status','editedAt'])
-          && request.resource.data.get('status','open') in ['open','in_progress','done'])
+          && request.resource.data.get('status','open') in ['open','in_progress','needs_info','completed','rejected'])
         || (authorized()
           && resource.data.get('authorEmail','') == userEmail()
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt'])
