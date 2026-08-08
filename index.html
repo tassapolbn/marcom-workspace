@@ -6008,17 +6008,20 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     if(!(window.phoConfigured&&window.phoConfigured())){ try{uiToast('Photo upload is not set up yet. '+(isAdmin()?'Connect the Drive uploader in Settings.':'Please ask Boss to connect it in Settings.'),{duration:9000});}catch(e){} return; }
     if(!/^image\//.test(file.type||'')){ try{uiToast('Please choose an image file.');}catch(e){} return; }
     closePops();
-    tcShowProgress(0.04,'Preparing photo…');
+    tcShowProgress(0.06,'Preparing photo…');
+    var prog=0.15, timer=null;
     compressImage(file,1600,0.82).then(function(out){
       if(!out.base64)throw new Error('The image was empty.');
-      tcShowProgress(0.12,'Uploading…');
-      return window.phoUpload({ filename:(file.name||'photo.jpg'), mimeType:'image/jpeg', dataBase64:out.base64 }, function(p){ tcShowProgress(0.12+(p||0)*0.85,'Uploading…'); })
+      tcShowProgress(prog,'Uploading…');
+      timer=setInterval(function(){ prog=Math.min(0.9,prog+0.05); tcShowProgress(prog,'Uploading…'); },250);
+      return window.phoUpload({ filename:(file.name||'photo.jpg'), mimeType:'image/jpeg', dataBase64:out.base64 })
         .then(function(res){
-          tcHideProgress();
+          if(timer){clearInterval(timer);timer=null;}
+          tcShowProgress(1,'Done'); setTimeout(tcHideProgress,350);
           if(!res||!res.imageUrl)throw new Error('The uploader did not return a link.');
           sendMedia('image',res.imageUrl,out.width,out.height);
         });
-    }).catch(function(e){ tcHideProgress(); console.error(e); try{uiToast('Could not upload the photo: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){} });
+    }).catch(function(e){ if(timer){clearInterval(timer);timer=null;} tcHideProgress(); console.error(e); try{uiToast('Could not upload the photo: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){} });
   }
   function driveViewUrl(u){ var m=/[?&]id=([^&]+)/.exec(u||''); return m?('https://drive.google.com/file/d/'+m[1]+'/view'):''; }
   function FS(){ try{return firebase.firestore();}catch(e){return null;} }
@@ -6255,21 +6258,17 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       .then(function(r){ return r.json(); })
       .catch(function(){ return {ok:false,error:'network'}; });
   }
-  /* Upload one already-compressed photo. Resolves to {imageUrl,viewUrl,...}. */
-  window.phoUpload=function(meta,onProgress){
-    return new Promise(function(resolve,reject){
-      if(!CFG||!CFG.url){ reject(new Error('Photo upload is not connected.')); return; }
-      var payload=JSON.stringify({ secret:CFG.secret||'', action:'upload', filename:(meta&&meta.filename)||'photo.jpg', mimeType:(meta&&meta.mimeType)||'image/jpeg', dataBase64:(meta&&meta.dataBase64)||'' });
-      var xhr; try{ xhr=new XMLHttpRequest(); }catch(e){ reject(new Error('Upload is not supported here.')); return; }
-      xhr.open('POST',CFG.url,true);
-      try{ xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8'); }catch(e){}
-      if(xhr.upload&&onProgress){ xhr.upload.onprogress=function(ev){ if(ev.lengthComputable)try{onProgress(ev.loaded/ev.total);}catch(_){} }; }
-      xhr.onload=function(){ var res=null; try{res=JSON.parse(xhr.responseText);}catch(e){} if(res&&res.ok&&res.imageUrl)resolve(res); else reject(new Error((res&&res.error)||('upload failed ('+xhr.status+')'))); };
-      xhr.onerror=function(){ reject(new Error('network error')); };
-      xhr.ontimeout=function(){ reject(new Error('the upload timed out')); };
-      xhr.timeout=120000;
-      xhr.send(payload);
-    });
+  /* Upload one already-compressed photo. Uses a plain-text fetch with NO upload
+     progress listener on purpose: attaching a listener to xhr.upload would make
+     the browser send a CORS preflight (OPTIONS), which an Apps Script Web App
+     cannot answer, so the request would fail. A simple fetch, like the calendar
+     sync uses, needs no preflight. Resolves to {imageUrl,viewUrl,...}. */
+  window.phoUpload=function(meta){
+    if(!CFG||!CFG.url)return Promise.reject(new Error('Photo upload is not connected.'));
+    var payload=JSON.stringify({ secret:CFG.secret||'', action:'upload', filename:(meta&&meta.filename)||'photo.jpg', mimeType:(meta&&meta.mimeType)||'image/jpeg', dataBase64:(meta&&meta.dataBase64)||'' });
+    return fetch(CFG.url,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:payload })
+      .then(function(r){ return r.json(); })
+      .then(function(res){ if(res&&res.ok&&res.imageUrl)return res; throw new Error((res&&res.error)||'the uploader did not accept the photo'); });
   };
   function phoMsg(t,bad){ var o=document.getElementById('pho-test-out'); if(!o)return; o.style.color=bad?'#b91c1c':'#147c3b'; o.textContent=t; }
   window.phoSave=function(){
