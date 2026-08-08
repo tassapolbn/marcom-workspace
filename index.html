@@ -5913,7 +5913,13 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
      (sign in -> Create an App -> copy the API Key) and paste it below. GIFs are
      shared as plain URLs, so no database rule depends on this key. Until a key is
      added, the GIF button explains how to switch it on. */
-  var GIPHY_API_KEY=''; // <-- paste your free Giphy API key here to enable GIF search
+  var GIPHY_API_KEY='0Ex557UuBnfy5iowjcwb1JHJmmJ5bhdz'; // Giphy (beta) key. Client-side, so it is visible in the page source; keep it a beta key.
+  /* Tenor (Google) GIF search. Get a key in the Google Cloud Console: enable the
+     "Tenor API", then create an API key. client_key is any short app identifier.
+     Both sources are optional and independent: whichever keys you fill in are
+     searched together and shown mixed in one grid. */
+  var TENOR_API_KEY='';               // <-- paste your free Tenor (Google Cloud) API key here
+  var TENOR_CLIENT_KEY='marcom-workspace';
   var TC_EMOJI=[
     ['Smileys',['😀','😃','😄','😁','😆','😅','😂','🤣','😊','🙂','😉','😍','😘','😜','🤪','🤔','🤗','😎','🥳','😏','😌','😔','😴','😮','😲','🥺','😢','😭','😤','😠','😡','🤯','😱','😳','🥵','🥶','😇','🙄','😬','🤭']],
     ['Gestures',['👍','👎','👏','🙌','🙏','👌','✌️','🤞','🤙','💪','👋','🤝','☝️','👆','👇','✋','🔥','💯','👀','🎯']],
@@ -5941,25 +5947,50 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   function closePops(){ ['tc-emoji-pop','tc-gif-pop'].forEach(function(id){ var p=document.getElementById(id); if(p)p.classList.remove('open'); }); }
   function toggleEmoji(){ var p=document.getElementById('tc-emoji-pop'), g=document.getElementById('tc-gif-pop'); if(g)g.classList.remove('open'); if(!p)return; var willOpen=!p.classList.contains('open'); if(willOpen)buildEmojiPanel(); p.classList.toggle('open',willOpen); }
   function toggleGif(){ var p=document.getElementById('tc-gif-pop'), em=document.getElementById('tc-emoji-pop'); if(em)em.classList.remove('open'); if(!p)return; var willOpen=!p.classList.contains('open'); p.classList.toggle('open',willOpen); if(willOpen){ var q=document.getElementById('tc-gif-q'); if(q)q.focus(); } }
+  /* Each source returns a common shape {thumb,url,w,h}; a failure returns [] so
+     one provider being down never blocks the other. */
+  function gifFromGiphy(q,limit){
+    if(!GIPHY_API_KEY)return Promise.resolve([]);
+    return fetch('https://api.giphy.com/v1/gifs/search?api_key='+encodeURIComponent(GIPHY_API_KEY)+'&q='+encodeURIComponent(q)+'&limit='+limit+'&rating=pg')
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        return ((j&&j.data)||[]).map(function(g){
+          var im=g.images||{}; var thumb=im.fixed_width||im.downsized||im.original; var full=im.downsized_medium||im.fixed_width||im.original;
+          if(!thumb||!full||!thumb.url||!full.url)return null;
+          return { thumb:thumb.url, url:full.url, w:parseInt(full.width,10)||0, h:parseInt(full.height,10)||0 };
+        }).filter(Boolean);
+      }).catch(function(){ return []; });
+  }
+  function gifFromTenor(q,limit){
+    if(!TENOR_API_KEY)return Promise.resolve([]);
+    return fetch('https://tenor.googleapis.com/v2/search?q='+encodeURIComponent(q)+'&key='+encodeURIComponent(TENOR_API_KEY)+'&client_key='+encodeURIComponent(TENOR_CLIENT_KEY||'marcom-workspace')+'&limit='+limit+'&media_filter=gif,tinygif&contentfilter=medium')
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        return ((j&&j.results)||[]).map(function(t){
+          var mf=t.media_formats||{}; var thumb=mf.tinygif||mf.nanogif||mf.gif; var full=mf.gif||mf.mediumgif||mf.tinygif;
+          if(!thumb||!full||!thumb.url||!full.url)return null;
+          var d=full.dims||[0,0];
+          return { thumb:thumb.url, url:full.url, w:parseInt(d[0],10)||0, h:parseInt(d[1],10)||0 };
+        }).filter(Boolean);
+      }).catch(function(){ return []; });
+  }
+  function gifInterleave(a,b){ var out=[],i=0; while(i<a.length||i<b.length){ if(i<a.length)out.push(a[i]); if(i<b.length)out.push(b[i]); i++; } return out; }
   function tcGifSearch(){
     var qEl=document.getElementById('tc-gif-q'), grid=document.getElementById('tc-gif-grid'); if(!grid)return;
     var q=((qEl&&qEl.value)||'').trim();
-    if(!GIPHY_API_KEY){ grid.innerHTML='<div class="tc-gif-note">To turn on GIF search, add a free Giphy API key to <b>GIPHY_API_KEY</b> in the code. Get one at developers.giphy.com.</div>'; return; }
+    var haveG=!!GIPHY_API_KEY, haveT=!!TENOR_API_KEY;
+    if(!haveG&&!haveT){ grid.innerHTML='<div class="tc-gif-note">To turn on GIF search, add a free Giphy key (<b>GIPHY_API_KEY</b>) and/or a Tenor key (<b>TENOR_API_KEY</b>) in the code. Get a Giphy key at developers.giphy.com, or a Tenor key in the Google Cloud Console.</div>'; return; }
     if(!q){ grid.innerHTML='<div class="tc-gif-note">Type a word to search for GIFs.</div>'; return; }
-    grid.innerHTML='<div class="tc-gif-note">Searching Giphy…</div>';
-    fetch('https://api.giphy.com/v1/gifs/search?api_key='+encodeURIComponent(GIPHY_API_KEY)+'&q='+encodeURIComponent(q)+'&limit=24&rating=pg')
-      .then(function(r){ return r.json(); })
-      .then(function(j){
-        var arr=(j&&j.data)||[];
-        if(!arr.length){ grid.innerHTML='<div class="tc-gif-note">No GIFs found. Try another word.</div>'; return; }
-        grid.innerHTML=arr.map(function(g){
-          var im=g.images||{}; var thumb=im.fixed_width||im.downsized||im.original; var full=im.downsized_medium||im.fixed_width||im.original;
-          if(!thumb||!full||!thumb.url||!full.url)return '';
-          var w=parseInt(full.width,10)||0, h=parseInt(full.height,10)||0;
-          return '<img loading="lazy" src="'+esc(safeUrl(thumb.url))+'" alt="GIF" tabindex="0" role="button" data-url="'+esc(encodeURIComponent(full.url))+'" data-w="'+w+'" data-h="'+h+'" onclick="tcPickGif(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();tcPickGif(this);}">';
-        }).join('')+'<div class="tc-gif-credit">Powered by GIPHY</div>';
-      })
-      .catch(function(err){ console.error(err); grid.innerHTML='<div class="tc-gif-note">Could not load GIFs. Please check the connection and try again.</div>'; try{uiToast('GIF search failed.');}catch(_){} });
+    grid.innerHTML='<div class="tc-gif-note">Searching…</div>';
+    var per=(haveG&&haveT)?14:24; /* fewer from each when both are on, to keep the grid tidy */
+    Promise.all([ gifFromGiphy(q,per), gifFromTenor(q,per) ]).then(function(rs){
+      var items=gifInterleave(rs[0]||[],rs[1]||[]);
+      if(!items.length){ grid.innerHTML='<div class="tc-gif-note">No GIFs found. Try another word.</div>'; return; }
+      var credit=[]; if(haveG)credit.push('GIPHY'); if(haveT)credit.push('Tenor');
+      grid.innerHTML=items.map(function(it){
+        return '<img loading="lazy" src="'+esc(safeUrl(it.thumb))+'" alt="GIF" tabindex="0" role="button" data-url="'+esc(encodeURIComponent(it.url))+'" data-w="'+(it.w||0)+'" data-h="'+(it.h||0)+'" onclick="tcPickGif(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();tcPickGif(this);}">';
+      }).join('')+'<div class="tc-gif-credit">Powered by '+credit.join(' + ')+'</div>';
+    }).catch(function(err){ console.error(err); grid.innerHTML='<div class="tc-gif-note">Could not load GIFs. Please try again.</div>'; try{uiToast('GIF search failed.');}catch(_){} });
   }
   window.tcPickGif=function(el){
     if(!el)return;
@@ -6118,7 +6149,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
         +'<button class="chat-send" id="tc-sendb" aria-label="Send message"><i class="ti ti-send"></i></button>'
       +'</div>'
       +'<div class="tc-pop" id="tc-emoji-pop"></div>'
-      +'<div class="tc-pop" id="tc-gif-pop"><div class="tc-gif-search"><input class="tc-gif-input" id="tc-gif-q" placeholder="Search GIFs…" autocomplete="off"><button class="tc-gif-go" id="tc-gif-go" type="button">Search</button></div><div class="tc-gif-grid" id="tc-gif-grid"><div class="tc-gif-note">Search Giphy for a GIF to share.</div></div></div>';
+      +'<div class="tc-pop" id="tc-gif-pop"><div class="tc-gif-search"><input class="tc-gif-input" id="tc-gif-q" placeholder="Search GIFs…" autocomplete="off"><button class="tc-gif-go" id="tc-gif-go" type="button">Search</button></div><div class="tc-gif-grid" id="tc-gif-grid"><div class="tc-gif-note">Search for a GIF to share.</div></div></div>';
     document.body.appendChild(p);
     document.getElementById('tc-close').onclick=toggle;
     document.getElementById('tc-sendb').onclick=send;
