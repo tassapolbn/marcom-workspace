@@ -5895,6 +5895,14 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
 .tc-gif-credit{font-size:9.5px;color:var(--muted);text-align:right;margin-top:7px;letter-spacing:.2px;}
 .tc-bubble.tc-media{padding:0;overflow:hidden;background:transparent;border:none;box-shadow:none;}
 .tc-bubble.tc-media img{display:block;max-width:220px;width:100%;height:auto;border-radius:12px;border:1px solid var(--border);}
+.tc-bubble.tc-media a{display:block;}
+.tc-file-hidden{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;}
+.tc-progress{display:none;padding:8px 13px;border-top:1px solid var(--border);background:var(--gray-light);}
+.tc-progress-lbl{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.tc-progress-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden;}
+.tc-progress-bar{height:100%;width:0;background:var(--navy);border-radius:99px;transition:width .2s;}
+html.dark .tc-progress{background:rgba(255,255,255,.04);}
+html.dark .tc-progress-bar{background:#5f8cc4;}
 </style>
 <script id="tc-script">
 /* ===== TEAM CHAT (auth-linked, additive) ===== */
@@ -5968,6 +5976,51 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
     if(w>0)data.width=Math.round(w); if(h>0)data.height=Math.round(h);
     ref.add(data).catch(function(e){ console.error(e); try{uiToast('Could not send: '+((e&&e.message)||'unknown error'));}catch(_){} });
   }
+  /* ---- photo upload (Google Drive via the Apps Script uploader) ---- */
+  function tcSyncPhotoBtn(){ var b=document.getElementById('tc-photob'); if(b)b.style.display=(window.phoConfigured&&window.phoConfigured())?'inline-flex':'none'; }
+  window.tcPhotoConfigChanged=tcSyncPhotoBtn;
+  function tcShowProgress(frac,label){ var p=document.getElementById('tc-progress'); if(p)p.style.display='block'; var bar=document.getElementById('tc-progress-bar'); if(bar)bar.style.width=Math.max(0,Math.min(100,Math.round((frac||0)*100)))+'%'; var lb=document.getElementById('tc-progress-lbl'); if(lb)lb.innerHTML='<i class="ti ti-upload"></i> '+esc(label||'Uploading…'); }
+  function tcHideProgress(){ var p=document.getElementById('tc-progress'); if(p)p.style.display='none'; var bar=document.getElementById('tc-progress-bar'); if(bar)bar.style.width='0%'; }
+  function compressImage(file,maxDim,quality){
+    return new Promise(function(resolve,reject){
+      var url; try{url=URL.createObjectURL(file);}catch(e){ reject(new Error('Could not read the image.')); return; }
+      var img=new Image();
+      img.onload=function(){
+        try{
+          var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+          if(!w||!h){ try{URL.revokeObjectURL(url);}catch(_){} reject(new Error('That image could not be read.')); return; }
+          var scale=Math.min(1,maxDim/Math.max(w,h));
+          var cw=Math.max(1,Math.round(w*scale)), ch=Math.max(1,Math.round(h*scale));
+          var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+          cv.getContext('2d').drawImage(img,0,0,cw,ch);
+          var dataUrl=cv.toDataURL('image/jpeg',quality||0.82);
+          try{URL.revokeObjectURL(url);}catch(_){}
+          resolve({ base64:(dataUrl.split(',')[1]||''), width:cw, height:ch });
+        }catch(err){ try{URL.revokeObjectURL(url);}catch(_){} reject(err); }
+      };
+      img.onerror=function(){ try{URL.revokeObjectURL(url);}catch(_){} reject(new Error('That image could not be read.')); };
+      img.src=url;
+    });
+  }
+  function tcHandlePhoto(file){
+    if(!file)return;
+    if(!me()){ try{uiToast('Please sign in to chat.');}catch(e){} return; }
+    if(!(window.phoConfigured&&window.phoConfigured())){ try{uiToast('Photo upload is not set up yet. '+(isAdmin()?'Connect the Drive uploader in Settings.':'Please ask Boss to connect it in Settings.'),{duration:9000});}catch(e){} return; }
+    if(!/^image\//.test(file.type||'')){ try{uiToast('Please choose an image file.');}catch(e){} return; }
+    closePops();
+    tcShowProgress(0.04,'Preparing photo…');
+    compressImage(file,1600,0.82).then(function(out){
+      if(!out.base64)throw new Error('The image was empty.');
+      tcShowProgress(0.12,'Uploading…');
+      return window.phoUpload({ filename:(file.name||'photo.jpg'), mimeType:'image/jpeg', dataBase64:out.base64 }, function(p){ tcShowProgress(0.12+(p||0)*0.85,'Uploading…'); })
+        .then(function(res){
+          tcHideProgress();
+          if(!res||!res.imageUrl)throw new Error('The uploader did not return a link.');
+          sendMedia('image',res.imageUrl,out.width,out.height);
+        });
+    }).catch(function(e){ tcHideProgress(); console.error(e); try{uiToast('Could not upload the photo: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){} });
+  }
+  function driveViewUrl(u){ var m=/[?&]id=([^&]+)/.exec(u||''); return m?('https://drive.google.com/file/d/'+m[1]+'/view'):''; }
   function FS(){ try{return firebase.firestore();}catch(e){return null;} }
   function esc(s){ try{return escHtml(s);}catch(e){return (s==null?'':String(s));} }
   function mn(w){ try{return (typeof memberName==='function')?memberName(w):w;}catch(e){return w;} }
@@ -6052,7 +6105,10 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
     p.innerHTML='<div class="chat-header"><div class="chat-header-title"><i class="ti ti-messages"></i> Team Chat</div><button class="tc-x" id="tc-close"><i class="ti ti-x"></i></button></div>'
       +'<div class="tc-presence" id="tc-presence"></div>'
       +'<div class="chat-messages" id="tc-messages"></div>'
+      +'<div class="tc-progress" id="tc-progress"><div class="tc-progress-lbl" id="tc-progress-lbl"><i class="ti ti-upload"></i> Uploading…</div><div class="tc-progress-track"><div class="tc-progress-bar" id="tc-progress-bar"></div></div></div>'
       +'<div class="chat-input-row">'
+        +'<input type="file" accept="image/*" id="tc-file" class="tc-file-hidden" tabindex="-1" aria-hidden="true">'
+        +'<button class="tc-tool" id="tc-photob" type="button" title="Send a photo" aria-label="Send a photo" style="display:none;"><i class="ti ti-photo"></i></button>'
         +'<button class="tc-tool" id="tc-emojib" type="button" title="Emoji" aria-label="Insert emoji"><i class="ti ti-mood-smile"></i></button>'
         +'<button class="tc-tool" id="tc-gifb" type="button" title="Search GIFs" aria-label="Search GIFs"><span class="tc-gif-lbl">GIF</span></button>'
         +'<input class="chat-input" id="tc-input" placeholder="Message the team..." autocomplete="off">'
@@ -6067,6 +6123,9 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
     var gb=document.getElementById('tc-gifb'); if(gb)gb.onclick=toggleGif;
     var gg=document.getElementById('tc-gif-go'); if(gg)gg.onclick=tcGifSearch;
     var gq=document.getElementById('tc-gif-q'); if(gq)gq.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); tcGifSearch(); } });
+    var pb=document.getElementById('tc-photob'), fileEl=document.getElementById('tc-file');
+    if(pb&&fileEl){ pb.onclick=function(){ closePops(); fileEl.click(); }; fileEl.addEventListener('change',function(){ var f=fileEl.files&&fileEl.files[0]; try{fileEl.value='';}catch(_){} if(f)tcHandlePhoto(f); }); }
+    tcSyncPhotoBtn();
     var inp=document.getElementById('tc-input');
     inp.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
     inp.addEventListener('focus',closePops);
@@ -6140,9 +6199,15 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
             ? '<div class="tc-receipt"><i class="ti ti-checks"></i> Read by '+esc(rd.join(', '))+'</div>'
             : '<div class="tc-receipt pending"><i class="ti ti-check"></i> Sent</div>';
         }
-        var bubble=okMedia
-          ? '<div class="tc-bubble tc-media"><img loading="lazy" src="'+esc(murl)+'" alt="'+(m.type==='gif'?'GIF':'image')+'"'+((m.width>0&&m.height>0)?(' width="'+parseInt(m.width,10)+'" height="'+parseInt(m.height,10)+'"'):'')+'></div>'
-          : '<div class="tc-bubble'+wsc+'">'+esc(m.text||(isMedia?'[media]':''))+'</div>';
+        var bubble;
+        if(okMedia){
+          var imgTag='<img loading="lazy" src="'+esc(murl)+'" alt="'+(m.type==='gif'?'GIF':'image')+'"'+((m.width>0&&m.height>0)?(' width="'+parseInt(m.width,10)+'" height="'+parseInt(m.height,10)+'"'):'')+'>';
+          var vurl=(m.type==='image')?driveViewUrl(m.imageUrl||''):'';
+          var inner=vurl?('<a href="'+esc(safeUrl(vurl))+'" target="_blank" rel="noopener" title="Open in Google Drive">'+imgTag+'</a>'):imgTag;
+          bubble='<div class="tc-bubble tc-media">'+inner+'</div>';
+        } else {
+          bubble='<div class="tc-bubble'+wsc+'">'+esc(m.text||(isMedia?'[media]':''))+'</div>';
+        }
         return '<div class="tc-msg '+(mine?'tc-mine':'tc-theirs')+'">'
           +(mine?'':'<div class="tc-author">'+esc(m.authorName||'Member')+'</div>')
           +bubble
@@ -6158,6 +6223,101 @@ html.dark .tc-emoji:hover,html.dark .tc-emoji:focus-visible{background:rgba(255,
   function boot(){ build(); watch(); watchPresence(); startHeartbeat(); }
   var __gatedBoot=function(){whenAuthed(boot);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__gatedBoot); else __gatedBoot();
+})();
+</script>
+<script id="pho-script">
+/* ===== CHAT PHOTO UPLOAD (Google Drive via Apps Script, additive) =====
+   The uploader endpoint + secret are stored once by the admin in
+   dept_settings/photoupload (admin write, authorised read), so the secret is
+   never placed in the public page source. Members read it to upload. */
+(function(){
+  if(window.__phoInit)return; window.__phoInit=true;
+  var CFG=null, unsub=null;
+  function FS(){ try{return firebase.firestore();}catch(e){return null;} }
+  function esc(s){ try{return escHtml(s);}catch(e){return String(s==null?'':s);} }
+  function me(){ return window.__cur||null; }
+  function isAdmin(){ var c=me(); return !!(c&&c.role==='admin'); }
+  window.phoConfigured=function(){ return !!(CFG&&CFG.url); };
+  function cleanUrl(u){
+    u=String(u||'').trim().replace(/\s+/g,'');
+    if(u.indexOf('script.googleusercontent.com')>=0){
+      return {url:'',error:'That address is the page Google redirects to, not the Web app address. Go back to the Apps Script project, press Deploy, then Manage deployments, and copy the URL shown there. It ends with /exec.'};
+    }
+    if(u&&!/^https:\/\/script\.google\.com\/macros\/s\/[^\/]+\/exec/.test(u)){
+      return {url:u,error:'That does not look like a Web app address. It should start with https://script.google.com/macros/s/ and end with /exec.'};
+    }
+    var m=u.match(/^(https:\/\/script\.google\.com\/macros\/s\/[^\/]+\/exec)/);
+    return {url:m?m[1]:u,error:''};
+  }
+  function callUrl(url,secret,payload){
+    payload.secret=secret||'';
+    return fetch(url,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload) })
+      .then(function(r){ return r.json(); })
+      .catch(function(){ return {ok:false,error:'network'}; });
+  }
+  /* Upload one already-compressed photo. Resolves to {imageUrl,viewUrl,...}. */
+  window.phoUpload=function(meta,onProgress){
+    return new Promise(function(resolve,reject){
+      if(!CFG||!CFG.url){ reject(new Error('Photo upload is not connected.')); return; }
+      var payload=JSON.stringify({ secret:CFG.secret||'', action:'upload', filename:(meta&&meta.filename)||'photo.jpg', mimeType:(meta&&meta.mimeType)||'image/jpeg', dataBase64:(meta&&meta.dataBase64)||'' });
+      var xhr; try{ xhr=new XMLHttpRequest(); }catch(e){ reject(new Error('Upload is not supported here.')); return; }
+      xhr.open('POST',CFG.url,true);
+      try{ xhr.setRequestHeader('Content-Type','text/plain;charset=utf-8'); }catch(e){}
+      if(xhr.upload&&onProgress){ xhr.upload.onprogress=function(ev){ if(ev.lengthComputable)try{onProgress(ev.loaded/ev.total);}catch(_){} }; }
+      xhr.onload=function(){ var res=null; try{res=JSON.parse(xhr.responseText);}catch(e){} if(res&&res.ok&&res.imageUrl)resolve(res); else reject(new Error((res&&res.error)||('upload failed ('+xhr.status+')'))); };
+      xhr.onerror=function(){ reject(new Error('network error')); };
+      xhr.ontimeout=function(){ reject(new Error('the upload timed out')); };
+      xhr.timeout=120000;
+      xhr.send(payload);
+    });
+  };
+  function phoMsg(t,bad){ var o=document.getElementById('pho-test-out'); if(!o)return; o.style.color=bad?'#b91c1c':'#147c3b'; o.textContent=t; }
+  window.phoSave=function(){
+    if(!isAdmin())return;
+    var chk=cleanUrl(((document.getElementById('pho-url')||{}).value||''));
+    if(chk.error){ phoMsg(chk.error,true); try{uiToast('The address was not saved. Please check the message above.',{duration:9000});}catch(e){} return; }
+    var url=chk.url; var uf=document.getElementById('pho-url'); if(uf)uf.value=url;
+    var sec=((document.getElementById('pho-secret')||{}).value||'').trim();
+    var d=FS(); if(!d)return;
+    d.collection('dept_settings').doc('photoupload').set({url:url,secret:sec},{merge:true})
+      .then(function(){ phoMsg('Saved. The team can now share photos in chat.',false); try{uiToast('Photo upload connected');}catch(e){} })
+      .catch(function(e){ var msg=(e&&e.message)||'unknown error'; phoMsg('Could not save: '+msg,true); try{uiToast('Could not save: '+msg,{duration:9000});}catch(_){} });
+  };
+  window.phoTest=function(){
+    var chk=cleanUrl(((document.getElementById('pho-url')||{}).value||''));
+    if(chk.error){ phoMsg(chk.error,true); return; }
+    var url=chk.url; if(!url){ try{uiToast('Paste the Web app URL first.');}catch(e){} return; }
+    var sec=((document.getElementById('pho-secret')||{}).value||'').trim();
+    phoMsg('Testing…',false);
+    callUrl(url,sec,{action:'ping'}).then(function(res){
+      if(res&&res.ok)phoMsg('Connected to folder: '+(res.folder||'shared folder'),false);
+      else { var er=(res&&res.error)||'no response'; phoMsg(er==='unauthorised'?'The secret phrase does not match the script.':('Could not connect: '+er),true); }
+    });
+  };
+  function inject(){
+    var body=document.querySelector('#settings-modal .modal-body');
+    if(!body||document.getElementById('pho-cfg'))return;
+    if(!isAdmin())return; /* only the admin connects the shared uploader */
+    var d=document.createElement('div'); d.id='pho-cfg';
+    d.style.cssText='margin-top:14px;padding-top:14px;border-top:1px solid var(--border);';
+    d.innerHTML='<label class="form-label"><i class="ti ti-photo-up" style="margin-right:5px;"></i> Chat photo upload (Google Drive)</label>'
+      +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;">Let the team share photos in chat, stored in the shared Drive folder. Follow google-apps-script/PHOTO-SETUP.md, then paste the Web app URL and the same secret phrase below. This applies to the whole team.</div>'
+      +'<input class="form-input" id="pho-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:6px;">'
+      +'<input class="form-input" id="pho-secret" type="text" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Secret phrase (must match the script)" style="margin-bottom:6px;">'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost btn-sm" onclick="phoTest()"><i class="ti ti-plug-connected"></i> Test connection</button>'
+      +'<button type="button" class="btn btn-navy btn-sm" onclick="phoSave()"><i class="ti ti-check"></i> Save</button></div>'
+      +'<div id="pho-test-out" style="font-size:11.5px;font-weight:700;margin-top:7px;"></div>';
+    body.appendChild(d);
+    var u=document.getElementById('pho-url'); if(u&&CFG)u.value=CFG.url||'';
+    var s=document.getElementById('pho-secret'); if(s&&CFG)s.value=CFG.secret||'';
+  }
+  function watch(){ var d=FS(); if(!d||unsub)return;
+    try{ unsub=d.collection('dept_settings').doc('photoupload').onSnapshot(function(doc){ CFG=(doc&&doc.exists)?(doc.data()||null):null; try{if(window.tcPhotoConfigChanged)tcPhotoConfigChanged();}catch(e){} },function(e){console.error(e);}); }catch(e){console.error(e);}
+  }
+  var _os=window.openSettings; window.openSettings=function(){ try{if(_os)_os();}catch(e){} setTimeout(inject,80); };
+  function boot(){ watch(); }
+  var __g=function(){whenAuthed(boot);};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__g); else __g();
 })();
 </script>
 <style id="trq-style">
