@@ -5,17 +5,22 @@ rules_version = '2';
 //
 // Design principles
 //  1. No broad top-level wildcard. Every collection the app uses is either
-//     matched explicitly below, or must appear in the member-collection
-//     whitelist. Unknown / future collections are DENIED by default.
-//  2. Overlapping allow rules are additive in Firestore, so the final
-//     member-collection block explicitly EXCLUDES every collection that has
-//     its own match above it (the whitelist contains member collections
-//     only). Nothing here re-broadens an earlier rule.
-//  3. The public Request Centre has NO direct database access. Submissions
-//     and status lookups go through Netlify Functions using the Admin SDK,
-//     which bypasses these rules on the server, where input is validated.
-//  4. Deploy order matters: deploy the new site + functions FIRST, confirm
-//     the Request Centre works, then deploy these rules.
+//     matched explicitly below, or matches the member-collection PATTERN in
+//     knownMemberCollection(). Unknown collections are DENIED by default.
+//  2. The member-collection check is a PATTERN, not a hand-typed list, so a
+//     newly added collection such as junior_settings can never be accidentally
+//     left out (this previously blocked calendar saves for a member). Write is
+//     still limited to a member's own workspace, or the admin, by ownsCollection.
+//  3. Overlapping allow rules are additive in Firestore. Collections that have
+//     their own explicit match above (event_tasks, chat_messages, dept_settings,
+//     school_events, sop_templates, the per-member _lieu / _sick) are granted
+//     exactly the same or narrower access by the pattern rule, so nothing is
+//     re-broadened.
+//  4. The public Request Centre has NO direct database access. Submissions and
+//     status lookups go through Netlify Functions using the Admin SDK, which
+//     bypasses these rules on the server, where input is validated.
+//  5. Deploy order matters: deploy the new site + functions FIRST, confirm the
+//     Request Centre works, then PUBLISH these rules.
 // =====================================================================
 
 service cloud.firestore {
@@ -24,10 +29,9 @@ service cloud.firestore {
     // ---------------- helpers ----------------
     function signedIn()  { return request.auth != null; }
     // Relaxed on purpose: password sign-ins are accepted without email
-    // verification, because the acl list below is the real gate that
-    // decides who may enter. (Tighten again later if everyone uses
-    // Google school accounts: require sign_in_provider == 'google.com'
-    // or email_verified == true.)
+    // verification, because the acl list below is the real gate that decides
+    // who may enter. (Tighten later if everyone uses Google school accounts:
+    // require sign_in_provider == 'google.com' or email_verified == true.)
     function trustedSignIn() {
       return signedIn();
     }
@@ -36,7 +40,7 @@ service cloud.firestore {
     function hasAcl()    { return trustedSignIn() && exists(aclRef()); }
     function aclData()   { return get(aclRef()).data; }
     function authorized(){ return hasAcl() && aclData().get('disabled', false) == false; }
-    function roleVal()   { return authorized() ? aclData().role : 'none'; }
+    function roleVal()   { return authorized() ? aclData().get('role', 'none') : 'none'; }
     function isAdmin()   { return roleVal() == 'admin'; }
 
     // Workspace prefix each role owns.
@@ -48,7 +52,7 @@ service cloud.firestore {
         : 'none';
     }
 
-    // Collections the signed-in member may WRITE (their own workspace).
+    // Collections the signed-in member may WRITE (their own workspace only).
     function ownsCollection(c) {
       return c == ws() + '_tasks'     ||
              c == ws() + '_links'     ||
@@ -58,19 +62,15 @@ service cloud.firestore {
              c == ws() + '_lieu'      ||
              c == ws() + '_assets'    ||
              c == ws() + '_settings'  ||
-             c == ws() + '_templates';   // fixes: O could not save recurring templates
+             c == ws() + '_templates';
     }
 
-    // Full whitelist of member workspace collections the app uses.
-    // Anything NOT in this list and NOT matched explicitly below is denied.
+    // Is this one of the app's member workspace collections?
+    // A PATTERN (every prefix x every suffix) so nothing can be left out. This
+    // gates READ for the team and is a precondition for WRITE; the actual write
+    // permission is still ownsCollection (own workspace) or admin, below.
     function knownMemberCollection(c) {
-      return c in [
-        'boss_tasks','boss_links','boss_notes','boss_settings',
-        'best_tasks','best_links','best_notes','best_dayoffs',
-        'dew_tasks','dew_links','dew_notes','dew_events','dew_sick','dew_lieu','dew_assets','dew_settings','dew_templates',
-        'o_tasks','o_links','o_notes','o_events','o_sick','o_lieu','o_assets','o_settings','o_templates',
-        'junior_tasks','junior_links','junior_notes','junior_events','junior_sick','junior_lieu','junior_settings','junior_templates'
-      ];
+      return c.matches('^(boss|best|dew|o|junior)_(tasks|links|notes|events|sick|lieu|assets|settings|templates|dayoffs)$');
     }
 
     // ---------------- access control list ----------------
@@ -83,8 +83,8 @@ service cloud.firestore {
     }
 
     // ---------------- public request queue ----------------
-    // Created ONLY by the server (Admin SDK). Team members may read, update
-    // a fixed set of workflow fields, and delete. Requester identity and the
+    // Created ONLY by the server (Admin SDK). Team members may read, update a
+    // fixed set of workflow fields, and delete. Requester identity and the
     // original submission content are immutable from the client.
     match /requests/{id} {
       allow read:   if authorized();
@@ -120,12 +120,11 @@ service cloud.firestore {
     }
 
     // ---------------- shared team chat ----------------
-    // authorEmail must match the signed-in user and can never be changed,
-    // so nobody can post or edit messages as someone else.
-    // A message is either plain text, or an image/GIF whose URL is stored on the
-    // message (text may then be empty). Only the specific optional keys below are
-    // allowed, every URL must be a string, and authorEmail is still pinned to the
-    // signed-in user, so this stays least-privilege.
+    // authorEmail must match the signed-in user and can never be changed, so
+    // nobody can post or edit messages as someone else. A message is either
+    // plain text, or an image/GIF whose URL is stored on the message (text may
+    // then be empty). Only the specific optional keys below are allowed, every
+    // URL must be a string, so this stays least-privilege.
     match /chat_messages/{id} {
       allow read: if authorized();
       allow create: if authorized()
@@ -175,8 +174,8 @@ service cloud.firestore {
     }
 
     // ---------------- activity / audit log ----------------
-    // Append-only for everyone INCLUDING the admin: history cannot be
-    // silently rewritten. The admin may delete an incorrect entry.
+    // Append-only for everyone INCLUDING the admin: history cannot be silently
+    // rewritten. The admin may delete an incorrect entry.
     match /activity/{id} {
       allow read: if authorized();
       allow create: if authorized()
@@ -187,7 +186,8 @@ service cloud.firestore {
 
     // ---------------- department-wide settings ----------------
     // Team names, petty cash meta, announcements, resources, brand library,
-    // lieu configuration. Everyone reads, only the admin writes.
+    // lieu configuration, the shared chat photo uploader. Everyone reads, only
+    // the admin writes.
     match /dept_settings/{doc} {
       allow read:  if authorized();
       allow write: if isAdmin();
@@ -201,8 +201,6 @@ service cloud.firestore {
     match /lieu_records/{id} { allow read: if authorized(); allow write: if isAdmin(); }
     match /sick_leave/{id}   { allow read: if authorized(); allow write: if isAdmin(); }
 
-    // School events: shared store used by both Boss and the Junior Events
-    // Coordinator (the app maps the junior workspace onto this collection).
     // ONE shared Event Hub for the whole team: every authorised member may add
     // and edit events, because an event belongs to the department, not a person.
     match /school_events/{id} {
@@ -210,16 +208,16 @@ service cloud.firestore {
       allow write: if authorized();
     }
 
-    // SOP task templates: shared; maintained by Boss and the Junior
-    // Events Coordinator.
+    // SOP task templates: shared; maintained by Boss and the Junior Events
+    // Coordinator.
     match /sop_templates/{doc} {
       allow read:  if authorized();
       allow write: if isAdmin() || roleVal() == 'junior';
     }
 
     // ---------------- per-member leave records (explicit) ----------------
-    // A tab owner always manages their own leave in lieu and sick leave.
-    // Stated explicitly so this can never depend on the whitelist below.
+    // A tab owner always manages their own leave in lieu and sick leave. Stated
+    // explicitly so this can never depend on the pattern rule below.
     match /dew_lieu/{id}    { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'designer'; }
     match /dew_sick/{id}    { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'designer'; }
     match /o_lieu/{id}      { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'media'; }
@@ -228,10 +226,10 @@ service cloud.firestore {
     match /junior_sick/{id} { allow read: if authorized(); allow write: if isAdmin() || roleVal() == 'junior'; }
 
     // ---------------- per-member workspace collections ----------------
-    // Strict whitelist: unknown collection names are denied even for the
-    // admin, so a typo or an abandoned experiment cannot open a back door.
     // READ:  any authorised team member (Team Overview, workload, availability).
-    // WRITE: the workspace owner, or the admin.
+    // WRITE: the workspace owner (ownsCollection), or the admin.
+    // The pattern in knownMemberCollection covers every member collection, so a
+    // member can always write their own _settings, _templates, _tasks, etc.
     match /{collection}/{id} {
       allow read:  if authorized() && knownMemberCollection(collection);
       allow write: if knownMemberCollection(collection)
