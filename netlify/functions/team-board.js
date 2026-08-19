@@ -15,6 +15,11 @@ const ROLE = {
   junior: 'Junior Events Coordinator'
 };
 const DEFAULT_NAME = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
+/* Official HeadStart logo (same one the public Request Centre uses). Shown on a
+   white tile so it reads on the dark header; falls back to a yellow HS monogram
+   if it ever fails to load. */
+const LOGO_URL = 'https://headstartphuket.com/assets/top/headstart-international-school-phuket-74639d3b8a4f5593024de37e9eb3cad3006abe9f8a2b1085869d45297ee665db.png';
+const LOGO_TAG = '<img src="' + LOGO_URL + '" alt="HeadStart International School, Phuket" onerror="var p=this.parentNode;p.classList.add(\'fb\');p.textContent=\'HS\';">';
 const COLOR = {
   boss:   ['#2b5488', '#12365a'],
   dew:    ['#ef9445', '#dd7a1c'],
@@ -126,7 +131,7 @@ function htmlPage(statusCode, title, inner, extraScript) {
 }
 
 const STYLE = '<style>'
-  + ':root{--ink:#16202e;--muted:#7a8699;--line:#e7ebf1;}'
+  + ':root{--ink:#16202e;--muted:#7a8699;--line:#e7ebf1;--brand:#f0b323;--brand2:#d9971a;}'
   + '*{box-sizing:border-box;} html{scroll-behavior:smooth;}'
   + 'body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);'
   + 'background:radial-gradient(1200px 600px at 12% -8%,#e9f0fb 0%,rgba(233,240,251,0) 55%),radial-gradient(1000px 560px at 100% 0%,#eae7fb 0%,rgba(234,231,251,0) 50%),#f4f6fb;min-height:100vh;}'
@@ -134,17 +139,24 @@ const STYLE = '<style>'
   // hero
   + '.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#22406a,#0a2444 60%,#0a1e3c);color:#fff;border-radius:22px;padding:26px 26px 22px;box-shadow:0 24px 50px -24px rgba(12,26,52,.7);animation:heroIn .7s cubic-bezier(.2,.7,.2,1) both;}'
   + '.hero:before{content:"";position:absolute;inset:-40% -10% auto auto;width:520px;height:520px;background:radial-gradient(circle at 30% 30%,rgba(120,170,255,.35),rgba(120,170,255,0) 60%);filter:blur(6px);animation:float 12s ease-in-out infinite;}'
-  + '.hero:after{content:"";position:absolute;inset:auto auto -60% -10%;width:460px;height:460px;background:radial-gradient(circle at 50% 50%,rgba(170,130,255,.28),rgba(170,130,255,0) 60%);animation:float 15s ease-in-out infinite reverse;}'
+  + '.hero:after{content:"";position:absolute;inset:auto auto -60% -12%;width:470px;height:470px;background:radial-gradient(circle at 50% 50%,rgba(240,179,35,.26),rgba(240,179,35,0) 62%);animation:float 15s ease-in-out infinite reverse;}'
+  + '.hero-accent{position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--brand),#ffd873 45%,var(--brand));z-index:2;}'
   + '.hero-in{position:relative;z-index:1;}'
   + '.brand{display:flex;align-items:center;gap:11px;}'
-  + '.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#8fb4ff,#5c7cfa);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;box-shadow:0 6px 16px -6px rgba(92,124,250,.8);}'
-  + '.hero h1{margin:0;font-size:21px;letter-spacing:-.3px;} .hero .sub{margin:3px 0 0;font-size:12.5px;color:#c3d6f2;}'
+  + '.logo{width:50px;height:50px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;padding:7px;box-shadow:0 10px 20px -8px rgba(0,0,0,.55);overflow:hidden;flex:0 0 auto;}'
+  + '.logo img{max-width:100%;max-height:100%;object-fit:contain;display:block;}'
+  + '.logo.fb{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#0a2444;font-weight:900;font-size:18px;padding:0;}'
+  + '.hero h1{margin:0;font-size:21px;letter-spacing:-.3px;} .hero h1 .mk{color:var(--brand);font-weight:900;}'
+  + '.titleaccent{width:48px;height:3px;border-radius:99px;margin:8px 0 0;background:linear-gradient(90deg,var(--brand),#ffd873);}'
+  + '.hero .sub{margin:8px 0 0;font-size:12.5px;color:#c3d6f2;}'
   + '.ro{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);padding:4px 11px;border-radius:99px;font-weight:800;font-size:11.5px;margin-left:auto;}'
   + '.ro .dot{width:8px;height:8px;border-radius:50%;background:#5ee08a;box-shadow:0 0 0 0 rgba(94,224,138,.6);animation:pulse 2.2s infinite;}'
   + '.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}'
   + '.stat{flex:1;min-width:120px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;backdrop-filter:blur(6px);}'
   + '.stat .n{font-size:26px;font-weight:900;letter-spacing:-.5px;line-height:1;} .stat .l{font-size:11px;color:#bcd2ec;margin-top:4px;font-weight:600;}'
-  + '.stat.warn .n{color:#ffd27a;} .stat.bad .n{color:#ff9d9d;}'
+  + '.stat.warn .n{color:var(--brand);} .stat.bad .n{color:#ff9d9d;}'
+  + '.stat.warn{border-color:rgba(240,179,35,.35);} .stat.warn:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(180deg,var(--brand),var(--brand2));border-radius:14px 0 0 14px;}'
+  + '.stat{position:relative;overflow:hidden;}'
   + '.updated{display:flex;justify-content:center;gap:8px;font-size:11.5px;color:var(--muted);margin:16px 0 2px;}'
   // grid + cards
   + '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:8px;}'
@@ -206,7 +218,7 @@ exports.handler = async (event) => {
   const good = share && share.enabled !== false && share.token && token && token === share.token;
   if (!good) {
     return htmlPage(403, 'Link not valid',
-      '<div class="wrap"><div class="hero" style="animation:none;"><div class="hero-in"><div class="brand"><div class="logo">H</div><div><h1>This link is not available</h1><p class="sub">The link is incorrect or has been turned off. Please ask the MARCOM team for a current link.</p></div></div></div></div></div>');
+      '<div class="wrap"><div class="hero" style="animation:none;"><div class="hero-accent"></div><div class="hero-in"><div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><h1>This link is not available</h1><p class="sub">The link is incorrect or has been turned off. Please ask the MARCOM team for a current link.</p></div></div></div></div></div>');
   }
 
   let names = Object.assign({}, DEFAULT_NAME);
@@ -247,8 +259,8 @@ exports.handler = async (event) => {
   const now = new Date();
   const when = now.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const inner = '<div class="wrap">'
-    + '<div class="hero"><div class="hero-in">'
-    + '<div class="brand"><div class="logo">H</div><div><h1>HeadStart MARCOM &mdash; Team Board</h1><p class="sub">A live look at what everyone is working on</p></div>'
+    + '<div class="hero"><div class="hero-accent"></div><div class="hero-in">'
+    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><h1>HeadStart <span class="mk">MARCOM</span> &mdash; Team Board</h1><div class="titleaccent"></div><p class="sub">A live look at what everyone is working on</p></div>'
     + '<span class="ro"><span class="dot"></span> Read only</span></div>'
     + '<div class="stats">'
     + '<div class="stat"><div class="n" data-count="' + totalActive + '">0</div><div class="l">Active tasks</div></div>'
