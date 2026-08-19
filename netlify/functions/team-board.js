@@ -129,9 +129,11 @@ function htmlPage(statusCode, title, inner, extraScript) {
 }
 
 const STYLE = '<style>'
+  + "@font-face{font-family:'Sarabun';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/sarabun/v17/DtVjJx26TKEr37c9WBI.ttf) format('truetype');unicode-range:U+0E00-0E7F,U+200C-200D,U+25CC;}"
+  + "@font-face{font-family:'Sarabun';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/sarabun/v17/DtVmJx26TKEr37c9YK5sulw.ttf) format('truetype');unicode-range:U+0E00-0E7F,U+200C-200D,U+25CC;}"
   + ':root{--ink:#16202e;--muted:#7a8699;--line:#e7ebf1;--brand:#f0b323;--brand2:#d9971a;}'
   + '*{box-sizing:border-box;} html{scroll-behavior:smooth;}'
-  + 'body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);'
+  + 'body{margin:0;font-family:Sarabun,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);'
   + 'background:radial-gradient(1200px 600px at 12% -8%,#e9f0fb 0%,rgba(233,240,251,0) 55%),radial-gradient(1000px 560px at 100% 0%,#eae7fb 0%,rgba(234,231,251,0) 50%),#f4f6fb;min-height:100vh;}'
   + '.wrap{max-width:1140px;margin:0 auto;padding:26px 16px 70px;}'
   // hero
