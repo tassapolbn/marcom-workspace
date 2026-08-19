@@ -4,3 +4,9 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# Pretty URL for the read-only team board shared with the Director.
+[[redirects]]
+  from = "/team-board"
+  to = "/.netlify/functions/team-board"
+  status = 200
