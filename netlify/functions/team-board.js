@@ -15,11 +15,9 @@ const ROLE = {
   junior: 'Junior Events Coordinator'
 };
 const DEFAULT_NAME = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
-/* Official HeadStart logo (same one the public Request Centre uses). Shown on a
-   white tile so it reads on the dark header; falls back to a yellow HS monogram
-   if it ever fails to load. */
-const LOGO_URL = 'https://headstartphuket.com/assets/top/headstart-international-school-phuket-74639d3b8a4f5593024de37e9eb3cad3006abe9f8a2b1085869d45297ee665db.png';
-const LOGO_TAG = '<img src="' + LOGO_URL + '" alt="HeadStart International School, Phuket" onerror="var p=this.parentNode;p.classList.add(\'fb\');p.textContent=\'HS\';">';
+/* A crisp graduation-cap mark on a white tile. Inline SVG, so it always renders
+   the same and can never break or load oddly like a stretched logo file. */
+const LOGO_TAG = '<svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="#12365a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 9l-10 -4l-10 4l10 4l10 -4v6"/><path d="M6 10.6v5.4a6 3 0 0 0 12 0v-5.4"/></svg>';
 const COLOR = {
   boss:   ['#2b5488', '#12365a'],
   dew:    ['#ef9445', '#dd7a1c'],
