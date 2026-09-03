@@ -18,6 +18,7 @@ const DEFAULT_NAME = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
 /* A crisp graduation-cap mark on a white tile. Inline SVG, so it always renders
    the same and can never break or load oddly like a stretched logo file. */
 const LOGO_TAG = '<svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="#12365a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 9l-10 -4l-10 4l10 4l10 -4v6"/><path d="M6 10.6v5.4a6 3 0 0 0 12 0v-5.4"/></svg>';
+const PEOPLE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6"/><path d="M20.5 20c0-2.4-1.5-4.2-3.7-4.8"/></svg>';
 const COLOR = {
   boss:   ['#2b5488', '#12365a'],
   dew:    ['#ef9445', '#dd7a1c'],
@@ -50,10 +51,12 @@ function daysUntil(d) {
   return Math.round((t - now) / 86400000);
 }
 function isActive(t) { return !DONE[(t && t.status) || 'pending']; }
-function assignedTo(t, ws) {
-  if (Array.isArray(t.assignees) && t.assignees.length) return t.assignees.indexOf(ws) >= 0;
-  return (t.owner || '') === ws;
+function taskAssignees(t) {
+  if (Array.isArray(t.assignees) && t.assignees.length) return t.assignees.filter(Boolean);
+  return t.owner ? [t.owner] : [];
 }
+function isSharedMany(t) { return taskAssignees(t).length >= 2; }
+function assignedTo(t, ws) { return taskAssignees(t).indexOf(ws) >= 0; }
 
 /* Only work-related, non-personal fields ever reach the page. */
 function detailOf(t, whoName, colors) {
@@ -88,7 +91,7 @@ function detailOf(t, whoName, colors) {
   return d;
 }
 
-function taskRow(t, id) {
+function taskRow(t, id, whoLabel) {
   const topic = esc(t.topic || t.title || 'Untitled');
   const du = daysUntil(t.dueDate);
   const od = du !== null && du < 0;
@@ -106,9 +109,10 @@ function taskRow(t, id) {
     : (t.priority === 'low') ? '<span class="pill pri-low">Low</span>' : '';
   const evName = (t.eventLabel || t.eventName || '').trim();
   const ev = evName ? '<span class="pill ev">' + esc(evName) + '</span>' : '';
+  const who = whoLabel ? '<span class="pill whopill"><i class="dot2"></i>' + esc(whoLabel) + '</span>' : '';
   return '<button type="button" class="t' + cls + '" onclick="showDetail(\'' + id + '\')">'
     + '<span class="t-top">' + topic + '<i class="chev">\u203a</i></span>'
-    + '<span class="meta2">' + due + stPill + pr + ev + '</span></button>';
+    + '<span class="meta2">' + due + stPill + pr + ev + who + '</span></button>';
 }
 
 function htmlPage(statusCode, title, inner, extraScript) {
@@ -155,7 +159,10 @@ const STYLE = '<style>'
   + '.stat.warn .n{color:var(--brand);} .stat.bad .n{color:#ff9d9d;}'
   + '.stat.warn{border-color:rgba(240,179,35,.35);} .stat.warn:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(180deg,var(--brand),var(--brand2));border-radius:14px 0 0 14px;}'
   + '.stat{position:relative;overflow:hidden;}'
-  + '.updated{display:flex;justify-content:center;gap:8px;font-size:11.5px;color:var(--muted);margin:16px 0 2px;}'
+  + '.updated{display:flex;justify-content:center;align-items:center;gap:10px;font-size:11.5px;color:var(--muted);margin:16px 0 2px;}'
+  + '.refreshbtn{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);color:var(--ink);font-family:inherit;font-size:12px;font-weight:700;padding:6px 13px;border-radius:99px;cursor:pointer;transition:background .12s,box-shadow .12s,transform .1s;}'
+  + '.refreshbtn:hover{background:#f6f8fc;box-shadow:0 6px 14px -8px rgba(16,24,40,.45);} .refreshbtn:active{transform:scale(.97);} .refreshbtn svg{opacity:.7;}'
+  + '.whopill{background:#ece9fb;color:#5b21b6;display:inline-flex;align-items:center;gap:5px;} .whopill .dot2{width:6px;height:6px;border-radius:50%;background:#7c3aed;display:inline-block;}'
   // grid + cards
   + '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:8px;}'
   + '.card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px -22px rgba(16,24,40,.5);opacity:0;transform:translateY(16px);animation:fadeUp .55s cubic-bezier(.2,.7,.2,1) forwards;transition:transform .18s ease,box-shadow .18s ease;}'
@@ -230,20 +237,43 @@ exports.handler = async (event) => {
   const TASKS = {};
   let idc = 0;
   let totalActive = 0, overdue = 0, dueWeek = 0;
+  function bump(t) { const du = daysUntil(t.dueDate); totalActive++; if (du !== null && du < 0) overdue++; else if (du !== null && du <= 7) dueWeek++; }
+  const nameOf = (w) => names[w] || DEFAULT_NAME[w] || w;
   const cards = [];
+
+  // A task shared with two or more people appears ONCE here, not repeated under
+  // every member. It shows who it is shared with.
+  const shared = eventTasks.filter(t => isActive(t) && isSharedMany(t))
+    .sort((a, b) => String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
+  if (shared.length) {
+    const rows = shared.map((t, i) => {
+      const id = 't' + (idc++);
+      const whoLabel = taskAssignees(t).map(nameOf).join(', ');
+      TASKS[id] = detailOf(t, whoLabel, ['#5b5bd6', '#3f3aa8']);
+      bump(t);
+      return taskRow(t, id, whoLabel).replace('<button', '<button style="animation-delay:' + (60 + i * 40) + 'ms"');
+    }).join('');
+    cards.push('<div class="card shared" style="--c:#5b5bd6;--c2:#3f3aa8;animation-delay:60ms">'
+      + '<div class="bar"></div><div class="hd"><div class="av">' + PEOPLE_SVG + '</div>'
+      + '<div><div class="nm">Shared across the team</div><div class="rl">Assigned to more than one person</div></div>'
+      + '<div class="cnt">' + shared.length + '</div></div>'
+      + '<div class="list">' + rows + '</div></div>');
+  }
+
   for (const ws of ORDER) {
     let own = [];
     try { const os = await db.collection(ws + '_tasks').get(); own = os.docs.map(d => d.data() || {}); }
     catch (e) { console.error(e); }
-    const mine = own.filter(isActive).concat(eventTasks.filter(t => isActive(t) && assignedTo(t, ws)));
+    // own tasks + event tasks assigned to just this person (multi-shared ones are in the card above)
+    const mine = own.filter(isActive)
+      .concat(eventTasks.filter(t => isActive(t) && assignedTo(t, ws) && !isSharedMany(t)));
     mine.sort((a, b) => String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
-    const nm = names[ws] || DEFAULT_NAME[ws] || ws;
+    const nm = nameOf(ws);
     const colors = COLOR[ws] || COLOR.boss;
     const rows = mine.map((t, i) => {
       const id = 't' + (idc++);
       TASKS[id] = detailOf(t, nm, colors);
-      const du = daysUntil(t.dueDate);
-      totalActive++; if (du !== null && du < 0) overdue++; else if (du !== null && du <= 7) dueWeek++;
+      bump(t);
       return taskRow(t, id).replace('<button', '<button style="animation-delay:' + (80 + i * 45) + 'ms"');
     }).join('');
     const initial = esc((nm || '?').trim().charAt(0).toUpperCase() || '?');
@@ -265,7 +295,7 @@ exports.handler = async (event) => {
     + '<div class="stat warn"><div class="n" data-count="' + dueWeek + '">0</div><div class="l">Due within 7 days</div></div>'
     + '<div class="stat bad"><div class="n" data-count="' + overdue + '">0</div><div class="l">Overdue</div></div>'
     + '</div></div></div>'
-    + '<div class="updated"><span>Updated ' + esc(when) + '</span><span>&middot;</span><span>Refresh for the latest</span></div>'
+    + '<div class="updated"><span>Updated ' + esc(when) + '</span><button class="refreshbtn" type="button" onclick="location.reload()" aria-label="Refresh"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v5h-5"/></svg> Refresh</button></div>'
     + '<div class="grid">' + cards.join('') + '</div>'
     + '<div class="foot">Private, read-only view shared by the HeadStart MARCOM team.<br>Tap any task to see its detail. Only ongoing tasks are shown, and no personal information is included.</div>'
     + '</div>'

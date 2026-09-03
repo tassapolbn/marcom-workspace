@@ -1151,6 +1151,10 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <div id="m-design-section" style="display:none;">
         <div class="role-divider"><i class="ti ti-palette"></i> Design Workflow</div>
         <div class="form-row">
+          <div class="form-group"><label class="form-label">Deadline Start (24h) <span style="color:var(--muted);font-weight:400;">for the Due Date above</span></label><span class="t24-mount" data-id="m-dz-start"></span></div>
+          <div class="form-group"><label class="form-label">Deadline End (24h) <span style="color:var(--muted);font-weight:400;">optional</span></label><span class="t24-mount" data-id="m-dz-end"></span></div>
+        </div>
+        <div class="form-row">
           <div class="form-group"><label class="form-label">Design Type</label><input type="text" class="form-input" id="m-dz-type" placeholder="e.g. Poster, Social, Banner" /></div>
           <div class="form-group"><label class="form-label">Requestor</label><input type="text" class="form-input" id="m-dz-requestor" placeholder="e.g. Khun Miki" /></div>
         </div>
@@ -2427,18 +2431,7 @@ function autoGrowDesc(){
 function populateEventSelect(who,selId){
   const grp=document.getElementById('m-event-group'),sel=document.getElementById('m-event');
   if(!grp||!sel)return;
-  if(who!=='boss'&&who!=='junior'){
-    /* Dew / O: no picker, but show the tag the task carries so it is visible. */
-    var _t=modalState.editId?(tasksOf(who)||[]).find(function(x){return x.id===modalState.editId;}):null;
-    var _lbl=_t&&(_t.eventLabel||_t.eventName);
-    sel.innerHTML='<option value="">None (General Task)</option>';
-    if(_lbl){
-      grp.style.display='block';
-      sel.innerHTML='<option value="" selected>'+escHtml(_lbl)+'</option>';
-      sel.disabled=true;
-    } else { grp.style.display='none'; sel.disabled=false; }
-    return;
-  }
+  /* Every member can tag a task to a shared event now, not just Boss and Eye. */
   sel.disabled=false;
   const evs=(typeof evSorted==='function')?evSorted(who):eventsOf(who);
   let h='<option value="">None (General Task)</option>';
@@ -2458,7 +2451,7 @@ function openAdd(who){
   document.getElementById('m-md-mailsent').checked=false;
   document.getElementById('m-dz-revisions').value='0';
   document.getElementById('m-dz-status').value='Brief Received';
-  try{t24Set('m-md-start','');t24Set('m-md-end','');}catch(e){}
+  try{t24Set('m-md-start','');t24Set('m-md-end','');t24Set('m-dz-start','');t24Set('m-dz-end','');}catch(e){}
   try{evtFill(null,who);}catch(e){}
   renderModalLinks();
   styleModal(who);
@@ -2491,6 +2484,8 @@ function openEdit(who,id){
   document.getElementById('m-md-taken').value=task.mdTaken||'';
   t24Set('m-md-start',task.mdStart||'');
   t24Set('m-md-end',task.mdEnd||'');
+  t24Set('m-dz-start',task.dzStart||'');
+  t24Set('m-dz-end',task.dzEnd||'');
   document.getElementById('m-md-location').value=task.mdLocation||'';
   document.getElementById('m-md-file').value=task.mdFile||'';
   document.getElementById('m-md-cat').value=task.mdCategory||'';
@@ -2582,17 +2577,17 @@ function saveTask(){
     data.dzType=gv('m-dz-type');data.dzRequestor=gv('m-dz-requestor');data.dzBrand=gv('m-dz-brand');
     data.dzFile=gv('m-dz-file');data.dzStatus=document.getElementById('m-dz-status').value;
     data.dzRevisions=parseInt(document.getElementById('m-dz-revisions').value||'0',10)||0;
+    data.dzStart=gv('m-dz-start');data.dzEnd=gv('m-dz-end');
   }
   const evSel=document.getElementById('m-event');
   const _prev=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
-  if(evSel&&(modalState.who==='boss'||modalState.who==='junior')){
+  if(evSel){
     data.eventId=evSel.value||'';
     const evObj=eventsOf(modalState.who).find(e=>e.id===data.eventId);
     /* Keep an inherited label when the picker has no match, so an event tag
        is never lost when a task is edited after being assigned onward. */
     data.eventName=evObj?(evObj.name||''):(data.eventId?'':((_prev&&_prev.eventName)||''));
   } else if(_prev){
-    /* Dew / O have no event picker: preserve whatever tag the task arrived with. */
     if(_prev.eventId!==undefined)data.eventId=_prev.eventId||'';
     if(_prev.eventName!==undefined)data.eventName=_prev.eventName||'';
   }
@@ -2693,6 +2688,8 @@ function duplicateTask(who,id){
   document.getElementById('m-md-taken').value=task.mdTaken||'';
   t24Set('m-md-start',task.mdStart||'');
   t24Set('m-md-end',task.mdEnd||'');
+  t24Set('m-dz-start',task.dzStart||'');
+  t24Set('m-dz-end',task.dzEnd||'');
   document.getElementById('m-md-location').value=task.mdLocation||'';
   document.getElementById('m-md-file').value=task.mdFile||'';
   document.getElementById('m-md-cat').value=task.mdCategory||'';
@@ -4466,6 +4463,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function roleOf(w){ return (MEM[w]&&MEM[w].role)||''; }
   function iconOf(w){ return (MEM[w]&&MEM[w].icon)||'ti-user'; }
   function tOf(w){ try{ return ovTasksOf(w)||[]; }catch(e){ return []; } }
+  /* Per-member workload = what is actually on that member's board (a shared card
+     counts for every person it is assigned to). tOf above stays de-duplicated
+     for team-wide totals so one shared card is not counted twice there. */
+  function tReal(w){ try{ return tasksOf(w)||[]; }catch(e){ return []; } }
   /* Events are one shared team hub. Attribute the whole (de-duplicated) set to a
      single slot so team roll-ups show each event once, never once per member. */
   function eOf(w){ if(w!=='boss')return []; try{ return teamEvents()||[]; }catch(e){ return []; } }
@@ -4609,7 +4610,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function renderAvailability(){
     var el=document.getElementById('ov-availability'); if(!el)return;
     el.innerHTML=MORDER.map(function(w){
-      var act=tOf(w).filter(isActive).length;
+      var act=tReal(w).filter(isActive).length;
       var st=statusOf(w);
       return '<div class="ov-mem" onclick="ovGoto(\''+w+'\')">'
         +'<div class="ov-mem-top"><div class="ov-mem-av"><i class="ti '+iconOf(w)+'"></i></div>'
@@ -4729,7 +4730,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   /* ---------- workload heatmap ---------- */
   function renderHeatmap(){
     var el=document.getElementById('ov-heatmap'); if(!el)return;
-    var counts=MORDER.map(function(w){ return {w:w,n:tOf(w).filter(isActive).length}; });
+    var counts=MORDER.map(function(w){ return {w:w,n:tReal(w).filter(isActive).length}; });
     var max=1; counts.forEach(function(c){ if(c.n>max)max=c.n; });
     el.innerHTML=counts.map(function(c){
       var lvl=c.n<=5?'low':(c.n<=12?'med':'high');
@@ -11258,7 +11259,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   function payload(t,who){
     if(!t)return null;
     if(window.taskCalendarPayload)return taskCalendarPayload(t,who);
-    return {title:t.topic||t.title||'MARCOM task',date:t.mdTaken||t.dueDate||'',startTime:t.mdStart||'',endTime:t.mdEnd||'',location:t.mdLocation||'',notes:t.description||''};
+    return {title:t.topic||t.title||'MARCOM task',date:t.mdTaken||t.dueDate||'',startTime:t.mdStart||t.dzStart||'',endTime:t.mdEnd||t.dzEnd||'',location:t.mdLocation||'',notes:t.description||''};
   }
   /* Opens Google Calendar pre-filled, then remembers that it was added. */
   window.uxpTaskCalendar=function(who,id){
@@ -11327,7 +11328,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   function payloadFor(task,taskId,who){
     var o=(window.taskCalendarPayload?taskCalendarPayload(task,who):null)||{
       title:task.topic||task.title||'MARCOM task',date:task.mdTaken||task.dueDate||'',
-      startTime:task.mdStart||'',endTime:task.mdEnd||'',location:task.mdLocation||'',notes:task.description||''
+      startTime:task.mdStart||task.dzStart||'',endTime:task.mdEnd||task.dzEnd||'',location:task.mdLocation||'',notes:task.description||''
     };
     return {action:'create',taskId:taskId,title:o.title,date:o.date,startTime:o.startTime,endTime:o.endTime,location:o.location,notes:o.notes};
   }
@@ -11611,8 +11612,8 @@ html.dark .icon-btn.cal-on{color:#5fcf85;}
     var t=task;
     /* A shoot uses its own date and time; everything else uses the due date. */
     var date=t.mdTaken||t.dueDate||'';
-    var start=t.mdStart||'';
-    var end=t.mdEnd||'';
+    var start=t.mdStart||t.dzStart||'';
+    var end=t.mdEnd||t.dzEnd||'';
     var loc=t.mdLocation||'';
     var _asg=(typeof taskAssignees==='function')?taskAssignees(t):(t.owner?[t.owner]:[]);
     var assignee=_asg.length?_asg.map(function(w){return nm(w);}).join(', '):nm(who||'');
