@@ -920,7 +920,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="bs-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>
           <div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="bs-done">0</div><div class="stat-lbl">Done</div></div></div>
         </div>
-        <div style="margin-bottom:0.9rem;"><button class="btn btn-navy btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
+        <div style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         <div class="filter-tabs">
           <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
@@ -7868,7 +7868,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     }catch(e){return [];}
   }
   function nmW(m){try{return tabLabel(m)||m;}catch(e){return m;}}
-  function accBtn(w){return w==='boss'?'btn-navy':'btn-accent';}
+  function accBtn(w){return 'btn-accent';}
   function fdt(d){try{return fmtDate(d);}catch(e){return d||'';}}
   function dU(d){try{return daysUntil(d);}catch(e){return null;}}
   function saveField(w,id,field,arr){
@@ -12037,6 +12037,277 @@ html.dark *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border:2px
 html.dark *::-webkit-scrollbar-thumb:hover{background:rgba(240,179,35,.65);background-clip:padding-box;}
 html.dark ::selection{background:rgba(240,179,35,.38);color:#fff;}
 </style>
+<style id="palette-2026">
+/* ============================================================
+   PALETTE 2026 — status colours, luxurious light canvas, motion
+   Hues follow the 2026 trend directions: Pantone Cloud Dancer
+   (soft white) as the light base, and the Coloro x WGSN family
+   Transformative Teal, Blue Aura, Amber Haze, Jelly Mint,
+   Future Dusk, Cherry Lacquer, Electric Fuchsia as the accents.
+   Exact values are tuned for screen contrast (AA or better).
+   ============================================================ */
+
+/* ---- 1. Status colours ---- */
+html:not(.dark){
+  --st-pending:#5a6875;--st-progress:#2563a8;--st-waiting:#8f5e0e;--st-hold:#6a55d0;
+  --st-done:#0a7052;--st-cancel:#c0334d;--st-overdue:#c0334d;--st-archived:#7d8b99;
+  --blue:#2563a8;--blue-light:#e7f0fa;
+  --amber:#8f5e0e;--amber-light:#fbf0dc;
+  --purple:#6a55d0;--purple-light:#eeeafb;
+  --green:#0a7052;--green-light:#ddf4ec;
+  --teal:#0d7f7a;--teal-light:#dbf0ef;
+  --danger:#c0334d;--danger-light:#fbe7ea;
+}
+html.dark{
+  --st-pending:#a7b8cb;--st-progress:#7cbaf0;--st-waiting:#f0b95e;--st-hold:#a495f5;
+  --st-done:#5fdcb4;--st-cancel:#f5738d;--st-overdue:#f5738d;--st-archived:#8496a8;
+  --blue:#7cbaf0;--blue-light:rgba(124,186,240,.16);
+  --amber:#f0b95e;--amber-light:rgba(240,185,94,.16);
+  --purple:#a495f5;--purple-light:rgba(164,149,245,.16);
+  --green:#5fdcb4;--green-light:rgba(95,220,180,.16);
+  --teal:#3fd0c6;--teal-light:rgba(63,208,198,.16);
+  --danger:#f5738d;--danger-light:rgba(245,115,141,.16);
+}
+html:not(.dark) .kb-col[data-status="pending"]{border-top-color:#5a6875;}
+html:not(.dark) .kb-col[data-status="in-progress"]{border-top-color:#2563a8;}
+html:not(.dark) .kb-col[data-status="waiting"]{border-top-color:#8f5e0e;}
+html:not(.dark) .kb-col[data-status="on-hold"]{border-top-color:#6a55d0;}
+html:not(.dark) .kb-col[data-status="done"]{border-top-color:#0a7052;}
+html:not(.dark) .kb-col[data-status="canceled"]{border-top-color:#c0334d;}
+html.dark .kb-col[data-status="pending"]{border-top-color:#a7b8cb;}
+html.dark .kb-col[data-status="in-progress"]{border-top-color:#7cbaf0;}
+html.dark .kb-col[data-status="waiting"]{border-top-color:#f0b95e;}
+html.dark .kb-col[data-status="on-hold"]{border-top-color:#a495f5;}
+html.dark .kb-col[data-status="done"]{border-top-color:#5fdcb4;}
+html.dark .kb-col[data-status="canceled"]{border-top-color:#f5738d;}
+/* Readable ink on the luminous dark accents (used by the Add Task bar) */
+html.dark body.theme-boss{--accent-on:#062031;}
+html.dark body.theme-best{--accent-on:#00251a;}
+html.dark body.theme-dew{--accent-on:#2a1c00;}
+html.dark body.theme-o{--accent-on:#2b0a11;}
+html.dark body.theme-junior{--accent-on:#00251a;}
+html.dark body.theme-overview{--accent-on:#0b1220;}
+
+/* ---- 2. Luxurious light canvas (Cloud Dancer base with colour drift) ---- */
+html:not(.dark) body,html:not(.dark) body.theme-overview{
+  background:
+    radial-gradient(60rem 40rem at 88% -10%, rgba(240,179,35,.17), transparent 60%),
+    radial-gradient(52rem 38rem at 2% 0%, rgba(18,164,160,.15), transparent 58%),
+    radial-gradient(48rem 36rem at 100% 66%, rgba(106,85,208,.12), transparent 60%),
+    radial-gradient(44rem 34rem at -6% 96%, rgba(198,56,155,.08), transparent 58%),
+    linear-gradient(180deg,#F7F5F1 0%,#F1EFEA 46%,#EBE9E4 100%);
+  background-attachment:fixed;}
+html:not(.dark) body::before{filter:blur(40px);opacity:.55;}
+html:not(.dark) .widget,html:not(.dark) .kb-col,html:not(.dark) .stat-box,
+html:not(.dark) .link-card,html:not(.dark) .note-card,html:not(.dark) .myday{
+  background:rgba(255,255,255,.74);
+  -webkit-backdrop-filter:blur(18px) saturate(1.25);backdrop-filter:blur(18px) saturate(1.25);
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 1px 2px rgba(24,30,45,.05),0 16px 40px -22px rgba(24,30,45,.28);}
+html:not(.dark) .kb-col{background:rgba(255,255,255,.52);}
+html:not(.dark) .task-card{background:rgba(255,255,255,.88);}
+html:not(.dark) .sub-nav{background:rgba(255,255,255,.55);}
+
+/* ---- 3. Add task bar follows the tab's own theme colour ---- */
+.btn-accent{background-color:var(--accent)!important;
+  background-image:linear-gradient(135deg,rgba(255,255,255,.20),rgba(0,0,0,.10))!important;
+  color:var(--accent-on,#fff)!important;box-shadow:0 8px 24px -8px var(--accent-shadow)!important;}
+.btn-accent:hover{filter:brightness(1.07);box-shadow:0 12px 30px -8px var(--accent-shadow)!important;}
+#panel-dew .btn-accent,#panel-o .btn-accent,#panel-junior .btn-accent,
+#panel-boss .btn-accent,#panel-best .btn-accent{
+  background-color:var(--accent)!important;color:var(--accent-on,#fff)!important;}
+.fpill.act-accent{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--accent-on,#fff)!important;}
+
+/* ---- 4. Theme colour picker ---- */
+.tcp-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2,rgba(255,255,255,.6));
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);
+  flex:0 0 auto;transition:transform .16s var(--ease),box-shadow .18s,border-color .18s;}
+.tcp-btn:hover{transform:translateY(-1px) rotate(8deg);border-color:var(--accent);color:var(--accent-ink,var(--accent));box-shadow:0 6px 16px -6px var(--accent-shadow);}
+.tcp-pop{position:absolute;z-index:60;margin-top:8px;padding:12px;border-radius:16px;background:var(--surface);
+  border:1px solid var(--border);box-shadow:var(--shadow-lg);width:232px;
+  -webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);
+  animation:tcpIn .18s var(--ease-out) both;}
+html.dark .tcp-pop{background:rgba(18,24,35,.94);}
+html:not(.dark) .tcp-pop{background:rgba(255,255,255,.96);}
+.tcp-ttl{font-size:10.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+.tcp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.tcp-sw{width:100%;aspect-ratio:1/1;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;
+  box-shadow:0 2px 8px -2px rgba(0,0,0,.35);transition:transform .14s var(--ease),box-shadow .18s;}
+.tcp-sw:hover{transform:scale(1.16);}
+.tcp-sw.on{border-color:var(--text);box-shadow:0 0 0 3px var(--border),0 4px 12px -2px rgba(0,0,0,.4);}
+.tcp-name{font-size:11px;color:var(--muted);margin-top:9px;font-weight:600;min-height:14px;}
+@keyframes tcpIn{from{opacity:0;transform:translateY(-6px) scale(.97);}to{opacity:1;transform:none;}}
+
+/* ---- 5. Smooth motion ---- */
+@keyframes auRise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes auPop{from{opacity:0;transform:translateY(14px) scale(.985);}to{opacity:1;transform:none;}}
+.tab-panel.active{animation:auRise .34s var(--ease-out) both;}
+.modal{animation:auPop .26s var(--ease-out) both;}
+.widget{animation:auRise .3s var(--ease-out) both;}
+.kb-col-body .task-card{animation:auRise .3s var(--ease-out) both;}
+.kb-col-body .task-card:nth-child(1){animation-delay:.02s}
+.kb-col-body .task-card:nth-child(2){animation-delay:.05s}
+.kb-col-body .task-card:nth-child(3){animation-delay:.08s}
+.kb-col-body .task-card:nth-child(4){animation-delay:.11s}
+.kb-col-body .task-card:nth-child(5){animation-delay:.14s}
+.kb-col-body .task-card:nth-child(6){animation-delay:.17s}
+.kb-col-body .task-card:nth-child(n+7){animation-delay:.2s}
+.stat-box{animation:auRise .32s var(--ease-out) both;}
+.stats-row .stat-box:nth-child(2){animation-delay:.06s}
+.stats-row .stat-box:nth-child(3){animation-delay:.12s}
+.stats-row .stat-box:nth-child(4){animation-delay:.18s}
+body,.btn,.fpill,.sub-tab,.task-card,.widget,.kb-col,.member-head,.btn-accent,.stat-box{
+  transition:background-color .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease),
+             box-shadow .28s var(--ease),transform .18s var(--ease);}
+.sub-tab,.fpill,.tab-btn{will-change:transform;}
+.modal-close:hover{transform:rotate(90deg);}
+.kb-col-count{transition:transform .2s var(--ease-out);}
+.kb-col:hover .kb-col-count{transform:scale(1.08);}
+</style>
+<script id="theme-picker-2026">
+/* Per-tab theme colour. Each workspace can pick its own accent from the
+   2026 palette. Saved to {ws}_settings/theme, applied live to that tab.
+   Text colours are derived so every choice stays readable in both themes. */
+(function(){
+  var PAL=[
+    {n:'Transformative Teal',c:'#12A4A0'},
+    {n:'Blue Aura',c:'#4B8FD0'},
+    {n:'Jelly Mint',c:'#12A97C'},
+    {n:'Amber Haze',c:'#C88A1E'},
+    {n:'Future Dusk',c:'#6A55D0'},
+    {n:'Electric Fuchsia',c:'#C6389B'},
+    {n:'Cherry Lacquer',c:'#B4243F'},
+    {n:'HeadStart Navy',c:'#003057'},
+    {n:'HeadStart Yellow',c:'#D99A0F'},
+    {n:'Graphite',c:'#4A5563'}
+  ];
+  var WS=['boss','best','dew','o','junior'];
+  var chosen={},ready=false;
+
+  function rgb(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
+  function hex(a){return '#'+a.map(function(v){v=Math.max(0,Math.min(255,Math.round(v)));return ('0'+v.toString(16)).slice(-2);}).join('');}
+  function lum(a){var s=a.map(function(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});return 0.2126*s[0]+0.7152*s[1]+0.0722*s[2];}
+  function ratio(a,b){var l1=lum(a),l2=lum(b);return (Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);}
+  function mix(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+  function readable(base,bg,target){/* nudge toward white or black until AA */
+    var toward=lum(rgb(bg))>0.5?[0,0,0]:[255,255,255],c=rgb(base),t=0;
+    while(ratio(c,rgb(bg))<target&&t<0.95){t+=0.05;c=mix(rgb(base),toward,t);}
+    return hex(c);}
+  function onColor(c){/* pick whichever label colour reads better on the swatch */
+    return ratio(rgb(c),[255,255,255])>=ratio(rgb(c),rgb('#0b1220'))?'#ffffff':'#0b1220';}
+
+  function apply(){
+    var css='';
+    WS.forEach(function(w){
+      var c=chosen[w];if(!c)return;
+      var a=rgb(c);
+      var ink=readable(c,'#F1EFEA',4.5);
+      var bright=readable(c,'#0f141c',4.5);
+      var tint='rgba('+a[0]+','+a[1]+','+a[2]+',.14)';
+      var sh='rgba('+a[0]+','+a[1]+','+a[2]+',.42)';
+      css+='body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onColor(c)+';}';
+      css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onColor(bright)+';}';
+      css+='html:not(.dark) body.theme-'+w+'{--accent-ondark:'+ink+';}';
+      css+='.tab-btn.a-'+w+'{color:'+bright+';border-bottom-color:'+c+';}';
+      css+='html:not(.dark) .tab-btn.a-'+w+'{color:#fff;border-bottom-color:'+bright+';}';
+    });
+    var st=document.getElementById('tc-themes');
+    if(!st){st=document.createElement('style');st.id='tc-themes';document.head.appendChild(st);}
+    st.textContent=css;
+  }
+
+  function getDb(){try{return window.db||firebase.firestore();}catch(e){return null;}}
+
+  function save(w,c){
+    var d=getDb();if(!d){chosen[w]=c;apply();return;}
+    d.collection(w+'_settings').doc('theme').set({color:c},{merge:true})
+      .catch(function(){
+        try{toast('You can only change the colour of your own tab.');}
+        catch(e){console.warn('theme save blocked for',w);}
+      });
+  }
+
+  function subscribe(){
+    var d=getDb();if(!d)return;
+    WS.forEach(function(w){
+      try{
+        d.collection(w+'_settings').doc('theme').onSnapshot(function(s){
+          var v=s&&s.exists&&s.data()?s.data().color:null;
+          if(v){chosen[w]=v;}else{delete chosen[w];}
+          apply();paintSwatches();
+        },function(){});
+      }catch(e){}
+    });
+  }
+
+  function paintSwatches(){
+    document.querySelectorAll('.tcp-pop[data-ws]').forEach(function(p){
+      var w=p.getAttribute('data-ws');
+      p.querySelectorAll('.tcp-sw').forEach(function(b){
+        b.classList.toggle('on',(chosen[w]||'').toLowerCase()===b.getAttribute('data-c').toLowerCase());
+      });
+    });
+  }
+
+  function closeAll(){document.querySelectorAll('.tcp-pop').forEach(function(p){p.remove();});}
+
+  function openPicker(w,btn){
+    var existing=document.querySelector('.tcp-pop[data-ws="'+w+'"]');
+    closeAll(); if(existing)return;
+    var pop=document.createElement('div');
+    pop.className='tcp-pop';pop.setAttribute('data-ws',w);
+    var h='<div class="tcp-ttl">Tab colour</div><div class="tcp-grid">';
+    PAL.forEach(function(p){
+      h+='<button class="tcp-sw" data-c="'+p.c+'" title="'+p.n+'" aria-label="'+p.n+'" style="background:'+p.c+'"></button>';
+    });
+    h+='</div><div class="tcp-name"></div>';
+    pop.innerHTML=h;
+    btn.parentNode.style.position=btn.parentNode.style.position||'relative';
+    btn.parentNode.appendChild(pop);
+    var nm=pop.querySelector('.tcp-name');
+    pop.querySelectorAll('.tcp-sw').forEach(function(b){
+      b.addEventListener('mouseenter',function(){nm.textContent=b.getAttribute('title');});
+      b.addEventListener('mouseleave',function(){nm.textContent='';});
+      b.addEventListener('click',function(ev){ev.stopPropagation();save(w,b.getAttribute('data-c'));closeAll();});
+    });
+    paintSwatches();
+  }
+
+  document.addEventListener('click',function(e){
+    if(!e.target.closest||!e.target.closest('.tcp-pop, .tcp-btn'))closeAll();
+  });
+
+  function inject(){
+    WS.forEach(function(w){
+      var panel=document.getElementById('panel-'+w);if(!panel)return;
+      var head=panel.querySelector('.member-head');if(!head)return;
+      if(head.querySelector('.tcp-btn'))return;
+      var b=document.createElement('button');
+      b.className='tcp-btn';b.type='button';
+      b.title='Choose this tab’s colour';b.setAttribute('aria-label','Choose this tab’s colour');
+      b.innerHTML='<i class="ti ti-palette"></i>';
+      b.addEventListener('click',function(ev){ev.stopPropagation();openPicker(w,b);});
+      var host=head.querySelector('.member-head-extra')||head;
+      host.appendChild(b);
+    });
+    paintSwatches();
+  }
+
+  function boot(){
+    if(ready)return;ready=true;
+    subscribe();inject();apply();
+    var n=0,iv=setInterval(function(){inject();if(++n>25)clearInterval(iv);},700);
+  }
+  function start(){
+    try{
+      if(window.firebase&&firebase.auth){
+        firebase.auth().onAuthStateChanged(function(u){if(u)boot();});
+      }else{boot();}
+    }catch(e){boot();}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
 </body>
 
 </html>
