@@ -869,8 +869,8 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     </div>
     <div id="sal-badge"></div>
   </div>
-  <nav class="tab-nav">
-    <button class="tab-btn a-boss" onclick="switchTab('boss')" id="tab-boss"><i class="ti ti-user"></i>Boss</button>
+  <nav class="tab-nav" role="tablist" aria-label="Workspaces">
+    <button class="tab-btn a-boss a-active" role="tab" aria-selected="true" aria-controls="panel-boss" onclick="switchTab('boss')" id="tab-boss"><i class="ti ti-user"></i>Boss</button>
   </nav>
  </div>
 </div>
@@ -2097,13 +2097,40 @@ initSalary();
 
 // TABS
 function switchTab(t){
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('a-boss','a-best','a-active'));
-  const panel=document.getElementById('panel-'+t);if(panel)panel.classList.add('active');
-  const tab=document.getElementById('tab-'+t);if(tab)tab.classList.add(t==='boss'?'a-boss':'a-active');
-  document.body.classList.remove('theme-boss','theme-best','theme-dew','theme-o','theme-junior');
+  const panel=document.getElementById('panel-'+t),tab=document.getElementById('tab-'+t);
+  if(!panel||!tab)return;
+  document.querySelectorAll('.tab-panel').forEach(p=>{
+    p.classList.toggle('active',p===panel);
+    p.setAttribute('role','tabpanel');
+    p.setAttribute('aria-labelledby',p.id.replace('panel-','tab-'));
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    const selected=b===tab;
+    b.classList.toggle('a-active',selected);
+    b.classList.toggle('a-boss',selected&&t==='boss');
+    b.classList.remove('a-best');
+    b.setAttribute('role','tab');
+    b.setAttribute('aria-selected',String(selected));
+    b.setAttribute('aria-controls',b.id.replace('tab-','panel-'));
+    b.tabIndex=selected?0:-1;
+  });
+  document.body.classList.remove('theme-overview','theme-boss','theme-best','theme-dew','theme-o','theme-junior');
   document.body.classList.add('theme-'+t);
+  const nav=tab.closest('.tab-nav');
+  if(nav&&nav.scrollWidth>nav.clientWidth){
+    const nr=nav.getBoundingClientRect(),tr=tab.getBoundingClientRect();
+    if(tr.left<nr.left||tr.right>nr.right)nav.scrollTo({left:nav.scrollLeft+tr.left-nr.left-(nav.clientWidth-tr.width)/2,behavior:motionBehavior()});
+  }
 }
+function motionBehavior(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';}
+document.addEventListener('keydown',function(e){
+  const tab=e.target.closest&&e.target.closest('.tab-nav .tab-btn');
+  if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+  const tabs=Array.from(tab.parentElement.querySelectorAll('.tab-btn')).filter(b=>!b.disabled&&b.getClientRects().length);
+  const i=tabs.indexOf(tab);if(i<0)return;
+  const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;
+  e.preventDefault();tabs[next].focus({preventScroll:true});tabs[next].click();
+});
 function switchSub(who,panel,btn){
   document.querySelectorAll('#panel-'+who+' .sub-panel').forEach(p=>p.style.display='none');
   document.getElementById(who+'-sub-'+panel).style.display='block';
@@ -2350,8 +2377,12 @@ function uiModalClose(val){
   if(r)r(val);
 }
 function __uiKeys(e){
-  if(e.key==='Escape'){e.preventDefault();uiModalClose(__uiKind==='prompt'?null:false);}
-  else if(e.key==='Enter'&&__uiKind==='confirm'){e.preventDefault();uiModalClose(true);}
+  if(e.key==='Escape'){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    uiModalClose(__uiKind==='prompt'?null:false);
+  }
+  /* Enter uses the focused button's native click behavior, including Cancel. */
   else if(e.key==='Tab'){
     var f=document.querySelectorAll('#uxp-modal .uxp-x, #uxp-modal input, #uxp-modal textarea, #uxp-modal .uxp-modal-foot button');
     if(!f.length)return;
@@ -2930,6 +2961,12 @@ function boardBusy(list){
   }catch(e){}
   return false;
 }
+function setBoardHTML(list,html){
+  /* Keep existing controls and animation state when a snapshot changes nothing. */
+  if(list.__boardHTML===html)return;
+  list.innerHTML=html;
+  list.__boardHTML=html;
+}
 function drawBoard(listId){
   __boardTimer[listId]=null;
   var a=__boardArgs[listId]; if(!a)return;
@@ -2937,12 +2974,12 @@ function drawBoard(listId){
   if(boardBusy(list)){ __boardTimer[listId]=setTimeout(function(){drawBoard(listId);},150); return; }
   var empty=a.emptyId?document.getElementById(a.emptyId):null;
   if(empty)empty.style.display='none';
-  if(!loadedOf(a.who)){list.innerHTML=skeletonHTML();return;}
+  if(!loadedOf(a.who)){setBoardHTML(list,skeletonHTML());return;}
   /* One board per tab: event-linked tasks are shown here too, tagged with
      their event, so nothing is hidden inside a second board. */
   var pool=a.tasks||[];
-  if(!pool.length&&empty){list.innerHTML='';empty.style.display='';return;}
-  list.innerHTML=kanbanHTML(pool,a.who,a.filter);
+  if(!pool.length&&empty){setBoardHTML(list,'');empty.style.display='';return;}
+  setBoardHTML(list,kanbanHTML(pool,a.who,a.filter));
 }
 function renderList(tasks,who,listId,emptyId,filter){
   if(!document.getElementById(listId))return;
@@ -10001,7 +10038,8 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
     render(); decorate();
     try{
       var mo=new MutationObserver(tick);
-      mo.observe(document.body,{childList:true,subtree:true});
+      var overview=document.getElementById('panel-overview');
+      if(overview)mo.observe(overview,{childList:true,subtree:true});
     }catch(e){}
     window.addEventListener('uxp-rccounts',render);
     setInterval(render,30000);
@@ -10232,22 +10270,29 @@ html.dark .uxp-rail-btn{color:#8fb4dc;}
   }
   function buildRail(col){
     var rail=col.querySelector(':scope>.uxp-sb-rail'); if(!rail)return;
+    var items=widgetsOf(col).map(function(w){var m=labelOf(w);return {widget:w,txt:m.txt,ic:m.ic};});
+    var previous=rail.__widgetItems;
+    if(previous&&previous.length===items.length&&rail.children.length===items.length&&items.every(function(m,i){
+      return m.widget===previous[i].widget&&m.txt===previous[i].txt&&m.ic===previous[i].ic;
+    }))return;
     rail.innerHTML='';
-    widgetsOf(col).forEach(function(w){
-      var m=labelOf(w);
+    items.forEach(function(m){
+      var w=m.widget;
       var b=document.createElement('button');
       b.type='button'; b.className='uxp-rail-btn';
       b.title=m.txt; b.setAttribute('aria-label',m.txt+' (open widget)');
       b.innerHTML='<i class="'+m.ic+'"></i>';
       b.onclick=function(){
         setCollapsed(false);
+        var behavior=motionBehavior();
         setTimeout(function(){
-          try{w.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){w.scrollIntoView();}
+          try{w.scrollIntoView({behavior:behavior,block:'center'});}catch(e){w.scrollIntoView();}
           w.classList.remove('uxp-widget-flash'); void w.offsetWidth; w.classList.add('uxp-widget-flash');
-        },300);
+        },behavior==='auto'?0:300);
       };
       rail.appendChild(b);
     });
+    rail.__widgetItems=items;
   }
   function paintToggles(){
     var v=isCollapsed();
@@ -12138,29 +12183,16 @@ html:not(.dark) .tcp-pop{background:rgba(255,255,255,.96);}
 .tcp-name{font-size:11px;color:var(--muted);margin-top:9px;font-weight:600;min-height:14px;}
 @keyframes tcpIn{from{opacity:0;transform:translateY(-6px) scale(.97);}to{opacity:1;transform:none;}}
 
-/* ---- 5. Smooth motion ---- */
+/* ---- 5. Motion belongs to navigation, not every live data refresh. ---- */
 @keyframes auRise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
 @keyframes auPop{from{opacity:0;transform:translateY(14px) scale(.985);}to{opacity:1;transform:none;}}
-.tab-panel.active{animation:auRise .34s var(--ease-out) both;}
-.modal{animation:auPop .26s var(--ease-out) both;}
-.widget{animation:auRise .3s var(--ease-out) both;}
-.kb-col-body .task-card{animation:auRise .3s var(--ease-out) both;}
-.kb-col-body .task-card:nth-child(1){animation-delay:.02s}
-.kb-col-body .task-card:nth-child(2){animation-delay:.05s}
-.kb-col-body .task-card:nth-child(3){animation-delay:.08s}
-.kb-col-body .task-card:nth-child(4){animation-delay:.11s}
-.kb-col-body .task-card:nth-child(5){animation-delay:.14s}
-.kb-col-body .task-card:nth-child(6){animation-delay:.17s}
-.kb-col-body .task-card:nth-child(n+7){animation-delay:.2s}
-.stat-box{animation:auRise .32s var(--ease-out) both;}
-.stats-row .stat-box:nth-child(2){animation-delay:.06s}
-.stats-row .stat-box:nth-child(3){animation-delay:.12s}
-.stats-row .stat-box:nth-child(4){animation-delay:.18s}
+.tab-panel.active{animation:auRise .22s var(--ease-out);}
+.modal{animation:auPop .2s var(--ease-out);}
+.widget,.side-col .widget,.task-card,.kb-col-body .task-card,.stat-box,#panel-overview .ov-stat{animation:none;}
 body,.btn,.fpill,.sub-tab,.task-card,.widget,.kb-col,.member-head,.btn-accent,.stat-box{
   transition:background-color .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease),
              box-shadow .28s var(--ease),transform .18s var(--ease);}
-.sub-tab,.fpill,.tab-btn{will-change:transform;}
-.modal-close:hover{transform:rotate(90deg);}
+.sub-tab,.fpill,.tab-btn{will-change:auto;}
 .kb-col-count{transition:transform .2s var(--ease-out);}
 .kb-col:hover .kb-col-count{transform:scale(1.08);}
 </style>
@@ -12539,11 +12571,11 @@ html:not(.dark) .tab-nav .tab-btn#tab-o.a-active,
 html:not(.dark) .tab-nav .tab-btn#tab-junior.a-active{
   color:#FFFFFF!important;border-bottom-color:#F0B323!important;background:rgba(255,255,255,.13)!important;}
 
-/* the salary strip already lives on the navy bar */
-html:not(.dark) .salary-strip{background:linear-gradient(135deg,rgba(240,179,35,.22),rgba(240,179,35,.06))!important;
+/* White salary text is only appropriate before the strip leaves the header. */
+html:not(.dark) .app-header .salary-strip{background:linear-gradient(135deg,rgba(240,179,35,.22),rgba(240,179,35,.06))!important;
   border-color:rgba(240,179,35,.34)!important;}
-html:not(.dark) .salary-info-text{color:rgba(255,255,255,.95)!important;}
-html:not(.dark) .salary-info-sub,html:not(.dark) .salary-days-label{color:rgba(255,255,255,.65)!important;}
+html:not(.dark) .app-header .salary-info-text{color:rgba(255,255,255,.95)!important;}
+html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary-days-label{color:rgba(255,255,255,.65)!important;}
 </style>
 <script id="theme-picker-2026">
 /* Per-tab theme colour. Each workspace can pick its own accent from the
@@ -12585,6 +12617,7 @@ html:not(.dark) .salary-info-sub,html:not(.dark) .salary-days-label{color:rgba(2
       var a=rgb(c);
       var ink=readable(c,'#EFF3F9',4.5);
       var bright=readable(c,'#0f141c',4.5);
+      var headerInk=readable(c,'#31566A',4.5); /* gold-tinted end of the navy header */
       var tint='rgba('+a[0]+','+a[1]+','+a[2]+',.14)';
       var sh='rgba('+a[0]+','+a[1]+','+a[2]+',.42)';
       /* label colour: auto picks the readable one, or the member's explicit choice */
@@ -12595,17 +12628,12 @@ html:not(.dark) .salary-info-sub,html:not(.dark) .salary-days-label{color:rgba(2
          and refine layers, and the sheet is placed last so it wins on order. */
       css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
-      css+='html.dark .tab-btn.a-'+w+'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
-      /* The header bar is navy in BOTH themes, so tab labels always use the
-         bright variant. The dark ink is for body content on the white page. */
-      css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
-      /* id-based too, otherwise the older #tab-* !important rules outrank us */
-      css+='html:not(.dark) .tab-nav .tab-btn#tab-'+w+',html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active),'
-          +'html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
-          +'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
-      css+='html.dark .tab-nav .tab-btn#tab-'+w+',html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active),'
-          +'html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
-          +'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
+      /* Custom colour decorates inactive labels only. Selection keeps the same
+         white label, filled background and gold indicator for every workspace. */
+      css+='html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
+          +'{color:'+headerInk+'!important;}';
+      css+='html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
+          +'{color:'+bright+'!important;}';
       /* The theme-linked bars. A dark label needs a solid light fill behind it,
          otherwise it would sit on a near-transparent tint and vanish. */
       var barsD,barsL;
@@ -12763,6 +12791,7 @@ html:not(.dark) .salary-info-sub,html:not(.dark) .salary-days-label{color:rgba(2
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
+<link rel="stylesheet" href="assets/workspace-ui.css">
 </body>
 
 </html>

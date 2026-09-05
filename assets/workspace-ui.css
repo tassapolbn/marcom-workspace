@@ -1,0 +1,82 @@
+/* Shared interaction and layout rules, after the legacy theme layers. */
+:root{--focus-ink:#1d64a5;}
+html.dark{--focus-ink:#9bd6ff;}
+html{scroll-padding-top:150px;}
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--focus-ink);outline-offset:3px;
+}
+.app-header button:focus-visible{outline-color:#f6d06a;outline-offset:-4px;}
+.tab-nav{scroll-padding-inline:8px;}
+.tab-nav .tab-btn{min-height:48px;}
+/* Selection is shared by all members, including saved custom themes. */
+html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active{
+  color:#fff!important;border-bottom-color:#f0b323!important;background:rgba(255,255,255,.13)!important;
+}
+.tab-nav .tab-btn:not(.a-active){border-bottom-color:transparent!important;}
+.icon-btn{color:var(--muted);}
+.kb-empty{opacity:1;}
+.salary-dock .sal-cell-label i{color:currentColor;-webkit-text-fill-color:currentColor;}
+.salary-dock .sal-cell-sub i{color:inherit;}
+
+/* A grid keeps the payday date, period and progress inside the card. */
+.salary-dock .salary-strip{
+  display:grid;grid-template-columns:80px minmax(0,1.25fr) minmax(0,1fr) minmax(150px,1fr) auto;
+  align-items:center;gap:20px;padding:20px 24px;width:100%;max-width:none;margin:0;
+}
+.salary-dock .salary-divider{display:none;}
+.salary-dock .sal-cell{min-width:0;}
+.salary-dock .sal-cell-value{white-space:normal;overflow-wrap:anywhere;line-height:1.4;}
+.salary-dock #sal-badge{margin:0;padding:0;}
+.two-col>*{min-width:0;}
+.stats-row{grid-template-columns:repeat(3,minmax(0,1fr));}
+.stat-box{min-width:0;}
+.sub-nav{overflow-x:auto;}
+.sub-tab{white-space:nowrap;}
+.member-head-text{min-width:0;overflow-wrap:anywhere;}
+.task-actions{flex-wrap:wrap;max-width:100%;}
+.task-meta,.task-links{min-width:0;}
+.task-link{max-width:100%;overflow-wrap:anywhere;}
+
+/* Avoid moving an entire widget when the pointer reaches one of its controls. */
+.widget:hover{transform:none;}
+.two-col{transition:none;}
+@media(hover:none){
+  .task-card:hover,.kb-col-body .task-card:hover,.widget:hover,.stat-box:hover,.btn:hover,
+  .link-card:hover,.note-card:hover,.evc-card:hover{transform:none;}
+}
+@media(max-width:1100px){
+  .salary-dock .salary-strip{grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:14px 20px;}
+  .salary-dock .sal-cell-prog{grid-column:2 / -1;}
+  .salary-dock #sal-badge{grid-column:1;grid-row:2;text-align:center;}
+  .salary-dock .salary-badge{padding:6px 9px;}
+}
+@media(max-width:600px){
+  .container{max-width:100%;padding:14px 12px 48px;}
+  .salary-dock{max-width:100%;padding:0 12px;}
+  .salary-dock .salary-strip{grid-template-columns:64px minmax(0,1fr);padding:16px;gap:14px;}
+  .salary-dock .sal-ring-wrap{width:64px;height:64px;}
+  .salary-dock .sal-ring{width:64px;height:64px;}
+  .salary-dock .salary-days-big{font-size:25px;}
+  .salary-dock .sal-cell:nth-of-type(5){grid-column:2;grid-row:2;}
+  .salary-dock .sal-cell-prog{grid-column:1 / -1;grid-row:3;}
+  .salary-dock .salary-badge{font-size:10px;padding:5px 7px;}
+  .sub-nav{gap:4px;padding:5px;}
+  .sub-tab{flex:0 0 auto;min-height:42px;padding:9px 12px;}
+  .stats-row{gap:8px;}
+  .stat-box{padding:14px 10px;flex-direction:column;align-items:flex-start;gap:8px;}
+  .stat-main{flex-direction:column;align-items:flex-start;gap:4px;}
+  .stat-num{font-size:26px;}
+  .stat-desc{max-width:100%;margin-left:0;text-align:left;font-size:11px;}
+  .stat-ic{width:32px;height:32px;font-size:18px;}
+  .member-head{padding:14px;gap:10px;}
+  .member-head-stats{justify-content:flex-start;margin-left:0;}
+  .modal-overlay{padding:12px;}
+  .modal{max-height:calc(100dvh - 24px);}
+}
+/* Reduced motion also removes delays so live content is immediately visible. */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation:none!important;transition:none!important;animation-delay:0s!important;
+    transition-delay:0s!important;scroll-behavior:auto!important;
+  }
+}
