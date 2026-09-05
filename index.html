@@ -12237,6 +12237,88 @@ html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,b
 .kb-col-body .task-card{margin-bottom:0!important;}
 .container{padding-top:1rem;}
 </style>
+<style id="fix-2026">
+/* ============================================================
+   FIX 2026 — three corrections verified in a real browser
+   1. Kanban corner overflow: a 3px border-top against 1px sides
+      makes the browser taper the join, which showed as horns past
+      the rounded corner. An inset shadow follows the radius exactly,
+      and the header gets a matching radius so it cannot poke out.
+   2. White labels on the theme-coloured Add Task and active filter.
+   3. Cool pearl light canvas that matches the cool cards and accents.
+   ============================================================ */
+
+/* ---- 1. Clean rounded corners on every Kanban column ---- */
+.kb-col[data-status]{border-top:1px solid var(--border)!important;
+  box-shadow:inset 0 3px 0 var(--c),var(--shadow-sm)!important;}
+.kb-col[data-status] .kb-col-head{border-radius:19px 19px 0 0;}
+
+/* ---- 2. White label on the theme-coloured controls ---- */
+html.dark .btn-accent.btn-full{color:#ffffff!important;
+  background:color-mix(in srgb,var(--accent) 12%,transparent)!important;
+  border-color:color-mix(in srgb,var(--accent) 52%,transparent)!important;}
+html.dark .fpill.act-accent{background:color-mix(in srgb,var(--accent) 24%,transparent)!important;
+  border:1.5px solid var(--accent)!important;color:#ffffff!important;box-shadow:none!important;}
+html:not(.dark) .btn-accent.btn-full{background:var(--accent-ink,var(--accent))!important;
+  border-color:var(--accent-ink,var(--accent))!important;color:#ffffff!important;
+  box-shadow:0 8px 22px -10px var(--accent-shadow)!important;}
+html:not(.dark) .fpill.act-accent{background:var(--accent-ink,var(--accent))!important;
+  border-color:var(--accent-ink,var(--accent))!important;color:#ffffff!important;}
+
+/* ---- 3. Cool pearl light canvas ---- */
+html:not(.dark){--surface:rgba(255,255,255,.82);--surface-2:rgba(255,255,255,.92);
+  --border:rgba(20,35,60,.10);--border-strong:rgba(20,35,60,.18);
+  --text:#101A2B;--muted:#55637A;}
+html:not(.dark) body,html:not(.dark) body.theme-overview{
+  background:linear-gradient(180deg,#F7F9FC 0%,#EFF3F9 50%,#E7EEF7 100%);background-attachment:fixed;}
+html:not(.dark) body::before{inset:-15%;filter:blur(70px);opacity:1;background:
+  radial-gradient(52rem 36rem at 90% -8%, rgba(14,116,144,.13), transparent 62%),
+  radial-gradient(46rem 34rem at 0% 2%, rgba(59,79,207,.10), transparent 60%),
+  radial-gradient(40rem 30rem at 98% 78%, rgba(139,63,199,.07), transparent 62%);}
+html:not(.dark) .app-header{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,250,253,.80));
+  box-shadow:0 8px 30px -20px rgba(20,35,60,.4);}
+html:not(.dark) .app-name,html:not(.dark) .app-tagline{color:#101A2B;}
+html:not(.dark) .app-tagline{color:#55637A;opacity:1;}
+html:not(.dark) .tab-btn{color:#55637A;}
+html:not(.dark) .tab-btn:hover{color:#101A2B;background:rgba(20,35,60,.05);}
+html:not(.dark) .sync-pill{background:rgba(20,35,60,.05);border-color:var(--border);color:#55637A;}
+html:not(.dark) .dm-toggle{background:rgba(20,35,60,.05);border-color:var(--border);color:#55637A;}
+html:not(.dark) .kb-col{background:rgba(255,255,255,.66);}
+html:not(.dark) .kb-col[data-status] .kb-col-head{background:color-mix(in srgb,var(--c) 8%,rgba(255,255,255,.55));}
+html:not(.dark) .task-card{background:rgba(255,255,255,.94);}
+html:not(.dark) .member-role{color:var(--accent-ink,var(--accent))!important;}
+</style>
+<style id="tabs-2026">
+/* ============================================================
+   TABS 2026 — the tab's own colour, and frameless task cards
+   ============================================================ */
+
+/* ---- 1. Label colour buttons in the picker ---- */
+.tcp-txrow{display:flex;gap:6px;}
+.tcp-tx{flex:1;padding:7px 0;border-radius:9px;border:1px solid var(--border);background:var(--surface-2,rgba(255,255,255,.06));
+  color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s var(--ease);}
+.tcp-tx:hover{color:var(--text);border-color:var(--gray-mid);}
+.tcp-tx.on{background:var(--accent);border-color:var(--accent);color:var(--accent-on,#fff);}
+
+/* ---- 2. Name bar carries the tab colour, same family as Add Task ---- */
+.member-head{background:color-mix(in srgb,var(--accent) 12%,var(--surface))!important;
+  border:1px solid color-mix(in srgb,var(--accent) 34%,transparent)!important;
+  border-left:5px solid var(--accent)!important;background-image:none!important;}
+
+/* ---- 3. Label colour drives every theme-linked bar ---- */
+html.dark .btn-accent.btn-full,html:not(.dark) .btn-accent.btn-full,
+html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent-on,#fff)!important;}
+
+/* ---- 4. Frameless board: cards sit straight on the background ---- */
+.kb-col,.kb-col[data-status]{background:transparent!important;border:none!important;
+  box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}
+.kb-col[data-status] .kb-col-head{background:transparent!important;border-radius:0!important;
+  border-bottom:2px solid var(--c)!important;padding:4px 4px 9px!important;}
+.kb-col-body{padding:12px 0 0!important;background:transparent!important;}
+.kb-col.kb-over{background:color-mix(in srgb,var(--c) 10%,transparent)!important;
+  border-radius:16px!important;box-shadow:inset 0 0 0 2px var(--c)!important;}
+.kb-empty{background:transparent!important;}
+</style>
 <script id="theme-picker-2026">
 /* Per-tab theme colour. Each workspace can pick its own accent from the
    2026 palette. Saved to {ws}_settings/theme, applied live to that tab.
@@ -12255,7 +12337,8 @@ html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,b
     {n:'Graphite',c:'#4A5563'}
   ];
   var WS=['boss','best','dew','o','junior'];
-  var chosen={},ready=false;
+  var TXT=[{n:'Auto',v:'auto'},{n:'White',v:'#ffffff'},{n:'Dark',v:'#0b1220'}];
+  var chosen={},chosenT={},ready=false;
 
   function rgb(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
   function hex(a){return '#'+a.map(function(v){v=Math.max(0,Math.min(255,Math.round(v)));return ('0'+v.toString(16)).slice(-2);}).join('');}
@@ -12274,26 +12357,49 @@ html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,b
     WS.forEach(function(w){
       var c=chosen[w];if(!c)return;
       var a=rgb(c);
-      var ink=readable(c,'#F1EFEA',4.5);
+      var ink=readable(c,'#EFF3F9',4.5);
       var bright=readable(c,'#0f141c',4.5);
       var tint='rgba('+a[0]+','+a[1]+','+a[2]+',.14)';
       var sh='rgba('+a[0]+','+a[1]+','+a[2]+',.42)';
-      css+='body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onColor(c)+';}';
-      css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onColor(bright)+';}';
-      css+='html:not(.dark) body.theme-'+w+'{--accent-ondark:'+ink+';}';
-      css+='.tab-btn.a-'+w+'{color:'+bright+';border-bottom-color:'+c+';}';
-      css+='html:not(.dark) .tab-btn.a-'+w+'{color:#fff;border-bottom-color:'+bright+';}';
+      /* label colour: auto picks the readable one, or the member's explicit choice */
+      var tSel=chosenT[w]||'auto';
+      var onLight=tSel==='auto'?'#ffffff':tSel;          /* sits on the solid ink fill */
+      var onDark =tSel==='auto'?'#ffffff':tSel;          /* sits on the dark tint */
+      /* html.dark / html:not(.dark) prefixes match the specificity of the aurora
+         and refine layers, and the sheet is placed last so it wins on order. */
+      css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
+      css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
+      css+='html.dark .tab-btn.a-'+w+'{color:'+bright+';border-bottom-color:'+bright+';}';
+      css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+ink+';border-bottom-color:'+ink+';}';
+      /* The theme-linked bars. A dark label needs a solid light fill behind it,
+         otherwise it would sit on a near-transparent tint and vanish. */
+      var barsD,barsL;
+      if(tSel==='#0b1220'){
+        barsD='background:'+bright+'!important;border-color:'+bright+'!important;color:#0b1220!important;';
+        barsL='background:'+c+'!important;border-color:'+c+'!important;color:#0b1220!important;';
+      }else{
+        barsD='background:color-mix(in srgb,'+bright+' 14%,transparent)!important;border-color:color-mix(in srgb,'+bright+' 52%,transparent)!important;color:'+onDark+'!important;';
+        barsL='background:'+ink+'!important;border-color:'+ink+'!important;color:'+onLight+'!important;';
+      }
+      css+='html.dark body.theme-'+w+' .btn-accent.btn-full,html.dark body.theme-'+w+' .fpill.act-accent{'+barsD+'}';
+      css+='html:not(.dark) body.theme-'+w+' .btn-accent.btn-full,html:not(.dark) body.theme-'+w+' .fpill.act-accent{'+barsL+'}';
     });
     var st=document.getElementById('tc-themes');
-    if(!st){st=document.createElement('style');st.id='tc-themes';document.head.appendChild(st);}
+    if(!st){st=document.createElement('style');st.id='tc-themes';}
     st.textContent=css;
+    /* Keep this sheet as the very last stylesheet. The aurora / refine / fix
+       layers sit at the end of <body>, so a sheet in <head> would lose to them. */
+    if(document.body)document.body.appendChild(st);
   }
 
   function getDb(){try{return window.db||firebase.firestore();}catch(e){return null;}}
 
-  function save(w,c){
-    var d=getDb();if(!d){chosen[w]=c;apply();return;}
-    d.collection(w+'_settings').doc('theme').set({color:c},{merge:true})
+  function save(w,patch){
+    if(patch.color)chosen[w]=patch.color;
+    if(patch.textColor)chosenT[w]=patch.textColor;
+    apply();paintSwatches();                       /* instant feedback for this tab */
+    var d=getDb();if(!d)return;
+    d.collection(w+'_settings').doc('theme').set(patch,{merge:true})
       .catch(function(){
         try{toast('You can only change the colour of your own tab.');}
         catch(e){console.warn('theme save blocked for',w);}
@@ -12305,8 +12411,10 @@ html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,b
     WS.forEach(function(w){
       try{
         d.collection(w+'_settings').doc('theme').onSnapshot(function(s){
-          var v=s&&s.exists&&s.data()?s.data().color:null;
+          var d0=s&&s.exists&&s.data()?s.data():null;
+          var v=d0?d0.color:null,t=d0?d0.textColor:null;
           if(v){chosen[w]=v;}else{delete chosen[w];}
+          if(t){chosenT[w]=t;}else{delete chosenT[w];}
           apply();paintSwatches();
         },function(){});
       }catch(e){}
@@ -12318,6 +12426,9 @@ html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,b
       var w=p.getAttribute('data-ws');
       p.querySelectorAll('.tcp-sw').forEach(function(b){
         b.classList.toggle('on',(chosen[w]||'').toLowerCase()===b.getAttribute('data-c').toLowerCase());
+      });
+      p.querySelectorAll('.tcp-tx').forEach(function(b){
+        b.classList.toggle('on',(chosenT[w]||'auto')===b.getAttribute('data-t'));
       });
     });
   }
@@ -12334,14 +12445,22 @@ html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,b
       h+='<button class="tcp-sw" data-c="'+p.c+'" title="'+p.n+'" aria-label="'+p.n+'" style="background:'+p.c+'"></button>';
     });
     h+='</div><div class="tcp-name"></div>';
+    h+='<div class="tcp-ttl" style="margin-top:12px">Label colour</div><div class="tcp-txrow">';
+    TXT.forEach(function(t){
+      h+='<button class="tcp-tx" data-t="'+t.v+'" type="button">'+t.n+'</button>';
+    });
+    h+='</div>';
     pop.innerHTML=h;
+    pop.querySelectorAll('.tcp-tx').forEach(function(b){
+      b.addEventListener('click',function(ev){ev.stopPropagation();save(w,{textColor:b.getAttribute('data-t')});});
+    });
     btn.parentNode.style.position=btn.parentNode.style.position||'relative';
     btn.parentNode.appendChild(pop);
     var nm=pop.querySelector('.tcp-name');
     pop.querySelectorAll('.tcp-sw').forEach(function(b){
       b.addEventListener('mouseenter',function(){nm.textContent=b.getAttribute('title');});
       b.addEventListener('mouseleave',function(){nm.textContent='';});
-      b.addEventListener('click',function(ev){ev.stopPropagation();save(w,b.getAttribute('data-c'));closeAll();});
+      b.addEventListener('click',function(ev){ev.stopPropagation();save(w,{color:b.getAttribute('data-c')});closeAll();});
     });
     paintSwatches();
   }
