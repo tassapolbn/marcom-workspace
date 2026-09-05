@@ -15,9 +15,12 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --navy:#1f3a5f;--navy2:#2b5286;--navy3:#15273f;--navy-light:#eaf0f7;
+  /* ===== Brand foundation: HeadStart navy #003057 + yellow #F0B323 on a crisp black/white base ===== */
+  --navy:#003057;--navy2:#0a4b7d;--navy3:#00233f;--navy-light:#e7eef5;
+  --brand:#003057;--brand-2:#0a4b7d;--brand-ink:#00233f;
   --coral:#e05a3d;--coral2:#bd4226;--coral-light:#fdebe6;
-  --gold:#e6a417;--gold2:#c98a08;--gold-light:#fdf3da;
+  --gold:#f0b323;--gold2:#d99a0f;--gold-light:#fdf3d6;
+  --accentY:#f0b323;--accentY-2:#d99a0f;
   --blue:#2563eb;--blue-light:#e5edfd;
   --amber:#d97706;--amber-light:#fdf0d5;
   --purple:#7c3aed;--purple-light:#efe9fd;
@@ -25,17 +28,23 @@
   --teal:#0d9488;--teal-light:#d6f5f0;
   --danger:#dc2626;--danger-light:#fde7e7;
   --sick:#e11d48;--sick-light:#fde6ea;
-  --gray:#697586;--gray-light:#f1f3f6;--gray-mid:#cdd3dc;
-  --text:#16202e;--muted:#697586;
-  --bg:#f4f5f8;--surface:#ffffff;--border:#e8eaef;
+  --gray:#5b6674;--gray-light:#eef1f5;--gray-mid:#c9d0da;
+  --ink:#0e1726;--text:#0e1726;--muted:#5b6674;
+  --bg:#f4f6f9;--surface:#ffffff;--surface-2:#f8fafc;--surface-3:#eef2f7;
+  --border:#e6e9ef;--border-soft:#eef1f5;--border-strong:#d6dbe4;--hairline:rgba(0,48,87,.08);
   --r:22px;--rsm:14px;--r-lg:28px;--r-xs:11px;
-  --shadow-sm:0 1px 3px rgba(20,28,42,0.05);
-  --shadow-lg:0 6px 16px rgba(20,28,42,0.06),0 30px 60px -22px rgba(20,28,42,0.26);
-  --ring:0 0 0 3px rgba(37,99,235,0.16);
+  --shadow-xs:0 1px 2px rgba(0,48,87,.05);
+  --shadow-sm:0 1px 3px rgba(0,48,87,.06);
+  --shadow-lg:0 2px 8px rgba(0,48,87,.07),0 28px 60px -22px rgba(0,48,87,.30);
+  --shadow-brand:0 10px 28px -10px rgba(0,48,87,.42);
+  --shadow-yellow:0 8px 22px -8px rgba(240,179,35,.5);
+  --ring:0 0 0 3px rgba(0,48,87,.16);
+  --grad-header:linear-gradient(135deg,#00263f 0%,#003057 52%,#0a4b7d 100%);
+  --grad-brand:linear-gradient(135deg,#003057,#0a4b7d);
   --st-pending:#64748b;--st-progress:#2563eb;--st-waiting:#e8850c;--st-hold:#7c3aed;
   --st-done:#16a34a;--st-cancel:#dc2626;--st-overdue:#dc2626;--st-archived:#94a3b8;
   --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;
-  --shadow:0 2px 6px rgba(20,28,42,0.05),0 18px 42px -18px rgba(20,28,42,0.16);
+  --shadow:0 1px 3px rgba(0,48,87,.05),0 12px 26px -14px rgba(0,48,87,.20);
   --dm-trans:background 0.25s,color 0.25s,border-color 0.25s,box-shadow 0.25s;
 }
 html.dark{
@@ -11766,17 +11775,131 @@ html.dark .avl-row.away .avl-st{color:#c4b5fd;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
 })();
 </script>
-<style id="reskin-2026">
-/* ===== Rounded & playful refresh (keeps the HeadStart brand colours) =====
-   Appearance only: bigger corners, pill buttons and filter tabs, rounder
-   inputs. No colours, layout or logic are changed, so every function, widget
-   and dark-mode style is preserved. Loaded last so it settles the corner radius
-   over the older hardcoded values. */
-.btn,.btn-sm,.btn-navy,.btn-coral,.btn-ghost,.btn-accent{border-radius:999px !important;}
-.sub-tab,.fpill{border-radius:999px !important;}
-.form-input,.form-select,textarea.form-input,textarea,.chat-input,.notes-search,.trq-input,.tc-gif-input{border-radius:14px !important;}
-.ov-card,.card,.task-card,.kb-col,.widget,.stat-box,.note-card,.link-card,.meet-card,.evc-card,.ews-card,.rc-card,.rc-type-card,.rq-card,.rcp,.tc-pop,.auth-card,.chat-panel,.ov-focus-card,.ov-res-card,.clockoff-banner,.sub-nav,.rov-banner,.salary-strip{border-radius:20px !important;}
-.modal{border-radius:24px !important;}
+<style id="premium-2026">
+/* ============================================================
+   PREMIUM 2026 — HeadStart Marcom Workspace (light-mode focus)
+   Visual + experience upgrade only. No DOM, no logic, no feature
+   or widget changes. Brand: navy #003057 + yellow #F0B323 on a
+   crisp black/white base. Loaded last so it settles the premium
+   design system over the older layers. Dark mode kept working
+   for a later dedicated pass.
+   ============================================================ */
+
+/* ---- 0. Motion tokens + reduced-motion safety ---- */
+:root{--ease:cubic-bezier(.22,.61,.36,1);--ease-out:cubic-bezier(.16,1,.3,1);--dur:.18s;--dur-lg:.34s;}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important;}
+}
+
+/* ---- 1. Typography rhythm (Latin only; Thai/Sarabun left natural) ---- */
+.app-name,.stat-num,.modal-title,.widget-title,.member-role,.evhub-title,.salary-days-big,.myday-greet{letter-spacing:-.3px;}
+.stat-num,.salary-days-big{letter-spacing:-1.2px;}
+
+/* ---- 2. Subtle brand atmosphere (soft, never neon) ---- */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(1100px 620px at 88% -10%, rgba(240,179,35,.07), transparent 60%),
+    radial-gradient(1000px 640px at -6% 2%, rgba(0,48,87,.06), transparent 58%);}
+.container{position:relative;z-index:1;}
+
+/* ---- 3. Rounded system (kept from the previous refresh) ---- */
+.btn,.btn-sm,.btn-navy,.btn-coral,.btn-ghost,.btn-accent,.btn-teal,.btn-danger,.btn-gold{border-radius:999px!important;}
+.sub-tab,.fpill{border-radius:999px!important;}
+.form-input,.form-select,.form-textarea,textarea.form-input,textarea,.chat-input,.notes-search,.trq-input,.tc-gif-input{border-radius:14px!important;}
+.ov-card,.card,.task-card,.kb-col,.widget,.stat-box,.note-card,.link-card,.meet-card,.evc-card,.ews-card,.rc-card,.rc-type-card,.rq-card,.rcp,.tc-pop,.auth-card,.chat-panel,.ov-focus-card,.ov-res-card,.clockoff-banner,.sub-nav,.rov-banner,.salary-strip,.myday{border-radius:20px!important;}
+.modal{border-radius:24px!important;}
+
+/* ---- 4. Header: premium navy with a fine yellow accent ---- */
+.app-header{background:var(--grad-header);position:sticky;top:0;z-index:200;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 34px -12px rgba(0,35,63,.55);}
+.app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accentY) 18%,var(--accentY) 82%,transparent);opacity:.9;}
+.logo-icon{background:linear-gradient(135deg,rgba(240,179,35,.30),rgba(255,255,255,.05));border:1px solid rgba(240,179,35,.4);box-shadow:0 6px 16px -8px rgba(240,179,35,.6);border-radius:13px;}
+.tab-nav{gap:2px;padding:0 6px;border-top:1px solid rgba(255,255,255,.08);}
+.tab-btn{border-radius:12px 12px 0 0;border-bottom-width:3px;transition:color .18s var(--ease),background .18s var(--ease),border-color .18s var(--ease);}
+.tab-btn:hover{color:#fff;background:rgba(255,255,255,.07);}
+
+/* ---- 5. Buttons: premium brand actions ---- */
+.btn{font-weight:700;letter-spacing:.1px;transition:transform .16s var(--ease),box-shadow .18s var(--ease),background .18s,filter .18s;}
+.btn:hover{transform:translateY(-1px);}
+.btn:active{transform:translateY(0) scale(.99);}
+.btn-navy{background:var(--grad-brand);box-shadow:var(--shadow-brand);}
+.btn-navy:hover{box-shadow:0 14px 32px -10px rgba(0,48,87,.52);filter:none;}
+.btn-accent,.btn-gold{background:linear-gradient(135deg,#f6c645,#f0b323);color:#3a2a00;box-shadow:var(--shadow-yellow);}
+.btn-ghost{background:var(--surface);border:1px solid var(--border-strong);color:var(--text);box-shadow:var(--shadow-xs);}
+.btn-ghost:hover{background:var(--surface-2);border-color:var(--gray-mid);filter:none;}
+.btn:focus-visible{outline:none;box-shadow:var(--ring),var(--shadow-sm);}
+
+/* ---- 6. Surfaces & cards: layered, hairline, soft depth ---- */
+.stat-box,.widget,.link-card,.note-card,.card,.ov-card,.rc-card,.rq-card,.evc-card,.ews-card{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);}
+.stat-box{padding:18px 14px;}
+.stat-box::before{height:4px;opacity:.95;}
+.widget:hover,.link-card:hover,.note-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.widget-head{padding:14px 16px;}
+.widget-head:hover{background:var(--surface-2);}
+.widget-title i{color:var(--brand);}
+.auth-card{box-shadow:var(--shadow-lg);}
+.two-col{gap:24px;}
+
+/* ---- 7. Filter pills & sub-tabs ---- */
+.fpill{background:var(--surface);border:1.5px solid var(--border-strong);box-shadow:var(--shadow-xs);font-weight:700;}
+.fpill:hover{transform:translateY(-1px);border-color:var(--gray-mid);color:var(--text);}
+.fpill.act-navy,.fpill.act-accent{background:var(--grad-brand);border-color:transparent;color:#fff;box-shadow:var(--shadow-brand);}
+.fpill.act-coral{box-shadow:0 8px 20px -8px rgba(224,90,61,.5);}
+.sub-nav{background:var(--surface-3);border:1px solid var(--border);}
+.sub-tab.act{background:var(--surface);box-shadow:var(--shadow-sm);}
+
+/* ---- 8. Inputs: calm surface, brand focus ring ---- */
+.form-input,.form-select,.form-textarea{background:var(--surface-2);border:1.5px solid var(--border-strong);transition:border-color .16s,box-shadow .16s,background .16s;}
+.form-input:hover,.form-select:hover,.form-textarea:hover{border-color:var(--gray-mid);}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--brand);background:var(--surface);box-shadow:var(--ring);}
+.form-label{color:var(--muted);letter-spacing:.5px;}
+
+/* ---- 9. Modals ---- */
+.modal-overlay{background:rgba(0,23,40,.5);backdrop-filter:blur(6px) saturate(1.1);}
+.modal{box-shadow:0 40px 90px -30px rgba(0,23,40,.6),0 4px 14px -6px rgba(0,23,40,.3);border:1px solid var(--border);}
+.modal-header{padding:20px 24px 14px;}
+.modal-close:hover{background:var(--danger-light);color:var(--danger);}
+
+/* ---- 10. Kanban: premium productivity surface ---- */
+.kb-col{background:var(--surface-3);border:1px solid var(--border);box-shadow:var(--shadow-xs);}
+.kb-col-head{padding:13px 14px;border-bottom:1px solid var(--border);}
+.kb-col-name{letter-spacing:-.2px;}
+.kb-col-count{background:var(--surface);border:1px solid var(--border-strong);}
+.kb-col.kb-over{background:var(--navy-light);box-shadow:inset 0 0 0 2px var(--brand),var(--shadow);}
+.kb-col-body .task-card{background:var(--surface);box-shadow:var(--shadow-sm);}
+.kb-col-body .task-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.task-card{border-left-width:4px;transition:var(--dm-trans),transform .16s var(--ease),box-shadow .18s var(--ease),border-color .16s;}
+.task-card.kb-dragging{opacity:.4;transform:scale(.98) rotate(-.4deg);box-shadow:var(--shadow-lg);}
+.kb-empty{border:1.5px dashed var(--border-strong);color:var(--muted);background:linear-gradient(var(--surface-2),transparent);}
+
+/* ---- 11. Meeting / hero cards ---- */
+.meet-card{background:var(--grad-brand);box-shadow:var(--shadow-brand);}
+
+/* ---- 12. Interaction states ---- */
+.btn[disabled],.btn:disabled,button:disabled,.btn.disabled{opacity:.5;cursor:not-allowed;transform:none!important;filter:none!important;box-shadow:none!important;}
+@keyframes pm-skel{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skeleton,.pm-skeleton{background:linear-gradient(90deg,var(--surface-3) 25%,var(--surface-2) 37%,var(--surface-3) 63%);background-size:200% 100%;animation:pm-skel 1.3s ease-in-out infinite;border-radius:8px;}
+@keyframes pm-spin{to{transform:rotate(360deg)}}
+.pm-spinner{width:18px;height:18px;border:2.5px solid var(--border-strong);border-top-color:var(--brand);border-radius:50%;animation:pm-spin .7s linear infinite;display:inline-block;}
+
+/* ---- 13. Scrollbars, selection, focus visibility ---- */
+::selection{background:rgba(240,179,35,.35);}
+*{scrollbar-width:thin;scrollbar-color:var(--gray-mid) transparent;}
+*::-webkit-scrollbar{width:10px;height:10px;}
+*::-webkit-scrollbar-thumb{background:var(--gray-mid);border-radius:99px;border:2px solid var(--bg);}
+*::-webkit-scrollbar-thumb:hover{background:var(--brand);}
+a:focus-visible,[tabindex]:focus-visible{outline:none;box-shadow:var(--ring);}
+
+/* ---- 14. Responsive (reorganize, not just scale) ---- */
+@media(max-width:1024px){.container{padding:1.1rem 1.1rem 4rem;}}
+@media(max-width:720px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .header-top{padding:12px 14px 8px;}
+  .tab-nav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .tab-nav::-webkit-scrollbar{display:none;}
+  .tab-btn{flex:0 0 auto;padding:12px 14px 13px;}
+  .btn{padding:11px 16px;}
+}
+@media(max-width:480px){.stats-row{grid-template-columns:1fr 1fr;}}
 </style>
 </body>
 
