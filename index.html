@@ -12319,6 +12319,68 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
   border-radius:16px!important;box-shadow:inset 0 0 0 2px var(--c)!important;}
 .kb-empty{background:transparent!important;}
 </style>
+<style id="light-2026">
+/* ============================================================
+   LIGHT 2026 — light mode is the team's daily view
+   The header text was written for the old navy bar (.tab-btn is
+   50% white, .a-active is #fff), so on a white header it was
+   white on white and effectively invisible. Fixed here, plus the
+   accent-linked panels the tab colour should drive.
+   ============================================================ */
+
+/* ---- 1. A header you can actually see ---- */
+html:not(.dark) .app-header{
+  background:linear-gradient(180deg,#FFFFFF 0%,#F7F9FC 100%)!important;
+  border-bottom:1px solid rgba(20,35,60,.12);
+  box-shadow:0 6px 24px -14px rgba(20,35,60,.35)!important;}
+html:not(.dark) .app-name{color:#0E1A2B!important;}
+html:not(.dark) .app-tagline{color:#5A6879!important;opacity:1!important;}
+html:not(.dark) .tab-nav{border-top:1px solid rgba(20,35,60,.09);}
+html:not(.dark) .tab-btn{color:#5A6879!important;}
+html:not(.dark) .tab-btn:hover{color:#0E1A2B!important;background:rgba(20,35,60,.05);}
+/* per-member labels, dark enough to read on white */
+html:not(.dark) .tab-btn.a-overview{color:#0E4C75!important;border-bottom-color:#0E4C75!important;}
+html:not(.dark) .tab-btn.a-boss{color:#003057!important;border-bottom-color:#003057!important;}
+html:not(.dark) .tab-btn.a-best{color:#0B6B4F!important;border-bottom-color:#0B6B4F!important;}
+html:not(.dark) .tab-btn.a-dew{color:#A65614!important;border-bottom-color:#A65614!important;}
+html:not(.dark) .tab-btn.a-o{color:#C2410C!important;border-bottom-color:#C2410C!important;}
+html:not(.dark) .tab-btn.a-junior{color:#14532D!important;border-bottom-color:#14532D!important;}
+/* the active tab follows whatever colour that tab is set to */
+html:not(.dark) .tab-btn.a-active{color:var(--accent-ink,#003057)!important;
+  border-bottom-color:var(--accent-ink,#003057)!important;background:rgba(20,35,60,.04);}
+html:not(.dark) .logo-icon{background:linear-gradient(135deg,rgba(240,179,35,.30),rgba(255,255,255,.7))!important;
+  border-color:rgba(240,179,35,.55)!important;}
+html:not(.dark) .sync-pill,html:not(.dark) .dm-toggle{background:rgba(20,35,60,.05)!important;
+  border-color:rgba(20,35,60,.12)!important;color:#5A6879!important;}
+html:not(.dark) .dm-toggle:hover{background:rgba(20,35,60,.10)!important;}
+
+/* ---- 2. Panels that follow the tab colour ---- */
+html:not(.dark) .meet-card:not(.none){
+  background:linear-gradient(135deg,var(--accent-ink,var(--accent)),color-mix(in srgb,var(--accent-ink,var(--accent)) 72%,#000))!important;
+  color:#fff!important;box-shadow:0 10px 26px -14px var(--accent-shadow)!important;}
+html.dark .meet-card:not(.none){
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,transparent),color-mix(in srgb,var(--accent) 8%,transparent))!important;
+  border:1px solid color-mix(in srgb,var(--accent) 38%,transparent)!important;color:var(--text)!important;box-shadow:none!important;}
+.evhub{border-left:5px solid var(--accent)!important;
+  border-top:1px solid color-mix(in srgb,var(--accent) 26%,var(--border))!important;
+  border-right:1px solid color-mix(in srgb,var(--accent) 26%,var(--border))!important;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 26%,var(--border))!important;}
+.evhub-head{background:color-mix(in srgb,var(--accent) 12%,transparent)!important;background-image:none!important;}
+.evhub-title i{color:var(--accent-ink,var(--accent))!important;}
+html.dark .evhub-title i{color:var(--accent-ondark,var(--accent))!important;}
+
+/* ---- 3. Picker tools: chart, code, copy ---- */
+.tcp-custom{display:flex;gap:6px;align-items:center;}
+.tcp-wheel{width:38px;height:34px;padding:2px;border:1px solid var(--border);border-radius:9px;background:var(--surface);cursor:pointer;flex:0 0 auto;}
+.tcp-hex{flex:1;min-width:0;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,rgba(255,255,255,.06));
+  color:var(--text);font:inherit;font-size:12px;font-weight:700;padding:0 9px;letter-spacing:.4px;text-transform:uppercase;}
+.tcp-hex:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent);}
+.tcp-copy{width:34px;height:34px;flex:0 0 auto;border:1px solid var(--border);border-radius:9px;background:var(--surface-2,rgba(255,255,255,.06));
+  color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;}
+.tcp-copy:hover{color:var(--accent-ink,var(--accent));border-color:var(--accent);}
+.tcp-msg{font-size:11px;font-weight:700;color:var(--muted);min-height:14px;margin-top:7px;}
+.tcp-msg.bad{color:var(--st-cancel);}
+</style>
 <script id="theme-picker-2026">
 /* Per-tab theme colour. Each workspace can pick its own accent from the
    2026 palette. Saved to {ws}_settings/theme, applied live to that tab.
@@ -12369,8 +12431,8 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
          and refine layers, and the sheet is placed last so it wins on order. */
       css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
-      css+='html.dark .tab-btn.a-'+w+'{color:'+bright+';border-bottom-color:'+bright+';}';
-      css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+ink+';border-bottom-color:'+ink+';}';
+      css+='html.dark .tab-btn.a-'+w+'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
+      css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+ink+'!important;border-bottom-color:'+ink+'!important;}';
       /* The theme-linked bars. A dark label needs a solid light fill behind it,
          otherwise it would sit on a near-transparent tint and vanish. */
       var barsD,barsL;
@@ -12450,9 +12512,37 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
       h+='<button class="tcp-tx" data-t="'+t.v+'" type="button">'+t.n+'</button>';
     });
     h+='</div>';
+    var cur=chosen[w]||'#12A4A0';
+    h+='<div class="tcp-ttl" style="margin-top:12px">Custom colour</div>'
+      +'<div class="tcp-custom">'
+      +'<input type="color" class="tcp-wheel" value="'+cur+'" title="Pick from the colour chart" aria-label="Pick from the colour chart">'
+      +'<input type="text" class="tcp-hex" value="'+cur+'" maxlength="7" spellcheck="false" placeholder="#12A4A0" aria-label="Colour code">'
+      +'<button class="tcp-copy" type="button" title="Copy colour code" aria-label="Copy colour code"><i class="ti ti-copy"></i></button>'
+      +'</div><div class="tcp-msg"></div>';
     pop.innerHTML=h;
     pop.querySelectorAll('.tcp-tx').forEach(function(b){
       b.addEventListener('click',function(ev){ev.stopPropagation();save(w,{textColor:b.getAttribute('data-t')});});
+    });
+    var wheel=pop.querySelector('.tcp-wheel'),hexIn=pop.querySelector('.tcp-hex'),
+        copyB=pop.querySelector('.tcp-copy'),msg=pop.querySelector('.tcp-msg');
+    function note(t,bad){msg.textContent=t;msg.className='tcp-msg'+(bad?' bad':'');
+      if(t)setTimeout(function(){if(msg)msg.textContent='';},1800);}
+    wheel.addEventListener('click',function(ev){ev.stopPropagation();});
+    wheel.addEventListener('input',function(){hexIn.value=wheel.value;});
+    wheel.addEventListener('change',function(ev){ev.stopPropagation();save(w,{color:wheel.value});note('Colour applied');});
+    hexIn.addEventListener('click',function(ev){ev.stopPropagation();});
+    function commitHex(){
+      var v=(hexIn.value||'').trim();
+      if(/^[0-9a-f]{6}$/i.test(v))v='#'+v;
+      if(!/^#[0-9a-f]{6}$/i.test(v)){note('Use a 6 digit code like #12A4A0',true);return;}
+      wheel.value=v;save(w,{color:v});note('Colour applied');
+    }
+    hexIn.addEventListener('keydown',function(ev){ev.stopPropagation();if(ev.key==='Enter'){ev.preventDefault();commitHex();}});
+    hexIn.addEventListener('blur',function(){if((hexIn.value||'').trim())commitHex();});
+    copyB.addEventListener('click',function(ev){ev.stopPropagation();
+      var v=chosen[w]||hexIn.value||'';
+      try{navigator.clipboard.writeText(v).then(function(){note('Copied '+v);},function(){note('Copy blocked',true);});}
+      catch(e){note('Copy blocked',true);}
     });
     btn.parentNode.style.position=btn.parentNode.style.position||'relative';
     btn.parentNode.appendChild(pop);
