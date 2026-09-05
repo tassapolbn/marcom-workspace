@@ -1658,7 +1658,9 @@ function toggleDark(){
   localStorage.setItem('bb_dark',isDark?'1':'0');
   document.getElementById('dm-icon').className=isDark?'ti ti-sun':'ti ti-moon';
 }
-if(localStorage.getItem('bb_dark')==='1'){
+/* Aurora is the default look. Anyone who explicitly switches to the light
+   theme keeps it ('0'); everyone else lands on the dark aurora canvas. */
+if(localStorage.getItem('bb_dark')!=='0'){
   document.getElementById('html-root').classList.add('dark');
   document.getElementById('dm-icon').className='ti ti-sun';
 }
@@ -11900,6 +11902,140 @@ a:focus-visible,[tabindex]:focus-visible{outline:none;box-shadow:var(--ring);}
   .btn{padding:11px 16px;}
 }
 @media(max-width:480px){.stats-row{grid-template-columns:1fr 1fr;}}
+</style>
+<style id="aurora-2026">
+/* ============================================================
+   AURORA 2026 — atmospheric gradient canvas + glass surfaces
+   Inspired by the reference boards: deep near-black canvas, large
+   soft blurred colour fields, frosted glass cards, luminous accents.
+   Appearance only. No DOM, no logic, no feature or widget changes.
+   Contrast targets: body text >= 12:1, muted >= 7:1 on the canvas.
+   ============================================================ */
+
+/* ---- 1. Deep canvas ---- */
+html.dark{
+  --bg:#070b12;--surface:rgba(255,255,255,.055);--surface-2:rgba(255,255,255,.085);--surface-3:rgba(255,255,255,.04);
+  --border:rgba(255,255,255,.10);--border-soft:rgba(255,255,255,.06);--border-strong:rgba(255,255,255,.17);
+  --text:#eef4fb;--ink:#ffffff;--muted:#a3b3c6;--gray:#a3b3c6;--gray-light:rgba(255,255,255,.06);--gray-mid:rgba(255,255,255,.22);
+  --shadow-xs:0 1px 2px rgba(0,0,0,.4);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.45);
+  --shadow:0 2px 10px rgba(0,0,0,.45),0 18px 48px -20px rgba(0,0,0,.8);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.5),0 40px 90px -30px rgba(0,0,0,.95);
+  --shadow-brand:0 10px 34px -10px rgba(240,179,35,.5);
+  --ring:0 0 0 3px rgba(240,179,35,.32);
+}
+html.dark body,html.dark body.theme-overview{background:#070b12;background-attachment:fixed;}
+
+/* ---- 2. Aurora light field (soft blurred colour, edges only so text stays clean) ---- */
+html.dark body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;filter:blur(30px);
+  background:
+    radial-gradient(46rem 34rem at 82% -6%, rgba(240,179,35,.30), transparent 62%),
+    radial-gradient(40rem 32rem at 6% 6%, rgba(45,212,191,.20), transparent 60%),
+    radial-gradient(44rem 36rem at 96% 58%, rgba(124,108,240,.22), transparent 62%),
+    radial-gradient(38rem 30rem at -6% 88%, rgba(74,222,128,.16), transparent 60%);}
+html.dark body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 40%, transparent 40%, rgba(4,7,12,.72) 100%);}
+.container{position:relative;z-index:1;}
+
+/* ---- 3. Frosted glass surfaces ---- */
+html.dark .widget,html.dark .kb-col,html.dark .modal,html.dark .chat-panel,html.dark .sub-nav,
+html.dark .stat-box,html.dark .link-card,html.dark .note-card,html.dark .card,html.dark .ov-card,
+html.dark .rc-card,html.dark .rq-card,html.dark .evc-card,html.dark .ews-card,html.dark .myday,html.dark .auth-card{
+  background:var(--surface);border:1px solid var(--border);
+  -webkit-backdrop-filter:blur(22px) saturate(1.35);backdrop-filter:blur(22px) saturate(1.35);
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.07);}
+html.dark .widget-head{background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);}
+html.dark .widget-head:hover{background:rgba(255,255,255,.06);}
+html.dark .widget:hover,html.dark .link-card:hover,html.dark .note-card:hover{box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.10);}
+
+/* ---- 4. Header: dark glass with a fine brand edge ---- */
+html.dark .app-header{background:linear-gradient(180deg,rgba(10,16,26,.88),rgba(7,11,18,.72));
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);backdrop-filter:blur(24px) saturate(1.4);
+  box-shadow:0 10px 40px -18px rgba(0,0,0,.9);}
+html.dark .app-header::after{background:linear-gradient(90deg,transparent,rgba(240,179,35,.85) 22%,rgba(45,212,191,.55) 78%,transparent);height:1px;opacity:1;}
+html.dark .sync-pill{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);}
+html.dark .dm-toggle{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);}
+html.dark .dm-toggle:hover{background:rgba(255,255,255,.16);}
+
+/* ---- 5. Luminous primary actions (brand yellow, like the reference CTAs) ---- */
+html.dark .btn-navy,html.dark .btn-accent,html.dark .btn-gold{
+  background:linear-gradient(135deg,#f7cf5a,#f0b323 60%,#e0a015);color:#0b1220;box-shadow:var(--shadow-brand);}
+html.dark .btn-navy:hover,html.dark .btn-accent:hover{box-shadow:0 14px 40px -10px rgba(240,179,35,.62);}
+html.dark .btn-ghost{background:rgba(255,255,255,.07);border:1px solid var(--border-strong);color:var(--text);}
+html.dark .btn-ghost:hover{background:rgba(255,255,255,.14);}
+html.dark .btn-coral{box-shadow:0 10px 30px -10px rgba(224,90,61,.6);}
+html.dark .btn-teal{box-shadow:0 10px 30px -10px rgba(13,148,136,.6);}
+
+/* ---- 6. Filter pills, sub tabs, inputs ---- */
+html.dark .fpill{background:rgba(255,255,255,.06);border:1.5px solid var(--border);color:var(--muted);}
+html.dark .fpill:hover{background:rgba(255,255,255,.12);color:var(--text);}
+html.dark .fpill.act-navy,html.dark .fpill.act-accent{background:linear-gradient(135deg,#f7cf5a,#f0b323);border-color:transparent;color:#0b1220;box-shadow:var(--shadow-brand);}
+html.dark .sub-nav{background:rgba(255,255,255,.04);}
+html.dark .sub-tab.act{background:rgba(255,255,255,.12);color:#fff;}
+html.dark .form-input,html.dark .form-select,html.dark .form-textarea{background:rgba(255,255,255,.06);border:1.5px solid var(--border);color:var(--text);}
+html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textarea:focus{border-color:#f0b323;background:rgba(255,255,255,.10);box-shadow:var(--ring);}
+html.dark .form-input::placeholder,html.dark .form-textarea::placeholder{color:#7d8ea3;}
+
+/* ---- 7. Modal + overlay ---- */
+html.dark .modal-overlay{background:rgba(2,5,10,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+html.dark .modal-header{background:rgba(16,22,33,.92);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);}
+html.dark .modal-close{background:rgba(255,255,255,.08);color:var(--muted);}
+
+/* ---- 8. Matched accent palette per tab (luminous on dark) ---- */
+html.dark body.theme-overview{--accent:#f0b323;--accent-ondark:#f7cf6a;--accent-ink:#f0b323;--accent-shadow:rgba(240,179,35,.45);}
+html.dark body.theme-boss{--accent:#38bdf8;--accent-ondark:#7dd3fc;--accent-ink:#38bdf8;--accent-shadow:rgba(56,189,248,.45);}
+html.dark body.theme-dew{--accent:#fbbf24;--accent-ondark:#fcd34d;--accent-ink:#fbbf24;--accent-shadow:rgba(251,191,36,.45);}
+html.dark body.theme-o{--accent:#fb7185;--accent-ondark:#fda4af;--accent-ink:#fb7185;--accent-shadow:rgba(251,113,133,.45);}
+html.dark body.theme-junior{--accent:#34d399;--accent-ondark:#6ee7b7;--accent-ink:#34d399;--accent-shadow:rgba(52,211,153,.45);}
+html.dark .tab-btn.a-overview{color:#f7cf6a;border-bottom-color:#f0b323;}
+html.dark .tab-btn.a-boss{color:#7dd3fc;border-bottom-color:#38bdf8;}
+html.dark .tab-btn.a-best{color:#6ee7b7;border-bottom-color:#34d399;}
+html.dark .tab-btn.a-dew{color:#fcd34d;border-bottom-color:#fbbf24;}
+html.dark .tab-btn.a-o{color:#fda4af;border-bottom-color:#fb7185;}
+html.dark .tab-btn.a-junior{color:#6ee7b7;border-bottom-color:#34d399;}
+html.dark .widget-title i{color:var(--accent-ondark,#f7cf6a);}
+
+/* ---- 9. Status colours tuned for the dark canvas ---- */
+html.dark{--st-pending:#94a3b8;--st-progress:#38bdf8;--st-waiting:#fbbf24;--st-hold:#a78bfa;
+  --st-done:#34d399;--st-cancel:#fb7185;--st-overdue:#fb7185;--st-archived:#64748b;}
+html.dark .kb-col[data-status="pending"]{border-top-color:#94a3b8;}
+html.dark .kb-col[data-status="in-progress"]{border-top-color:#38bdf8;}
+html.dark .kb-col[data-status="waiting"]{border-top-color:#fbbf24;}
+html.dark .kb-col[data-status="on-hold"]{border-top-color:#a78bfa;}
+html.dark .kb-col[data-status="done"]{border-top-color:#34d399;}
+html.dark .kb-col[data-status="canceled"]{border-top-color:#fb7185;}
+
+/* ---- 10. Kanban glass ---- */
+html.dark .kb-col{background:rgba(255,255,255,.035);}
+html.dark .kb-col-head{background:rgba(255,255,255,.03);}
+html.dark .kb-col-count{background:rgba(255,255,255,.10);border-color:var(--border);color:var(--text);}
+html.dark .kb-col.kb-over{background:rgba(240,179,35,.10);box-shadow:inset 0 0 0 2px rgba(240,179,35,.55),var(--shadow);}
+html.dark .kb-empty{border-color:var(--border-strong);background:rgba(255,255,255,.02);color:var(--muted);}
+html.dark .kb-col-body .task-card,html.dark .task-card{background:rgba(255,255,255,.06);border-color:var(--border);}
+html.dark .task-card:hover{background:rgba(255,255,255,.10);box-shadow:var(--shadow-lg);}
+html.dark .task-card.tc-pending,html.dark .task-card.tc-in-progress,html.dark .task-card.tc-waiting,
+html.dark .task-card.tc-on-hold,html.dark .task-card.tc-done,html.dark .task-card.tc-canceled{background:rgba(255,255,255,.06);}
+
+/* ---- 11. Readability guards for light-only hardcoded rules ---- */
+html.dark .evt-chip{background:rgba(255,255,255,.07);border-color:var(--border);color:var(--text);}
+html.dark .auth-card{background:rgba(16,22,33,.72);}
+html.dark .auth-brand-t{color:#f7cf6a;}
+html.dark .auth-field input,html.dark .auth-google{background:rgba(255,255,255,.07);border-color:var(--border);color:var(--text);}
+html.dark .auth-link{color:#f7cf6a;}
+html.dark .meet-card{background:linear-gradient(135deg,rgba(240,179,35,.20),rgba(45,212,191,.14));border:1px solid var(--border);color:var(--text);}
+html.dark .note-card-content::after{background:linear-gradient(transparent,rgba(18,24,35,.95));}
+
+/* ---- 12. Soft aurora for the light theme too (same language, brighter key) ---- */
+html:not(.dark) body::before{content:'';position:fixed;inset:-10%;z-index:0;pointer-events:none;filter:blur(30px);
+  background:
+    radial-gradient(44rem 32rem at 84% -8%, rgba(240,179,35,.20), transparent 62%),
+    radial-gradient(40rem 30rem at 4% 4%, rgba(45,212,191,.14), transparent 60%),
+    radial-gradient(40rem 32rem at 98% 62%, rgba(124,108,240,.12), transparent 62%);}
+
+/* ---- 13. Scrollbars on the dark canvas ---- */
+html.dark *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border:2px solid transparent;background-clip:padding-box;}
+html.dark *::-webkit-scrollbar-thumb:hover{background:rgba(240,179,35,.65);background-clip:padding-box;}
+html.dark ::selection{background:rgba(240,179,35,.38);color:#fff;}
 </style>
 </body>
 
