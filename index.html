@@ -12484,6 +12484,67 @@ html:not(.dark) .sub-tab.act{background:#FFFFFF!important;box-shadow:var(--shado
 html:not(.dark) .fpill{background:#FFFFFF!important;box-shadow:var(--shadow-xs)!important;}
 html:not(.dark) .tcp-pop{background:#FFFFFF!important;box-shadow:var(--shadow-lg)!important;}
 </style>
+<style id="navy-header-2026">
+/* ============================================================
+   NAVY HEADER 2026 — #003057 with a #F0B323 bloom
+   Blending gold straight into navy makes olive mud, so the gold
+   is layered as a soft bloom over a navy base plus a crisp gold
+   rule, keeping both brand colours without dirtying either.
+   Bloom is held at 22% and the right end darkened to #04406B so
+   every label clears AA over the whole gradient (worst 5.11:1).
+   ============================================================ */
+html:not(.dark) .app-header{
+  background:
+    radial-gradient(120% 200% at 92% -25%, rgba(240,179,35,.22), transparent 60%),
+    radial-gradient(90% 170% at 3% 125%, rgba(9,86,140,.42), transparent 62%),
+    linear-gradient(100deg,#00223C 0%,#003057 52%,#04406B 100%)!important;
+  border-bottom:none!important;color:#fff;
+  box-shadow:0 10px 30px -14px rgba(0,34,60,.60)!important;}
+html:not(.dark) .app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;opacity:1;
+  background:linear-gradient(90deg,rgba(240,179,35,0),#F0B323 18%,#F6D06A 50%,#F0B323 82%,rgba(240,179,35,0))!important;}
+html:not(.dark) .app-name{color:#FFFFFF!important;}
+html:not(.dark) .app-tagline{color:rgba(255,255,255,.80)!important;opacity:1!important;}
+html:not(.dark) .logo-icon{background:linear-gradient(135deg,#F6D06A,#F0B323)!important;
+  border:1px solid rgba(240,179,35,.60)!important;color:#00243F!important;
+  box-shadow:0 6px 18px -6px rgba(240,179,35,.65)!important;}
+html:not(.dark) .sync-pill,html:not(.dark) .dm-toggle{background:rgba(255,255,255,.12)!important;
+  border-color:rgba(255,255,255,.20)!important;color:rgba(255,255,255,.92)!important;}
+html:not(.dark) .dm-toggle:hover{background:rgba(255,255,255,.22)!important;}
+html:not(.dark) .tab-nav{border-top:1px solid rgba(255,255,255,.12)!important;}
+html:not(.dark) .tab-btn{color:rgba(255,255,255,.72)!important;}
+html:not(.dark) .tab-btn:hover{color:#FFFFFF!important;background:rgba(255,255,255,.10)!important;}
+
+/* member labels as light tints that read on navy */
+html:not(.dark) .tab-nav .tab-btn#tab-overview,
+html:not(.dark) .tab-nav .tab-btn#tab-overview:not(.a-active){color:#F7CF6A!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-boss,
+html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active),
+html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active):not(.a-boss){color:#B3D8FF!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-best,
+html:not(.dark) .tab-nav .tab-btn#tab-best:not(.a-active){color:#A7E3C0!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-dew,
+html:not(.dark) .tab-nav .tab-btn#tab-dew:not(.a-active){color:#FFD3A0!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-o,
+html:not(.dark) .tab-nav .tab-btn#tab-o:not(.a-active){color:#FFCFC2!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-junior,
+html:not(.dark) .tab-nav .tab-btn#tab-junior:not(.a-active){color:#A7E3C0!important;}
+
+/* active tab: white label, gold underline */
+html:not(.dark) .tab-nav .tab-btn.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-overview.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-boss.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-best.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-dew.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-o.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-junior.a-active{
+  color:#FFFFFF!important;border-bottom-color:#F0B323!important;background:rgba(255,255,255,.13)!important;}
+
+/* the salary strip already lives on the navy bar */
+html:not(.dark) .salary-strip{background:linear-gradient(135deg,rgba(240,179,35,.22),rgba(240,179,35,.06))!important;
+  border-color:rgba(240,179,35,.34)!important;}
+html:not(.dark) .salary-info-text{color:rgba(255,255,255,.95)!important;}
+html:not(.dark) .salary-info-sub,html:not(.dark) .salary-days-label{color:rgba(255,255,255,.65)!important;}
+</style>
 <script id="theme-picker-2026">
 /* Per-tab theme colour. Each workspace can pick its own accent from the
    2026 palette. Saved to {ws}_settings/theme, applied live to that tab.
@@ -12535,11 +12596,13 @@ html:not(.dark) .tcp-pop{background:#FFFFFF!important;box-shadow:var(--shadow-lg
       css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
       css+='html.dark .tab-btn.a-'+w+'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
-      css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+ink+'!important;border-bottom-color:'+ink+'!important;}';
+      /* The header bar is navy in BOTH themes, so tab labels always use the
+         bright variant. The dark ink is for body content on the white page. */
+      css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
       /* id-based too, otherwise the older #tab-* !important rules outrank us */
       css+='html:not(.dark) .tab-nav .tab-btn#tab-'+w+',html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active),'
           +'html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
-          +'{color:'+ink+'!important;border-bottom-color:'+ink+'!important;}';
+          +'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
       css+='html.dark .tab-nav .tab-btn#tab-'+w+',html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active),'
           +'html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
           +'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
