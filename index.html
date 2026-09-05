@@ -12380,6 +12380,109 @@ html.dark .evhub-title i{color:var(--accent-ondark,var(--accent))!important;}
 .tcp-copy:hover{color:var(--accent-ink,var(--accent));border-color:var(--accent);}
 .tcp-msg{font-size:11px;font-weight:700;color:var(--muted);min-height:14px;margin-top:7px;}
 .tcp-msg.bad{color:var(--st-cancel);}
+
+/* ---- 4. Beat the older ID-based tab colours ----
+   Lines ~4959-4995 set the tab labels by element id with !important, using
+   pale tints chosen for the old navy header. An id outranks classes, so the
+   class rules above lose. These selectors carry the same id plus more
+   classes, so they win cleanly without touching the original blocks. */
+html:not(.dark) .tab-nav .tab-btn#tab-overview,
+html:not(.dark) .tab-nav .tab-btn#tab-overview:not(.a-active){color:#0E4C75!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-boss,
+html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active),
+html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active):not(.a-boss){color:#003057!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-best,
+html:not(.dark) .tab-nav .tab-btn#tab-best:not(.a-active){color:#0B6B4F!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-dew,
+html:not(.dark) .tab-nav .tab-btn#tab-dew:not(.a-active){color:#A65614!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-o,
+html:not(.dark) .tab-nav .tab-btn#tab-o:not(.a-active){color:#C2410C!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-junior,
+html:not(.dark) .tab-nav .tab-btn#tab-junior:not(.a-active){color:#14532D!important;}
+/* same override for dark, so the tab palette and the picker apply there too */
+html.dark .tab-nav .tab-btn#tab-overview,
+html.dark .tab-nav .tab-btn#tab-overview:not(.a-active){color:#f7cf6a!important;}
+html.dark .tab-nav .tab-btn#tab-boss,
+html.dark .tab-nav .tab-btn#tab-boss:not(.a-active),
+html.dark .tab-nav .tab-btn#tab-boss:not(.a-active):not(.a-boss){color:#7dd3fc!important;}
+html.dark .tab-nav .tab-btn#tab-best,
+html.dark .tab-nav .tab-btn#tab-best:not(.a-active){color:#6ee7b7!important;}
+html.dark .tab-nav .tab-btn#tab-dew,
+html.dark .tab-nav .tab-btn#tab-dew:not(.a-active){color:#fcd34d!important;}
+html.dark .tab-nav .tab-btn#tab-o,
+html.dark .tab-nav .tab-btn#tab-o:not(.a-active){color:#fda4af!important;}
+html.dark .tab-nav .tab-btn#tab-junior,
+html.dark .tab-nav .tab-btn#tab-junior:not(.a-active){color:#6ee7b7!important;}
+html.dark .tab-nav .tab-btn.a-active,
+html.dark .tab-nav .tab-btn#tab-overview.a-active,
+html.dark .tab-nav .tab-btn#tab-boss.a-active,
+html.dark .tab-nav .tab-btn#tab-best.a-active,
+html.dark .tab-nav .tab-btn#tab-dew.a-active,
+html.dark .tab-nav .tab-btn#tab-o.a-active,
+html.dark .tab-nav .tab-btn#tab-junior.a-active{
+  color:var(--accent-ondark,#f7cf6a)!important;border-bottom-color:var(--accent-ondark,#f7cf6a)!important;}
+
+/* the active tab still wins, in its own tab colour */
+html:not(.dark) .tab-nav .tab-btn.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-overview.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-boss.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-best.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-dew.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-o.a-active,
+html:not(.dark) .tab-nav .tab-btn#tab-junior.a-active{
+  color:var(--accent-ink,#003057)!important;border-bottom-color:var(--accent-ink,#003057)!important;}
+</style>
+<style id="white-2026">
+/* ============================================================
+   WHITE 2026 — bright white light mode
+   The page is pure white and every panel is solid white, so the
+   only thing separating them is the shadow. The shadows are
+   therefore stronger and cooler than the old translucent look,
+   and the frosted blur is removed (pointless over solid white).
+   ============================================================ */
+html:not(.dark){
+  --bg:#FFFFFF;--surface:#FFFFFF;--surface-2:#FFFFFF;--surface-3:#F5F7FA;
+  --border:rgba(16,24,40,.09);--border-soft:rgba(16,24,40,.06);--border-strong:rgba(16,24,40,.16);
+  --shadow-xs:0 1px 2px rgba(16,24,40,.05);
+  --shadow-sm:0 1px 3px rgba(16,24,40,.07);
+  --shadow:0 1px 3px rgba(16,24,40,.06),0 12px 30px -8px rgba(16,24,40,.15);
+  --shadow-lg:0 2px 6px rgba(16,24,40,.07),0 24px 52px -12px rgba(16,24,40,.22);}
+
+/* a clean white canvas, no tinted light pools */
+html:not(.dark) body,html:not(.dark) body.theme-overview{background:#FFFFFF!important;}
+html:not(.dark) body::before,html:not(.dark) body::after{background:none!important;filter:none!important;}
+
+/* solid white panels that float on their shadow */
+html:not(.dark) .widget,html:not(.dark) .stat-box,html:not(.dark) .link-card,
+html:not(.dark) .note-card,html:not(.dark) .card,html:not(.dark) .ov-card,
+html:not(.dark) .rc-card,html:not(.dark) .rq-card,html:not(.dark) .evc-card,
+html:not(.dark) .ews-card,html:not(.dark) .myday,html:not(.dark) .task-card,
+html:not(.dark) .evhub,html:not(.dark) .modal,html:not(.dark) .chat-panel,html:not(.dark) .auth-card{
+  background:#FFFFFF!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+  box-shadow:var(--shadow)!important;}
+html:not(.dark) .widget:hover,html:not(.dark) .link-card:hover,
+html:not(.dark) .note-card:hover,html:not(.dark) .task-card:hover{box-shadow:var(--shadow-lg)!important;}
+html:not(.dark) .modal,html:not(.dark) .chat-panel,html:not(.dark) .auth-card{box-shadow:var(--shadow-lg)!important;}
+
+/* header sits on white, so it needs its own edge */
+html:not(.dark) .app-header{background:#FFFFFF!important;
+  border-bottom:1px solid rgba(16,24,40,.10);
+  box-shadow:0 4px 18px -10px rgba(16,24,40,.28)!important;}
+
+/* the board stays frameless; cards carry the elevation */
+html:not(.dark) .kb-col,html:not(.dark) .kb-col[data-status]{background:transparent!important;box-shadow:none!important;}
+html:not(.dark) .kb-empty{background:transparent!important;border-color:rgba(16,24,40,.14)!important;}
+
+/* fields and rails need a hint of tone so they read on white */
+html:not(.dark) .form-input,html:not(.dark) .form-select,html:not(.dark) .form-textarea{
+  background:#F5F7FA!important;border-color:rgba(16,24,40,.14)!important;}
+html:not(.dark) .form-input:focus,html:not(.dark) .form-select:focus,html:not(.dark) .form-textarea:focus{
+  background:#FFFFFF!important;border-color:var(--accent,#003057)!important;}
+html:not(.dark) .sub-nav{background:#F5F7FA!important;}
+html:not(.dark) .sub-tab.act{background:#FFFFFF!important;box-shadow:var(--shadow-sm)!important;}
+html:not(.dark) .fpill{background:#FFFFFF!important;box-shadow:var(--shadow-xs)!important;}
+html:not(.dark) .tcp-pop{background:#FFFFFF!important;box-shadow:var(--shadow-lg)!important;}
 </style>
 <script id="theme-picker-2026">
 /* Per-tab theme colour. Each workspace can pick its own accent from the
@@ -12433,6 +12536,13 @@ html.dark .evhub-title i{color:var(--accent-ondark,var(--accent))!important;}
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
       css+='html.dark .tab-btn.a-'+w+'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
       css+='html:not(.dark) .tab-btn.a-'+w+'{color:'+ink+'!important;border-bottom-color:'+ink+'!important;}';
+      /* id-based too, otherwise the older #tab-* !important rules outrank us */
+      css+='html:not(.dark) .tab-nav .tab-btn#tab-'+w+',html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active),'
+          +'html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
+          +'{color:'+ink+'!important;border-bottom-color:'+ink+'!important;}';
+      css+='html.dark .tab-nav .tab-btn#tab-'+w+',html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active),'
+          +'html.dark .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'
+          +'{color:'+bright+'!important;border-bottom-color:'+bright+'!important;}';
       /* The theme-linked bars. A dark label needs a solid light fill behind it,
          otherwise it would sit on a near-transparent tint and vanish. */
       var barsD,barsL;
