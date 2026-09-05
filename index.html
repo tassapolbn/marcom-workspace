@@ -12164,6 +12164,79 @@ body,.btn,.fpill,.sub-tab,.task-card,.widget,.kb-col,.member-head,.btn-accent,.s
 .kb-col-count{transition:transform .2s var(--ease-out);}
 .kb-col:hover .kb-col-count{transform:scale(1.08);}
 </style>
+<style id="refine-2026">
+/* ============================================================
+   REFINE 2026 — tuned against real rendered screenshots
+   Fixes: muddy canvas (heavy vignette + warm pools turned brown),
+   statuses too washed to tell apart, invisible "pending", and a
+   heavy full-width Add Task bar. Cleaner spacing throughout.
+   ============================================================ */
+
+/* ---- 1. Clean deep canvas (no brown cast, light vignette) ---- */
+html.dark{
+  --bg:#0A0E18;--surface:rgba(255,255,255,.05);--surface-2:rgba(255,255,255,.08);
+  --border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.20);
+  --text:#EAF0F8;--muted:#93A3B8;
+  --st-pending:#38D6E8;--st-progress:#7C8CFF;--st-waiting:#FFB020;--st-hold:#D07CFF;
+  --st-done:#22D39A;--st-cancel:#FF5C7A;--st-overdue:#FF5C7A;--st-archived:#8FA0B4;}
+html.dark body,html.dark body.theme-overview{background:#0A0E18;}
+html.dark body::before{inset:-15%;filter:blur(60px);background:
+  radial-gradient(50rem 34rem at 88% -8%, rgba(34,211,238,.16), transparent 62%),
+  radial-gradient(46rem 34rem at 4% 4%, rgba(99,102,241,.15), transparent 60%),
+  radial-gradient(40rem 30rem at 98% 72%, rgba(176,124,255,.12), transparent 62%);}
+html.dark body::after{background:radial-gradient(140% 100% at 50% 30%, transparent 62%, rgba(6,9,16,.55) 100%);}
+html.dark .app-header{background:linear-gradient(180deg,rgba(12,17,28,.92),rgba(10,14,24,.78));}
+
+/* ---- 2. Light canvas: warm Cloud Dancer with a calm colour drift ---- */
+html:not(.dark){
+  --st-pending:#0E7490;--st-progress:#3B4FCF;--st-waiting:#96610A;--st-hold:#8B3FC7;
+  --st-done:#077A58;--st-cancel:#B92A42;--st-overdue:#B92A42;--st-archived:#6C7A8A;}
+html:not(.dark) body,html:not(.dark) body.theme-overview{
+  background:linear-gradient(180deg,#F7F5F1 0%,#F1EFEA 46%,#EBE9E4 100%);background-attachment:fixed;}
+html:not(.dark) body::before{inset:-15%;filter:blur(60px);opacity:1;background:
+  radial-gradient(50rem 34rem at 88% -8%, rgba(18,164,160,.16), transparent 62%),
+  radial-gradient(46rem 34rem at 2% 2%, rgba(99,102,241,.12), transparent 60%),
+  radial-gradient(40rem 30rem at 98% 74%, rgba(176,124,255,.10), transparent 62%);}
+html:not(.dark) body::after{background:none;}
+
+/* ---- 3. Status you can read at a glance ---- */
+.kb-col[data-status="pending"]{--c:var(--st-pending);}
+.kb-col[data-status="in-progress"]{--c:var(--st-progress);}
+.kb-col[data-status="waiting"]{--c:var(--st-waiting);}
+.kb-col[data-status="on-hold"]{--c:var(--st-hold);}
+.kb-col[data-status="done"]{--c:var(--st-done);}
+.kb-col[data-status="canceled"]{--c:var(--st-cancel);}
+.kb-col[data-status]{border-top:3px solid var(--c);}
+.kb-col[data-status] .kb-col-head{background:color-mix(in srgb,var(--c) 10%,transparent);}
+.kb-col[data-status] .kb-col-name{color:var(--c);font-weight:800;}
+.kb-col[data-status] .kb-col-ic{background:var(--c)!important;color:#0A0E18!important;}
+html:not(.dark) .kb-col[data-status] .kb-col-ic{color:#ffffff!important;}
+.kb-col[data-status] .kb-col-count{background:color-mix(in srgb,var(--c) 20%,transparent)!important;
+  border-color:transparent!important;color:var(--c)!important;}
+.task-card{border-left-width:5px!important;}
+
+/* ---- 4. Add Task bar: refined outline in the tab's own colour ---- */
+.btn-accent.btn-full{background:color-mix(in srgb,var(--accent) 8%,transparent)!important;
+  background-image:none!important;border:1.5px solid color-mix(in srgb,var(--accent) 46%,transparent)!important;
+  box-shadow:none!important;border-radius:14px!important;padding:12px!important;letter-spacing:.2px;}
+html.dark .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 90%,white)!important;}
+html:not(.dark) .btn-accent.btn-full{color:color-mix(in srgb,var(--accent) 72%,black)!important;
+  background:color-mix(in srgb,var(--accent) 9%,white)!important;}
+.btn-accent.btn-full:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)!important;transform:none;}
+
+/* ---- 5. Cleaner, tighter rhythm ---- */
+.member-head{padding:12px 16px!important;margin-bottom:10px!important;}
+.member-head .member-avatar{width:42px!important;height:42px!important;font-size:18px!important;}
+.member-head .member-name{font-size:18px!important;}
+.stat-box{padding:14px 12px!important;}
+.stat-num{font-size:24px!important;}
+.stat-lbl{font-size:10.5px;letter-spacing:.3px;}
+.stats-row{gap:10px;margin-bottom:11px;}
+.filter-tabs{margin-bottom:12px;}
+.kb-col-body{padding:10px;gap:9px;}
+.kb-col-body .task-card{margin-bottom:0!important;}
+.container{padding-top:1rem;}
+</style>
 <script id="theme-picker-2026">
 /* Per-tab theme colour. Each workspace can pick its own accent from the
    2026 palette. Saved to {ws}_settings/theme, applied live to that tab.
