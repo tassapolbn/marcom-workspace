@@ -11,6 +11,8 @@
     "firebase-tools": "^13.35.1"
   },
   "scripts": {
+    "test:ui": "node --test tests/ui-*.test.mjs",
+    "preview:ui": "node tests/ui-preview.mjs",
     "test:rules": "firebase emulators:exec --only firestore \"node tests/rules.test.mjs\""
   }
 }

@@ -1444,6 +1444,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   </div>
 </div>
 
+<script src="assets/ui-render.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -2581,7 +2582,7 @@ function saveTaskAndCalendar(){
   var shoot=(document.getElementById('m-md-taken')||{}).value||'';
   if(!due&&!shoot){
     try{uiToast('Please fill in the Due Date field first (or Date Taken for a shoot). The calendar needs a date.',{duration:8000});}catch(e){}
-    var d=document.getElementById('m-due'); if(d){try{d.focus();d.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
+    var d=document.getElementById('m-due'); if(d){try{d.focus();d.scrollIntoView({block:'center',behavior:motionBehavior()});}catch(e){}}
     return;
   }
   window.__calAfterSave=true;
@@ -3950,23 +3951,26 @@ function setCmdkSel(i){cmdkSel=i;highlightCmdk();}
 function highlightCmdk(){document.querySelectorAll('#cmdk-results .cmdk-item').forEach(el=>el.classList.toggle('sel',parseInt(el.dataset.idx)===cmdkSel));}
 function runCmdk(i){if(cmdkItems[i]&&cmdkItems[i].run)cmdkItems[i].run();}
 function scrollCmdkSel(){const el=document.querySelector('#cmdk-results .cmdk-item.sel');if(el)el.scrollIntoView({block:'nearest'});}
-document.addEventListener('keydown',e=>{
+function handleWorkspaceShortcut(e){
+  if(e.defaultPrevented||e.isComposing)return;
   const ov=document.getElementById('cmdk-overlay');
   const open=ov&&ov.classList.contains('open');
+  const dialog=document.querySelector('.modal-overlay.open,.confirm-overlay.open');
+  if(dialog&&!open)return;
   if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();open?closeCmdk():openCmdk();return;}
   if(open){
-    if(e.key==='Escape'){e.preventDefault();closeCmdk();}
+    if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();closeCmdk();}
     else if(e.key==='ArrowDown'){e.preventDefault();cmdkSel=Math.min(cmdkSel+1,cmdkItems.length-1);highlightCmdk();scrollCmdkSel();}
     else if(e.key==='ArrowUp'){e.preventDefault();cmdkSel=Math.max(cmdkSel-1,0);highlightCmdk();scrollCmdkSel();}
     else if(e.key==='Enter'){e.preventDefault();runCmdk(cmdkSel);}
     return;
   }
   const tag=(e.target.tagName||'').toLowerCase();
-  if(tag==='input'||tag==='textarea'||e.target.isContentEditable)return;
+  if(e.ctrlKey||e.metaKey||e.altKey||tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable)return;
   if(e.key==='/'){e.preventDefault();openCmdk();}
   else if(e.key==='n'||e.key==='N'){e.preventDefault();openAdd(curTab());}
-  else if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open,.confirm-overlay.open').forEach(m=>m.classList.remove('open'));}
-});
+}
+document.addEventListener('keydown',handleWorkspaceShortcut);
 
 /* ===== WEATHER (Open-Meteo, free, no key) ===== */
 const WX_CODES={0:['ti-sun','Clear'],1:['ti-sun','Mainly clear'],2:['ti-cloud','Partly cloudy'],3:['ti-cloud','Overcast'],45:['ti-cloud-fog','Fog'],48:['ti-cloud-fog','Fog'],51:['ti-cloud-rain','Light drizzle'],53:['ti-cloud-rain','Drizzle'],55:['ti-cloud-rain','Heavy drizzle'],56:['ti-cloud-rain','Freezing drizzle'],57:['ti-cloud-rain','Freezing drizzle'],61:['ti-cloud-rain','Light rain'],63:['ti-cloud-rain','Rain'],65:['ti-cloud-rain','Heavy rain'],66:['ti-cloud-rain','Freezing rain'],67:['ti-cloud-rain','Freezing rain'],71:['ti-snowflake','Light snow'],73:['ti-snowflake','Snow'],75:['ti-snowflake','Heavy snow'],77:['ti-snowflake','Snow grains'],80:['ti-cloud-rain','Showers'],81:['ti-cloud-rain','Showers'],82:['ti-cloud-storm','Heavy showers'],85:['ti-snowflake','Snow showers'],86:['ti-snowflake','Snow showers'],95:['ti-bolt','Thunderstorm'],96:['ti-bolt','Thunderstorm'],99:['ti-bolt','Thunderstorm']};
@@ -4641,11 +4645,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var meetSubs=nextMeet?sub('ti-clock-hour-4','Next: '+esc((nextMeet.title||'').slice(0,26))+(nextMeet.st.toDateString()===now.toDateString()?' \u00b7 '+nextMeet.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''))+sub('ti-calendar',meetWeek+' in the next 7 days'):sub('ti-calendar-off','No upcoming meetings');
     var evSubs=nextEv?sub('ti-calendar-star','Next: '+esc(nextEv.name.slice(0,24))+' in '+nextEv.d+'d')+sub('ti-confetti',evWeek+' event'+(evWeek===1?'':'s')+' this week'):sub('ti-calendar-off','No upcoming events');
     var evBar=nextEv?bar(Math.max(4,100-Math.min(100,nextEv.d/60*100)),'var(--purple)'):'';
-    el.innerHTML=card('ti-clipboard-list',open,'Active Tasks','ov-s-navy',actSubs,bar(pct,'var(--st-done)'))
+    MarcomUI.setHTML(el,card('ti-clipboard-list',open,'Active Tasks','ov-s-navy',actSubs,bar(pct,'var(--st-done)'))
       +card('ti-calendar-due',dueToday,'Due Today','ov-s-gold',dueSubs)
       +card('ti-alert-triangle',od,'Overdue','ov-s-red',odSubs)
       +card('ti-calendar-time',meetToday,'Meetings Today','ov-s-blue',meetSubs,'','openMeetingCal()')
-      +card('ti-confetti',evUp,'Upcoming Events','ov-s-purple',evSubs,evBar);
+      +card('ti-confetti',evUp,'Upcoming Events','ov-s-purple',evSubs,evBar));
   }
 
   /* ---------- availability ---------- */
@@ -4657,7 +4661,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
   function renderAvailability(){
     var el=document.getElementById('ov-availability'); if(!el)return;
-    el.innerHTML=MORDER.map(function(w){
+    MarcomUI.setHTML(el,MORDER.map(function(w){
       var act=tReal(w).filter(isActive).length;
       var st=statusOf(w);
       return '<div class="ov-mem" onclick="ovGoto(\''+w+'\')">'
@@ -4665,7 +4669,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
         +'<div class="ov-mem-id"><div class="ov-mem-name">'+esc(nm(w))+'</div><div class="ov-mem-role">'+esc(roleOf(w))+'</div></div></div>'
         +'<div class="ov-mem-bot"><span class="ov-mem-load"><b>'+act+'</b> active</span><span class="ov-st '+st.c+'"><i class="ti '+st.i+'"></i> '+st.l+'</span></div>'
         +'</div>';
-    }).join('');
+    }).join(''));
   }
 
   /* ---------- master calendar ---------- */
@@ -4673,7 +4677,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function calFilters(){
     var el=document.getElementById('ov-cal-filters'); if(!el)return;
     var opts=[['all','All Team']].concat(MORDER.map(function(w){ return [w,nm(w)]; }));
-    el.innerHTML=opts.map(function(o){ return '<button class="ov-fpill'+(ovCalFilter===o[0]?' on':'')+'" onclick="ovSetCalFilter(\''+o[0]+'\')">'+esc(o[1])+'</button>'; }).join('');
+    MarcomUI.setHTML(el,opts.map(function(o){ return '<button class="ov-fpill'+(ovCalFilter===o[0]?' on':'')+'" onclick="ovSetCalFilter(\''+o[0]+'\')">'+esc(o[1])+'</button>'; }).join(''));
   }
   function dayData(ds){
     var out={dl:[],ev:[],sick:[],leave:[]};
@@ -4703,14 +4707,14 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var cls=['cal-day','ov-day',ds===t?'today':'',ovSel===ds?'sel':''].filter(Boolean).join(' ');
       html+='<div class="'+cls+'" onclick="ovPickDay(\''+ds+'\')">'+d+(dots?'<span class="ov-dots">'+dots+'</span>':'')+'</div>';
     }
-    grid.innerHTML=html;
+    MarcomUI.setHTML(grid,html);
     function leg(c,l){ return '<span class="ov-leg"><span class="ov-cd '+c+'"></span>'+l+'</span>'; }
-    var lg=document.getElementById('ov-cal-legend'); if(lg)lg.innerHTML=leg('ov-cd-dl','Deadline')+leg('ov-cd-ev','Event')+leg('ov-cd-sick','Sick')+leg('ov-cd-leave','Leave');
+    var lg=document.getElementById('ov-cal-legend'); if(lg)MarcomUI.setHTML(lg,leg('ov-cd-dl','Deadline')+leg('ov-cd-ev','Event')+leg('ov-cd-sick','Sick')+leg('ov-cd-leave','Leave'));
     renderCalDetail();
   }
   function renderCalDetail(){
     var el=document.getElementById('ov-cal-detail'); if(!el)return;
-    if(!ovSel){ el.style.display='none'; el.innerHTML=''; return; }
+    if(!ovSel){ el.style.display='none'; MarcomUI.setHTML(el,''); return; }
     var dd=dayData(ovSel); el.style.display='block';
     function row(c,a,b){ return '<div class="ov-det"><span class="ov-cd '+c+'"></span><div><div class="ov-det-a">'+esc(a)+'</div>'+(b?'<div class="ov-det-b">'+esc(b)+'</div>':'')+'</div></div>'; }
     var rows=[];
@@ -4718,7 +4722,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     dd.ev.forEach(function(o){ rows.push(row('ov-cd-ev',o.e.name||'Event','Team event'+(o.e.time?' · '+o.e.time:''))); });
     dd.sick.forEach(function(o){ rows.push(row('ov-cd-sick',nm(o.w)+' on sick leave','')); });
     dd.leave.forEach(function(o){ rows.push(row('ov-cd-leave',nm(o.w)+' on leave',o.r.event||'')); });
-    el.innerHTML='<div class="ov-cal-detail-title">'+fdt(ovSel)+'</div>'+(rows.length?rows.join(''):'<div class="ov-empty-sm">Nothing scheduled.</div>');
+    MarcomUI.setHTML(el,'<div class="ov-cal-detail-title">'+fdt(ovSel)+'</div>'+(rows.length?rows.join(''):'<div class="ov-empty-sm">Nothing scheduled.</div>'));
   }
 
   /* ---------- deadlines ---------- */
@@ -4739,7 +4743,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var gi=items.filter(function(it){ return it.d>=g[1]&&it.d<=g[2]; }).sort(function(a,b){ return a.d-b.d; });
       if(gi.length)html+=grp(g[0],gi,false);
     });
-    el.innerHTML=html||'<div class="ov-empty-sm">No deadlines in the next two weeks.</div>';
+    MarcomUI.setHTML(el,html||'<div class="ov-empty-sm">No deadlines in the next two weeks.</div>');
   }
 
   /* ---------- event countdown ---------- */
@@ -4748,14 +4752,14 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var arr=[];
     MORDER.forEach(function(w){ eOf(w).forEach(function(e){ if(e.date){ var d=dU(e.date); if(d!==null&&d>=0)arr.push({w:w,e:e,d:d}); } }); });
     arr.sort(function(a,b){ return a.d-b.d; });
-    if(!arr.length){ el.innerHTML='<div class="ov-empty-sm">No upcoming events.</div>'; return; }
-    el.innerHTML=arr.slice(0,8).map(function(it){
+    if(!arr.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No upcoming events.</div>'); return; }
+    MarcomUI.setHTML(el,arr.slice(0,8).map(function(it){
       var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':it.d+' days');
       var urg=it.d<=3?' urg':(it.d<=7?' soon':'');
       return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div class="ov-cdn-n"'+((it.e.color&&/^#[0-9a-fA-F]{6}$/.test(it.e.color))?' style="color:'+it.e.color+';"':'')+'>'+it.d+'</div><div class="ov-cdn-u">days</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
         +'<div class="ov-cdn-tag">'+lbl+'</div></div>';
-    }).join('');
+    }).join(''));
   }
 
   /* ---------- recent activity (real timestamps only) ---------- */
@@ -4768,11 +4772,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       lOf(w).forEach(function(r){ var dt=tsToDate(r.createdAt); if(dt)acts.push({dt:dt,i:'ti-beach',txt:'<b>'+esc(nm(w))+'</b> '+(r.type==='earned'?'earned a day-off in lieu':'logged leave taken')}); });
     });
     acts.sort(function(a,b){ return b.dt-a.dt; });
-    if(!acts.length){ el.innerHTML='<div class="ov-empty-sm">No recent activity.</div>'; return; }
-    el.innerHTML=acts.slice(0,10).map(function(a){
+    if(!acts.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No recent activity.</div>'); return; }
+    MarcomUI.setHTML(el,acts.slice(0,10).map(function(a){
       var when=a.dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+a.dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       return '<div class="ov-act"><div class="ov-act-ic"><i class="ti '+a.i+'"></i></div><div class="ov-act-b"><div class="ov-act-txt">'+a.txt+'</div><div class="ov-act-t">'+when+'</div></div></div>';
-    }).join('');
+    }).join(''));
   }
 
   /* ---------- workload heatmap ---------- */
@@ -4780,36 +4784,36 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var el=document.getElementById('ov-heatmap'); if(!el)return;
     var counts=MORDER.map(function(w){ return {w:w,n:tReal(w).filter(isActive).length}; });
     var max=1; counts.forEach(function(c){ if(c.n>max)max=c.n; });
-    el.innerHTML=counts.map(function(c){
+    MarcomUI.setHTML(el,counts.map(function(c){
       var lvl=c.n<=5?'low':(c.n<=12?'med':'high');
       var lbl=c.n<=5?'Low':(c.n<=12?'Medium':'High');
       var pct=Math.max(6,Math.round(c.n/max*100));
       return '<div class="ov-hm"><div class="ov-hm-top"><span class="ov-hm-name">'+esc(nm(c.w))+'</span><span class="ov-hm-val '+lvl+'">'+c.n+' · '+lbl+'</span></div><div class="ov-hm-bar"><div class="ov-hm-fill '+lvl+'" style="width:'+pct+'%"></div></div></div>';
-    }).join('');
+    }).join(''));
   }
 
   /* ---------- leave dashboard ---------- */
   function renderLeave(){
     var el=document.getElementById('ov-leave'); if(!el)return;
-    el.innerHTML=MORDER.map(function(w){
+    MarcomUI.setHTML(el,MORDER.map(function(w){
       var sick=sOf(w).length;
       var earned=0,used=0; lOf(w).forEach(function(r){ if(r.type==='earned')earned+=(r.days||0); else used+=(r.days||0); });
       var bal=earned-used; bal=Number.isInteger(bal)?bal:bal.toFixed(1);
       return '<div class="ov-lv"><div class="ov-lv-name">'+esc(nm(w))+'</div><div class="ov-lv-stats"><span class="ov-lv-pill sick"><i class="ti ti-heart-broken"></i> '+sick+' sick</span><span class="ov-lv-pill lieu"><i class="ti ti-beach"></i> '+bal+' lieu</span></div></div>';
-    }).join('');
+    }).join(''));
   }
 
   /* ---------- watermark deletion queue (O's media tasks) ---------- */
   function renderWM(){
     var el=document.getElementById('ov-watermark'); if(!el)return;
     var items=tOf('o').filter(function(t){ return t.mdWatermark; }).sort(function(a,b){ return (a.mdWatermark||'').localeCompare(b.mdWatermark||''); });
-    if(!items.length){ el.innerHTML='<div class="ov-empty-sm">No media files queued for deletion.</div>'; return; }
-    el.innerHTML=items.map(function(t){
+    if(!items.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No media files queued for deletion.</div>'); return; }
+    MarcomUI.setHTML(el,items.map(function(t){
       var dr=dU(t.mdWatermark);
       var cls=dr<0?'od':(dr===0?'today':(dr<=7?'soon':'ok'));
       var lbl=dr<0?('Overdue by '+Math.abs(dr)+'d'):(dr===0?'Delete today':dr+' days left');
       return '<div class="ov-wm '+cls+'"><div class="ov-wm-name">'+esc(topicOf(t))+'</div><div class="ov-wm-meta">Uploaded '+(t.mdUpload?fdt(t.mdUpload):'-')+' · Delete '+fdt(t.mdWatermark)+'</div><div class="ov-wm-days">'+lbl+'</div></div>';
-    }).join('');
+    }).join(''));
   }
 
   /* ---------- department resources ---------- */
@@ -4830,12 +4834,12 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
   function renderRes(){
     var el=document.getElementById('ov-resources'); if(!el)return;
-    el.innerHTML=RES_DEFS.map(function(r){
+    MarcomUI.setHTML(el,RES_DEFS.map(function(r){
       if(r[0]==='links'){ return '<a class="ov-res-card" onclick="openLinksHub()" style="cursor:pointer;"><div class="ov-res-ic"><i class="ti '+r[2]+'"></i></div><div class="ov-res-t">'+r[1]+'</div><div class="ov-res-go">Open &rsaquo;</div></a>'; }
       var u=resUrl(r[0]);
       if(u){ return '<a class="ov-res-card" href="'+esc(safeUrl(u))+'" target="_blank" rel="noopener noreferrer"><div class="ov-res-ic"><i class="ti '+r[2]+'"></i></div><div class="ov-res-t">'+r[1]+'</div><div class="ov-res-go">Open &rsaquo;</div></a>'; }
       return '<a class="ov-res-card empty" onclick="ovOpenResources()"><div class="ov-res-ic"><i class="ti '+r[2]+'"></i></div><div class="ov-res-t">'+r[1]+'</div><div class="ov-res-go muted">Add link</div></a>';
-    }).join('');
+    }).join(''));
   }
   function buildResModal(){
     if(document.getElementById('ov-res-modal'))return;
@@ -4893,7 +4897,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function renderOverview(){
     if(!document.getElementById('panel-overview'))return;
     var sub=document.getElementById('ov-datesub');
-    if(sub){ var n=new Date(); sub.textContent=DOW[n.getDay()]+', '+n.getDate()+' '+MON[n.getMonth()]+' '+n.getFullYear(); }
+    if(sub){ var n=new Date(),dateLabel=DOW[n.getDay()]+', '+n.getDate()+' '+MON[n.getMonth()]+' '+n.getFullYear(); if(sub.textContent!==dateLabel)sub.textContent=dateLabel; }
     renderStats(); renderAvailability(); calFilters(); renderCal(); renderDeadlines();
     renderCountdown(); renderActivity(); renderHeatmap(); renderLeave(); renderWM(); renderRes();
     try{ if(window.ovDaily)window.ovDaily(); }catch(e){}
@@ -4902,7 +4906,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   /* ---------- window-exposed handlers (used by inline onclick) ---------- */
   window.renderOverview=renderOverview;
   window.ovGo=function(){ try{ switchTab('overview'); }catch(e){} renderOverview(); };
-  window.ovGoto=function(w){ try{ switchTab(w); }catch(e){} try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){} };
+  window.ovGoto=function(w){ try{ switchTab(w); }catch(e){} try{ window.scrollTo({top:0,behavior:motionBehavior()}); }catch(e){} };
   window.ovCalPrev=function(){ ovCalM--; if(ovCalM<0){ ovCalM=11; ovCalY--; } renderCal(); };
   window.ovCalNext=function(){ ovCalM++; if(ovCalM>11){ ovCalM=0; ovCalY++; } renderCal(); };
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };
@@ -4940,7 +4944,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       renderOverview();
       startSync();
       if(ok&&document.getElementById('panel-overview')){ try{ switchTab('overview'); }catch(e){} }
-      setInterval(function(){ try{ var p=document.getElementById('panel-overview'); if(p&&p.classList.contains('active'))renderOverview(); }catch(e){} },5000);
+      setInterval(function(){ try{ var p=document.getElementById('panel-overview'); if(!document.hidden&&p&&p.classList.contains('active'))renderOverview(); }catch(e){} },5000);
     }catch(e){ console.error('Overview init failed (existing app untouched):',e); }
   }
   var __gatedInit=function(){whenAuthed(init);};
@@ -7933,7 +7937,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     if(WS.indexOf(w)<0)return;
     ST[w].open=id; ST[w].tab='overview'; ST[w].form=null; ST[w].edit=null;
     switchToEvents(w); renderPanel(w);
-    try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+    try{window.scrollTo({top:0,behavior:motionBehavior()});}catch(e){}
   };
   window.evwsBack=function(w){ST[w].open=null;ST[w].form=null;ST[w].edit=null;renderPanel(w);};
   window.evwsTab=function(w,tab){ST[w].tab=tab;ST[w].form=null;ST[w].edit=null;renderPanel(w);};
@@ -8585,14 +8589,14 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       var t=tOf(w).find(function(x){return x.id===tid;});
       switchTab(w);
       if(t&&t.eventId&&window.evwsOpenEvent)evwsOpenEvent(w,t.eventId);
-      window.scrollTo({top:0,behavior:'smooth'});
+      window.scrollTo({top:0,behavior:motionBehavior()});
     }catch(e){}
   };
   window.ovFocusEvent=function(w,eid){
     try{
       switchTab(w);
       if(window.evwsOpenEvent)evwsOpenEvent(w,eid);
-      window.scrollTo({top:0,behavior:'smooth'});
+      window.scrollTo({top:0,behavior:motionBehavior()});
     }catch(e){}
   };
   window.ovDaily=function(){
@@ -8600,7 +8604,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     /* greeting */
     var g=now.getHours()<12?'Good morning':(now.getHours()<17?'Good afternoon':'Good evening');
     var greet=document.getElementById('ov-greet');
-    if(greet)greet.textContent=g+', '+myName();
+    if(greet){var greeting=g+', '+myName();if(greet.textContent!==greeting)greet.textContent=greeting;}
     /* gather today data */
     var dueToday=[],overdue=[],evToday=[],nextEv=null,meetToday=0;
     MORDER.forEach(function(w){
@@ -8630,7 +8634,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       parts.push('<span class="tl-chip'+(overdue.length?' tl-warn':'')+'"><i class="ti ti-alert-triangle"></i><b>'+overdue.length+'</b>&nbsp;overdue</span>');
       parts.push('<span class="tl-chip"><i class="ti ti-calendar-time"></i><b>'+meetToday+'</b>&nbsp;meeting'+(meetToday===1?'':'s')+' today</span>');
       if(nextEv)parts.push('<span class="tl-chip"><i class="ti ti-confetti"></i>Next event:&nbsp;<b>'+esc((nextEv.e.name||'Event').slice(0,24))+'</b>&nbsp;'+(nextEv.d===0?'today':'in '+nextEv.d+'d')+'</span>');
-      line.innerHTML=parts.join('');
+      MarcomUI.setHTML(line,parts.join(''));
     }
     /* focus card */
     var fc=document.getElementById('ov-focus');
@@ -8663,9 +8667,9 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
         if(evToday.length)bits.push(evToday.length+' event'+(evToday.length===1?'':'s'));
         if(overdue.length)bits.push(overdue.length+' overdue');
         if(dueToday.length)bits.push(dueToday.length+' due today');
-        fc.innerHTML=head+'<div class="ov-focus-sub">'+bits.join(' · ')+'</div><div class="ov-focus-list">'+rows+'</div>';
+        MarcomUI.setHTML(fc,head+'<div class="ov-focus-sub">'+bits.join(' · ')+'</div><div class="ov-focus-list">'+rows+'</div>');
       }else{
-        fc.innerHTML='<div class="ov-focus-row">'+head+'<div class="ov-focus-clear"><i class="ti ti-circle-check"></i>All clear. Nothing due today, nothing overdue.</div></div>';
+        MarcomUI.setHTML(fc,'<div class="ov-focus-row">'+head+'<div class="ov-focus-clear"><i class="ti ti-circle-check"></i>All clear. Nothing due today, nothing overdue.</div></div>');
       }
       fc.style.display='block';
     }
@@ -9114,7 +9118,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     ['rcf-eventDate','rcf-startTime','rcf-endTime'].forEach(function(id){
       var el=document.getElementById(id); if(el)el.addEventListener('change',rcOnChange);
     });
-    try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+    try{window.scrollTo({top:0,behavior:motionBehavior()});}catch(e){}
   }
   /* Restore anything already typed (used when the language is switched). */
   function rcFillAll(){
@@ -9132,7 +9136,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     var em=localStorage.getItem('rc_email')||'';
     var emf=document.getElementById('rcf-email'); if(emf&&!emf.value&&em)emf.value=em;
   }
-  window.rcHomeGo=function(){rcHome();try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}};
+  window.rcHomeGo=function(){rcHome();try{window.scrollTo({top:0,behavior:motionBehavior()});}catch(e){}};
   window.rcOnChange=function(){
     document.querySelectorAll('#rc-form [data-showif]').forEach(function(el){
       var p=el.getAttribute('data-showif').split('::');
@@ -9344,7 +9348,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       if(!d.deliverablesText){
         var eb=document.getElementById('rc-step-err');
         if(eb){eb.textContent=U('dlv_req');eb.style.display='block';}
-        try{document.getElementById('rc-dlv-box').scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
+        try{document.getElementById('rc-dlv-box').scrollIntoView({block:'center',behavior:motionBehavior()});}catch(e){}
         return;
       }
     }
@@ -9363,7 +9367,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       document.querySelectorAll('.rc-err').forEach(function(e){e.classList.remove('rc-err');});
       missing.forEach(function(m){var el=document.getElementById('rcf-'+m.k);if(el)el.classList.add('rc-err');});
       var first=document.getElementById('rcf-'+missing[0].k);
-      if(first){try{first.focus();first.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}}
+      if(first){try{first.focus();first.scrollIntoView({block:'center',behavior:motionBehavior()});}catch(e){}}
       return;
     }
     var errBox0=document.getElementById('rc-step-err'); if(errBox0)errBox0.style.display='none';
@@ -9971,7 +9975,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
   }
   function scrollToEl(sel){
     var el=document.querySelector(sel);
-    if(el){ try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){el.scrollIntoView();} }
+    if(el){ try{el.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){el.scrollIntoView();} }
   }
   window.uxpGoto=function(sel){ scrollToEl(sel); };
   function render(){
@@ -9990,7 +9994,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
       var a=awayInfo(w), nm=nameOf(w); if(!nm)return '';
       return '<span class="uxp-pill'+(a?' away':'')+'"><span class="uxp-dot"></span>'+esc(nm)+(a?' &middot; '+(a==='sick'?'Sick':'TOIL'):'')+'</span>';
     }).join('');
-    host.innerHTML=''
+    MarcomUI.setHTML(host,''
       +'<div class="ov-card" id="uxp-today-card">'
       +'<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-sun-high"></i> Today at a Glance</div></div>'
       +'<div class="uxp-today-row">'
@@ -10000,7 +10004,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
       +'<button type="button" class="uxp-chip '+(rc.waiting?'warn':'ok')+'" onclick="uxpGoto(\'.ov-col-side\')" aria-label="'+(rc.waiting||0)+' requests waiting for approval or clarification."><span class="uxp-chip-n">'+(rc.waiting||0)+'</span><span class="uxp-chip-l">Waiting / clarify</span></button>'
       +'</div>'
       +'<div class="uxp-avail" role="list" aria-label="Team availability today">'+pills+'</div>'
-      +'</div>';
+      +'</div>');
   }
   /* collapsible cards */
   var COLKEY='uxp_collapsed';
@@ -10192,18 +10196,25 @@ button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,te
     document.title=(label?label+' · ':'')+'MARCOM Workspace';
   }
   /* Esc closes any open legacy modal; aria labels from titles */
-  document.addEventListener('keydown',function(e){
-    if(e.key!=='Escape')return;
+  function handleOverlayEscape(e){
+    if(e.key!=='Escape'||e.defaultPrevented)return;
+    function consume(){e.preventDefault();e.stopImmediatePropagation();}
+    var more=document.getElementById('uxp-more-panel');
+    if(more&&more.classList.contains('open')){consume();uxpMoreToggle(true);return;}
     var p=document.getElementById('uxp-bell-panel');
-    if(p&&p.classList.contains('open')){uxpBellToggle(true);return;}
+    if(p&&p.classList.contains('open')){consume();uxpBellToggle(true);return;}
     var um=document.getElementById('uxp-modal');
     if(um&&um.classList.contains('open'))return; /* handles its own Esc */
-    var open=document.querySelectorAll('.modal-overlay.open');
+    var open=Array.from(document.querySelectorAll('.modal-overlay.open,.confirm-overlay.open'));
     if(!open.length)return;
+    open.sort(function(a,b){return (parseInt(getComputedStyle(a).zIndex)||0)-(parseInt(getComputedStyle(b).zIndex)||0);});
     var m=open[open.length-1];
+    consume();
+    if(m.id==='confirm-overlay'){closeConfirm();return;}
     var x=m.querySelector('.modal-close');
     if(x)x.click(); else m.classList.remove('open');
-  });
+  }
+  document.addEventListener('keydown',handleOverlayEscape);
   function ariaPass(){
     document.querySelectorAll('button[title]:not([aria-label]),a[title]:not([aria-label])').forEach(function(el){
       el.setAttribute('aria-label',el.getAttribute('title'));
@@ -12616,7 +12627,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
       var c=chosen[w];if(!c)return;
       var a=rgb(c);
       var ink=readable(c,'#EFF3F9',4.5);
-      var bright=readable(c,'#0f141c',4.5);
+      var bright=readable(c,'#26374b',4.5); /* readable on tinted dark cards too */
       var headerInk=readable(c,'#31566A',4.5); /* gold-tinted end of the navy header */
       var tint='rgba('+a[0]+','+a[1]+','+a[2]+',.14)';
       var sh='rgba('+a[0]+','+a[1]+','+a[2]+',.42)';
@@ -12649,10 +12660,10 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
     });
     var st=document.getElementById('tc-themes');
     if(!st){st=document.createElement('style');st.id='tc-themes';}
-    st.textContent=css;
+    if(st.textContent!==css)st.textContent=css;
     /* Keep this sheet as the very last stylesheet. The aurora / refine / fix
        layers sit at the end of <body>, so a sheet in <head> would lose to them. */
-    if(document.body)document.body.appendChild(st);
+    if(document.body&&document.body.lastElementChild!==st)document.body.appendChild(st);
   }
 
   function getDb(){try{return window.db||firebase.firestore();}catch(e){return null;}}

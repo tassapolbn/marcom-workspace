@@ -50,6 +50,14 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .salary-dock #sal-badge{grid-column:1;grid-row:2;text-align:center;}
   .salary-dock .salary-badge{padding:6px 9px;}
 }
+@media(max-width:900px){
+  .header-inner{max-width:100%;}
+  .header-top{flex-wrap:wrap;gap:10px;}
+  .app-logo{flex:1 1 100%;min-width:0;}
+  .header-right{width:100%;min-width:0;justify-content:flex-end;}
+  .header-right .auth-banner{margin-right:auto;}
+  html{scroll-padding-top:180px;}
+}
 @media(max-width:600px){
   .container{max-width:100%;padding:14px 12px 48px;}
   .salary-dock{max-width:100%;padding:0 12px;}
@@ -70,6 +78,8 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .stat-ic{width:32px;height:32px;font-size:18px;}
   .member-head{padding:14px;gap:10px;}
   .member-head-stats{justify-content:flex-start;margin-left:0;}
+  .widget-head{flex-wrap:wrap;gap:8px;}
+  .widget-head .cal-nav-mini{margin-left:auto;}
   .modal-overlay{padding:12px;}
   .modal{max-height:calc(100dvh - 24px);}
 }

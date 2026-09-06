@@ -151,14 +151,14 @@ const server = http.createServer(async (request, response) => {
     }
     if (url.pathname === '/app') {
       let html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
-      html = html.replace(/<script\b[^>]*\bsrc=["'][^"']*["'][^>]*>\s*<\/script>/gi, '');
+      html = html.replace(/<script\b[^>]*\bsrc=["']https:\/\/www\.gstatic\.com\/firebasejs\/[^"']*["'][^>]*>\s*<\/script>/gi, '');
       html = html.replace(/<head>/i, '<head>' + script);
       response.setHeader('Content-Type', 'text/html; charset=utf-8');
       return response.end(html);
     }
     if (/^\/assets\/[\w.-]+$/.test(url.pathname) || url.pathname === '/site.webmanifest') {
       const filepath = path.join(root, url.pathname.slice(1));
-      const mime = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' }[path.extname(filepath)] || 'application/octet-stream';
+      const mime = { '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' }[path.extname(filepath)] || 'application/octet-stream';
       response.setHeader('Content-Type', mime); return response.end(await fs.readFile(filepath));
     }
     response.writeHead(404); response.end('Preview route unavailable');

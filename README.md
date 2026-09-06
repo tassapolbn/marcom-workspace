@@ -114,6 +114,22 @@ Requires Java (the Firestore emulator). The suite covers: public visitor,
 admin, designer, media, junior, disabled user, and a signed-in user without
 an ACL record.
 
+### UI checks and local preview
+
+Run `npm run test:ui` for the dependency-free navigation, contrast-generation,
+dialog keyboard, and live-render regression checks. This also checks that every
+inline application script parses.
+
+Run `npm run preview:ui`, then open `http://127.0.0.1:4173/preview` for a local
+preview using synthetic tasks and an in-memory Firebase adapter. Its controls
+switch viewport width and theme and simulate a live refresh. The preview blocks
+connections to app services and never uses production account or task data.
+Reload the preview after editing source. Shared UI refinements live in
+`assets/workspace-ui.css`, loaded after the older inline theme layers.
+The small `assets/ui-render.js` module preserves unchanged Overview content
+between live updates. See `UI-CODE-REVIEW.md` for reviewed issues, fixes, and
+remaining priorities.
+
 ## 8. Recommended follow-ups (not yet implemented)
 
 - Firebase App Check (reCAPTCHA v3) for the internal app's Firestore access.
