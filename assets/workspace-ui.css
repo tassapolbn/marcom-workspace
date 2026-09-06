@@ -83,10 +83,98 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .modal-overlay{padding:12px;}
   .modal{max-height:calc(100dvh - 24px);}
 }
+/* The overview month stays compact regardless of the dashboard width. */
+#panel-overview .ov-calendar-card>.ov-card-head{flex-wrap:wrap;gap:12px;}
+#panel-overview .ov-calendar-card .ov-cal-nav{margin-left:auto;gap:8px;}
+#panel-overview .ov-cal-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:24px;align-items:start;}
+#panel-overview .ov-cal-month{min-width:0;}
+#panel-overview .ov-cal-grid{gap:5px;}
+#panel-overview .ov-cal-grid .cal-dow{padding:8px 0;font-size:11px;}
+#panel-overview .ov-cal-grid .cal-day{
+  aspect-ratio:auto;min-width:0;height:48px;border:1px solid transparent;
+  padding:5px 2px;border-radius:10px;font-family:inherit;font-size:13px;
+  background:var(--gray-light);color:var(--text);
+  transition:background-color .16s ease,border-color .16s ease;
+}
+#panel-overview .ov-cal-grid .cal-day.empty{background:transparent;}
+#panel-overview .ov-cal-grid .cal-day:not(.empty):hover{border-color:var(--gray-mid);}
+#panel-overview .ov-cal-grid .cal-day.today{background:var(--navy);color:#fff;}
+#panel-overview .ov-cal-grid .cal-day.sel{outline:2px solid var(--focus-ink);outline-offset:-2px;}
+#panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:var(--gold);}
+#panel-overview .ov-cal-grid .ov-dots{height:6px;margin-top:4px;gap:3px;}
+#panel-overview .ov-cal-grid .cal-day.today .ov-cd{background:#fff;}
+html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
+#panel-overview .ov-cal-legend{gap:8px 14px;margin-top:14px;}
+#panel-overview .ov-cal-detail{
+  margin:0;padding:20px;border:1px solid var(--border);border-radius:16px;
+  background:var(--gray-light);min-width:0;
+}
+#panel-overview .ov-agenda-eyebrow{font-size:10px;letter-spacing:1px;font-weight:700;color:var(--muted);margin-bottom:8px;}
+#panel-overview .ov-cal-detail-title{font-size:18px;letter-spacing:0;text-transform:none;color:var(--text);margin-bottom:4px;}
+#panel-overview .ov-agenda-count{font-size:12px;color:var(--muted);margin-bottom:16px;}
+#panel-overview .ov-agenda-items{max-height:260px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+#panel-overview .ov-cal-detail .ov-det{padding:11px 0;border-top:1px solid var(--border);}
+#panel-overview .ov-cal-detail .ov-det>div{min-width:0;overflow-wrap:anywhere;}
+#panel-overview .ov-agenda-empty{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 0;font-size:12px;color:var(--muted);line-height:1.6;}
+#panel-overview .ov-agenda-empty i{font-size:24px;}
+#panel-overview .ov-agenda-empty strong{font-size:14px;color:var(--text);}
+@media(max-width:760px){
+  #panel-overview .ov-cal-layout{grid-template-columns:minmax(0,1fr);gap:18px;}
+  #panel-overview .ov-calendar-card .ov-cal-nav{margin-left:0;}
+  #panel-overview .ov-cal-grid{gap:3px;}
+  #panel-overview .ov-cal-grid .cal-day{height:44px;}
+  #panel-overview .ov-cal-detail{padding:16px;}
+}
+/* Dialog motion: a soft arrival, a faster dismissal, and no layout animation.
+   Older browsers keep the entrance keyframes; discrete transitions add exits. */
+:root{--dialog-enter:280ms;--dialog-exit:160ms;--dialog-ease:cubic-bezier(.2,.8,.2,1);}
+@keyframes workspace-dialog-in{
+  from{opacity:0;transform:translateY(12px) scale(.975);}
+  to{opacity:1;transform:none;}
+}
+@keyframes workspace-backdrop-in{from{opacity:0;}to{opacity:1;}}
+:is(.modal-overlay,.confirm-overlay,.cmdk-overlay).open{
+  animation:workspace-backdrop-in var(--dialog-enter) ease-out;
+}
+.modal-overlay>.modal,.confirm-overlay>.confirm-box,.cmdk-overlay>.cmdk-box{
+  animation:workspace-dialog-in var(--dialog-enter) var(--dialog-ease);
+  transform-origin:50% 40%;
+}
+@supports(transition-behavior:allow-discrete){
+  :is(.modal-overlay,.confirm-overlay,.cmdk-overlay){
+    opacity:0;
+    transition:opacity var(--dialog-exit) ease-in,display var(--dialog-exit) allow-discrete;
+  }
+  :is(.modal-overlay,.confirm-overlay,.cmdk-overlay).open{
+    opacity:1;animation:none;
+    transition-duration:var(--dialog-enter);
+    transition-timing-function:var(--dialog-ease);
+  }
+  .modal-overlay>.modal,.confirm-overlay>.confirm-box,.cmdk-overlay>.cmdk-box{
+    animation:none;transform:translateY(8px) scale(.985);
+    transition:transform var(--dialog-exit) ease-in;
+  }
+  .modal-overlay.open>.modal,.confirm-overlay.open>.confirm-box,.cmdk-overlay.open>.cmdk-box{
+    transform:none;transition:transform var(--dialog-enter) var(--dialog-ease);
+  }
+  /* A dismissed overlay remains painted briefly, but cannot catch clicks. */
+  :is(.modal-overlay,.confirm-overlay,.cmdk-overlay):not(.open){pointer-events:none;}
+  @starting-style{
+    :is(.modal-overlay,.confirm-overlay,.cmdk-overlay).open{opacity:0;}
+    .modal-overlay.open>.modal,.confirm-overlay.open>.confirm-box,.cmdk-overlay.open>.cmdk-box{
+      transform:translateY(12px) scale(.975);
+    }
+  }
+}
+/* A tiny press response acknowledges the action without moving the layout. */
+.btn:not(:disabled):active,.modal-close:not(:disabled):active{
+  transform:scale(.98);transition-duration:80ms;
+}
 /* Reduced motion also removes delays so live content is immediately visible. */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{
     animation:none!important;transition:none!important;animation-delay:0s!important;
     transition-delay:0s!important;scroll-behavior:auto!important;
   }
+  .btn:not(:disabled):active,.modal-close:not(:disabled):active{transform:none;}
 }

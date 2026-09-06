@@ -4567,11 +4567,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown Hub</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
    +    '</div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button class="cal-arrow" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title"></span><button class="cal-arrow" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
+   +    '<div class="ov-card ov-calendar-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button type="button" class="ov-fpill" onclick="ovCalToday()">Today</button><button class="cal-arrow" aria-label="Previous month" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title" aria-live="polite"></span><button class="cal-arrow" aria-label="Next month" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
    +      '<div class="ov-cal-filters" id="ov-cal-filters"></div>'
-   +      '<div class="cal-grid ov-cal-grid" id="ov-cal-grid"></div>'
+   +      '<div class="ov-cal-layout"><div class="ov-cal-month"><div class="cal-grid ov-cal-grid" id="ov-cal-grid" role="group" aria-label="Choose a calendar date"></div>'
    +      '<div class="ov-cal-legend" id="ov-cal-legend"></div>'
-   +      '<div class="ov-cal-detail" id="ov-cal-detail" style="display:none;"></div>'
+   +      '</div><div class="ov-cal-detail" id="ov-cal-detail" role="region" aria-label="Selected day agenda" aria-live="polite"></div></div>'
    +    '</div>'
    +  '</div>'
    +  '<div class="ov-col-side">'
@@ -4695,7 +4695,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var firstDow=new Date(ovCalY,ovCalM,1).getDay();
     var dim=new Date(ovCalY,ovCalM+1,0).getDate();
     var t=tdy(); var html='';
-    ['S','M','T','W','T','F','S'].forEach(function(d){ html+='<div class="cal-dow">'+d+'</div>'; });
+    var month=ovCalY+'-'+pad2(ovCalM+1);
+    // Keep the agenda aligned with the visible month, including year changes.
+    if(!ovSel||ovSel.slice(0,7)!==month)ovSel=t.slice(0,7)===month?t:month+'-01';
+    var focused=grid.contains(document.activeElement)?document.activeElement.getAttribute('data-date'):null;
+    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d){ html+='<div class="cal-dow">'+d+'</div>'; });
     for(var i=0;i<firstDow;i++)html+='<div class="cal-day empty"></div>';
     for(var d=1;d<=dim;d++){
       var ds=ovCalY+'-'+pad2(ovCalM+1)+'-'+pad2(d);
@@ -4705,9 +4709,12 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       if(dd.sick.length)dots+='<span class="ov-cd ov-cd-sick"></span>';
       if(dd.leave.length)dots+='<span class="ov-cd ov-cd-leave"></span>';
       var cls=['cal-day','ov-day',ds===t?'today':'',ovSel===ds?'sel':''].filter(Boolean).join(' ');
-      html+='<div class="'+cls+'" onclick="ovPickDay(\''+ds+'\')">'+d+(dots?'<span class="ov-dots">'+dots+'</span>':'')+'</div>';
+      var count=dd.dl.length+dd.ev.length+dd.sick.length+dd.leave.length;
+      html+='<button type="button" class="'+cls+'" data-date="'+ds+'" aria-pressed="'+(ovSel===ds)+'"'+(ds===t?' aria-current="date"':'')+' aria-label="'+esc(fdt(ds)+', '+count+' scheduled item'+(count===1?'':'s'))+'" onclick="ovPickDay(\''+ds+'\')"><span class="ov-day-number">'+d+'</span><span class="ov-dots" aria-hidden="true">'+dots+'</span></button>';
     }
+    for(var end=(firstDow+dim)%7;end>0&&end<7;end++)html+='<div class="cal-day empty" aria-hidden="true"></div>';
     MarcomUI.setHTML(grid,html);
+    if(focused){var next=grid.querySelector('[data-date="'+focused+'"]');if(next)next.focus({preventScroll:true});}
     function leg(c,l){ return '<span class="ov-leg"><span class="ov-cd '+c+'"></span>'+l+'</span>'; }
     var lg=document.getElementById('ov-cal-legend'); if(lg)MarcomUI.setHTML(lg,leg('ov-cd-dl','Deadline')+leg('ov-cd-ev','Event')+leg('ov-cd-sick','Sick')+leg('ov-cd-leave','Leave'));
     renderCalDetail();
@@ -4722,7 +4729,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     dd.ev.forEach(function(o){ rows.push(row('ov-cd-ev',o.e.name||'Event','Team event'+(o.e.time?' · '+o.e.time:''))); });
     dd.sick.forEach(function(o){ rows.push(row('ov-cd-sick',nm(o.w)+' on sick leave','')); });
     dd.leave.forEach(function(o){ rows.push(row('ov-cd-leave',nm(o.w)+' on leave',o.r.event||'')); });
-    MarcomUI.setHTML(el,'<div class="ov-cal-detail-title">'+fdt(ovSel)+'</div>'+(rows.length?rows.join(''):'<div class="ov-empty-sm">Nothing scheduled.</div>'));
+    MarcomUI.setHTML(el,'<div class="ov-agenda-eyebrow">DAY AGENDA</div><div class="ov-cal-detail-title">'+fdt(ovSel)+'</div><div class="ov-agenda-count">'+rows.length+' scheduled item'+(rows.length===1?'':'s')+'</div><div class="ov-agenda-items">'+(rows.length?rows.join(''):'<div class="ov-agenda-empty"><i class="ti ti-calendar-check" aria-hidden="true"></i><strong>A clear day</strong><span>No deadlines, events or leave for this selection. Choose another date to see what’s planned.</span></div>')+'</div>');
   }
 
   /* ---------- deadlines ---------- */
@@ -4910,7 +4917,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.ovCalPrev=function(){ ovCalM--; if(ovCalM<0){ ovCalM=11; ovCalY--; } renderCal(); };
   window.ovCalNext=function(){ ovCalM++; if(ovCalM>11){ ovCalM=0; ovCalY++; } renderCal(); };
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };
-  window.ovPickDay=function(ds){ ovSel=(ovSel===ds?null:ds); renderCal(); };
+  window.ovPickDay=function(ds){ ovSel=ds; renderCal(); };
+  window.ovCalToday=function(){var now=new Date();ovCalY=now.getFullYear();ovCalM=now.getMonth();ovSel=tdy();renderCal();};
   window.ovSearch=function(v){ doSearch(v); };
   window.ovClearSearch=function(){ var i=document.getElementById('ov-search'); if(i)i.value=''; var b=document.getElementById('ov-search-results'); if(b){ b.style.display='none'; b.innerHTML=''; } };
   window.ovAddAnnouncement=function(){
