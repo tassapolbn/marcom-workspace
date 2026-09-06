@@ -6,7 +6,13 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderTeamBoard } from './team-board-fixture.mjs';
+import { renderTeamBoard, sendBoardAction, sampleBoardData } from './team-board-fixture.mjs';
+
+/* One synthetic board for the whole preview session, so a Director request sent
+   from /team-board-preview is still there after a refresh. Nothing leaves this
+   process: the real functions run against an in-memory database. */
+const boardCollections = sampleBoardData();
+const boardNotes = [];
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.UI_PREVIEW_PORT || 4173);
@@ -49,6 +55,12 @@ function fixtureBootstrap() {
     docs.set(member + '_notes/sample', { title: 'Campaign checklist', content: 'Confirm artwork, review Thai copy, and check all event dates.', createdAt: Timestamp.now() });
     docs.set(member + '_links/sample', { title: 'Brand guidelines', url: '#preview-brand', category: 'Resources', createdAt: Timestamp.now() });
   }
+  /* One open Director request, so the card panel and the bell group are visible here. */
+  docs.set('director_notes/preview-request', { status: 'new', taskKey: 'boss_tasks/sample-1',
+    taskColl: 'boss_tasks', taskId: 'sample-1', taskTopic: 'Prepare the September newsletter',
+    action: 'deadline', actionLabel: 'Needs to be done by', sentence: 'Needs to be done by 20 Sept 2026',
+    value: '2026-09-20', note: 'Before the parent evening, please.', from: 'Khun Miki',
+    owners: ['boss'], source: 'team-board', createdAtIso: new Date().toISOString(), createdAt: Timestamp.now() });
   docs.set('acl/preview@example.test', { role: 'admin', workspace: null, disabled: false });
   docs.set('dept_settings/team', { names: { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' } });
   docs.set('boss_settings/theme', { color: '#4B8FD0', textColor: 'auto' });
@@ -140,15 +152,35 @@ function shell(width) {
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><title>MARCOM local UI preview</title><style>body{margin:0;background:#dce3ec;font:14px system-ui;color:#172339}header{padding:10px 16px;display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#172339;color:white}button,select{font:inherit;padding:6px 10px;border-radius:7px;border:1px solid #b4bfd0;cursor:pointer}iframe{display:block;height:calc(100vh - 55px);max-width:100%;margin:0 auto;border:0;background:white}pre{display:none;position:fixed;inset:60px 12px 12px auto;width:min(560px,90vw);overflow:auto;background:#101827;color:#d4f4e2;border:2px solid #62758c;border-radius:10px;padding:15px;z-index:20;white-space:pre-wrap;font:12px monospace}</style></head><body><header><b>Local UI preview · synthetic data</b><select id="width" aria-label="Preview viewport width"><option value="100%">Full width</option><option>1440</option><option>1024</option><option>900</option><option>768</option><option>390</option><option>320</option></select><button id="theme">Light / dark</button><button id="refresh">Simulate live refresh</button><button id="report">Diagnostics</button><button id="reload">Reload current source</button></header><iframe title="MARCOM preview" id="app" style="width:${width}px" src="/app"></iframe><pre id="diagnostics" role="status"></pre><script>const frame=document.getElementById('app'),picker=document.getElementById('width'),report=document.getElementById('diagnostics');picker.value='${width}';if(!picker.value)picker.value='100%';if(picker.value==='100%')frame.style.width='100%';picker.onchange=()=>{frame.style.width=picker.value==='100%'?'100%':picker.value+'px';report.style.display='none'};document.getElementById('theme').onclick=()=>frame.contentDocument.documentElement.classList.toggle('dark');document.getElementById('refresh').onclick=()=>frame.contentWindow.previewRefresh();document.getElementById('report').onclick=()=>{report.textContent=JSON.stringify(frame.contentWindow.previewReport(),null,2);report.style.display=report.style.display==='block'?'none':'block'};document.getElementById('reload').onclick=()=>frame.contentWindow.location.reload();window.previewReport=()=>frame.contentWindow.previewReport();</script></body></html>`;
 }
 
+/* The app preview must reach nothing at all. The team board preview may reach
+   this server only, for the local stand-in of the Director action endpoint. */
+const appPolicy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'none'; frame-src 'self'; form-action 'none'";
+const boardPolicy = appPolicy.replace("connect-src 'none'", "connect-src 'self'");
+
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, 'http://127.0.0.1:' + port);
   response.setHeader('Cache-Control', 'no-store');
-  response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'none'; frame-src 'self'; form-action 'none'");
+  response.setHeader('Content-Security-Policy', appPolicy);
   try {
     if (url.pathname === '/team-board-preview') {
-      const page = await renderTeamBoard();
+      /* This one page posts back to /board-action below, so it needs connect-src. */
+      response.setHeader('Content-Security-Policy', boardPolicy);
+      const page = await renderTeamBoard({ collections: boardCollections, notes: boardNotes });
       response.writeHead(page.statusCode, page.headers);
       return response.end(page.body);
+    }
+    if (url.pathname === '/board-action' || url.pathname === '/.netlify/functions/board-action') {
+      response.setHeader('Content-Security-Policy', boardPolicy);
+      const raw = await new Promise(resolve => {
+        let body = ''; request.on('data', chunk => { body += chunk; if (body.length > 20000) request.destroy(); });
+        request.on('end', () => resolve(body));
+      });
+      let body = {}; try { body = JSON.parse(raw || '{}'); } catch (_) { body = {}; }
+      const result = await sendBoardAction({ collections: boardCollections, notes: boardNotes,
+        method: request.method, body });
+      for (const record of (result.written.director_notes || [])) boardNotes.push(record);
+      response.writeHead(result.statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
+      return response.end(JSON.stringify(result.body));
     }
     if (url.pathname === '/' || url.pathname === '/preview') {
       const requested = Number(url.searchParams.get('width'));

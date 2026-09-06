@@ -6482,6 +6482,131 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__g); else __g();
 })();
 </script>
+<style id="dirq-style">
+/* ===== Director requests raised on the shared team board ===== */
+.dirq{margin-top:9px;padding:9px 10px;border:1px solid #f0d0a4;border-left:3px solid #d98324;border-radius:10px;background:#fffaf2;}
+html.dark .dirq{background:#3b2b14;border-color:#7d5c26;}
+.dirq-h{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#8a4b12;}
+html.dark .dirq-h{color:#f0b95f;}
+.dirq-n{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#d98324;color:#fff;font-size:10px;font-weight:800;}
+.dirq-i{margin-top:8px;padding-top:8px;border-top:1px dashed #edd9bb;}
+.dirq-i:first-of-type{padding-top:0;border-top:0;}
+html.dark .dirq-i{border-top-color:#6d5124;}
+.dirq-s{font-size:12.5px;font-weight:700;line-height:1.4;color:var(--text);}
+.dirq-m{margin-top:2px;font-size:11px;color:var(--muted);}
+.dirq-note{margin-top:4px;font-size:12.5px;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;}
+.dirq-ok{margin-top:8px;min-height:34px;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid #d98324;border-radius:8px;background:transparent;color:#8a4b12;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;}
+.dirq-ok:hover{background:#d98324;color:#fff;}
+html.dark .dirq-ok{color:#f0b95f;}
+.task-card.has-dirq{border-color:#e8b877;}
+</style>
+<script id="dirq-script">
+/* ===== DIRECTOR REQUESTS FROM THE SHARED TEAM BOARD =====
+   The Director opens /team-board with the private link, with no login, and sends
+   a request from a task card. The server (netlify/functions/board-action.js)
+   re-checks the share token and writes it to director_notes. It NEVER edits the
+   task, so nothing sent from that board can change a status, a deadline or an
+   assignee on its own.
+   This block shows every open request on the owner's card, counts them in the
+   notification bell for the owner and the admin, and lets either of them close
+   one once it has been actioned. */
+(function(){
+  if(window.__dirqInit)return; window.__dirqInit=true;
+  var NOTES=[], unsub=null, busy={};
+  function FS(){ try{return firebase.firestore();}catch(e){return null;} }
+  function esc(s){ try{return escHtml(s);}catch(e){return String(s==null?'':s);} }
+  function me(){ return window.__cur||null; }
+  function isAdmin(){ var c=me(); return !!(c&&c.role==='admin'); }
+  function myWs(){ var c=me(); if(!c)return ''; return c.role==='admin'?'boss':(c.workspace||''); }
+  function myEmail(){ var c=me(); return c?(c.email||''):''; }
+  function mn(w){ try{ return (typeof memberName==='function')?(memberName(w)||w):w; }catch(e){ return w; } }
+  function day(iso){ try{ return iso?fmtDate(String(iso).slice(0,10)):''; }catch(e){ return ''; } }
+  /* The admin sees every request; a member sees only the ones addressed to them. */
+  function visible(n){ if(isAdmin())return true; var w=myWs(); return !!(w&&(n.owners||[]).indexOf(w)>=0); }
+  function keyOf(task,who){
+    var shared=false;
+    try{ shared=(typeof isEventTask==='function')&&isEventTask(task); }catch(e){}
+    return (shared?'event_tasks':(who+'_tasks'))+'/'+((task&&task.id)||'');
+  }
+  function openFor(key){ return NOTES.filter(function(n){ return n.taskKey===key&&visible(n); }); }
+  /* Feeds the existing notification bell, which groups by the g field. */
+  window.dirqItems=function(){
+    return NOTES.filter(visible).map(function(n){
+      var owners=(n.owners||[]).map(mn).join(', ');
+      return { g:'Director requests', cls:'warn', ic:'ti-user-star',
+        t:n.sentence||n.actionLabel||'Request',
+        s:(n.taskTopic||'Task')+' \u00b7 from '+(n.from||'the Director')+(owners?' \u00b7 for '+owners:''),
+        go:((n.owners||[])[0]||myWs()||'boss') };
+    });
+  };
+  window.dirqHandled=function(id){
+    if(!id||busy[id])return; var f=FS(); if(!f)return;
+    busy[id]=true;
+    var patch={status:'done',handledBy:myEmail()};
+    try{ patch.handledAt=firebase.firestore.FieldValue.serverTimestamp(); }catch(e){}
+    f.collection('director_notes').doc(id).update(patch)
+      .then(function(){ busy[id]=false; try{uiToast('Request marked as handled.');}catch(e){} })
+      .catch(function(e){ busy[id]=false; console.error(e);
+        try{uiToast('Could not update this request: '+((e&&e.message)||'unknown error'));}catch(_){} });
+  };
+  function panelHTML(list){
+    if(!list.length)return '';
+    var rows=list.map(function(n){
+      return '<div class="dirq-i"><div class="dirq-s">'+esc(n.sentence||n.actionLabel||'Request')+'</div>'
+        +'<div class="dirq-m">'+esc([n.from||'Director',day(n.createdAtIso)].filter(Boolean).join(' \u00b7 '))+'</div>'
+        +(n.note?'<div class="dirq-note">'+esc(n.note)+'</div>':'')
+        +'<button type="button" class="dirq-ok" onclick="event.stopPropagation();dirqHandled(&quot;'+esc(n.id)+'&quot;)">'
+        +'<i class="ti ti-check"></i> Mark as handled</button></div>';
+    }).join('');
+    return '<div class="dirq" onclick="event.stopPropagation()"><div class="dirq-h">'
+      +'<i class="ti ti-user-star"></i> Director request'+(list.length>1?'s':'')
+      +'<span class="dirq-n">'+list.length+'</span></div>'+rows+'</div>';
+  }
+  /* The card markup is built as a string and swapped in wholesale, so the panel
+     is added to that string rather than to the DOM: a redraw keeps it, and the
+     unchanged-content check in setBoardHTML still works. */
+  function wrapCard(){
+    if(typeof window.taskCardHTML!=='function'||window.taskCardHTML.__dirq)return;
+    var inner=window.taskCardHTML;
+    var wrapped=function(task,who){
+      var html=inner.apply(this,arguments);
+      try{
+        var list=openFor(keyOf(task,who));
+        if(!list.length)return html;
+        var panel=panelHTML(list);
+        var mark='<i class="ti ti-arrow-up-right tc-open-hint"';
+        var at=html.lastIndexOf(mark);
+        if(at<0)at=html.lastIndexOf('</div>');
+        html=(at<0)?(html+panel):(html.slice(0,at)+panel+html.slice(at));
+        html=html.replace('class="task-card ','class="task-card has-dirq ');
+      }catch(e){ console.error(e); }
+      return html;
+    };
+    wrapped.__dirq=true;
+    window.taskCardHTML=wrapped;
+  }
+  function repaint(){
+    try{ if(typeof renderBoss==='function')renderBoss(); }catch(e){}
+    try{ MEMBER_ORDER.forEach(function(w){ if(w!=='boss'&&typeof renderMember==='function')renderMember(w); }); }catch(e){}
+    try{ if(window.renderOverview)renderOverview(); }catch(e){}
+    try{ window.dispatchEvent(new Event('uxp-rccounts')); }catch(e){}
+  }
+  function watch(){
+    var f=FS(); if(!f||unsub)return;
+    try{
+      /* No orderBy here, so no composite index is needed; sorting happens below. */
+      unsub=f.collection('director_notes').where('status','==','new').onSnapshot(function(s){
+        NOTES=s.docs.map(function(d){ return Object.assign({id:d.id},d.data()||{}); })
+          .sort(function(a,b){ return String(b.createdAtIso||'').localeCompare(String(a.createdAtIso||'')); });
+        repaint();
+      },function(e){ console.error('[director requests] listener refused',e); });
+    }catch(e){ console.error(e); }
+  }
+  function boot(){ wrapCard(); watch(); }
+  var __dq=function(){whenAuthed(boot);};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__dq); else __dq();
+})();
+</script>
 <style id="trq-style">
 #panel-overview #trq-card .trq-compose{background:var(--gray-light);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;}
 #panel-overview .trq-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;resize:vertical;min-height:48px;}
@@ -10130,6 +10255,8 @@ button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,te
   }
   function items(){
     var out=[],today=tdy();
+    /* Requests the Director raised on the shared board (see the dirq block). */
+    try{ (window.dirqItems?window.dirqItems():[]).forEach(function(x){out.push(x);}); }catch(e){}
     var rc=window.__rcCounts||{};
     (rc.unreadList||[]).forEach(function(r){
       if(!reqVisible(r.ws))return;
@@ -10163,7 +10290,7 @@ button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,te
       p.innerHTML='<div class="uxp-nt-empty"><i class="ti ti-bell-check"></i>All clear. Nothing needs your attention right now.</div>';
       return p;
     }
-    var groups=['Overdue','Due today','New requests','Waiting / needs clarification'];
+    var groups=['Director requests','Overdue','Due today','New requests','Waiting / needs clarification'];
     var html='';
     groups.forEach(function(g){
       var gi=list.filter(function(x){return x.g===g;}).slice(0,6);

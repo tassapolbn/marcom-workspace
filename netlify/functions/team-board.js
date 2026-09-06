@@ -6,6 +6,7 @@
    HTML page. Tasks can be clicked to see detail, but nothing can be edited.
    It never exposes leave, pay or any other private field. */
 const { getDb, rateLimited, json, clientIp } = require('./lib/admin');
+const { ACTIONS } = require('./lib/board-actions');
 
 const ORDER = ['boss', 'dew', 'o', 'junior'];
 const ROLE = {
@@ -62,7 +63,7 @@ function isSharedMany(t) { return taskAssignees(t).length >= 2; }
 function assignedTo(t, ws) { return taskAssignees(t).indexOf(ws) >= 0; }
 
 /* Only work-related, non-personal fields ever reach the page. */
-function detailOf(t, whoName, colors) {
+function detailOf(t, whoName, colors, notes) {
   const d = {
     who: whoName, c: colors[0], c2: colors[1],
     topic: t.topic || t.title || 'Untitled',
@@ -92,15 +93,20 @@ function detailOf(t, whoName, colors) {
   if (Array.isArray(t.links) && t.links.length) {
     d.links = t.links.filter(l => l && l.url).slice(0, 8).map(l => ({ title: String(l.title || l.url), url: String(l.url) }));
   }
+  /* The real record this card came from, so a Director action can be tied to it.
+     Nothing here is secret: the ids are only useful with the share token. */
+  d.coll = t.__coll || '';
+  d.docId = t.__id || '';
+  d.requests = (notes && notes[d.coll + '/' + d.docId]) || [];
   return d;
 }
 
-function taskRow(t, id, whoLabel) {
+function taskRow(t, id, whoLabel, reqCount) {
   const topic = esc(t.topic || t.title || 'Untitled');
   const du = daysUntil(t.dueDate);
   const od = du !== null && du < 0;
   const soon = du !== null && du >= 0 && du <= 3;
-  const cls = od ? ' od' : (soon ? ' soon' : '');
+  const cls = (od ? ' od' : (soon ? ' soon' : '')) + (reqCount > 0 ? ' rq' : '');
   let due = '';
   if (t.dueDate) {
     const dcls = od ? ' od' : (soon ? ' soon' : '');
@@ -114,9 +120,12 @@ function taskRow(t, id, whoLabel) {
   const evName = (t.eventLabel || t.eventName || '').trim();
   const ev = evName ? '<span class="pill ev">' + esc(evName) + '</span>' : '';
   const who = whoLabel ? '<span class="pill whopill"><i class="dot2"></i>' + esc(whoLabel) + '</span>' : '';
+  const rq = reqCount > 0
+    ? '<span class="pill req">' + (reqCount === 1 ? '1 request sent' : reqCount + ' requests sent') + '</span>'
+    : '';
   return '<button type="button" class="t' + cls + '" data-task-id="' + id + '" onclick="showDetail(\'' + id + '\')">'
     + '<span class="t-top">' + topic + '<i class="chev">\u203a</i></span>'
-    + '<span class="meta2">' + due + stPill + pr + ev + who + '</span></button>';
+    + '<span class="meta2">' + due + stPill + pr + ev + who + rq + '</span></button>';
 }
 
 function htmlPage(statusCode, title, inner, extraScript) {
@@ -161,8 +170,27 @@ exports.handler = async (event) => {
   catch (e) { console.error(e); }
 
   let eventTasks = [];
-  try { const es = await db.collection('event_tasks').get(); eventTasks = es.docs.map(d => d.data() || {}); }
+  try { const es = await db.collection('event_tasks').get(); eventTasks = es.docs.map(d => Object.assign(d.data() || {}, { __id: d.id, __coll: 'event_tasks' })); }
   catch (e) { console.error(e); }
+
+  /* Requests the Director has already sent and the team has not closed yet, so
+     the same thing is not asked twice. Only work fields are read. */
+  const NOTES = {};
+  let openReq = 0;
+  try {
+    const ns = await db.collection('director_notes').where('status', '==', 'new').get();
+    ns.docs.forEach(d => {
+      const n = d.data() || {};
+      const key = String(n.taskKey || '');
+      if (!key) return;
+      (NOTES[key] = NOTES[key] || []).push({
+        sentence: String(n.sentence || n.actionLabel || ''),
+        from: String(n.from || ''),
+        note: String(n.note || ''),
+        when: n.createdAtIso ? fmtDate(String(n.createdAtIso).slice(0, 10)) : ''
+      });
+    });
+  } catch (e) { console.error(e); }
 
   const TASKS = {};
   let idc = 0;
@@ -179,10 +207,11 @@ exports.handler = async (event) => {
     const rows = shared.map(t => {
       const id = 't' + (idc++);
       const whoLabel = taskAssignees(t).map(nameOf).join(', ');
-      TASKS[id] = detailOf(t, whoLabel, ['#5b5bd6', '#3f3aa8']);
+      TASKS[id] = detailOf(t, whoLabel, ['#5b5bd6', '#3f3aa8'], NOTES);
       TASKS[id].members = taskAssignees(t);
       bump(t);
-      return taskRow(t, id, whoLabel);
+      openReq += TASKS[id].requests.length;
+      return taskRow(t, id, whoLabel, TASKS[id].requests.length);
     }).join('');
     cards.push('<div class="card shared" style="--c:#5b5bd6;--c2:#3f3aa8">'
       + '<div class="bar"></div><div class="hd"><div class="av">' + PEOPLE_SVG + '</div>'
@@ -193,7 +222,7 @@ exports.handler = async (event) => {
 
   for (const ws of ORDER) {
     let own = [];
-    try { const os = await db.collection(ws + '_tasks').get(); own = os.docs.map(d => d.data() || {}); }
+    try { const os = await db.collection(ws + '_tasks').get(); own = os.docs.map(d => Object.assign(d.data() || {}, { __id: d.id, __coll: ws + '_tasks' })); }
     catch (e) { console.error(e); }
     // own tasks + event tasks assigned to just this person (multi-shared ones are in the card above)
     const mine = own.filter(isActive)
@@ -203,10 +232,11 @@ exports.handler = async (event) => {
     const colors = COLOR[ws] || COLOR.boss;
     const rows = mine.map(t => {
       const id = 't' + (idc++);
-      TASKS[id] = detailOf(t, nm, colors);
+      TASKS[id] = detailOf(t, nm, colors, NOTES);
       TASKS[id].members = [ws];
       bump(t);
-      return taskRow(t, id);
+      openReq += TASKS[id].requests.length;
+      return taskRow(t, id, '', TASKS[id].requests.length);
     }).join('');
     const initial = esc((nm || '?').trim().charAt(0).toUpperCase() || '?');
     cards.push('<div class="card" style="--c:' + colors[0] + ';--c2:' + colors[1] + '">'
@@ -228,22 +258,27 @@ exports.handler = async (event) => {
     + '<div class="results-line"><p id="board-results" role="status">Showing ' + totalActive + ' ongoing tasks</p><button id="board-reset" class="reset-btn" type="button" hidden>Clear filters</button></div>';
   const inner = '<main class="wrap">'
     + '<div class="hero"><div class="hero-accent"></div><div class="hero-in">'
-    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><h1>HeadStart <span class="mk">MARCOM</span> &mdash; Team Board</h1><div class="titleaccent"></div><p class="sub">Team priorities, at a glance. Select any task for the full brief.</p></div>'
-    + '<span class="ro">Read-only board</span></div>'
+    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><h1>HeadStart <span class="mk">MARCOM</span> &mdash; Team Board</h1><div class="titleaccent"></div><p class="sub">Team priorities, at a glance. Select any task for the full brief, and to send a request to the owner.</p></div>'
+    + '<span class="ro">View and request</span></div>'
     + '<div class="stats">'
     + '<div class="stat"><div class="n" data-count="' + totalActive + '">' + totalActive + '</div><div class="l">Active tasks</div></div>'
     + '<div class="stat warn"><div class="n" data-count="' + dueWeek + '">' + dueWeek + '</div><div class="l">Due within 7 days</div></div>'
     + '<div class="stat bad"><div class="n" data-count="' + overdue + '">' + overdue + '</div><div class="l">Overdue</div></div>'
+    + '<div class="stat req"><div class="n" data-count="' + openReq + '">' + openReq + '</div><div class="l">Open requests</div></div>'
     + '</div></div></div>'
     + '<div class="updated"><span>Updated ' + esc(when) + ' · Bangkok time</span><button class="refreshbtn" type="button" onclick="location.reload()" aria-label="Refresh"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v5h-5"/></svg> Refresh</button></div>'
     + controls + '<div class="grid">' + cards.join('') + '</div>'
     + '<div id="board-empty" class="no-results" hidden><h2>No matching tasks</h2><p>Try a different search or clear the filters to see the whole team.</p></div>'
-    + '<div class="foot">Ongoing work only · shared tasks appear once · refresh to load the latest updates.</div>'
+    + '<div class="foot">Ongoing work only · shared tasks appear once · your requests reach the owner and the MARCOM Manager, who apply them · refresh to load the latest updates.</div>'
     + '</main>'
     + '<dialog class="dv" id="dv" aria-labelledby="dv-title"><div id="dv-inner"></div></dialog>';
 
   const dataJson = JSON.stringify(TASKS).replace(/</g, '\\u003c');
+  /* The token is already in this reader's address bar; the page carries it so an
+     action can be posted back and re-checked on the server. */
+  const configJson = JSON.stringify({ token: token, actions: ACTIONS, endpoint: '/.netlify/functions/board-action' }).replace(/</g, '\\u003c');
   const script = '<script id="board-data" type="application/json">' + dataJson + '</script>'
+    + '<script id="board-config" type="application/json">' + configJson + '</script>'
     + '<script src="/assets/team-board.js" defer></script>';
 
   return htmlPage(200, 'Team Task Board', inner, script);

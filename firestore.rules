@@ -105,6 +105,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------------- Director requests from the shared team board ----------------
+    // Written ONLY by the server (board-action.js), which checks the private share
+    // token first. The board has no login, so nothing it sends may edit a task: a
+    // request is a separate record the team reads and applies by hand.
+    // Every authorised member reads them (the notification bell counts them). Only
+    // the admin, or a member the request is addressed to, may close one, and the
+    // closing write may touch nothing except the three handled fields, so the text
+    // of a request can never be rewritten after the fact.
+    match /director_notes/{id} {
+      allow read:   if authorized();
+      allow create: if false;   // server only
+      allow update: if (isAdmin() || (authorized() && ws() in resource.data.get('owners', [])))
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','handledBy','handledAt'])
+        && request.resource.data.get('status','new') in ['new','done'];
+      allow delete: if isAdmin();
+    }
+
     // ---------------- shared central event task board ----------------
     // Every authorised member may read and write every event task: this is a
     // shared internal board. Deletion is confirmed in the UI, and every write

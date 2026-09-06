@@ -10,3 +10,9 @@
   from = "/team-board"
   to = "/.netlify/functions/team-board"
   status = 200
+
+# The Director's action endpoint used by that board (writes a request only).
+[[redirects]]
+  from = "/board-action"
+  to = "/.netlify/functions/board-action"
+  status = 200

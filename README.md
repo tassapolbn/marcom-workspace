@@ -15,6 +15,9 @@ and Video Editor), Eye (Junior Events Coordinator).
 | `assets/` | Static images (the support staff calendar was moved out of the HTML, saving ~650 KB per visit) |
 | `netlify/functions/submit-request.js` | Public request submission endpoint (validation, sanitising, rate limiting, honeypot, server request number, task auto-creation, failure log, optional email notifications) |
 | `netlify/functions/request-status.js` | Secure status lookup by requester email, returns a minimal summary only |
+| `netlify/functions/team-board.js` | The Director's board page (`/team-board?token=...`), server rendered |
+| `netlify/functions/board-action.js` | The Director's action endpoint (`/board-action`): writes a request, never edits a task |
+| `netlify/functions/lib/board-actions.js` | The action list, shared by the page and the endpoint so they can never disagree |
 | `netlify/functions/lib/admin.js` | Shared Firebase Admin bootstrap and helpers |
 | `firestore.rules` | Least-privilege Firestore rules (deploy AFTER the site, see below) |
 | `tests/rules.test.mjs` | Emulator tests for every role |
@@ -102,6 +105,12 @@ email/password, they must verify their email address first.
 - Data listeners in the browser now start only AFTER an authorised sign-in,
   so the login screen and the public page no longer attempt (or receive) any
   team data.
+- The Director's board has no login, so the private share token is its only
+  credential and it is re-checked on every action. An action can do exactly one
+  thing: add a record to `director_notes`. It can never change a status, a
+  deadline, an assignee or any other stored field, and `director_notes` is
+  server-write-only in the rules. Turning sharing off, or resetting the link,
+  stops actions immediately, not just viewing.
 
 ## 7. Testing the rules
 
@@ -113,6 +122,11 @@ npm run test:rules
 Requires Java (the Firestore emulator). The suite covers: public visitor,
 admin, designer, media, junior, disabled user, and a signed-in user without
 an ACL record.
+
+Note: `director_notes` is a new collection. Until the rules in this repository
+are published, the workspace cannot read it and Director requests will not
+appear in the app, even though the board still accepts them (the server writes
+with the Admin SDK, which bypasses rules).
 
 ### UI checks and local preview
 
@@ -130,13 +144,42 @@ The small `assets/ui-render.js` module preserves unchanged Overview content
 between live updates. See `UI-CODE-REVIEW.md` for reviewed issues, fixes, and
 remaining priorities.
 
-The read-only Team Board uses `assets/team-board.css` and `assets/team-board.js`.
+The Team Board uses `assets/team-board.css` and `assets/team-board.js`.
 Open `/team-board-preview` on the local preview server to check its real server
-renderer with synthetic data, without a share token or Firebase credentials.
-Its filters run locally; Refresh fetches a new snapshot. Shared tasks appear once
-and remain visible when filtering for any of their assignees. Deadline badges use
-the Bangkok calendar day. UI tests cover share access, data escaping, filtering,
-shared-task counts, and the Bangkok midnight boundary.
+renderer with synthetic data, without a share token or Firebase credentials. The
+preview also answers `/board-action` from the same in-memory data, so the whole
+request flow can be tried locally. Its filters run locally; Refresh fetches a new
+snapshot. Shared tasks appear once and remain visible when filtering for any of
+their assignees. Deadline badges use the Bangkok calendar day. UI tests cover
+share access, data escaping, filtering, shared-task counts, the Bangkok midnight
+boundary, and every rule the action endpoint applies.
+
+## 7a. Director requests from the Team Board
+
+The Director opens the shared link, selects any task, and sends one of these,
+with an optional message:
+
+| Option | Extra field |
+|---|---|
+| Please prioritise this task | none |
+| Needs to be done by | a date |
+| Please hold this task | none |
+| Please cancel this task | none |
+| Please assign this task to | a name or department |
+| Needs discussion on this task | none |
+| Please give an update to | a name |
+| Other comment or instruction | the message itself |
+
+The board asks for the sender's name the first time and remembers it in that
+browser. Each request then lands in three places at once: an amber panel on the
+task card in the owner's tab, a **Director requests** group at the top of the
+notification bell for the owner and for the admin, and an automatic Team Chat
+message. The task itself is untouched, so the owner (or Boss) reads the request,
+applies it by hand, and presses **Mark as handled** to clear it. Requests still
+open are listed back on the board, so the same thing is not asked twice.
+
+To add or reword an option, edit `netlify/functions/lib/board-actions.js`. The
+menu and the server validation both read that one list.
 
 ## 8. Recommended follow-ups (not yet implemented)
 
