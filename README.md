@@ -130,6 +130,14 @@ The small `assets/ui-render.js` module preserves unchanged Overview content
 between live updates. See `UI-CODE-REVIEW.md` for reviewed issues, fixes, and
 remaining priorities.
 
+The read-only Team Board uses `assets/team-board.css` and `assets/team-board.js`.
+Open `/team-board-preview` on the local preview server to check its real server
+renderer with synthetic data, without a share token or Firebase credentials.
+Its filters run locally; Refresh fetches a new snapshot. Shared tasks appear once
+and remain visible when filtering for any of their assignees. Deadline badges use
+the Bangkok calendar day. UI tests cover share access, data escaping, filtering,
+shared-task counts, and the Bangkok midnight boundary.
+
 ## 8. Recommended follow-ups (not yet implemented)
 
 - Firebase App Check (reCAPTCHA v3) for the internal app's Firestore access.

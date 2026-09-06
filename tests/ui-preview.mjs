@@ -6,6 +6,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderTeamBoard } from './team-board-fixture.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.UI_PREVIEW_PORT || 4173);
@@ -144,6 +145,11 @@ const server = http.createServer(async (request, response) => {
   response.setHeader('Cache-Control', 'no-store');
   response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src 'none'; frame-src 'self'; form-action 'none'");
   try {
+    if (url.pathname === '/team-board-preview') {
+      const page = await renderTeamBoard();
+      response.writeHead(page.statusCode, page.headers);
+      return response.end(page.body);
+    }
     if (url.pathname === '/' || url.pathname === '/preview') {
       const requested = Number(url.searchParams.get('width'));
       response.setHeader('Content-Type', 'text/html; charset=utf-8');
