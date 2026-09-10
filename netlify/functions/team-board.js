@@ -18,21 +18,41 @@ const ROLE = {
 const DEFAULT_NAME = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
 /* Official supplied HeadStart artwork, preserved at its original aspect ratio. */
 const LOGO_TAG = '<img src="/assets/headstart-landscape-dark.png" alt="HeadStart International School Phuket" width="2048" height="510">';
-const PEOPLE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6"/><path d="M20.5 20c0-2.4-1.5-4.2-3.7-4.8"/></svg>';
+const PEOPLE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6"/><path d="M20.5 20c0-2.4-1.5-4.2-3.7-4.8"/></svg>';
+const CAL_SVG = '<svg class="pico" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>';
+/* Each member's colour is the one their tab already carries in the workspace
+   (the light-theme `.tab-btn.a-*` set in index.html), so a reader recognises
+   the same person by the same colour in both places. Accent, then tint. */
 const COLOR = {
-  boss:   ['#F0B323', '#003057'],
-  dew:    ['#F0B323', '#003057'],
-  o:      ['#F0B323', '#003057'],
-  junior: ['#F0B323', '#003057']
+  boss:   ['#003057', '#e8eff7'],
+  dew:    ['#A65614', '#fbeee0'],
+  o:      ['#C2410C', '#fdeae2'],
+  junior: ['#14532D', '#e6f2ea']
 };
 const DONE = { done: 1, canceled: 1 };
 const BOARD_DATE = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'});
+
+/* The four ongoing states, listed the way a reader wants to meet them: work
+   moving now, then work blocked on somebody, then work not started, then work
+   deliberately paused. Each state carries its own glyph, so the board never
+   asks anyone to tell states apart by colour alone. */
+const STATUS_ORDER = ['in-progress', 'waiting', 'pending', 'on-hold'];
 const STATUS = {
-  'pending':     { label: 'Pending',     bg: '#eef1f5', fg: '#5b6675' },
-  'in-progress': { label: 'In progress', bg: '#e7eff7', fg: '#003057' },
-  'waiting':     { label: 'Waiting',     bg: '#fdf0d9', fg: '#855714' },
-  'on-hold':     { label: 'On hold',     bg: '#e9edf2', fg: '#48576a' }
+  'in-progress': { label: 'In progress', note: 'Being worked on now',
+    icon: '<circle cx="12" cy="12" r="9"/><path d="M9.2 12h5.6"/><path d="m12.4 9.6 2.4 2.4-2.4 2.4"/>' },
+  'waiting':     { label: 'Waiting', note: 'Blocked or waiting on someone',
+    icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.1 1.9"/>' },
+  'pending':     { label: 'Pending', note: 'Not started yet',
+    icon: '<circle cx="12" cy="12" r="9"/><path d="M8.4 12h7.2"/>' },
+  'on-hold':     { label: 'On hold', note: 'Paused for now',
+    icon: '<circle cx="12" cy="12" r="9"/><path d="M10.2 9.2v5.6"/><path d="M13.8 9.2v5.6"/>' }
 };
+function statusOf(t) { const key = (t && t.status) || 'pending'; return STATUS[key] ? key : 'pending'; }
+function statusIcon(key, size) {
+  return '<svg class="sico" viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none"'
+    + ' stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"'
+    + ' aria-hidden="true">' + STATUS[key].icon + '</svg>';
+}
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -66,7 +86,7 @@ function detailOf(t, whoName, colors, notes) {
   const d = {
     who: whoName, c: colors[0], c2: colors[1],
     topic: t.topic || t.title || 'Untitled',
-    status: t.status || 'pending',
+    status: statusOf(t),
     priority: t.priority || '',
     due: t.dueDate ? fmtDate(t.dueDate) : '',
     dueRaw: t.dueDate || '',
@@ -100,31 +120,50 @@ function detailOf(t, whoName, colors, notes) {
   return d;
 }
 
-function taskRow(t, id, whoLabel, reqCount) {
+/* One task card. Status owns the strongest signals (the left rail and the chip
+   at the top), the deadline owns the surface tint and its own pill, and a
+   Director request owns the gold flag. The three never fight for the same
+   piece of the card. `home` is the team-member group the card belongs to, so
+   the browser can regroup without the server rendering the task twice. */
+function taskRow(t, id, owners, reqCount, home) {
   const topic = esc(t.topic || t.title || 'Untitled');
   const du = daysUntil(t.dueDate);
   const od = du !== null && du < 0;
   const soon = du !== null && du >= 0 && du <= 3;
-  const cls = (od ? ' od' : (soon ? ' soon' : '')) + (reqCount > 0 ? ' rq' : '');
+  const key = statusOf(t);
+  const cls = 's-' + key + (od ? ' od' : (soon ? ' soon' : '')) + (reqCount > 0 ? ' rq' : '');
   let due = '';
   if (t.dueDate) {
     const dcls = od ? ' od' : (soon ? ' soon' : '');
     const lbl = od ? ('Overdue ' + fmtDate(t.dueDate)) : (du === 0 ? 'Due today' : (soon ? (du + 'd left') : fmtDate(t.dueDate)));
-    due = '<span class="pill due' + dcls + '">' + esc(lbl) + '</span>';
-  } else due = '<span class="pill due">No deadline</span>';
-  const st = STATUS[t.status] || STATUS['pending'];
-  const stPill = '<span class="pill task-status" style="background:' + st.bg + ';color:' + st.fg + ';">' + esc(st.label) + '</span>';
+    due = '<span class="pill due' + dcls + '">' + CAL_SVG + esc(lbl) + '</span>';
+  } else due = '<span class="pill due">' + CAL_SVG + 'No deadline</span>';
+  const stChip = '<span class="t-status">' + statusIcon(key, 14) + esc(STATUS[key].label) + '</span>';
   const pr = (t.priority === 'high') ? '<span class="pill pri-high">High priority</span>'
     : (t.priority === 'low') ? '<span class="pill pri-low">Low</span>' : '';
   const evName = (t.eventLabel || t.eventName || '').trim();
   const ev = evName ? '<span class="pill ev">' + esc(evName) + '</span>' : '';
-  const who = whoLabel ? '<span class="pill whopill"><i class="dot2"></i>' + esc(whoLabel) + '</span>' : '';
+  const who = owners.map(o => '<span class="pill whopill m-' + esc(o.ws) + '">' + esc(o.name) + '</span>').join('');
   const rq = reqCount > 0
     ? '<span class="pill req">' + (reqCount === 1 ? '1 request sent' : reqCount + ' requests sent') + '</span>'
     : '';
-  return '<button type="button" class="t' + cls + '" data-task-id="' + id + '" onclick="showDetail(\'' + id + '\')">'
-    + '<span class="t-top"><span>' + topic + '</span><i class="chev" aria-hidden="true">\u203a</i></span>'
-    + '<span class="meta2">' + stPill + due + pr + ev + who + rq + '</span></button>';
+  return '<button type="button" class="t ' + cls + '" data-task-id="' + id + '"'
+    + ' data-status="' + key + '" data-group="' + esc(home) + '" onclick="showDetail(\'' + id + '\')">'
+    + '<span class="t-head">' + stChip + '<span class="t-flags">' + pr + rq + '</span></span>'
+    + '<span class="t-title"><span class="t-name">' + topic + '</span><i class="chev" aria-hidden="true">›</i></span>'
+    + '<span class="meta2">' + due + ev + who + '</span></button>';
+}
+
+/* A group card: the same shell for a team member and for a status column, so
+   switching between the two groupings never changes the reading rhythm. */
+function groupCard(o) {
+  return '<div class="card' + (o.extra ? ' ' + o.extra : '') + '"' + (o.attr || '') + '>'
+    + '<div class="bar"></div>'
+    + '<div class="hd"><div class="av">' + o.avatar + '</div>'
+    + '<div><div class="nm">' + esc(o.name) + '</div><div class="rl">' + esc(o.role) + '</div></div>'
+    + '<div class="cnt">' + o.count + '</div></div>'
+    + '<div class="list"' + (o.listAttr || '') + '>' + (o.rows || '')
+    + '<div class="empty"' + (o.rows ? ' hidden' : '') + '>' + esc(o.empty) + '</div></div></div>';
 }
 
 function htmlPage(statusCode, title, inner, extraScript) {
@@ -196,7 +235,10 @@ exports.handler = async (event) => {
   let totalActive = 0, overdue = 0, dueWeek = 0;
   function bump(t) { const du = daysUntil(t.dueDate); totalActive++; if (du !== null && du < 0) overdue++; else if (du !== null && du <= 7) dueWeek++; }
   const nameOf = (w) => names[w] || DEFAULT_NAME[w] || w;
-  const cards = [];
+  /* Every task is rendered exactly once. Both groupings are built from this
+     one list, and the browser moves the rendered cards between them. */
+  const built = [];
+  const memberCards = [];
   const sharedCards = [];
 
   // A task shared with two or more people appears ONCE here, not repeated under
@@ -204,20 +246,22 @@ exports.handler = async (event) => {
   const shared = eventTasks.filter(t => isActive(t) && isSharedMany(t))
     .sort((a, b) => String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
   if (shared.length) {
-    const rows = shared.map(t => {
+    shared.forEach(t => {
       const id = 't' + (idc++);
-      const whoLabel = taskAssignees(t).map(nameOf).join(', ');
-      TASKS[id] = detailOf(t, whoLabel, ['#F0B323', '#003057'], NOTES);
+      const owners = taskAssignees(t).map(ws => ({ ws: ws, name: nameOf(ws) }));
+      TASKS[id] = detailOf(t, owners.map(o => o.name).join(', '), ['#F0B323', '#003057'], NOTES);
       TASKS[id].members = taskAssignees(t);
       bump(t);
       openReq += TASKS[id].requests.length;
-      return taskRow(t, id, whoLabel, TASKS[id].requests.length);
-    }).join('');
-    sharedCards.push('<div class="card shared" style="--c:#F0B323;--c2:#003057">'
-      + '<div class="bar"></div><div class="hd"><div class="av">' + PEOPLE_SVG + '</div>'
-      + '<div><div class="nm">Shared across the team</div><div class="rl">Assigned to more than one person</div></div>'
-      + '<div class="cnt">' + shared.length + '</div></div>'
-      + '<div class="list">' + rows + '</div></div>');
+      built.push({ id: id, status: statusOf(t), home: 'shared',
+        html: taskRow(t, id, owners, TASKS[id].requests.length, 'shared') });
+    });
+    sharedCards.push(groupCard({
+      extra: 'shared', attr: ' style="--c:#F0B323;--c2:#003057"', avatar: PEOPLE_SVG,
+      name: 'Shared across the team', role: 'Assigned to more than one person',
+      count: shared.length, rows: '', listAttr: ' data-member-list="shared"',
+      empty: 'No shared tasks in this view'
+    }));
   }
 
   for (const ws of ORDER) {
@@ -230,35 +274,62 @@ exports.handler = async (event) => {
     mine.sort((a, b) => String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
     const nm = nameOf(ws);
     const colors = COLOR[ws] || COLOR.boss;
-    const rows = mine.map(t => {
+    mine.forEach(t => {
       const id = 't' + (idc++);
       TASKS[id] = detailOf(t, nm, colors, NOTES);
       TASKS[id].members = [ws];
       bump(t);
       openReq += TASKS[id].requests.length;
-      return taskRow(t, id, '', TASKS[id].requests.length);
-    }).join('');
-    const initial = esc((nm || '?').trim().charAt(0).toUpperCase() || '?');
-    cards.push('<div class="card" style="--c:' + colors[0] + ';--c2:' + colors[1] + '">'
-      + '<div class="bar"></div><div class="hd"><div class="av">' + initial + '</div>'
-      + '<div><div class="nm">' + esc(nm) + '</div><div class="rl">' + esc(ROLE[ws] || '') + '</div></div>'
-      + '<div class="cnt">' + mine.length + '</div></div>'
-      + '<div class="list">' + (mine.length ? rows : '<div class="empty">No ongoing tasks</div>') + '</div></div>');
+      built.push({ id: id, status: statusOf(t), home: ws,
+        html: taskRow(t, id, [{ ws: ws, name: nm }], TASKS[id].requests.length, ws) });
+    });
+    memberCards.push(groupCard({
+      extra: 'mcard m-' + ws,
+      avatar: esc((nm || '?').trim().charAt(0).toUpperCase() || '?'),
+      name: nm, role: ROLE[ws] || '', count: mine.length, rows: '',
+      listAttr: ' data-member-list="' + esc(ws) + '"', empty: 'No ongoing tasks'
+    }));
   }
+
+  /* Status is the board's default organisation, so the server renders the
+     cards into their status column. The team-member columns above are ready
+     and empty; the browser fills them the moment that grouping is chosen. */
+  const byStatus = {};
+  STATUS_ORDER.forEach(k => { byStatus[k] = []; });
+  built.forEach(row => byStatus[row.status].push(row));
+  const statusCards = STATUS_ORDER.map(k => groupCard({
+    extra: 's-' + k, avatar: statusIcon(k, 22), name: STATUS[k].label, role: STATUS[k].note,
+    count: byStatus[k].length, rows: byStatus[k].map(r => r.html).join(''),
+    listAttr: ' data-status-list="' + k + '"', empty: 'Nothing at this stage'
+  })).join('');
 
   const now = new Date();
   const when = now.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
   const memberOptions = ORDER.map(ws => '<option value="' + ws + '">' + esc(nameOf(ws)) + '</option>').join('');
-  const controls = '<form id="board-controls" class="board-controls" role="search" aria-label="Filter team tasks">'
+  /* Status is a headline filter, not a line in a dropdown: each category shows
+     its own colour, its own glyph and how much work is sitting in it. */
+  const statusChips = '<div class="status-filter" id="board-status" role="group" aria-label="Filter by status">'
+    + '<button type="button" class="schip is-on" data-status="" aria-pressed="true">All statuses<b>' + totalActive + '</b></button>'
+    + STATUS_ORDER.map(k => '<button type="button" class="schip s-' + k + '" data-status="' + k + '" aria-pressed="false">'
+        + statusIcon(k, 14) + esc(STATUS[k].label) + '<b>' + byStatus[k].length + '</b></button>').join('')
+    + '</div>';
+  const groupBy = '<div class="groupby" role="group" aria-label="Group tasks by">'
+    + '<span class="gb-label">Group by</span>'
+    + '<button type="button" class="gbtn is-on" data-group-mode="status" aria-pressed="true">Status</button>'
+    + '<button type="button" class="gbtn" data-group-mode="member" aria-pressed="false">Team member</button>'
+    + '</div>';
+  const controls = '<div class="toolbar" id="board-toolbar">'
+    + '<div class="toolbar-head"><span class="tb-label">Status</span>' + statusChips + '</div>'
+    + '<form id="board-controls" class="board-controls" role="search" aria-label="Filter team tasks">'
     + '<label class="control search-control"><span>Search tasks</span><input id="board-search" type="search" placeholder="Task, event or keyword" autocomplete="off"></label>'
     + '<label class="control"><span>Team member</span><select id="board-member"><option value="">Everyone</option>' + memberOptions + '</select></label>'
-    + '<label class="control"><span>Status</span><select id="board-status"><option value="">All statuses</option><option value="pending">Pending</option><option value="in-progress">In progress</option><option value="waiting">Waiting</option><option value="on-hold">On hold</option></select></label>'
     + '<label class="control"><span>Deadline</span><select id="board-due"><option value="">Any deadline</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="week">Next 7 days</option><option value="none">No deadline</option></select></label>'
-    + '<label class="density"><input id="board-compact" type="checkbox" checked>Compact view</label></form>'
+    + groupBy
+    + '<label class="density"><input id="board-compact" type="checkbox" checked>Compact view</label></form></div>'
     + '<div class="results-line"><p id="board-results" role="status">Showing ' + totalActive + ' ongoing tasks</p><button id="board-reset" class="reset-btn" type="button" hidden>Clear filters</button></div>';
   const inner = '<main class="wrap">'
     + '<div class="hero"><div class="hero-accent"></div><div class="hero-in">'
-    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><div class="eyebrow">MARCOM WORKSPACE</div><h1>Team Board<span class="mk">.</span></h1><p class="sub">Select a task to review the brief or send a request.</p></div>'
+    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><div class="eyebrow">MARCOM WORKSPACE</div><h1>Team Board<span class="mk">.</span></h1><p class="sub">Grouped by status. Select a task to review the brief or send a request.</p></div>'
     + '<span class="ro">View and request</span></div>'
     + '<div class="stats">'
     + '<div class="stat"><div class="n" data-count="' + totalActive + '">' + totalActive + '</div><div class="l">Ongoing tasks</div></div>'
@@ -267,7 +338,9 @@ exports.handler = async (event) => {
     + '<div class="stat req"><div class="n" data-count="' + openReq + '">' + openReq + '</div><div class="l">Open requests</div></div>'
     + '</div></div></div>'
     + '<div class="updated"><span>Updated ' + esc(when) + ' · Bangkok time</span><button class="refreshbtn" type="button" onclick="location.reload()" aria-label="Refresh"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v5h-5"/></svg> Refresh</button></div>'
-    + controls + '<div class="grid">' + cards.concat(sharedCards).join('') + '</div>'
+    + controls
+    + '<div class="grid" id="grid-status">' + statusCards + '</div>'
+    + '<div class="grid" id="grid-member" hidden>' + memberCards.concat(sharedCards).join('') + '</div>'
     + '<div id="board-empty" class="no-results" hidden><h2>No matching tasks</h2><p>Try a different search or clear the filters to see the whole team.</p></div>'
     + '<div class="foot">Ongoing work only · shared tasks appear once · your requests reach the owner and the MARCOM Manager, who apply them · refresh to load the latest updates.</div>'
     + '</main>'

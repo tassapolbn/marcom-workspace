@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createRequire} from 'node:module';
+import {readFileSync} from 'node:fs';
 import {renderTeamBoard,sendBoardAction,boardActions} from './team-board-fixture.mjs';
 const {matchesTask,actionProblem}=createRequire(import.meta.url)('../assets/team-board.js');
 const payload=html=>JSON.parse(html.match(/<script id="board-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
@@ -45,6 +46,76 @@ test('due today follows Bangkok midnight even when the server is on the previous
   const tasks=Object.values(payload(page.body));
   assert.equal(tasks.find(t=>t.topic==='Today').daysLeft,0);
   assert.equal(tasks.find(t=>t.topic==='Yesterday').daysLeft,-1);
+});
+
+/* ===== Status categories and the two groupings ===== */
+
+test('every task is rendered once and carries the keys both groupings need',async()=>{
+  const page=await renderTeamBoard({collections:{
+    boss_tasks:[{__id:'b1',topic:'Newsletter',status:'in-progress'}],
+    event_tasks:[{__id:'e1',topic:'Open Day',status:'waiting',assignees:['boss','dew']}]}});
+  const ids=[...page.body.matchAll(/data-task-id="(t\d+)"/g)].map(m=>m[1]);
+  assert.equal(ids.length,2);
+  assert.equal(new Set(ids).size,ids.length);          // regrouping moves cards, never copies them
+  assert.match(page.body,/data-task-id="t\d+" data-status="waiting" data-group="shared"/);
+  assert.match(page.body,/data-task-id="t\d+" data-status="in-progress" data-group="boss"/);
+  // The shared column exists for the browser to move that card into.
+  assert.match(page.body,/data-member-list="shared"/);
+});
+
+test('status columns carry the work and member columns stand ready and empty',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[
+    {topic:'A',status:'in-progress'},{topic:'B',status:'in-progress'},{topic:'C',status:'on-hold'}]}});
+  const status=page.body.match(/<div class="grid" id="grid-status">([\s\S]*?)<div class="grid" id="grid-member"/)[1];
+  const member=page.body.match(/<div class="grid" id="grid-member" hidden>([\s\S]*?)<div id="board-empty"/)[1];
+  // Work that is moving comes first, work that is paused last.
+  assert.deepEqual([...status.matchAll(/data-status-list="([a-z-]+)"/g)].map(m=>m[1]),
+    ['in-progress','waiting','pending','on-hold']);
+  assert.equal((status.match(/data-task-id=/g)||[]).length,3);
+  assert.equal(member.match(/data-task-id=/g),null);   // the browser fills these on demand
+  // No shared work in this snapshot, so that column is not drawn at all.
+  assert.deepEqual([...member.matchAll(/data-member-list="([a-z]+)"/g)].map(m=>m[1]),
+    ['boss','dew','o','junior']);
+  assert.match(status,/>In progress<\/div><div class="rl">[^<]*<\/div><\/div><div class="cnt">2</);
+  // A category with nothing in it still appears, so the full set stays visible.
+  assert.match(status,/>Waiting<\/div><div class="rl">[^<]*<\/div><\/div><div class="cnt">0</);
+});
+
+test('the status filter offers every ongoing status with its own count',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[
+    {topic:'A',status:'waiting'},{topic:'B',status:'waiting'},{topic:'C',status:'pending'}]}});
+  const chips=[...page.body.matchAll(/class="schip[^"]*" data-status="([a-z-]*)" aria-pressed="[a-z]+">(?:<svg[\s\S]*?<\/svg>)?[A-Za-z ]+<b>(\d+)<\/b>/g)]
+    .map(m=>[m[1],m[2]]);
+  assert.deepEqual(chips,[['','3'],['in-progress','0'],['waiting','2'],['pending','1'],['on-hold','0']]);
+});
+
+test('a status the board does not know is read as pending, not dropped',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[{__id:'x1',topic:'Odd one',status:'parked'}]}});
+  // The payload is normalised too, so the Pending filter still reaches this card.
+  assert.equal(Object.values(payload(page.body))[0].status,'pending');
+  assert.match(page.body,/data-task-id="t0" data-status="pending"/);
+  assert.match(page.body,/Odd one/);
+});
+
+test('a task carries one name tag per owner, each in that member colour',async()=>{
+  const page=await renderTeamBoard({collections:{
+    boss_tasks:[{topic:'Newsletter',status:'pending'}],
+    event_tasks:[{topic:'Open Day',status:'waiting',assignees:['dew','o','junior']}]}});
+  assert.match(page.body,/<span class="pill whopill m-boss">Boss<\/span>/);
+  // Shared work names each person separately, not as one joined string.
+  const shared=page.body.match(/data-group="shared"[\s\S]*?<\/button>/)[0];
+  assert.deepEqual([...shared.matchAll(/whopill m-([a-z]+)">([^<]+)</g)].map(m=>[m[1],m[2]]),
+    [['dew','Dew'],['o','O'],['junior','Eye']]);
+  // The member's own group card is tagged so the stylesheet can colour it too.
+  for(const ws of ['boss','dew','o','junior'])
+    assert.match(page.body,new RegExp('class="card mcard m-'+ws+'"'),ws);
+});
+
+test('the stylesheet gives every member the board renders a colour',()=>{
+  // Guards the board and the stylesheet against drifting apart on a rename.
+  const css=readFileSync(new URL('../assets/team-board.css',import.meta.url),'utf8');
+  for(const ws of ['boss','dew','o','junior'])
+    assert.match(css,new RegExp('\\.m-'+ws+'\\{--mc:#[0-9a-fA-F]{6};--mbg:#[0-9a-fA-F]{6};--mfg:#[0-9a-fA-F]{6};\\}'),ws);
 });
 
 /* ===== Director actions sent from the shared board ===== */
