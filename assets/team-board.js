@@ -24,8 +24,15 @@
     if(action.id==='comment'&&!String(form.note||'').trim())return 'Please write your comment.';
     return '';
   }
+  function updateStatusGroups(groups){
+    groups.forEach(group=>{
+      const visible=Array.from(group.querySelectorAll('[data-task-id]')).filter(row=>!row.hidden).length;
+      group.hidden=visible===0;
+      group.querySelector('.status-count').textContent=String(visible);
+    });
+  }
   // Export the pure predicates for dependency-free regression tests.
-  if(typeof module==='object'&&module.exports){module.exports={matchesTask,actionProblem};return;}
+  if(typeof module==='object'&&module.exports){module.exports={matchesTask,actionProblem,updateStatusGroups};return;}
   const data=document.getElementById('board-data');if(!data)return;
   const tasks=JSON.parse(data.textContent);
   const configEl=document.getElementById('board-config');
@@ -45,6 +52,7 @@
     const filter={query:query.value.trim(),member:member.value,status:status.value,due:due.value};
     let shown=0;
     rows.forEach(row=>{const show=matchesTask(tasks[row.dataset.taskId],filter);row.hidden=!show;if(show)shown++;});
+    updateStatusGroups(Array.from(document.querySelectorAll('[data-status-group]')));
     const filtering=Object.values(filter).some(Boolean);
     document.querySelector('.grid').classList.toggle('member-filtered',Boolean(filter.member));
     cards.forEach(card=>{

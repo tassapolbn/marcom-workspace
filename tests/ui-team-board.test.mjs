@@ -180,3 +180,36 @@ test('the browser catches the same missing input the server would refuse', () =>
   assert.match(actionProblem(find('comment'),{from:'A',note:' '}),/write your comment/);
   assert.equal(actionProblem(find('comment'),{from:'A',note:'Please review'}),'');
 });
+
+test('status sections keep members separate, preserve due order and show each task once',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[
+    {topic:'Later active',status:'in-progress',dueDate:'2026-10-10'},
+    {topic:'Pending task',status:'pending'},
+    {topic:'Earlier active',status:'in-progress',dueDate:'2026-10-01'},
+    {topic:'Waiting task',status:'waiting'},
+    {topic:'Held task',status:'on-hold'}
+  ],dew_tasks:[{topic:'Dew active',status:'in-progress'}],event_tasks:[
+    {topic:'Shared pending',status:'pending',assignees:['boss','dew']}
+  ]}});
+  const data=payload(page.body);
+  const groups=[...page.body.matchAll(/<section class="status-group" data-status-group="([^"]+)"[^>]*>([\s\S]*?)<\/section>/g)];
+  assert.deepEqual(groups.map(g=>g[1]),['in-progress','pending','waiting','on-hold','in-progress','pending']);
+  const ids=groups.flatMap(g=>[...g[2].matchAll(/data-task-id="([^"]+)"/g)].map(m=>m[1]));
+  assert.equal(new Set(ids).size,7);assert.equal(ids.length,7);
+  assert.ok(groups[0][2].indexOf('Earlier active')<groups[0][2].indexOf('Later active'));
+  for(const g of groups){
+    const tasks=[...g[2].matchAll(/data-task-id="([^"]+)"/g)].map(m=>data[m[1]]);
+    assert.ok(tasks.every(t=>t.status===g[1]));
+    assert.ok(tasks.every(t=>JSON.stringify(t.members)===JSON.stringify(tasks[0].members)));
+    assert.match(g[2],new RegExp('aria-label="Task count">'+tasks.length+'<'));
+  }
+});
+
+test('filters hide empty status sections and restore their counts after clearing',()=>{
+  const {updateStatusGroups}=createRequire(import.meta.url)('../assets/team-board.js');
+  const rows=[{hidden:false},{hidden:true}],badge={textContent:''};
+  const group={hidden:false,querySelectorAll:()=>rows,querySelector:()=>badge};
+  updateStatusGroups([group]);assert.equal(badge.textContent,'1');assert.equal(group.hidden,false);
+  rows[0].hidden=true;updateStatusGroups([group]);assert.equal(badge.textContent,'0');assert.equal(group.hidden,true);
+  rows.forEach(r=>r.hidden=false);updateStatusGroups([group]);assert.equal(badge.textContent,'2');assert.equal(group.hidden,false);
+});
