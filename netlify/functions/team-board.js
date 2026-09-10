@@ -29,9 +29,9 @@ const DONE = { done: 1, canceled: 1 };
 const BOARD_DATE = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'});
 const STATUS = {
   'pending':     { label: 'Pending',     bg: '#eef1f5', fg: '#5b6675' },
-  'in-progress': { label: 'In progress', bg: '#e6effd', fg: '#1d4ed8' },
+  'in-progress': { label: 'In progress', bg: '#e7eff7', fg: '#003057' },
   'waiting':     { label: 'Waiting',     bg: '#fdf0d9', fg: '#855714' },
-  'on-hold':     { label: 'On hold',     bg: '#efe9fb', fg: '#6d28d9' }
+  'on-hold':     { label: 'On hold',     bg: '#e9edf2', fg: '#48576a' }
 };
 
 function esc(s) {
