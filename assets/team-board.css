@@ -42,8 +42,6 @@ h1{margin:0;font-size:clamp(1.75rem,2.5vw,2.5rem);line-height:1.25;letter-spacin
 .grid.member-filtered{grid-template-columns:minmax(0,1fr);}.member-filtered>.card:not(.shared) .list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));}
 .no-results{padding:32px;border:1px dashed #b8c7d3;border-radius:14px;text-align:center;color:var(--muted);background:white;}.no-results h2{color:var(--ink);font-size:18px;margin:0 0 6px;}.no-results p{margin:0;}
 .foot{margin-top:24px;font-size:12px;color:var(--muted);text-align:center;}
-.compact .t{padding:9px 10px;}.compact .t-top{font-size:.875rem;}.compact .meta2{margin-top:6px;gap:4px;}.compact .pill{font-size:.875rem;padding:1px 5px;}.compact .task-heading{margin-bottom:6px;}.compact .list{gap:6px;}
-.compact .hero{padding:16px 22px;}.compact .stats{margin-top:16px;}.compact .stat{padding:12px 16px;}.compact .updated{margin:10px 0;}.compact .board-controls{padding:12px;}.compact .hd{padding-top:12px;padding-bottom:10px;}
 /* Native dialog provides focus containment and makes the background inert. */
 .dv{padding:0;border:1px solid var(--line);border-radius:22px;width:calc(100% - 28px);max-width:600px;max-height:calc(100dvh - 40px);color:var(--ink);background:white;box-shadow:0 24px 80px #0b203540;}
 .dv::backdrop{background:#0b2035a6;backdrop-filter:blur(3px);}
@@ -98,3 +96,42 @@ textarea:focus-visible{outline:3px solid #2879bc;outline-offset:3px;}
 /* Labels retain meaning while decorative colour follows the school palette. */
 .av svg{stroke:currentColor;}
 @media(min-width:601px) and (max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+
+/* Default to a scanning layout. Task names stay fully readable and every task
+   remains in the page; the dialog provides the supporting event details. */
+.compact .wrap{padding:16px clamp(12px,2vw,28px) 32px;}
+.compact .hero{padding:16px 20px;border-radius:16px;}
+.compact .logo{width:160px;}
+.compact .brand{gap:20px;}
+.compact .brand>div:nth-child(2){padding-left:20px;}
+.compact h1{font-size:1.5rem;}
+.compact .eyebrow{font-size:.75rem;margin-bottom:0;}
+.compact .sub,.compact .ro{display:none;}
+.compact .stats{margin-top:14px;gap:8px;}
+.compact .stat{flex-direction:row;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;}
+.compact .stat .n{font-size:1.5rem;}
+.compact .stat .l{font-size:.875rem;}
+.compact .updated{margin:10px 0;font-size:.75rem;}
+.compact .board-controls{padding:12px;gap:10px;border-radius:12px;}
+.compact .control>span{font-size:.75rem;}
+.compact .results-line{margin:12px 0 10px;}
+.compact .grid{gap:12px;}
+.compact .card{border-radius:12px;box-shadow:none;}
+.compact .hd{gap:9px;padding:12px;}
+.compact .av{width:32px;height:32px;border-radius:9px;font-size:.875rem;}
+.compact .nm{font-size:.9375rem;}
+.compact .list{gap:6px;padding:8px;}
+.compact .t{padding:10px;border-radius:8px;box-shadow:none;}
+.compact .t-top{font-size:.875rem;line-height:1.45;}
+.compact .chev{background:none;height:20px;flex-basis:16px;font-size:18px;}
+.compact .meta2{margin-top:6px;padding-top:0;border-top:0;gap:4px;}
+.compact .pill{font-size:.875rem;padding:1px 5px;line-height:1.4;border-radius:4px;}
+.compact .meta2 .ev{display:none;}
+.compact .empty{padding:16px 8px;}
+@media(max-width:600px){
+  .compact .brand{gap:12px;}
+  .compact .brand>div:nth-child(2){flex:1 1 140px;padding-left:0;border-left:0;}
+  .compact .logo{width:140px;}
+  .compact .hero{padding:14px;}
+  .compact .stat{flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;}
+}

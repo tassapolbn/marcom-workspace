@@ -63,8 +63,12 @@
   document.getElementById('board-reset').addEventListener('click',()=>{
     query.value='';member.value='';status.value='';due.value='';filterBoard();query.focus();
   });
-  document.getElementById('board-compact').addEventListener('change',event=>{
+  const density=document.getElementById('board-compact');
+  try{density.checked=localStorage.getItem('hs-board-compact')!=='false';}catch(_){}
+  document.body.classList.toggle('compact',density.checked);
+  density.addEventListener('change',event=>{
     document.body.classList.toggle('compact',event.target.checked);
+    try{localStorage.setItem('hs-board-compact',String(event.target.checked));}catch(_){}
   });
   const dialog=document.getElementById('dv');
   let returnFocus=null,previousOverflow='';
