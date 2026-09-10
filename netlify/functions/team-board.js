@@ -16,15 +16,14 @@ const ROLE = {
   junior: 'Junior Events Coordinator'
 };
 const DEFAULT_NAME = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
-/* A crisp graduation-cap mark on a white tile. Inline SVG, so it always renders
-   the same and can never break or load oddly like a stretched logo file. */
-const LOGO_TAG = '<svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="#12365a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 9l-10 -4l-10 4l10 4l10 -4v6"/><path d="M6 10.6v5.4a6 3 0 0 0 12 0v-5.4"/></svg>';
+/* Official supplied HeadStart artwork, preserved at its original aspect ratio. */
+const LOGO_TAG = '<img src="/assets/headstart-landscape-dark.png" alt="HeadStart International School Phuket" width="2048" height="510">';
 const PEOPLE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6"/><path d="M20.5 20c0-2.4-1.5-4.2-3.7-4.8"/></svg>';
 const COLOR = {
-  boss:   ['#2b5488', '#12365a'],
-  dew:    ['#9272b9', '#65458b'],
-  o:      ['#4d8595', '#285d6b'],
-  junior: ['#2f8a53', '#166534']
+  boss:   ['#F0B323', '#003057'],
+  dew:    ['#F0B323', '#003057'],
+  o:      ['#F0B323', '#003057'],
+  junior: ['#F0B323', '#003057']
 };
 const DONE = { done: 1, canceled: 1 };
 const BOARD_DATE = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -114,8 +113,8 @@ function taskRow(t, id, whoLabel, reqCount) {
     due = '<span class="pill due' + dcls + '">' + esc(lbl) + '</span>';
   } else due = '<span class="pill due">No deadline</span>';
   const st = STATUS[t.status] || STATUS['pending'];
-  const stPill = '<span class="pill" style="background:' + st.bg + ';color:' + st.fg + ';">' + esc(st.label) + '</span>';
-  const pr = (t.priority === 'high') ? '<span class="pill pri-high">High</span>'
+  const stPill = '<span class="pill task-status" style="background:' + st.bg + ';color:' + st.fg + ';">' + esc(st.label) + '</span>';
+  const pr = (t.priority === 'high') ? '<span class="pill pri-high">High priority</span>'
     : (t.priority === 'low') ? '<span class="pill pri-low">Low</span>' : '';
   const evName = (t.eventLabel || t.eventName || '').trim();
   const ev = evName ? '<span class="pill ev">' + esc(evName) + '</span>' : '';
@@ -124,8 +123,8 @@ function taskRow(t, id, whoLabel, reqCount) {
     ? '<span class="pill req">' + (reqCount === 1 ? '1 request sent' : reqCount + ' requests sent') + '</span>'
     : '';
   return '<button type="button" class="t' + cls + '" data-task-id="' + id + '" onclick="showDetail(\'' + id + '\')">'
-    + '<span class="t-top">' + topic + '<i class="chev">\u203a</i></span>'
-    + '<span class="meta2">' + due + stPill + pr + ev + who + rq + '</span></button>';
+    + '<span class="task-heading">' + stPill + pr + '</span><span class="t-top"><span>' + topic + '</span><i class="chev" aria-hidden="true">\u203a</i></span>'
+    + '<span class="meta2">' + due + ev + who + rq + '</span></button>';
 }
 
 function htmlPage(statusCode, title, inner, extraScript) {
@@ -198,6 +197,7 @@ exports.handler = async (event) => {
   function bump(t) { const du = daysUntil(t.dueDate); totalActive++; if (du !== null && du < 0) overdue++; else if (du !== null && du <= 7) dueWeek++; }
   const nameOf = (w) => names[w] || DEFAULT_NAME[w] || w;
   const cards = [];
+  const sharedCards = [];
 
   // A task shared with two or more people appears ONCE here, not repeated under
   // every member. It shows who it is shared with.
@@ -207,13 +207,13 @@ exports.handler = async (event) => {
     const rows = shared.map(t => {
       const id = 't' + (idc++);
       const whoLabel = taskAssignees(t).map(nameOf).join(', ');
-      TASKS[id] = detailOf(t, whoLabel, ['#5b5bd6', '#3f3aa8'], NOTES);
+      TASKS[id] = detailOf(t, whoLabel, ['#F0B323', '#003057'], NOTES);
       TASKS[id].members = taskAssignees(t);
       bump(t);
       openReq += TASKS[id].requests.length;
       return taskRow(t, id, whoLabel, TASKS[id].requests.length);
     }).join('');
-    cards.push('<div class="card shared" style="--c:#5b5bd6;--c2:#3f3aa8">'
+    sharedCards.push('<div class="card shared" style="--c:#F0B323;--c2:#003057">'
       + '<div class="bar"></div><div class="hd"><div class="av">' + PEOPLE_SVG + '</div>'
       + '<div><div class="nm">Shared across the team</div><div class="rl">Assigned to more than one person</div></div>'
       + '<div class="cnt">' + shared.length + '</div></div>'
@@ -243,7 +243,7 @@ exports.handler = async (event) => {
       + '<div class="bar"></div><div class="hd"><div class="av">' + initial + '</div>'
       + '<div><div class="nm">' + esc(nm) + '</div><div class="rl">' + esc(ROLE[ws] || '') + '</div></div>'
       + '<div class="cnt">' + mine.length + '</div></div>'
-      + '<div class="list">' + (mine.length ? rows : '<div class="empty">No ongoing tasks \u2728</div>') + '</div></div>');
+      + '<div class="list">' + (mine.length ? rows : '<div class="empty">No ongoing tasks</div>') + '</div></div>');
   }
 
   const now = new Date();
@@ -258,16 +258,16 @@ exports.handler = async (event) => {
     + '<div class="results-line"><p id="board-results" role="status">Showing ' + totalActive + ' ongoing tasks</p><button id="board-reset" class="reset-btn" type="button" hidden>Clear filters</button></div>';
   const inner = '<main class="wrap">'
     + '<div class="hero"><div class="hero-accent"></div><div class="hero-in">'
-    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><h1>HeadStart <span class="mk">MARCOM</span> &mdash; Team Board</h1><div class="titleaccent"></div><p class="sub">Team priorities, at a glance. Select any task for the full brief, and to send a request to the owner.</p></div>'
+    + '<div class="brand"><div class="logo">' + LOGO_TAG + '</div><div><div class="eyebrow">MARCOM WORKSPACE</div><h1>Team Board<span class="mk">.</span></h1><p class="sub">Select a task to review the brief or send a request.</p></div>'
     + '<span class="ro">View and request</span></div>'
     + '<div class="stats">'
-    + '<div class="stat"><div class="n" data-count="' + totalActive + '">' + totalActive + '</div><div class="l">Active tasks</div></div>'
+    + '<div class="stat"><div class="n" data-count="' + totalActive + '">' + totalActive + '</div><div class="l">Ongoing tasks</div></div>'
     + '<div class="stat warn"><div class="n" data-count="' + dueWeek + '">' + dueWeek + '</div><div class="l">Due within 7 days</div></div>'
     + '<div class="stat bad"><div class="n" data-count="' + overdue + '">' + overdue + '</div><div class="l">Overdue</div></div>'
     + '<div class="stat req"><div class="n" data-count="' + openReq + '">' + openReq + '</div><div class="l">Open requests</div></div>'
     + '</div></div></div>'
     + '<div class="updated"><span>Updated ' + esc(when) + ' · Bangkok time</span><button class="refreshbtn" type="button" onclick="location.reload()" aria-label="Refresh"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v5h-5"/></svg> Refresh</button></div>'
-    + controls + '<div class="grid">' + cards.join('') + '</div>'
+    + controls + '<div class="grid">' + cards.concat(sharedCards).join('') + '</div>'
     + '<div id="board-empty" class="no-results" hidden><h2>No matching tasks</h2><p>Try a different search or clear the filters to see the whole team.</p></div>'
     + '<div class="foot">Ongoing work only · shared tasks appear once · your requests reach the owner and the MARCOM Manager, who apply them · refresh to load the latest updates.</div>'
     + '</main>'
@@ -281,5 +281,5 @@ exports.handler = async (event) => {
     + '<script id="board-config" type="application/json">' + configJson + '</script>'
     + '<script src="/assets/team-board.js" defer></script>';
 
-  return htmlPage(200, 'Team Task Board', inner, script);
+  return htmlPage(200, 'HeadStart MARCOM | Team Board', inner, script);
 };
