@@ -127,6 +127,18 @@ function taskRow(t, id, whoLabel, reqCount) {
     + '<span class="meta2">' + stPill + due + pr + ev + who + rq + '</span></button>';
 }
 
+/* Preserve deadline order within each status and show each task exactly once. */
+function statusGroups(tasks, renderRow) {
+  return ['in-progress', 'pending', 'waiting', 'on-hold'].map(status => {
+    const group = tasks.filter(t => (STATUS[t.status] ? t.status : 'pending') === status);
+    if (!group.length) return '';
+    return '<section class="status-group" data-status-group="' + status + '" aria-label="' + STATUS[status].label + '">'
+      + '<h3 class="status-heading"><span class="status-label">' + STATUS[status].label + '</span>'
+      + '<span class="status-count" aria-label="Task count">' + group.length + '</span></h3>'
+      + '<div class="status-tasks">' + group.map(renderRow).join('') + '</div></section>';
+  }).join('');
+}
+
 function htmlPage(statusCode, title, inner, extraScript) {
   return {
     statusCode,
@@ -204,7 +216,7 @@ exports.handler = async (event) => {
   const shared = eventTasks.filter(t => isActive(t) && isSharedMany(t))
     .sort((a, b) => String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
   if (shared.length) {
-    const rows = shared.map(t => {
+    const rows = statusGroups(shared, t => {
       const id = 't' + (idc++);
       const whoLabel = taskAssignees(t).map(nameOf).join(', ');
       TASKS[id] = detailOf(t, whoLabel, ['#F0B323', '#003057'], NOTES);
@@ -212,10 +224,10 @@ exports.handler = async (event) => {
       bump(t);
       openReq += TASKS[id].requests.length;
       return taskRow(t, id, whoLabel, TASKS[id].requests.length);
-    }).join('');
+    });
     sharedCards.push('<div class="card shared" style="--c:#F0B323;--c2:#003057">'
       + '<div class="bar"></div><div class="hd"><div class="av">' + PEOPLE_SVG + '</div>'
-      + '<div><div class="nm">Shared across the team</div><div class="rl">Assigned to more than one person</div></div>'
+      + '<div><h2 class="nm">Shared across the team</h2><div class="rl">Assigned to more than one person</div></div>'
       + '<div class="cnt">' + shared.length + '</div></div>'
       + '<div class="list">' + rows + '</div></div>');
   }
@@ -230,18 +242,18 @@ exports.handler = async (event) => {
     mine.sort((a, b) => String(a.dueDate || '9999-12-31').localeCompare(String(b.dueDate || '9999-12-31')));
     const nm = nameOf(ws);
     const colors = COLOR[ws] || COLOR.boss;
-    const rows = mine.map(t => {
+    const rows = statusGroups(mine, t => {
       const id = 't' + (idc++);
       TASKS[id] = detailOf(t, nm, colors, NOTES);
       TASKS[id].members = [ws];
       bump(t);
       openReq += TASKS[id].requests.length;
       return taskRow(t, id, '', TASKS[id].requests.length);
-    }).join('');
+    });
     const initial = esc((nm || '?').trim().charAt(0).toUpperCase() || '?');
     cards.push('<div class="card" style="--c:' + colors[0] + ';--c2:' + colors[1] + '">'
       + '<div class="bar"></div><div class="hd"><div class="av">' + initial + '</div>'
-      + '<div><div class="nm">' + esc(nm) + '</div><div class="rl">' + esc(ROLE[ws] || '') + '</div></div>'
+      + '<div><h2 class="nm">' + esc(nm) + '</h2><div class="rl">' + esc(ROLE[ws] || '') + '</div></div>'
       + '<div class="cnt">' + mine.length + '</div></div>'
       + '<div class="list">' + (mine.length ? rows : '<div class="empty">No ongoing tasks</div>') + '</div></div>');
   }
