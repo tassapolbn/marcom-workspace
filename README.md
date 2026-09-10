@@ -154,6 +154,28 @@ their assignees. Deadline badges use the Bangkok calendar day. UI tests cover
 share access, data escaping, filtering, shared-task counts, the Bangkok midnight
 boundary, and every rule the action endpoint applies.
 
+### How the board is organised
+
+The board opens grouped by **status**, in the order In progress, Waiting,
+Pending, On hold. **Group by** switches between status columns and team-member
+columns; the choice is remembered in that browser. Both groupings share one set
+of rendered cards, which the browser moves rather than redraws, so a task is
+never counted or shown twice and a request badge survives the switch.
+
+The status row above the filters is also the status filter: each category shows
+its own colour, its own icon and how many ongoing tasks sit in it, and selecting
+one narrows the board to that category. An empty category still appears, so the
+full set of states stays visible. A status the board does not recognise is read
+as Pending rather than dropped.
+
+Each status has its own accent, tint and glyph, so status is never signalled by
+colour alone. On a task card the status owns the left rail and the chip at the
+top, the deadline owns the surface tint and its own pill (red overdue, amber for
+the next three days), and an open Director request owns the gold flag, so the
+three signals never overwrite each other. To add or reword a status, edit
+`STATUS` and `STATUS_ORDER` in `netlify/functions/team-board.js` and add the
+matching `--s-<key>` custom properties in `assets/team-board.css`.
+
 ## 7a. Director requests from the Team Board
 
 The Director opens the shared link, selects any task, and sends one of these,

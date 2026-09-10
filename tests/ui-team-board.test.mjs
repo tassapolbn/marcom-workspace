@@ -47,6 +47,55 @@ test('due today follows Bangkok midnight even when the server is on the previous
   assert.equal(tasks.find(t=>t.topic==='Yesterday').daysLeft,-1);
 });
 
+/* ===== Status categories and the two groupings ===== */
+
+test('every task is rendered once and carries the keys both groupings need',async()=>{
+  const page=await renderTeamBoard({collections:{
+    boss_tasks:[{__id:'b1',topic:'Newsletter',status:'in-progress'}],
+    event_tasks:[{__id:'e1',topic:'Open Day',status:'waiting',assignees:['boss','dew']}]}});
+  const ids=[...page.body.matchAll(/data-task-id="(t\d+)"/g)].map(m=>m[1]);
+  assert.equal(ids.length,2);
+  assert.equal(new Set(ids).size,ids.length);          // regrouping moves cards, never copies them
+  assert.match(page.body,/data-task-id="t\d+" data-status="waiting" data-group="shared"/);
+  assert.match(page.body,/data-task-id="t\d+" data-status="in-progress" data-group="boss"/);
+  // The shared column exists for the browser to move that card into.
+  assert.match(page.body,/data-member-list="shared"/);
+});
+
+test('status columns carry the work and member columns stand ready and empty',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[
+    {topic:'A',status:'in-progress'},{topic:'B',status:'in-progress'},{topic:'C',status:'on-hold'}]}});
+  const status=page.body.match(/<div class="grid" id="grid-status">([\s\S]*?)<div class="grid" id="grid-member"/)[1];
+  const member=page.body.match(/<div class="grid" id="grid-member" hidden>([\s\S]*?)<div id="board-empty"/)[1];
+  // Work that is moving comes first, work that is paused last.
+  assert.deepEqual([...status.matchAll(/data-status-list="([a-z-]+)"/g)].map(m=>m[1]),
+    ['in-progress','waiting','pending','on-hold']);
+  assert.equal((status.match(/data-task-id=/g)||[]).length,3);
+  assert.equal(member.match(/data-task-id=/g),null);   // the browser fills these on demand
+  // No shared work in this snapshot, so that column is not drawn at all.
+  assert.deepEqual([...member.matchAll(/data-member-list="([a-z]+)"/g)].map(m=>m[1]),
+    ['boss','dew','o','junior']);
+  assert.match(status,/>In progress<\/div><div class="rl">[^<]*<\/div><\/div><div class="cnt">2</);
+  // A category with nothing in it still appears, so the full set stays visible.
+  assert.match(status,/>Waiting<\/div><div class="rl">[^<]*<\/div><\/div><div class="cnt">0</);
+});
+
+test('the status filter offers every ongoing status with its own count',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[
+    {topic:'A',status:'waiting'},{topic:'B',status:'waiting'},{topic:'C',status:'pending'}]}});
+  const chips=[...page.body.matchAll(/class="schip[^"]*" data-status="([a-z-]*)" aria-pressed="[a-z]+">(?:<svg[\s\S]*?<\/svg>)?[A-Za-z ]+<b>(\d+)<\/b>/g)]
+    .map(m=>[m[1],m[2]]);
+  assert.deepEqual(chips,[['','3'],['in-progress','0'],['waiting','2'],['pending','1'],['on-hold','0']]);
+});
+
+test('a status the board does not know is read as pending, not dropped',async()=>{
+  const page=await renderTeamBoard({collections:{boss_tasks:[{__id:'x1',topic:'Odd one',status:'parked'}]}});
+  // The payload is normalised too, so the Pending filter still reaches this card.
+  assert.equal(Object.values(payload(page.body))[0].status,'pending');
+  assert.match(page.body,/data-task-id="t0" data-status="pending"/);
+  assert.match(page.body,/Odd one/);
+});
+
 /* ===== Director actions sent from the shared board ===== */
 
 const liveTask={__id:'t1',topic:'Prepare the September newsletter',status:'in-progress'};
