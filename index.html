@@ -9130,11 +9130,11 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     }).join('');
     root.innerHTML=''
       +'<div class="rc-hero"><div class="rc-hero-band"></div>'
-      +  rcLangHTML()
+      +  '<div class="rc-language-bar">'+rcLangHTML()+'</div>'
       +  '<div class="rc-hero-top">'
       +    '<span class="rc-logo-wrap">'+logoImg()+'</span>'
       +    '<div class="rc-hero-main">'
-      +      '<div class="rc-hero-t">MARCOM Request Centre</div>'
+      +      '<h1 class="rc-hero-t">MARCOM Request Centre</h1>'
       +      '<div class="rc-hero-s">Marketing &amp; Communications Department</div>'
       +    '</div>'
       +  '</div>'
@@ -9153,7 +9153,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       +'<div class="rc-foot"><i class="ti ti-heart" style="font-size:11px;color:var(--coral);"></i> HeadStart International School, Phuket · Marketing &amp; Communications Team</div>';
     rcRenderHist();
   }
-  var RC_LOGO_URL='https://headstartphuket.com/assets/top/headstart-international-school-phuket-74639d3b8a4f5593024de37e9eb3cad3006abe9f8a2b1085869d45297ee665db.png';
+  var RC_LOGO_URL='assets/headstart-landscape-dark.png';
   window.rcLogoFallback=function(img){
     if(!img.getAttribute('data-alt')){img.setAttribute('data-alt','1');img.src='logo.png';return;}
     img.style.display='none';
@@ -12627,7 +12627,7 @@ html:not(.dark){
   --shadow-lg:0 2px 6px rgba(16,24,40,.07),0 24px 52px -12px rgba(16,24,40,.22);}
 
 /* a clean white canvas, no tinted light pools */
-html:not(.dark) body,html:not(.dark) body.theme-overview{background:#FFFFFF!important;}
+html:not(.dark) body:not(.request-mode),html:not(.dark) body.theme-overview:not(.request-mode){background:#FFFFFF!important;}
 html:not(.dark) body::before,html:not(.dark) body::after{background:none!important;filter:none!important;}
 
 /* solid white panels that float on their shadow */
@@ -12938,6 +12938,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
 })();
 </script>
 <link rel="stylesheet" href="assets/workspace-ui.css">
+<link rel="stylesheet" href="assets/request-centre.css">
 </body>
 
 </html>
