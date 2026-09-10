@@ -168,6 +168,16 @@ one narrows the board to that category. An empty category still appears, so the
 full set of states stays visible. A status the board does not recognise is read
 as Pending rather than dropped.
 
+Each member keeps the colour their workspace tab already uses (the light-theme
+`.tab-btn.a-*` set in `index.html`): Boss school navy, Dew burnt orange, O
+orange-red, Eye deep green. That colour carries the member's group card and
+every name tag on a task, so the same person reads as the same colour in both
+places. A task shared by several people shows one tag per person. The colours
+live in `COLOR` in `netlify/functions/team-board.js` and in the `.m-<key>`
+custom properties in `assets/team-board.css`; a UI test fails if the two drift
+apart. The shared card stays navy and gold, because it stands for the whole
+team rather than one person.
+
 Each status has its own accent, tint and glyph, so status is never signalled by
 colour alone. On a task card the status owns the left rail and the chip at the
 top, the deadline owns the surface tint and its own pill (red overdue, amber for

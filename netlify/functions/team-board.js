@@ -20,11 +20,14 @@ const DEFAULT_NAME = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
 const LOGO_TAG = '<img src="/assets/headstart-landscape-dark.png" alt="HeadStart International School Phuket" width="2048" height="510">';
 const PEOPLE_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><path d="M16 5.2a3 3 0 0 1 0 5.6"/><path d="M20.5 20c0-2.4-1.5-4.2-3.7-4.8"/></svg>';
 const CAL_SVG = '<svg class="pico" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>';
+/* Each member's colour is the one their tab already carries in the workspace
+   (the light-theme `.tab-btn.a-*` set in index.html), so a reader recognises
+   the same person by the same colour in both places. Accent, then tint. */
 const COLOR = {
-  boss:   ['#F0B323', '#003057'],
-  dew:    ['#F0B323', '#003057'],
-  o:      ['#F0B323', '#003057'],
-  junior: ['#F0B323', '#003057']
+  boss:   ['#003057', '#e8eff7'],
+  dew:    ['#A65614', '#fbeee0'],
+  o:      ['#C2410C', '#fdeae2'],
+  junior: ['#14532D', '#e6f2ea']
 };
 const DONE = { done: 1, canceled: 1 };
 const BOARD_DATE = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -122,7 +125,7 @@ function detailOf(t, whoName, colors, notes) {
    Director request owns the gold flag. The three never fight for the same
    piece of the card. `home` is the team-member group the card belongs to, so
    the browser can regroup without the server rendering the task twice. */
-function taskRow(t, id, whoLabel, reqCount, home) {
+function taskRow(t, id, owners, reqCount, home) {
   const topic = esc(t.topic || t.title || 'Untitled');
   const du = daysUntil(t.dueDate);
   const od = du !== null && du < 0;
@@ -140,7 +143,7 @@ function taskRow(t, id, whoLabel, reqCount, home) {
     : (t.priority === 'low') ? '<span class="pill pri-low">Low</span>' : '';
   const evName = (t.eventLabel || t.eventName || '').trim();
   const ev = evName ? '<span class="pill ev">' + esc(evName) + '</span>' : '';
-  const who = whoLabel ? '<span class="pill whopill">' + esc(whoLabel) + '</span>' : '';
+  const who = owners.map(o => '<span class="pill whopill m-' + esc(o.ws) + '">' + esc(o.name) + '</span>').join('');
   const rq = reqCount > 0
     ? '<span class="pill req">' + (reqCount === 1 ? '1 request sent' : reqCount + ' requests sent') + '</span>'
     : '';
@@ -245,13 +248,13 @@ exports.handler = async (event) => {
   if (shared.length) {
     shared.forEach(t => {
       const id = 't' + (idc++);
-      const whoLabel = taskAssignees(t).map(nameOf).join(', ');
-      TASKS[id] = detailOf(t, whoLabel, ['#F0B323', '#003057'], NOTES);
+      const owners = taskAssignees(t).map(ws => ({ ws: ws, name: nameOf(ws) }));
+      TASKS[id] = detailOf(t, owners.map(o => o.name).join(', '), ['#F0B323', '#003057'], NOTES);
       TASKS[id].members = taskAssignees(t);
       bump(t);
       openReq += TASKS[id].requests.length;
       built.push({ id: id, status: statusOf(t), home: 'shared',
-        html: taskRow(t, id, whoLabel, TASKS[id].requests.length, 'shared') });
+        html: taskRow(t, id, owners, TASKS[id].requests.length, 'shared') });
     });
     sharedCards.push(groupCard({
       extra: 'shared', attr: ' style="--c:#F0B323;--c2:#003057"', avatar: PEOPLE_SVG,
@@ -278,10 +281,10 @@ exports.handler = async (event) => {
       bump(t);
       openReq += TASKS[id].requests.length;
       built.push({ id: id, status: statusOf(t), home: ws,
-        html: taskRow(t, id, nm, TASKS[id].requests.length, ws) });
+        html: taskRow(t, id, [{ ws: ws, name: nm }], TASKS[id].requests.length, ws) });
     });
     memberCards.push(groupCard({
-      attr: ' style="--c:' + colors[0] + ';--c2:' + colors[1] + '"',
+      extra: 'mcard m-' + ws,
       avatar: esc((nm || '?').trim().charAt(0).toUpperCase() || '?'),
       name: nm, role: ROLE[ws] || '', count: mine.length, rows: '',
       listAttr: ' data-member-list="' + esc(ws) + '"', empty: 'No ongoing tasks'

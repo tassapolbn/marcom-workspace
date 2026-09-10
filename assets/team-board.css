@@ -20,6 +20,12 @@
   --s-pending:#6b7a8c;--s-pending-bg:#eef2f6;--s-pending-fg:#4a5866;
   --s-on-hold:#7a5ea7;--s-on-hold-bg:#f1ecf8;--s-on-hold-fg:#584079;
 }
+/* Member identity, taken from the workspace tabs so the same person reads as
+   the same colour in both places: accent, tint, and readable ink on that tint. */
+.m-boss{--mc:#003057;--mbg:#e8eff7;--mfg:#003057;}
+.m-dew{--mc:#A65614;--mbg:#fbeee0;--mfg:#8f4a11;}
+.m-o{--mc:#C2410C;--mbg:#fdeae2;--mfg:#a33509;}
+.m-junior{--mc:#14532D;--mbg:#e6f2ea;--mfg:#14532D;}
 .s-in-progress{--sc:var(--s-in-progress);--sbg:var(--s-in-progress-bg);--sfg:var(--s-in-progress-fg);}
 .s-waiting{--sc:var(--s-waiting);--sbg:var(--s-waiting-bg);--sfg:var(--s-waiting-fg);}
 .s-pending{--sc:var(--s-pending);--sbg:var(--s-pending-bg);--sfg:var(--s-pending-fg);}
@@ -103,6 +109,12 @@ h1{margin:0;font-size:clamp(1.75rem,2.5vw,2.5rem);line-height:1.22;letter-spacin
 #grid-member .hd{background:var(--navy);}
 #grid-member .nm{color:#fff;}#grid-member .rl{color:#d3e0eb;}
 #grid-member .cnt{background:#ffffff1c;border-color:#ffffff33;color:#fff;}
+#grid-member .mcard>.bar{background:var(--mc);}
+#grid-member .mcard .hd{background:var(--mc);}
+#grid-member .mcard .av{background:#fff;color:var(--mc);}
+/* The card header already names the owner here, so the tag would only repeat
+   it. On the shared card, and in every status group, the tags stay. */
+#grid-member .mcard .whopill{display:none;}
 /* Status groups take their identity from the status scale. */
 #grid-status .card>.bar{background:var(--sc);}
 #grid-status .av{background:var(--sc);color:#fff;border-radius:50%;}
@@ -131,9 +143,7 @@ h1{margin:0;font-size:clamp(1.75rem,2.5vw,2.5rem);line-height:1.22;letter-spacin
 .due.od{background:var(--danger-bg);color:var(--danger);}
 .pri-high{background:#fff0c9;color:#765000;}
 .ev{background:#eef3f8;color:#2a5678;}
-.whopill{background:#e8eff7;color:#03446b;}
-/* Owner is implied by a team-member group, so it is only shown where it helps. */
-#grid-member .card:not(.shared) .whopill{display:none;}
+.whopill{background:var(--mbg,#e8eff7);color:var(--mfg,#03446b);}
 /* Deadline pressure reads through the surface; status keeps the rail. */
 .t.od{border-color:var(--danger-line);background:#fffbfa;}
 .t.soon{border-color:#efdcb6;}

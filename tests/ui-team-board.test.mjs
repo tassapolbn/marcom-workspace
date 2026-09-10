@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createRequire} from 'node:module';
+import {readFileSync} from 'node:fs';
 import {renderTeamBoard,sendBoardAction,boardActions} from './team-board-fixture.mjs';
 const {matchesTask,actionProblem}=createRequire(import.meta.url)('../assets/team-board.js');
 const payload=html=>JSON.parse(html.match(/<script id="board-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
@@ -94,6 +95,27 @@ test('a status the board does not know is read as pending, not dropped',async()=
   assert.equal(Object.values(payload(page.body))[0].status,'pending');
   assert.match(page.body,/data-task-id="t0" data-status="pending"/);
   assert.match(page.body,/Odd one/);
+});
+
+test('a task carries one name tag per owner, each in that member colour',async()=>{
+  const page=await renderTeamBoard({collections:{
+    boss_tasks:[{topic:'Newsletter',status:'pending'}],
+    event_tasks:[{topic:'Open Day',status:'waiting',assignees:['dew','o','junior']}]}});
+  assert.match(page.body,/<span class="pill whopill m-boss">Boss<\/span>/);
+  // Shared work names each person separately, not as one joined string.
+  const shared=page.body.match(/data-group="shared"[\s\S]*?<\/button>/)[0];
+  assert.deepEqual([...shared.matchAll(/whopill m-([a-z]+)">([^<]+)</g)].map(m=>[m[1],m[2]]),
+    [['dew','Dew'],['o','O'],['junior','Eye']]);
+  // The member's own group card is tagged so the stylesheet can colour it too.
+  for(const ws of ['boss','dew','o','junior'])
+    assert.match(page.body,new RegExp('class="card mcard m-'+ws+'"'),ws);
+});
+
+test('the stylesheet gives every member the board renders a colour',()=>{
+  // Guards the board and the stylesheet against drifting apart on a rename.
+  const css=readFileSync(new URL('../assets/team-board.css',import.meta.url),'utf8');
+  for(const ws of ['boss','dew','o','junior'])
+    assert.match(css,new RegExp('\\.m-'+ws+'\\{--mc:#[0-9a-fA-F]{6};--mbg:#[0-9a-fA-F]{6};--mfg:#[0-9a-fA-F]{6};\\}'),ws);
 });
 
 /* ===== Director actions sent from the shared board ===== */
