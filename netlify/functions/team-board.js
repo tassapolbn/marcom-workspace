@@ -123,8 +123,8 @@ function taskRow(t, id, whoLabel, reqCount) {
     ? '<span class="pill req">' + (reqCount === 1 ? '1 request sent' : reqCount + ' requests sent') + '</span>'
     : '';
   return '<button type="button" class="t' + cls + '" data-task-id="' + id + '" onclick="showDetail(\'' + id + '\')">'
-    + '<span class="task-heading">' + stPill + pr + '</span><span class="t-top"><span>' + topic + '</span><i class="chev" aria-hidden="true">\u203a</i></span>'
-    + '<span class="meta2">' + due + ev + who + rq + '</span></button>';
+    + '<span class="t-top"><span>' + topic + '</span><i class="chev" aria-hidden="true">\u203a</i></span>'
+    + '<span class="meta2">' + stPill + due + pr + ev + who + rq + '</span></button>';
 }
 
 function htmlPage(statusCode, title, inner, extraScript) {
@@ -139,7 +139,7 @@ function htmlPage(statusCode, title, inner, extraScript) {
     body: '<!doctype html><html lang="en"><head><meta charset="utf-8">'
       + '<meta name="viewport" content="width=device-width, initial-scale=1">'
       + '<meta name="robots" content="noindex, nofollow">'
-      + '<title>' + esc(title) + '</title>' + STYLE + '</head><body>' + inner
+      + '<title>' + esc(title) + '</title>' + STYLE + '</head><body' + (statusCode === 200 ? ' class="compact"' : '') + '>' + inner
       + (extraScript || '') + '</body></html>'
   };
 }
@@ -254,7 +254,7 @@ exports.handler = async (event) => {
     + '<label class="control"><span>Team member</span><select id="board-member"><option value="">Everyone</option>' + memberOptions + '</select></label>'
     + '<label class="control"><span>Status</span><select id="board-status"><option value="">All statuses</option><option value="pending">Pending</option><option value="in-progress">In progress</option><option value="waiting">Waiting</option><option value="on-hold">On hold</option></select></label>'
     + '<label class="control"><span>Deadline</span><select id="board-due"><option value="">Any deadline</option><option value="overdue">Overdue</option><option value="today">Due today</option><option value="week">Next 7 days</option><option value="none">No deadline</option></select></label>'
-    + '<label class="density"><input id="board-compact" type="checkbox">Compact view</label></form>'
+    + '<label class="density"><input id="board-compact" type="checkbox" checked>Compact view</label></form>'
     + '<div class="results-line"><p id="board-results" role="status">Showing ' + totalActive + ' ongoing tasks</p><button id="board-reset" class="reset-btn" type="button" hidden>Clear filters</button></div>';
   const inner = '<main class="wrap">'
     + '<div class="hero"><div class="hero-accent"></div><div class="hero-in">'
