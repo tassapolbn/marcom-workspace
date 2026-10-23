@@ -95,7 +95,7 @@ All motion respects the system "reduce motion" setting.
     Reopening Add Task offers "Restore your unsaved task from 14:20?". Saving or discarding clears the draft.
   - Test: type a task, reload the page, open Add Task and restore it. Then save it and check the draft is gone.
 
-- [ ] **3. Smooth open and close everywhere (shared motion)**
+- [x] **3. Smooth open and close everywhere (shared motion)**
   - Files: `assets/workspace-ui.css`, a small new `assets/ui-motion.js` (loaded from `index.html`), the widget collapse script and the Overview card fold button in `index.html`, a new `tests/ui-motion.test.mjs`
   - One shared, smooth fold and unfold animation (height and fade, about 200 ms). It is used by the
     side widgets on member tabs and by the Overview cards' fold buttons, and later steps reuse it

@@ -196,3 +196,28 @@ html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
 .task-draft-banner>button:first-of-type{margin-left:auto;}
 html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(240,179,35,.35);}
 @keyframes task-draft-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+/* Shared dropdown surfaces and discrete enter/exit motion. */
+.ui-menu{
+  position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08),0 16px 40px rgba(0,0,0,.12);
+  padding:6px;min-width:200px;z-index:640;display:none;
+}
+.ui-menu.open{display:block;}
+.ui-menu-item{
+  display:flex;align-items:center;width:100%;gap:10px;padding:9px 12px;border-radius:10px;
+}
+.ui-menu-item:hover,.ui-menu-item:focus-visible{background:var(--gray-light);}
+@supports(transition-behavior:allow-discrete){
+  :is(.ui-menu,#uxp-more-panel,#uxp-bell-panel){
+    opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;
+    transition:opacity 140ms ease-in,transform 140ms ease-in,display 140ms ease-in allow-discrete;
+  }
+  :is(.ui-menu,#uxp-more-panel,#uxp-bell-panel).open{
+    opacity:1;transform:none;animation:none;
+    transition-duration:200ms;transition-timing-function:cubic-bezier(.2,.8,.2,1);
+  }
+  :is(.ui-menu,#uxp-more-panel,#uxp-bell-panel):not(.open){pointer-events:none;}
+  @starting-style{
+    :is(.ui-menu,#uxp-more-panel,#uxp-bell-panel).open{opacity:0;transform:translateY(-6px) scale(.98);}
+  }
+}

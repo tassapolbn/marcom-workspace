@@ -4119,7 +4119,7 @@ function toggleEvTimeline(){
 }
 function toggleEvHub(){
   evHubCollapsed=!evHubCollapsed;
-  document.querySelectorAll('.evhub').forEach(e=>e.classList.toggle('collapsed',evHubCollapsed));
+  document.querySelectorAll('.evhub').forEach(e=>typeof window.MarcomMotion !== 'undefined' ? window.MarcomMotion.toggle(e,'collapsed',evHubCollapsed,{reveal:':scope>.evhub-body'}) : e.classList.toggle('collapsed',evHubCollapsed));
   document.querySelectorAll('.eh-collapse-btn').forEach(b=>b.innerHTML='<i class="ti ti-chevron-'+(evHubCollapsed?'down':'up')+'"></i>');
 }
 const EV_COLORS=['#1f3a5f','#2563eb','#0d9488','#15a34a','#e6a417','#e8850c','#e05a3d','#d6336c','#7c3aed','#697586'];
@@ -7560,7 +7560,7 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
     if(e.target.closest('button,select,input,a,textarea')) return;
     var widget=head.closest('.widget');
     if(!widget) return;
-    var collapsed=widget.classList.toggle('collapsed');
+    var collapsed=typeof window.MarcomMotion !== 'undefined' ? window.MarcomMotion.toggle(widget,'collapsed',undefined,{reveal:':scope>.widget-body'}) : widget.classList.toggle('collapsed');
     localStorage.setItem(widgetKey(widget),collapsed?'1':'0');
   });
   scan();
@@ -10162,7 +10162,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
         ev.stopPropagation();
         var st=colState();
         var v=!card.classList.contains('uxp-collapsed');
-        card.classList.toggle('uxp-collapsed',v);
+        if(typeof window.MarcomMotion !== 'undefined')window.MarcomMotion.toggle(card,'uxp-collapsed',v,{reveal:':scope>*:not(.ov-card-head)'});else card.classList.toggle('uxp-collapsed',v);
         st[key]=v?1:0;
         try{localStorage.setItem(COLKEY,JSON.stringify(st));}catch(e){}
         b.setAttribute('aria-expanded',v?'false':'true');
@@ -10560,7 +10560,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     b.type='button'; b.className='uxp-sal-toggle'; b.id='uxp-sal-toggle';
     b.onclick=function(){
       var v=!document.body.classList.contains('uxp-sal-collapsed');
-      document.body.classList.toggle('uxp-sal-collapsed',v);
+      if(typeof window.MarcomMotion !== 'undefined')window.MarcomMotion.toggle(document.body,'uxp-sal-collapsed',v,{animate:dock,reveal:'#uxp-salary-dock .salary-strip'});else document.body.classList.toggle('uxp-sal-collapsed',v);
       try{localStorage.setItem('uxp_sal',v?'1':'0');}catch(e){}
       paint();
     };
@@ -12940,6 +12940,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
+<script src="assets/ui-motion.js"></script>
 <script src="assets/ui-dialogs.js"></script>
 <script src="assets/task-draft.js"></script>
 <link rel="stylesheet" href="assets/workspace-ui.css">
