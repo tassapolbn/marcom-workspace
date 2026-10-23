@@ -117,7 +117,7 @@ All motion respects the system "reduce motion" setting.
   - Test: in the preview, add one past and one future event. The past one is hidden. Deleting from the
     chip and then pressing Undo brings it back. Clear past events works. `npm run test:ui` passes.
 
-- [ ] **5. Event Board: open tasks only, folded by event**
+- [x] **5. Event Board: open tasks only, folded by event**
   - Files: `index.html` (`evt-script` / `evbRender` and `evt-style`), `tests/ui-preview.mjs` (add a few made-up shared tasks), a UI test
   - Done and Canceled tasks are hidden, with a "Show completed (N)" switch.
   - Each event is one line (name, open tasks, unassigned count, next due date) and opens smoothly on click.

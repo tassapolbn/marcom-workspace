@@ -55,6 +55,26 @@ function fixtureBootstrap() {
     docs.set(member + '_notes/sample', { title: 'Campaign checklist', content: 'Confirm artwork, review Thai copy, and check all event dates.', createdAt: Timestamp.now() });
     docs.set(member + '_links/sample', { title: 'Brand guidelines', url: '#preview-brand', category: 'Resources', createdAt: Timestamp.now() });
   }
+  [
+    ['School Open Day', 'Prepare welcome packs', 'pending', '', 2],
+    ['School Open Day', 'Approve the campaign', 'in-progress', 'boss', 1],
+    ['School Open Day', 'Design the invitation', 'waiting', 'dew', 3],
+    ['School Open Day', 'Book event photography', 'on-hold', 'o', 4],
+    ['School Open Day', 'Publish registration form', 'done', 'junior', -2],
+    ['School Open Day', 'Confirm the venue', 'done', 'boss', -1],
+    ['School Open Day', 'Print extra banners', 'canceled', 'dew', 5],
+    ['Christmas Fair', 'Design fair posters', 'done', 'dew', -5],
+    ['Christmas Fair', 'Photograph the stalls', 'done', 'o', -4],
+    ['Christmas Fair', 'Send the fair recap', 'done', 'junior', -3],
+    ['Sports Day', 'Prepare the sports schedule', 'pending', 'boss', 14],
+    ['Sports Day', 'Plan sports photography', 'in-progress', 'o', 18],
+  ].forEach(([eventLabel, title, status, owner, offset], i) => {
+    docs.set('event_tasks/preview-evt-' + (i + 1), {
+      topic: title, title, status, priority: i === 0 ? 'high' : 'normal', dueDate: date(offset),
+      eventLabel, owner, assignees: owner ? [owner] : [],
+      createdBy: 'preview@example.test', createdAt: Timestamp.now(),
+    });
+  });
   /* One open Director request, so the card panel and the bell group are visible here. */
   docs.set('director_notes/preview-request', { status: 'new', taskKey: 'boss_tasks/sample-1',
     taskColl: 'boss_tasks', taskId: 'sample-1', taskTopic: 'Prepare the September newsletter',

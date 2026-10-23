@@ -259,3 +259,25 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 @media(hover:none){.ev-chip-del{opacity:1;}}
 @media(max-width:480px){.ev-past{grid-template-columns:repeat(2,1fr);}}
 @media(prefers-reduced-motion:reduce){.ev-chip-del,.ev-past-toggle i{transition:none;}}
+
+/* Compact shared Event Board with remembered event folds. */
+#evb-card .evb-g-h{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;
+  background:transparent;padding:10px 12px;border-radius:10px;font-weight:700;
+  font-family:inherit;cursor:pointer;
+}
+#evb-card .evb-g-h:hover{background:var(--gray-light);}
+#evb-card .evb-summary{margin-left:auto;color:var(--muted);font-size:12px;font-weight:400;}
+#evb-card .evb-chevron{transition:transform 200ms;}
+#evb-card .evb-g-closed .evb-chevron{transform:rotate(-90deg);}
+#evb-card .evb-g{border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;}
+#evb-card .evb-g.evb-g-closed .evb-g-b{display:none;}
+#evb-card .evb-warn{color:var(--amber);font-weight:700;}
+#evb-card .evb-more{
+  padding:6px 10px;margin:4px 12px 8px;border:0;border-radius:6px;background:transparent;
+  color:var(--muted);font-family:inherit;font-size:12px;cursor:pointer;
+}
+#evb-card .evb-more:hover{background:var(--gray-light);}
+#evb-card .evb-row-done{opacity:.6;}
+.evb-done-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
+@media(prefers-reduced-motion:reduce){#evb-card .evb-chevron{transition:none;}}
