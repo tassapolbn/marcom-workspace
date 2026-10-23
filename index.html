@@ -4794,7 +4794,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'</div>'
    +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
    +'<div id="uxp-today"></div>'
-   +'<div class="ov-ann-row">'
+   +'<div class="ov-ann-row ov-ann-row-single">'
    +'<div class="ov-card ov-ann">'
    +  '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div></div>'
    +  '<div class="ov-ann-compose">'
@@ -4807,7 +4807,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '</div>'
    +  '<div class="ov-ann-list" id="ov-ann-list"></div>'
    +'</div>'
-   +'<div class="ov-card ov-avail-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users"></i> Team Availability</div></div><div class="ov-avail" id="ov-availability"></div></div>'
    +'</div>'
    +'<div class="ov-stats" id="ov-stats"></div>'
    +'<div class="ov-card ov-focus-card" id="ov-focus" style="display:none;"></div>'
@@ -4826,9 +4825,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '</div>'
    +  '</div>'
    +  '<div class="ov-col-side">'
+   +    '<div class="ov-card" id="team-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users"></i> Team today <span class="team-sum" id="team-sum"></span></div><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div><div class="team-list" id="team-list"></div><div class="team-note" id="team-note"></div></div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-bolt"></i> Quick Actions</div></div><div class="ov-qa" id="ov-qa"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-flame"></i> Workload Heatmap</div></div><div id="ov-heatmap"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-beach"></i> Leave &amp; Availability</div></div><div id="ov-leave"></div></div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark Deletion Queue</div></div><div id="ov-watermark"></div></div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-folder"></i> Department Resources</div><button class="ov-mini-btn" onclick="ovOpenResources()" title="Edit resource links"><i class="ti ti-edit"></i></button></div><div class="ov-res" id="ov-resources"></div></div>'
    +  '</div>'
@@ -4910,18 +4908,53 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(lOf(w).some(function(r){ return r.type==='used'&&r.date===t; }))return {l:'On Leave',c:'ov-st-leave',i:'ti-beach'};
     return {l:'Available',c:'ov-st-ok',i:'ti-circle-check'};
   }
-  function renderAvailability(){
-    var el=document.getElementById('ov-availability'); if(!el)return;
-    MarcomUI.setHTML(el,MORDER.map(function(w){
-      var act=tReal(w).filter(isActive).length;
-      var st=statusOf(w);
-      return '<div class="ov-mem" onclick="ovGoto(\''+w+'\')">'
-        +'<div class="ov-mem-top"><div class="ov-mem-av"><i class="ti '+iconOf(w)+'"></i></div>'
-        +'<div class="ov-mem-id"><div class="ov-mem-name">'+esc(nm(w))+'</div><div class="ov-mem-role">'+esc(roleOf(w))+'</div></div></div>'
-        +'<div class="ov-mem-bot"><span class="ov-mem-load"><b>'+act+'</b> active</span><span class="ov-st '+st.c+'"><i class="ti '+st.i+'"></i> '+st.l+'</span></div>'
-        +'</div>';
+  function renderTeam(){
+    var el=document.getElementById('team-list'); if(!el)return;
+    var counts=MORDER.map(function(w){ return {w:w,n:tReal(w).filter(isActive).length}; });
+    var max=1,total=0;
+    counts.forEach(function(c){ max=Math.max(max,c.n); total+=c.n; });
+    MarcomUI.setHTML(el,counts.map(function(c){
+      var w=c.w,lvl=c.n<=5?'low':(c.n<=12?'med':'high');
+      var lbl=c.n<=5?'Low':(c.n<=12?'Medium':'High');
+      var pct=Math.max(6,Math.round(c.n/max*100));
+      var leave=statusOf(w),st=typeof window.avlState==='function'?window.avlState(w):null;
+      if(leave.c!=='ov-st-ok'||!st||st.txt==='Calendar not connected'){
+        st={cls:leave.c==='ov-st-ok'?'free':'away',txt:leave.l};
+      }
+      var sick=sOf(w).length,bal;
+      /* The lieu script converts earned hours into days; fall back to plain days. */
+      if(typeof window.LIEU_balanceText==='function'){ try{ bal=window.LIEU_balanceText(w); }catch(e){} }
+      if(bal===undefined){
+        var earned=0,used=0;
+        lOf(w).forEach(function(r){ if(r.type==='earned')earned+=(r.days||0); else used+=(r.days||0); });
+        bal=earned-used; bal=(Number.isInteger(bal)?bal:bal.toFixed(1))+' days';
+      }
+      return '<div class="team-row" onclick="ovGoto(\''+w+'\')" role="button" tabindex="0" data-member="'+esc(w)+'">'
+        +'<div class="team-av"><i class="ti '+esc(iconOf(w))+'"></i></div>'
+        +'<div class="team-who"><div class="team-name">'+esc(nm(w))+'</div><div class="team-role">'+esc(roleOf(w))+'</div></div>'
+        +'<span class="team-st '+esc(st.cls)+'">'+esc(st.txt)+'</span>'
+        +'<div class="team-load"><b>'+c.n+'</b> open <span class="team-lvl '+lvl+'">'+lbl+'</span><div class="team-bar"><div class="team-fill '+lvl+'" style="width:'+pct+'%"></div></div></div>'
+        +'<div class="team-meta">Sick <b>'+sick+'</b> \u00b7 Lieu <b>'+esc(String(bal))+'</b></div></div>';
     }).join(''));
+    MarcomUI.setHTML(document.getElementById('team-sum'),'\u00b7 '+total+' open tasks');
+    var missing=typeof window.avlMissing==='function'?window.avlMissing():[];
+    var note=document.getElementById('team-note');
+    if(note){
+      MarcomUI.setHTML(note,missing.length?'Calendar not connected: '+esc(missing.join(', '))+'. Each person connects it in Settings.':'');
+      note.hidden=!missing.length;
+    }
+    if(!el.__teamKeys){
+      el.__teamKeys=true;
+      el.addEventListener('keydown',function(e){
+        if(e.key!=='Enter'&&e.key!==' ')return;
+        var row=e.target.closest('.team-row');
+        if(!row||!el.contains(row))return;
+        e.preventDefault();
+        window.ovGoto(row.getAttribute('data-member'));
+      });
+    }
   }
+  window.ovRenderTeam=renderTeam;
 
   /* ---------- master calendar ---------- */
   function calMembers(){ return ovCalFilter==='all'?MORDER:[ovCalFilter]; }
@@ -5037,30 +5070,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     }).join(''));
   }
 
-  /* ---------- workload heatmap ---------- */
-  function renderHeatmap(){
-    var el=document.getElementById('ov-heatmap'); if(!el)return;
-    var counts=MORDER.map(function(w){ return {w:w,n:tReal(w).filter(isActive).length}; });
-    var max=1; counts.forEach(function(c){ if(c.n>max)max=c.n; });
-    MarcomUI.setHTML(el,counts.map(function(c){
-      var lvl=c.n<=5?'low':(c.n<=12?'med':'high');
-      var lbl=c.n<=5?'Low':(c.n<=12?'Medium':'High');
-      var pct=Math.max(6,Math.round(c.n/max*100));
-      return '<div class="ov-hm"><div class="ov-hm-top"><span class="ov-hm-name">'+esc(nm(c.w))+'</span><span class="ov-hm-val '+lvl+'">'+c.n+' · '+lbl+'</span></div><div class="ov-hm-bar"><div class="ov-hm-fill '+lvl+'" style="width:'+pct+'%"></div></div></div>';
-    }).join(''));
-  }
-
-  /* ---------- leave dashboard ---------- */
-  function renderLeave(){
-    var el=document.getElementById('ov-leave'); if(!el)return;
-    MarcomUI.setHTML(el,MORDER.map(function(w){
-      var sick=sOf(w).length;
-      var earned=0,used=0; lOf(w).forEach(function(r){ if(r.type==='earned')earned+=(r.days||0); else used+=(r.days||0); });
-      var bal=earned-used; bal=Number.isInteger(bal)?bal:bal.toFixed(1);
-      return '<div class="ov-lv"><div class="ov-lv-name">'+esc(nm(w))+'</div><div class="ov-lv-stats"><span class="ov-lv-pill sick"><i class="ti ti-heart-broken"></i> '+sick+' sick</span><span class="ov-lv-pill lieu"><i class="ti ti-beach"></i> '+bal+' lieu</span></div></div>';
-    }).join(''));
-  }
-
   /* ---------- watermark deletion queue (O's media tasks) ---------- */
   function renderWM(){
     var el=document.getElementById('ov-watermark'); if(!el)return;
@@ -5156,8 +5165,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(!document.getElementById('panel-overview'))return;
     var sub=document.getElementById('ov-datesub');
     if(sub){ var n=new Date(),dateLabel=DOW[n.getDay()]+', '+n.getDate()+' '+MON[n.getMonth()]+' '+n.getFullYear(); if(sub.textContent!==dateLabel)sub.textContent=dateLabel; }
-    renderStats(); renderAvailability(); calFilters(); renderCal(); renderDeadlines();
-    renderCountdown(); renderActivity(); renderHeatmap(); renderLeave(); renderWM(); renderRes();
+    renderStats(); renderTeam(); calFilters(); renderCal(); renderDeadlines();
+    renderCountdown(); renderActivity(); renderWM(); renderRes();
     try{ if(window.ovDaily)window.ovDaily(); }catch(e){}
   }
 
@@ -5197,7 +5206,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function init(){
     try{
       var ok=buildShell();
-      try{ var _side=document.querySelector('#panel-overview .ov-col-side'); var _mw=document.querySelector('#panel-boss .menu-widget'); if(_side&&_mw){ var _w=_mw.querySelector('.wmove'); if(_w)_w.remove(); _side.insertBefore(_mw,_side.firstChild); } if(typeof renderMenu==='function')renderMenu(); }catch(e){}
+      try{ var _side=document.querySelector('#panel-overview .ov-col-side'); var _mw=document.querySelector('#panel-boss .menu-widget'); if(_side&&_mw){ var _w=_mw.querySelector('.wmove'); if(_w)_w.remove(); var _team=document.getElementById('team-card'); _side.insertBefore(_mw,_team?_team.nextSibling:_side.firstChild); } if(typeof renderMenu==='function')renderMenu(); }catch(e){}
       buildAuthorOptions();
       renderAnnouncements();
       renderOverview();
@@ -5494,7 +5503,9 @@ html.dark .l2-hint b{color:#2bb3a5;}
   function patchOverview(){ var box=document.getElementById('ov-leave'); if(!box)return; var rows=box.querySelectorAll('.ov-lv');
     for(var i=0;i<rows.length;i++){ var w=MORDER[i]; if(!w)continue; var pill=rows[i].querySelector('.ov-lv-pill.lieu'); if(pill)pill.innerHTML='<i class="ti ti-beach"></i> '+fmtDH(totals(w).balance); } }
   var ovObs=null;
-  function attachOv(){ var box=document.getElementById('ov-leave'); if(!box){ setTimeout(attachOv,800); return; } patchOverview();
+  /* The Overview no longer has a leave card (Team today shows the balance), so stop
+     waiting once the Overview exists without one. */
+  function attachOv(){ var box=document.getElementById('ov-leave'); if(!box){ if(!document.getElementById('panel-overview'))setTimeout(attachOv,800); return; } patchOverview();
     try{ ovObs=new MutationObserver(function(){ ovObs.disconnect(); patchOverview(); ovObs.observe(box,{childList:true}); }); ovObs.observe(box,{childList:true}); }catch(e){} }
 
   function startCfg(){ var d=fdb(); if(!d){ setTimeout(startCfg,800); return; }
@@ -12204,32 +12215,12 @@ html.dark .avl-row.away .avl-st{color:#c4b5fd;}
     if(c.state==='soon')return {cls:'soon',txt:'Free now · next in '+c.startsInMinutes+' min'};
     return {cls:'free',txt:'Available'+(c.eventsToday?(' · '+c.eventsToday+' today'):' · nothing today')};
   }
-  function card(){
-    var side=document.querySelector('#panel-overview .ov-col-side'); if(!side)return null;
-    var c=document.getElementById('avl-card');
-    if(!c){
-      c=document.createElement('div'); c.className='ov-card'; c.id='avl-card';
-      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-user-check"></i> Who is free right now</div>'
-        +'<button type="button" class="uxp-col-btn" onclick="avlRefresh(true)" title="Refresh" aria-label="Refresh availability" style="margin-left:auto;"><i class="ti ti-refresh"></i></button></div>'
-        +'<div class="avl-wrap" id="avl-body"></div>'
-        +'<div class="avl-note" id="avl-note"></div>';
-      side.insertBefore(c,side.firstChild);
-    }
-    return c;
-  }
+  window.avlState=function(w){ return label(w); };
+  window.avlMissing=function(){
+    return order().filter(function(w){ return !(typeof window.gcsConfigured==='function'&&window.gcsConfigured(w)); }).map(nm).filter(Boolean);
+  };
   function paint(){
-    if(!card())return;
-    var body=document.getElementById('avl-body'); if(!body)return;
-    body.innerHTML=order().map(function(w){
-      var nmv=nm(w); if(!nmv)return '';
-      var l=label(w);
-      return '<div class="avl-row '+l.cls+'"><span class="avl-dot"></span><span class="avl-nm">'+esc(nmv)+'</span><span class="avl-st">'+esc(l.txt)+'</span></div>';
-    }).join('');
-    var missing=order().filter(function(w){return !(window.gcsConfigured&&gcsConfigured(w));}).map(nm).filter(Boolean);
-    var note=document.getElementById('avl-note');
-    if(note)note.textContent=missing.length
-      ? ('Not connected yet: '+missing.join(', ')+'. Each member connects their own calendar in Settings.')
-      : 'Read from each member’s own calendar. Only free or busy is shared, never what the entry is.';
+    if(typeof window.ovRenderTeam==='function')window.ovRenderTeam();
   }
   window.avlRefresh=function(){
     paint();

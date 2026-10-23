@@ -317,3 +317,49 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #modal .role-fold:focus-visible{outline:2px solid var(--accent,var(--navy));outline-offset:3px;}
 #modal .role-closed .role-body{display:none;}
 @media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}
+
+/* One team snapshot for the Overview. */
+#panel-overview .ov-ann-row.ov-ann-row-single{grid-template-columns:1fr;}
+#team-card .team-list{display:flex;flex-direction:column;gap:6px;}
+#team-card .team-row{
+  display:grid;grid-template-columns:36px minmax(0,1fr) auto;
+  grid-template-areas:"av who st" "av load load" "av meta meta";
+  column-gap:10px;row-gap:4px;padding:10px;border-radius:12px;
+  border:1px solid var(--border);cursor:pointer;transition:background 150ms;
+}
+#team-card .team-row:hover,#team-card .team-row:focus-visible{background:var(--gray-light);}
+#team-card .team-row:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+#team-card .team-av{
+  grid-area:av;width:36px;height:36px;border-radius:50%;background:var(--navy-light);
+  color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:19px;
+}
+#team-card .team-who{grid-area:who;min-width:0;overflow-wrap:anywhere;}
+#team-card .team-name{font-size:13.5px;font-weight:700;}
+#team-card .team-role,#team-card .team-meta{font-size:11.5px;color:var(--muted);}
+#team-card .team-meta{grid-area:meta;}
+#team-card .team-st{
+  grid-area:st;align-self:start;max-width:160px;border-radius:99px;font-size:11px;
+  font-weight:700;padding:3px 9px;color:var(--muted);background:var(--gray-light);
+  text-align:center;overflow-wrap:anywhere;
+}
+#team-card .team-st.free{color:var(--st-done,var(--green));background:var(--green-light);}
+#team-card .team-st.busy{color:var(--danger);background:var(--danger-light);}
+#team-card .team-st.soon{color:var(--amber);background:var(--amber-light);}
+#team-card .team-st.away{color:var(--muted);background:var(--gray-light);}
+#team-card .team-load{grid-area:load;display:flex;gap:8px;align-items:center;font-size:12px;min-width:0;}
+#team-card .team-bar{flex:1;min-width:16px;height:6px;border-radius:99px;background:var(--gray-light);overflow:hidden;}
+#team-card .team-fill{height:100%;border-radius:inherit;}
+#team-card .team-fill.low{background:var(--st-done,var(--green));}
+#team-card .team-fill.med{background:var(--amber);}
+#team-card .team-fill.high{background:var(--danger);}
+#team-card .team-lvl{font-size:10.5px;font-weight:700;}
+#team-card .team-lvl.low{color:var(--st-done,var(--green));}
+#team-card .team-lvl.med{color:var(--amber);}
+#team-card .team-lvl.high{color:var(--danger);}
+#team-card .team-sum{color:var(--muted);font-weight:600;font-size:11.5px;}
+#team-card .team-note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
+#team-card .ov-card-title{flex-wrap:wrap;}
+html.dark #team-card .team-av{color:#8fb4dc;}
+html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
+@media(max-width:400px){#team-card .team-st{max-width:120px;}}
+@media(prefers-reduced-motion:reduce){#team-card .team-row{transition:none;}}

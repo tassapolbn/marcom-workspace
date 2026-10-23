@@ -149,7 +149,7 @@ All motion respects the system "reduce motion" setting.
   - Test: create a design request and a media request in the preview. Check the stored record has the
     copied values, and that Team Board tests still pass.
 
-- [ ] **8. One "Team today" card instead of four**
+- [x] **8. One "Team today" card instead of four**
   - Files: `index.html` (Team Availability, Who is free right now, Leave & Availability, Workload Heatmap renderers)
   - One row per person: open tasks and workload level, free or busy now (when their calendar is connected), and on leave or sick today.
   - Test: the preview shows the four people with the same figures the four old cards showed. The

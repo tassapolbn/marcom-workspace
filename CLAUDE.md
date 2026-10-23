@@ -18,4 +18,5 @@
 - One step at a time. Never ask Codex to build the whole app in one go.
 - Codex cannot see this chat, so put all needed context in the instruction file.
 - Never use danger-full-access or --dangerously-bypass-approvals-and-sandbox.
-- If Codex fails twice on the same step, or reports a usage limit, stop and tell me.
+- If Codex fails twice on the same step, stop and tell me.
+- If Codex reports a usage limit, Claude builds the steps itself (same review, test and commit routine) until the limit resets, then goes back to Codex.
