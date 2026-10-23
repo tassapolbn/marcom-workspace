@@ -5,3 +5,7 @@ node_modules/
 service-account*.json
 *.log
 .DS_Store
+
+# Local tooling (Claude preview config, Codex task files)
+.claude/
+.codex-tasks/
