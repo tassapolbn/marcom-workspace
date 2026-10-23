@@ -89,7 +89,7 @@ All motion respects the system "reduce motion" setting.
   - Test: in the preview, type in Add Task, then click outside, press Escape and press ×. Each time the
     text must still be there or the discard question must appear. Saving must still work, with no extra question.
 
-- [ ] **2. Unsaved new tasks are kept as a draft**
+- [x] **2. Unsaved new tasks are kept as a draft**
   - Files: `index.html` (`openAdd`, `saveTask`, `closeModal`), `tests/ui-interactions.test.mjs`
   - While you type a new task, a draft is kept in this browser, separately for each member.
     Reopening Add Task offers "Restore your unsaved task from 14:20?". Saving or discarding clears the draft.

@@ -99,7 +99,11 @@
   }
   root.requestCloseModal = function(){
     var editing = typeof modalState !== 'undefined' && modalState && modalState.editId;
+    var discardDraft = !editing && isDirty(document.getElementById('modal'));
     return requestClose('modal', editing ? 'Discard your changes?' : 'Discard this task?', function(){
+      if(discardDraft && typeof modalState !== 'undefined' && modalState &&
+         typeof root.MarcomDraft !== 'undefined' && root.MarcomDraft &&
+         typeof root.MarcomDraft.clear === 'function')root.MarcomDraft.clear(modalState.who);
       if(typeof closeModal === 'function')closeModal();
     });
   };

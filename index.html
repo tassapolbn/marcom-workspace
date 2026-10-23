@@ -2503,8 +2503,10 @@ function openAdd(who){
   setTaskType((who==='o'||who==='dew')?'role':'standard');
   document.getElementById('modal').classList.add('open');
   autoGrowDesc();
+  if(window.MarcomDraft)MarcomDraft.offer(who);
 }
 function openEdit(who,id){
+  if(window.MarcomDraft)MarcomDraft.hideOffer();
   const task=(tasksOf(who)).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
@@ -2673,6 +2675,7 @@ function saveTask(){
   }
   else{
     data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+    if(window.MarcomDraft)MarcomDraft.clear(modalState.who);
     data.createdBy=meEmail();
     if(evtOn&&!data.owner)data.owner='';
     /* The id is generated locally, so the calendar step can run at once
@@ -12938,6 +12941,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
 })();
 </script>
 <script src="assets/ui-dialogs.js"></script>
+<script src="assets/task-draft.js"></script>
 <link rel="stylesheet" href="assets/workspace-ui.css">
 <link rel="stylesheet" href="assets/request-centre.css">
 </body>
