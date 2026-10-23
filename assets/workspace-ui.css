@@ -221,3 +221,41 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
     :is(.ui-menu,#uxp-more-panel,#uxp-bell-panel).open{opacity:0;transform:translateY(-6px) scale(.98);}
   }
 }
+
+/* Event countdown deletion and folded past events. */
+.ev-chip{position:relative;}
+.ev-chip-date,.ev-chip-name{padding-right:23px;}
+.ev-chip-del{
+  position:absolute;top:6px;right:6px;width:26px;height:26px;padding:0;flex-shrink:0;
+  display:inline-flex;align-items:center;justify-content:center;border-radius:50%;
+  background:var(--surface);border:1px solid var(--border);color:var(--muted);
+  cursor:pointer;opacity:0;transition:opacity 120ms;
+}
+.ev-chip:hover .ev-chip-del,.ev-chip:focus-within .ev-chip-del,
+.ov-cdn:hover .ev-chip-del,.ov-cdn:focus-within .ev-chip-del,
+.ev-tl-item:hover .ev-chip-del,.ev-tl-item:focus-within .ev-chip-del{opacity:1;}
+.ev-chip-del:hover{background:var(--danger-light);color:var(--danger);}
+.ev-chip-del:focus-visible{outline:2px solid var(--danger);outline-offset:2px;}
+.ov-cdn>.ev-chip-del,.ev-tl-item>.ev-chip-del{position:static;margin-left:auto;}
+.ev-tl-item{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;}
+.ev-tl-date,.ev-tl-name,.ev-tl-cd{grid-column:1;}
+.ev-tl-item>.ev-chip-del{grid-column:2;grid-row:1 / 4;align-self:start;}
+.ev-past-toggle{
+  display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 10px;
+  border:1px solid var(--border);border-radius:99px;background:var(--surface);
+  color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
+}
+.ev-past-toggle i{transition:transform 200ms;}
+.ev-past-toggle[aria-expanded="true"] i{transform:rotate(180deg);}
+.ev-past{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px;}
+.ev-past.ev-past-closed{display:none;}
+.ev-chip-past{opacity:.72;}
+.ev-chip-past:hover{opacity:1;}
+.ev-past-clear{
+  grid-column:1 / -1;justify-self:start;padding:5px 8px;border:0;border-radius:6px;
+  background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
+}
+.ev-past-clear:hover,.ews-del:hover{background:var(--danger-light);color:var(--danger);}
+@media(hover:none){.ev-chip-del{opacity:1;}}
+@media(max-width:480px){.ev-past{grid-template-columns:repeat(2,1fr);}}
+@media(prefers-reduced-motion:reduce){.ev-chip-del,.ev-past-toggle i{transition:none;}}

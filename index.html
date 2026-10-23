@@ -2444,7 +2444,7 @@ function uiToast(msg,opts){
   setTimeout(function(){ t.classList.add('out'); setTimeout(kill,320); }, opts.duration||5000);
 }
 function deleteWithUndo(colRef,id,item,label){
-  if(!colRef)return;
+  if(!colRef)return Promise.resolve(false);
   var data=null;
   if(item){ data={}; Object.keys(item).forEach(function(k){ if(k!=='id'&&k!=='__src')data[k]=item[k]; }); }
   /* Undo re-creates the document, and the event_tasks create rule requires
@@ -2456,10 +2456,11 @@ function deleteWithUndo(colRef,id,item,label){
     var _me=meEmail();
     if(_me){ data.createdBy=_me; Object.assign(data,stampEdit()); }
   }
-  colRef.doc(id).delete().then(function(){
+  return colRef.doc(id).delete().then(function(){
     if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).catch(function(e){ console.error(e); dbSaveFailed(e,'the restored item'); }); }});
     else uiToast(label||'Deleted');
-  }).catch(function(e){ console.error(e); uiToast('Delete failed. Please try again.'); });
+    return true;
+  }).catch(function(e){ console.error(e); uiToast('Delete failed. Please try again.'); return false; });
 }
 
 // TASK MODAL
@@ -4044,6 +4045,7 @@ function openMeetingCal(){window.open('https://calendar.google.com/','_blank');}
 
 /* ===== EVENT HUB ===== */
 let evTimelineMode=false,evHubCollapsed=false,eventEditId=null,eventModalWho='boss';
+var evPastOpen={};
 function evCountdown(ev){const dt=new Date(ev.date+'T'+(ev.time||'23:59')+':00');return {ms:dt-new Date(),dt:dt};}
 function evUrgency(ms){if(ms<0)return 'grey';const d=ms/86400000;if(d>30)return 'green';if(d>=14)return 'amber';return 'red';}
 function evCountLabel(ms){
@@ -4072,32 +4074,56 @@ function evShort(ms){
 }
 function evSorted(who){return [...eventsOf(who)].sort((a,b)=>new Date(a.date+'T'+(a.time||'23:59'))-new Date(b.date+'T'+(b.time||'23:59')));}
 function evHubHTML(evs,who){
+  var upcoming=[],past=[];
+  evs.forEach(function(ev){(evCountdown(ev).ms<0?past:upcoming).push(ev);});
+  upcoming.sort(function(a,b){return evCountdown(a).ms-evCountdown(b).ms;});
+  past.sort(function(a,b){return evCountdown(b).ms-evCountdown(a).ms;});
+  function chips(items,isPast){
+    var html='';
+    items.forEach(function(ev){
+      var cd=evCountdown(ev),u=evUrgency(cd.ms);
+      var clr=evOkClr(ev.color)?ev.color:'',tc=(clr&&evOkClr(ev.textColor))?ev.textColor:'';
+      var chipStyle='';
+      if(clr)chipStyle=tc?('border-top-color:'+clr+';background:linear-gradient(180deg,'+clr+','+evTint(clr,0.86)+');'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
+      html+='<div class="ev-chip evt-'+u+(isPast?' ev-chip-past':'')+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
+        +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';opacity:.78;"':'')+'>'+evChipDate(ev)+'</div>'
+        +'<div class="ev-chip-name"'+(tc?' style="color:'+tc+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
+        +'<div class="ev-chip-cd evu-'+u+'"'+(tc?' style="color:'+tc+';"':'')+'>'+evShort(cd.ms)+'</div>'
+        +evDeleteButtonHTML(ev,who)+'</div>';
+    });
+    return html;
+  }
+  var html='';
   if(evTimelineMode){
-    let html='<div class="ev-timeline">';
-    evs.forEach(ev=>{
+    html='<div class="ev-timeline">';
+    upcoming.forEach(ev=>{
       const cd=evCountdown(ev),u=evUrgency(cd.ms),c=evCountLabel(cd.ms);
-      html+='<div class="ev-tl-item" onclick="evChipClick(\''+ev.id+'\',\''+who+'\')">'
+      html+='<div class="ev-tl-item" onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
         +'<div class="ev-tl-dot evu-'+u+'"'+(evOkClr(ev.color)?' style="color:'+ev.color+';"':'')+'></div>'
         +'<div class="ev-tl-date">'+evDateLabel(ev)+'</div>'
         +'<div class="ev-tl-name"'+(evOkClr(ev.color)?' style="color:'+ev.color+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
         +'<div class="ev-tl-cd evu-'+u+'">'+(cd.ms<0?'Completed':c.num+' '+c.lbl)+'</div>'
-        +'</div>';
+        +evDeleteButtonHTML(ev,who)+'</div>';
     });
-    return html+'</div>';
+    html+='</div>';
+  }else{
+    html='<div class="ev-grid">'+chips(upcoming,false)+'</div>';
   }
-  let html='<div class="ev-grid">';
-  evs.forEach(ev=>{
-    const cd=evCountdown(ev),u=evUrgency(cd.ms);
-    const clr=evOkClr(ev.color)?ev.color:'',tc=(clr&&evOkClr(ev.textColor))?ev.textColor:'';
-    let chipStyle='';
-    if(clr)chipStyle=tc?('border-top-color:'+clr+';background:linear-gradient(180deg,'+clr+','+evTint(clr,0.86)+');'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
-    html+='<div class="ev-chip evt-'+u+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick(\''+ev.id+'\',\''+who+'\')">'
-      +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';opacity:.78;"':'')+'>'+evChipDate(ev)+'</div>'
-      +'<div class="ev-chip-name"'+(tc?' style="color:'+tc+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
-      +'<div class="ev-chip-cd evu-'+u+'"'+(tc?' style="color:'+tc+';"':'')+'>'+evShort(cd.ms)+'</div>'
-      +'</div>';
-  });
-  return html+'</div>';
+  if(past.length){
+    html+='<button type="button" class="ev-past-toggle" aria-expanded="'+!!evPastOpen[who]+'" onclick="toggleEvPast('+escHtml(JSON.stringify(who))+',this)">Past events ('+past.length+') <i class="ti ti-chevron-down"></i></button>'
+      +'<div class="ev-past'+(evPastOpen[who]?'':' ev-past-closed')+'">'+chips(past,true)
+      +'<button type="button" class="ev-past-clear" onclick="clearPastEvents('+escHtml(JSON.stringify(who))+')">Clear past events</button></div>';
+  }
+  return html;
+}
+function evDeleteButtonHTML(ev,who){
+  return '<button type="button" class="ev-chip-del" aria-label="Delete event '+escHtml(ev.name||'Untitled')+'" title="Delete event" onclick="event.stopPropagation();quickDeleteEvent('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')"><i class="ti ti-trash"></i></button>';
+}
+function toggleEvPast(who,button){
+  var open=evPastOpen[who]=!evPastOpen[who],container=button.nextElementSibling;
+  button.setAttribute('aria-expanded',String(open));
+  if(typeof window.MarcomMotion!=='undefined')window.MarcomMotion.toggle(container,'ev-past-closed',!open,{reveal:':scope>*'});
+  else container.classList.toggle('ev-past-closed',!open);
 }
 function renderEvHub(who){
   const body=document.getElementById(who+'-evhub-body');if(!body)return;
@@ -4204,13 +4230,13 @@ function saveEvent(){
   if(!name||!date){alert('Please enter an event name and a date.');return;}
   const data={name:name,date:date,time:document.getElementById('ev-time').value||'',category:document.getElementById('ev-category').value||'',notes:document.getElementById('ev-notes').value.trim(),color:((document.getElementById('ev-color')||{value:''}).value||''),textColor:((document.getElementById('ev-tcolor')||{value:''}).value||'')};
   const ref=eventsRefOf(eventModalWho);if(!ref){closeEventModal();return;}
-  if(eventEditId)ref.doc(eventEditId).update(data);
+  if(eventEditId)(eventRefById(eventEditId)||eventsRefOf(eventModalWho)).doc(eventEditId).update(data);
   else{data.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref.add(data);}
   closeEventModal();
 }
 function deleteEvent(){
   if(!eventEditId)return;
-  const ref=eventsRefOf(eventModalWho);if(!ref)return;
+  const ref=eventRefById(eventEditId)||eventsRefOf(eventModalWho);if(!ref)return;
   const ev=(eventsOf(eventModalWho)||[]).find(x=>x.id===eventEditId);
   const evId=eventEditId;
   uiConfirm({title:'Delete event',message:'"'+((ev&&ev.name)||'This event')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){
@@ -4219,6 +4245,77 @@ function deleteEvent(){
     closeEventModal();
   });
 }
+function eventRefById(id){
+  if(schoolEvents.some(function(ev){return ev.id===id;}))return eventsRef;
+  var members=['dew','o','junior'];
+  for(var i=0;i<members.length;i++){
+    var data=DATA[members[i]];
+    if(data&&(data.events||[]).some(function(ev){return ev.id===id;}))return data.eventsRef;
+  }
+  return null;
+}
+function eventLinkedWork(ev){
+  var counts={tasks:0,suppliers:(ev.suppliers||[]).length,files:(ev.files||[]).length,notes:(ev.enotes||[]).length,budget:0,total:0};
+  var seen=Object.create(null);
+  MEMBER_ORDER.forEach(function(w){
+    tasksOf(w).forEach(function(task){
+      if(task.eventId===ev.id&&!seen[task.id]){seen[task.id]=true;counts.tasks++;}
+    });
+  });
+  ['hsc','hsn'].forEach(function(campus){
+    var budget=ev.budget&&ev.budget[campus];
+    counts.budget+=budget?(budget.items||[]).length:0;
+  });
+  counts.total=counts.tasks+counts.suppliers+counts.files+counts.notes+counts.budget;
+  return counts;
+}
+function quickDeleteEvent(id,who){
+  var ev=teamEvents().find(function(item){return item.id===id;}),ref=eventRefById(id);
+  if(!ev||!ref)return Promise.resolve(false);
+  var work=eventLinkedWork(ev),name=ev.name||'Untitled';
+  function remove(){return deleteWithUndo(ref,id,ev,'Event "'+name+'" deleted');}
+  if(!work.total)return remove();
+  var parts=[];
+  [['tasks','task'],['suppliers','supplier'],['files','file'],['notes','note']].forEach(function(pair){
+    var n=work[pair[0]];
+    if(n)parts.push(n+' '+pair[1]+(n===1?'':'s'));
+  });
+  if(work.budget)parts.push('a budget');
+  var list=parts.length>1?parts.slice(0,-1).join(', ')+' and '+parts[parts.length-1]:parts[0];
+  return uiConfirm({title:'Delete "'+name+'"?',message:'It has '+list+'. The tasks stay on their boards; its workspace (suppliers, files, notes, budget) is deleted.',okLabel:'Delete event',danger:true}).then(function(ok){
+    return ok?remove():false;
+  });
+}
+window.quickDeleteEvent=quickDeleteEvent;
+function clearPastEvents(who){
+  var seen=Object.create(null);
+  var past=eventsOf(who).filter(function(ev){
+    if(!(evCountdown(ev).ms<0)||seen[ev.id])return false;
+    seen[ev.id]=true;return true;
+  });
+  if(!past.length)return Promise.resolve(false);
+  var names=past.slice(0,5).map(function(ev){return ev.name||'Untitled';}).join(', ');
+  if(past.length>5)names+=' and '+(past.length-5)+' more';
+  return uiConfirm({title:'Clear past events?',message:'Delete '+past.length+' past events: '+names+'. Linked tasks stay on their boards.',okLabel:'Delete '+past.length+' events',danger:true}).then(function(ok){
+    if(!ok)return false;
+    var deleted=[];
+    return Promise.all(past.map(function(ev){
+      var ref=eventRefById(ev.id),data={};
+      if(!ref)return false;
+      Object.keys(ev).forEach(function(key){if(key!=='id'&&key!=='__src')data[key]=ev[key];});
+      return ref.doc(ev.id).delete().then(function(){deleted.push({ref:ref,id:ev.id,data:data});return true;}).catch(function(e){console.error(e);return false;});
+    })).then(function(results){
+      if(deleted.length)uiToast(deleted.length+' past events deleted',{undo:function(){
+        return Promise.all(deleted.map(function(item){
+          return item.ref.doc(item.id).set(item.data).catch(function(e){console.error(e);dbSaveFailed(e,'the restored event');});
+        }));
+      }});
+      if(results.some(function(ok){return !ok;}))uiToast('Some events could not be deleted. Please try again.');
+      return deleted.length===past.length;
+    });
+  });
+}
+window.clearPastEvents=clearPastEvents;
 function createTaskForEvent(id,who){
   const ev=eventsOf(who).find(e=>e.id===id);
   const name=ev?(ev.name||''):'';
@@ -4768,7 +4865,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var urg=it.d<=3?' urg':(it.d<=7?' soon':'');
       return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div class="ov-cdn-n"'+((it.e.color&&/^#[0-9a-fA-F]{6}$/.test(it.e.color))?' style="color:'+it.e.color+';"':'')+'>'+it.d+'</div><div class="ov-cdn-u">days</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
-        +'<div class="ov-cdn-tag">'+lbl+'</div></div>';
+        +'<div class="ov-cdn-tag">'+lbl+'</div>'+evDeleteButtonHTML(it.e,'boss')+'</div>';
     }).join(''));
   }
 
@@ -8250,6 +8347,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       +'<div class="ews-head-actions">'
       +'<button class="btn '+accBtn(w)+' btn-sm" onclick="evwsAddTask(\''+w+'\',\''+ev.id+'\')"><i class="ti ti-plus"></i> Add Task</button>'
       +'<button class="btn btn-ghost btn-sm" onclick="openEventModal(\''+ev.id+'\',\''+w+'\')"><i class="ti ti-edit"></i> Edit Event</button>'
+      +'<button type="button" class="btn btn-ghost btn-sm ews-del" onclick="quickDeleteEvent('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(w))+').then(function(deleted){if(deleted)evwsBack('+escHtml(JSON.stringify(w))+');})"><i class="ti ti-trash"></i> Delete</button>'
       +'</div></div>';
   }
   function wsTabsHTML(w,ev){

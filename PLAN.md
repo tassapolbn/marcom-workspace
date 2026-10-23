@@ -106,7 +106,7 @@ All motion respects the system "reduce motion" setting.
   - Test: fold and unfold widgets and Overview cards in the preview. The motion is smooth, the folded
     state is still remembered, and nothing jumps.
 
-- [ ] **4. Event countdown: easy delete, past events tidied away**
+- [x] **4. Event countdown: easy delete, past events tidied away**
   - Files: `index.html` (Event Hub: `evHubHTML`, `renderEvHub`, `deleteEvent`; event workspace header; Event Countdown Hub on the Overview; their CSS)
   - Each countdown chip gets a small delete button. An event with no linked work is deleted in one
     click, with an Undo message. An event that has linked tasks, suppliers, files or a budget asks
@@ -149,19 +149,19 @@ All motion respects the system "reduce motion" setting.
   - Test: create a design request and a media request in the preview. Check the stored record has the
     copied values, and that Team Board tests still pass.
 
-- [ ] **8. One set of "today" numbers on the Overview**
+- [ ] **8. One "Team today" card instead of four**
+  - Files: `index.html` (Team Availability, Who is free right now, Leave & Availability, Workload Heatmap renderers)
+  - One row per person: open tasks and workload level, free or busy now (when their calendar is connected), and on leave or sick today.
+  - Test: the preview shows the four people with the same figures the four old cards showed. The
+    "calendar not connected" note appears once, not four times.
+
+- [ ] **9. One set of "today" numbers on the Overview**
   - Files: `index.html` (Overview shell and the stats, focus and greeting renderers; `uxp-today`)
   - Keep one row of tiles you can click: Overdue · Due today · Due this week · New requests · Meetings today.
     Clicking a tile filters Upcoming Deadlines, which becomes the one task list.
   - Remove the repeats: the greeting line's numbers (the greeting and date stay), Today at a Glance,
     and Today's Focus. Its items are already the Overdue and Today groups in Upcoming Deadlines.
   - Test: each number appears once, matches the old counts on the same data, and filters the list.
-
-- [ ] **9. One "Team today" card instead of four**
-  - Files: `index.html` (Team Availability, Who is free right now, Leave & Availability, Workload Heatmap renderers)
-  - One row per person: open tasks and workload level, free or busy now (when their calendar is connected), and on leave or sick today.
-  - Test: the preview shows the four people with the same figures the four old cards showed. The
-    "calendar not connected" note appears once, not four times.
 
 - [ ] **10. New Overview layout, with less-used items folded away**
   - Files: `index.html` (Overview shell order and CSS; Today's Menu, Support Staff Calendar, Resources, Watermark queue, Team Requests, Quick Actions, payday strip)
