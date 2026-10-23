@@ -4789,11 +4789,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   /* ---------- shell ---------- */
   var SHELL=''
    +'<div class="ov-topbar">'
-   +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div><div class="ov-today-line" id="ov-todayline"></div></div>'
+   +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
    +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
    +'</div>'
    +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
-   +'<div id="uxp-today"></div>'
    +'<div class="ov-ann-row ov-ann-row-single">'
    +'<div class="ov-card ov-ann">'
    +  '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div></div>'
@@ -4808,12 +4807,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '<div class="ov-ann-list" id="ov-ann-list"></div>'
    +'</div>'
    +'</div>'
-   +'<div class="ov-stats" id="ov-stats"></div>'
-   +'<div class="ov-card ov-focus-card" id="ov-focus" style="display:none;"></div>'
+   +'<div class="ov-stats" id="ov-stats" role="group" aria-label="Today at a glance"></div>'
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
    +    '<div class="ov-main-list-grid">'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div></div><div id="ov-deadlines"></div></div>'
+   +    '<div class="ov-card" id="ov-dl-card"><div class="ov-card-head"><div class="ov-card-title" id="ov-dl-title" tabindex="-1"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div><div class="ov-dl-filters" id="ov-dl-filters" role="group" aria-label="Filter deadlines"></div></div><div id="ov-deadlines"></div></div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown Hub</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
    +    '</div>'
@@ -4851,54 +4849,81 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
 
   /* ---------- stats ---------- */
+  /* Pure counts for the "today" tiles. items are tasks with status and dueDate;
+     dayFn(dateStr) returns days until that date (negative when overdue). A task
+     due today is never also counted in the next 7 days. */
+  function todayCounts(items,dayFn){
+    var out={overdue:0,oldest:0,dueToday:0,week:0,open:0};
+    (items||[]).forEach(function(x){
+      if(!x||x.status==='done'||x.status==='canceled')return;
+      out.open++;
+      if(!x.dueDate)return;
+      var d=dayFn(x.dueDate);
+      if(d===null||d===undefined||isNaN(d))return;
+      if(d<0){ out.overdue++; if(-d>out.oldest)out.oldest=-d; }
+      else if(d===0)out.dueToday++;
+      else if(d<=7)out.week++;
+    });
+    return out;
+  }
   function renderStats(){
     var el=document.getElementById('ov-stats'); if(!el)return;
-    var open=0,dw=0,od=0,dn=0,dueToday=0,addedWk=0,doneWk=0,worstOd=0;
-    var now=new Date(), wkAgo=new Date(now.getTime()-7*86400000);
+    var all=[],doneWk=0,now=new Date(),wkAgo=new Date(now.getTime()-7*86400000);
     MORDER.forEach(function(w){
       tOf(w).forEach(function(x){
-        var cr=tsToDate(x.createdAt); if(cr&&cr>=wkAgo)addedWk++;
-        if(isActive(x)){
-          open++;
-          if(x.dueDate){ var d=dU(x.dueDate); if(d!==null){ if(d<0){ od++; if(-d>worstOd)worstOd=-d; } else { if(d===0)dueToday++; if(d<=7)dw++; } } }
-        }
-        if(x.status==='done'){ dn++; var dd=tsToDate(x.doneAt); if(dd&&dd>=wkAgo)doneWk++; }
+        all.push(x);
+        if(x.status==='done'){ var dd=tsToDate(x.doneAt); if(dd&&dd>=wkAgo)doneWk++; }
       });
     });
-    /* meetings from connected calendars (deduped) */
-    var seen={},meetToday=0,meetWeek=0,nextMeet=null;
+    var c=todayCounts(all,dU);
+    /* meetings later today from connected calendars (deduped) */
+    var seen={},meetToday=0,nextMeet=null;
     MORDER.forEach(function(w){
       var gd=(typeof gcalData!=='undefined')?gcalData[w]:null;
       if(gd&&gd.list)gd.list.forEach(function(m){
         if(m.allDay||!m.start)return; var st=new Date(m.start); if(!(st>now))return;
+        if(st.toDateString()!==now.toDateString())return;
         var k=(m.title||'')+'|'+m.start; if(seen[k])return; seen[k]=1;
-        if(st.toDateString()===now.toDateString())meetToday++;
-        if((st-now)<7*86400000)meetWeek++;
+        meetToday++;
         if(!nextMeet||st<nextMeet.st)nextMeet={st:st,title:m.title||'Meeting'};
       });
     });
-    /* next event across the team */
-    var evUp=0,evWeek=0,nextEv=null;
-    MORDER.forEach(function(w){
-      eOf(w).forEach(function(e){ if(!e.date)return; var d=dU(e.date); if(d===null||d<0)return;
-        evUp++; if(d<=7)evWeek++;
-        if(!nextEv||d<nextEv.d)nextEv={d:d,name:e.name||'Event',date:e.date}; });
-    });
-    var total=open+dn, pct=total?Math.round(dn/total*100):0;
-    function sub(ic,txt,cls){ return '<span class="ov-sub'+(cls?' '+cls:'')+'"><i class="ti '+ic+'"></i>'+txt+'</span>'; }
-    function bar(p,color){ return '<div class="ov-bar"><div class="ov-bar-fill" style="width:'+Math.max(0,Math.min(100,p))+'%;background:'+color+';"></div></div>'; }
-    function card(i,n,l,c,subs,extra,click){ return '<div class="ov-stat '+c+'"'+(click?' style="cursor:pointer;" onclick="'+click+'"':'')+'><div class="ov-stat-top"><div class="ov-stat-ic"><i class="ti '+i+'"></i></div><div class="ov-stat-main"><div class="ov-stat-num">'+n+'</div><div class="ov-stat-lbl">'+l+'</div></div></div><div class="ov-stat-subs">'+subs+'</div>'+(extra||'')+'</div>'; }
-    var actSubs=sub('ti-trending-up','\u25b2 '+addedWk+' added this week','ov-sub-up')+sub('ti-circle-check',dn+' completed \u00b7 '+pct+'%');
-    var dueSubs=sub('ti-calendar-week',dw+' due within 7 days')+(doneWk?sub('ti-check',doneWk+' finished this week','ov-sub-up'):sub('ti-clock','Stay on schedule'));
-    var odSubs=od?sub('ti-alert-circle','Oldest is '+worstOd+'d overdue','ov-sub-bad')+sub('ti-arrow-right','Needs attention today','ov-sub-bad'):sub('ti-shield-check','All clear \u00b7 nothing overdue','ov-sub-up');
-    var meetSubs=nextMeet?sub('ti-clock-hour-4','Next: '+esc((nextMeet.title||'').slice(0,26))+(nextMeet.st.toDateString()===now.toDateString()?' \u00b7 '+nextMeet.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''))+sub('ti-calendar',meetWeek+' in the next 7 days'):sub('ti-calendar-off','No upcoming meetings');
-    var evSubs=nextEv?sub('ti-calendar-star','Next: '+esc(nextEv.name.slice(0,24))+' in '+nextEv.d+'d')+sub('ti-confetti',evWeek+' event'+(evWeek===1?'':'s')+' this week'):sub('ti-calendar-off','No upcoming events');
-    var evBar=nextEv?bar(Math.max(4,100-Math.min(100,nextEv.d/60*100)),'var(--purple)'):'';
-    MarcomUI.setHTML(el,card('ti-clipboard-list',open,'Active Tasks','ov-s-navy',actSubs,bar(pct,'var(--st-done)'))
-      +card('ti-calendar-due',dueToday,'Due Today','ov-s-gold',dueSubs)
-      +card('ti-alert-triangle',od,'Overdue','ov-s-red',odSubs)
-      +card('ti-calendar-time',meetToday,'Meetings Today','ov-s-blue',meetSubs,'','openMeetingCal()')
-      +card('ti-confetti',evUp,'Upcoming Events','ov-s-purple',evSubs,evBar));
+    var rc=window.__rcCounts||{}, unread=rc.unread||0, waiting=rc.waiting||0;
+    function many(n,one,more){ return n+' '+(n===1?one:more); }
+    function tile(icon,n,label,cls,sub,subCls,action,aria){
+      return '<div class="ov-stat '+cls+'" role="button" tabindex="0" data-action="'+action+'" aria-label="'+esc(aria)+'">'
+        +'<div class="ov-stat-top"><div class="ov-stat-ic"><i class="ti '+icon+'"></i></div><div class="ov-stat-main"><div class="ov-stat-num">'+n+'</div><div class="ov-stat-lbl">'+label+'</div></div></div>'
+        +'<div class="ov-stat-subs"><span class="ov-sub'+(subCls?' '+subCls:'')+'">'+sub+'</span></div></div>';
+    }
+    var meetSub=nextMeet
+      ?'Next: '+esc((nextMeet.title||'').slice(0,26))+' &middot; '+nextMeet.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
+      :'No meetings today';
+    MarcomUI.setHTML(el,
+      tile('ti-alert-triangle',c.overdue,'Overdue','ov-s-red',c.overdue?'Oldest is '+c.oldest+'d overdue':'All clear',c.overdue?'ov-sub-bad':'ov-sub-up','overdue',many(c.overdue,'overdue task','overdue tasks')+'. Show them.')
+      +tile('ti-calendar-due',c.dueToday,'Due today','ov-s-gold',doneWk?many(doneWk,'task','tasks')+' done this week':'Stay on schedule',doneWk?'ov-sub-up':'','today',many(c.dueToday,'task','tasks')+' due today. Show them.')
+      +tile('ti-calendar-week',c.week,'Next 7 days','ov-s-navy',c.open+' open in total','','week',many(c.week,'task','tasks')+' due in the next 7 days. Show them.')
+      +tile('ti-inbox',unread,'New requests','ov-s-blue',waiting?waiting+' waiting for approval':'Nothing waiting',waiting?'ov-sub-bad':'','requests',many(unread,'new request','new requests')+'. Go to the Request Centre.')
+      +tile('ti-calendar-time',meetToday,'Meetings today','ov-s-purple',meetSub,'','meetings',many(meetToday,'meeting','meetings')+' today. Open the calendar.'));
+    if(!el.__statKeys){
+      el.__statKeys=true;
+      var act=function(t){
+        var a=t.getAttribute('data-action');
+        if(a==='overdue'||a==='today'||a==='week'){ if(window.ovDlFilter)window.ovDlFilter(a,true); return; }
+        if(a==='requests'){
+          var rcCard=document.getElementById('ov-rc-card');
+          if(rcCard){ try{ rcCard.scrollIntoView({behavior:motionBehavior(),block:'start'}); }catch(e){ rcCard.scrollIntoView(); } }
+          return;
+        }
+        if(a==='meetings'&&typeof openMeetingCal==='function')openMeetingCal();
+      };
+      el.addEventListener('click',function(e){ var t=e.target.closest('.ov-stat[data-action]'); if(t&&el.contains(t))act(t); });
+      el.addEventListener('keydown',function(e){
+        if(e.key!=='Enter'&&e.key!==' ')return;
+        var t=e.target.closest('.ov-stat[data-action]'); if(!t||!el.contains(t))return;
+        e.preventDefault(); act(t);
+      });
+      window.addEventListener('uxp-rccounts',function(){ try{ renderStats(); }catch(e){} });
+    }
   }
 
   /* ---------- availability ---------- */
@@ -5017,24 +5042,54 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
 
   /* ---------- deadlines ---------- */
+  var ovDl='all', ovDlOpen={};
+  var DL_GROUPS=[['overdue','Overdue',-Infinity,-1],['today','Today',0,0],['tomorrow','Tomorrow',1,1],['week','This Week',2,7],['next','Next Week',8,14]];
+  var DL_SHOW={all:['overdue','today','tomorrow','week','next'],overdue:['overdue'],today:['today'],week:['tomorrow','week']};
+  /* Pure grouping for Upcoming Deadlines. items are {d,...} where d is days until
+     the due date; filter is all, overdue, today or week (the next 7 days). */
+  function dlGroups(items,filter){
+    var show=DL_SHOW[filter]||DL_SHOW.all, out=[];
+    DL_GROUPS.forEach(function(g){
+      if(show.indexOf(g[0])<0)return;
+      var gi=(items||[]).filter(function(it){ return it.d>=g[2]&&it.d<=g[3]; }).sort(function(a,b){ return a.d-b.d; });
+      if(gi.length)out.push({key:g[0],title:g[1],items:gi,over:g[0]==='overdue'});
+    });
+    return out;
+  }
+  window.ovDlFilter=function(f,scroll){
+    ovDl=(!f||ovDl===f)?'all':f; ovDlOpen={};
+    renderDeadlines();
+    if(!scroll)return;
+    var card=document.getElementById('ov-dl-card');
+    if(card){ try{ card.scrollIntoView({behavior:motionBehavior(),block:'start'}); }catch(e){ card.scrollIntoView(); } }
+    var title=document.getElementById('ov-dl-title');
+    if(title){ try{ title.focus({preventScroll:true}); }catch(e){} }
+  };
+  window.ovDlMore=function(k){ ovDlOpen[k]=true; renderDeadlines(); };
   function renderDeadlines(){
     var el=document.getElementById('ov-deadlines'); if(!el)return;
-    var items=[], overdue=[];
+    var items=[];
     MORDER.forEach(function(w){ tOf(w).forEach(function(t){
-      if(isActive(t)&&t.dueDate){ var d=dU(t.dueDate); if(d===null)return; if(d<0)overdue.push({w:w,t:t,d:d}); else if(d<=14)items.push({w:w,t:t,d:d}); }
+      if(isActive(t)&&t.dueDate){ var d=dU(t.dueDate); if(d===null)return; if(d<=14)items.push({w:w,t:t,d:d}); }
     }); });
+    var fl=document.getElementById('ov-dl-filters');
+    if(fl)MarcomUI.setHTML(fl,[['all','All'],['overdue','Overdue'],['today','Today'],['week','7 days']].map(function(o){
+      var on=ovDl===o[0];
+      return '<button type="button" class="ov-fpill'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="ovDlFilter(\''+o[0]+'\')">'+o[1]+'</button>';
+    }).join(''));
     function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
-    function grp(title,arr,over){
-      return '<div class="ov-dl-grp"><div class="ov-dl-grp-t'+(over?' od':'')+'">'+title+' <span class="ov-dl-count">'+arr.length+'</span></div>'
-        +arr.map(function(it){ return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub">'+esc(nm(it.w))+' · '+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>'; }).join('')+'</div>';
+    function row(it){
+      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub">'+esc(nm(it.w))+' &middot; '+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
-    var html='';
-    if(overdue.length){ overdue.sort(function(a,b){ return a.d-b.d; }); html+=grp('Overdue',overdue,true); }
-    [['Today',0,0],['Tomorrow',1,1],['This Week',2,7],['Next Week',8,14]].forEach(function(g){
-      var gi=items.filter(function(it){ return it.d>=g[1]&&it.d<=g[2]; }).sort(function(a,b){ return a.d-b.d; });
-      if(gi.length)html+=grp(g[0],gi,false);
-    });
-    MarcomUI.setHTML(el,html||'<div class="ov-empty-sm">No deadlines in the next two weeks.</div>');
+    var html=dlGroups(items,ovDl).map(function(g){
+      var list=ovDlOpen[g.key]?g.items:g.items.slice(0,5);
+      return '<div class="ov-dl-grp"><div class="ov-dl-grp-t'+(g.over?' od':'')+'">'+g.title+' <span class="ov-dl-count">'+g.items.length+'</span></div>'
+        +list.map(row).join('')
+        +(g.items.length>list.length?'<button type="button" class="ov-dl-more" onclick="ovDlMore(\''+g.key+'\')">Show '+(g.items.length-list.length)+' more</button>':'')
+        +'</div>';
+    }).join('');
+    var empty={all:'No deadlines in the next two weeks.',overdue:'Nothing overdue. Nice work.',today:'Nothing due today.',week:'Nothing due in the next 7 days.'}[ovDl];
+    MarcomUI.setHTML(el,html||'<div class="ov-empty-sm">'+empty+'</div>');
   }
 
   /* ---------- event countdown ---------- */
@@ -9001,74 +9056,8 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     var g=now.getHours()<12?'Good morning':(now.getHours()<17?'Good afternoon':'Good evening');
     var greet=document.getElementById('ov-greet');
     if(greet){var greeting=g+', '+myName();if(greet.textContent!==greeting)greet.textContent=greeting;}
-    /* gather today data */
-    var dueToday=[],overdue=[],evToday=[],nextEv=null,meetToday=0;
-    MORDER.forEach(function(w){
-      tOf(w).forEach(function(t){
-        if(t.status==='done'||t.status==='canceled'||!t.dueDate)return;
-        var d=dU(t.dueDate);
-        if(d===0)dueToday.push({w:w,t:t,d:d});
-        else if(d!==null&&d<0)overdue.push({w:w,t:t,d:d});
-      });
-      eOf(w).forEach(function(e){
-        if(!e.date)return; var d=dU(e.date);
-        if(d===0)evToday.push({w:w,e:e});
-        if(d!==null&&d>=0&&(!nextEv||d<nextEv.d))nextEv={d:d,e:e,w:w};
-      });
-      var gd=(typeof gcalData!=='undefined')?gcalData[w]:null;
-      if(gd&&gd.list)gd.list.forEach(function(m){
-        if(m.allDay||!m.start)return; var st=new Date(m.start);
-        if(st>now&&st.toDateString()===now.toDateString())meetToday++;
-      });
-    });
-    overdue.sort(function(a,b){return a.d-b.d;});
-    /* today line */
-    var line=document.getElementById('ov-todayline');
-    if(line){
-      var parts=[];
-      parts.push('<span class="tl-chip"><i class="ti ti-calendar-due"></i><b>'+dueToday.length+'</b>&nbsp;due today</span>');
-      parts.push('<span class="tl-chip'+(overdue.length?' tl-warn':'')+'"><i class="ti ti-alert-triangle"></i><b>'+overdue.length+'</b>&nbsp;overdue</span>');
-      parts.push('<span class="tl-chip"><i class="ti ti-calendar-time"></i><b>'+meetToday+'</b>&nbsp;meeting'+(meetToday===1?'':'s')+' today</span>');
-      if(nextEv)parts.push('<span class="tl-chip"><i class="ti ti-confetti"></i>Next event:&nbsp;<b>'+esc((nextEv.e.name||'Event').slice(0,24))+'</b>&nbsp;'+(nextEv.d===0?'today':'in '+nextEv.d+'d')+'</span>');
-      MarcomUI.setHTML(line,parts.join(''));
-    }
-    /* focus card */
-    var fc=document.getElementById('ov-focus');
-    if(fc){
-      var rows='';
-      evToday.forEach(function(x){
-        rows+='<div class="ov-fitem" onclick="ovFocusEvent(\''+x.w+'\',\''+x.e.id+'\')">'
-          +'<span class="tcard-sicon" style="background:var(--gold-light);color:var(--gold2);"><i class="ti ti-confetti"></i></span>'
-          +'<span class="ov-fi-topic">'+esc(x.e.name||'Event')+'</span>'
-          +'<span class="ov-fi-who">'+esc(nm(x.w))+'</span>'
-          +'<span class="ov-fi-due fd-event"><i class="ti ti-calendar-star"></i>Event today</span></div>';
-      });
-      overdue.slice(0,5).forEach(function(x){
-        rows+='<div class="ov-fitem" onclick="ovFocusGo(\''+x.w+'\',\''+x.t.id+'\')">'
-          +(typeof statusIconHTML==='function'?statusIconHTML(x.t.status||'pending'):'')
-          +'<span class="ov-fi-topic">'+esc(x.t.topic||x.t.title||'Untitled')+'</span>'
-          +'<span class="ov-fi-who">'+esc(nm(x.w))+'</span>'
-          +'<span class="ov-fi-due fd-over"><i class="ti ti-alert-triangle"></i>'+Math.abs(x.d)+'d overdue</span></div>';
-      });
-      dueToday.slice(0,6).forEach(function(x){
-        rows+='<div class="ov-fitem" onclick="ovFocusGo(\''+x.w+'\',\''+x.t.id+'\')">'
-          +(typeof statusIconHTML==='function'?statusIconHTML(x.t.status||'pending'):'')
-          +'<span class="ov-fi-topic">'+esc(x.t.topic||x.t.title||'Untitled')+'</span>'
-          +'<span class="ov-fi-who">'+esc(nm(x.w))+'</span>'
-          +'<span class="ov-fi-due fd-today"><i class="ti ti-calendar-due"></i>Due today</span></div>';
-      });
-      var head='<div class="ov-focus-h"><i class="ti ti-target-arrow"></i> Today’s Focus</div>';
-      if(rows){
-        var bits=[];
-        if(evToday.length)bits.push(evToday.length+' event'+(evToday.length===1?'':'s'));
-        if(overdue.length)bits.push(overdue.length+' overdue');
-        if(dueToday.length)bits.push(dueToday.length+' due today');
-        MarcomUI.setHTML(fc,head+'<div class="ov-focus-sub">'+bits.join(' · ')+'</div><div class="ov-focus-list">'+rows+'</div>');
-      }else{
-        MarcomUI.setHTML(fc,'<div class="ov-focus-row">'+head+'<div class="ov-focus-clear"><i class="ti ti-circle-check"></i>All clear. Nothing due today, nothing overdue.</div></div>');
-      }
-      fc.style.display='block';
-    }
+    /* The today numbers live in the Overview tiles and Upcoming Deadlines now;
+       the greeting line and the Today's Focus card no longer repeat them. */
     /* quick actions */
     var qa=document.getElementById('ov-qa');
     if(qa&&!qa.getAttribute('data-built')){

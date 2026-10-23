@@ -155,7 +155,7 @@ All motion respects the system "reduce motion" setting.
   - Test: the preview shows the four people with the same figures the four old cards showed. The
     "calendar not connected" note appears once, not four times.
 
-- [ ] **9. One set of "today" numbers on the Overview**
+- [x] **9. One set of "today" numbers on the Overview**
   - Files: `index.html` (Overview shell and the stats, focus and greeting renderers; `uxp-today`)
   - Keep one row of tiles you can click: Overdue · Due today · Due this week · New requests · Meetings today.
     Clicking a tile filters Upcoming Deadlines, which becomes the one task list.

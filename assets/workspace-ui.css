@@ -363,3 +363,32 @@ html.dark #team-card .team-av{color:#8fb4dc;}
 html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
 @media(max-width:400px){#team-card .team-st{max-width:120px;}}
 @media(prefers-reduced-motion:reduce){#team-card .team-row{transition:none;}}
+
+/* Today tiles (one set of numbers) and the Upcoming Deadlines filter. */
+#panel-overview .ov-stats{grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:1100px){#panel-overview .ov-stats{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:700px){#panel-overview .ov-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:420px){#panel-overview .ov-stats{grid-template-columns:minmax(0,1fr);}}
+#panel-overview .ov-stat[role=button]{cursor:pointer;transition:transform 160ms ease,box-shadow 160ms ease;}
+@media(hover:hover){
+  #panel-overview .ov-stat[role=button]:hover{
+    transform:translateY(-2px);
+    box-shadow:0 2px 4px rgba(16,24,40,.05),0 12px 26px -12px rgba(16,24,40,.25);
+  }
+}
+#panel-overview .ov-stat[role=button]:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
+#panel-overview #ov-dl-card .ov-card-head{flex-wrap:wrap;gap:8px;}
+#panel-overview .ov-dl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
+#panel-overview .ov-dl-more{
+  display:block;width:100%;margin-top:4px;padding:7px 10px;border:0;border-radius:8px;
+  background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;
+  text-align:center;cursor:pointer;
+}
+#panel-overview .ov-dl-more:hover,#panel-overview .ov-dl-more:focus-visible{background:var(--gray-light);color:var(--navy);}
+html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-more:focus-visible{color:#9bd6ff;}
+#ov-dl-title:focus{outline:none;}
+#ov-dl-title:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
+@media(prefers-reduced-motion:reduce){
+  #panel-overview .ov-stat[role=button]{transition:none;}
+  #panel-overview .ov-stat[role=button]:hover{transform:none;}
+}
