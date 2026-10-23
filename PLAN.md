@@ -137,7 +137,7 @@ All motion respects the system "reduce motion" setting.
   - Test: Add Task fits on one screen at 1280 × 800. Editing an existing task with notes and links
     shows them all. Saving keeps every field as before (checked against stored data in the preview).
 
-- [ ] **7. No repeated fields in design and media requests, MARCOM categories**
+- [x] **7. No repeated fields in design and media requests, MARCOM categories**
   - Files: `index.html` (design and media request sections, `saveTask`, `openEdit`, the O auto-copy script)
   - One "Requested by" field fills both Assigned By and Requestor.
   - Brand / Campaign and O's Event Name are filled from the chosen event, and can still be changed.

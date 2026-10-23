@@ -306,3 +306,14 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #modal .tf-more-toggle:hover{background:var(--gray-light);}
 #modal .tf-more-body{padding:4px 14px 14px;}
 #modal .tf-more.tf-more-closed .tf-more-body{display:none;}
+
+/* Foldable role request details. */
+#modal .role-fold{
+  width:100%;background:transparent;border:0;padding:14px 0 0;
+  border-top:1px solid var(--border);font-family:inherit;text-align:left;cursor:pointer;
+}
+#modal .role-fold .role-chevron{margin-left:auto;transition:transform 200ms;}
+#modal .role-fold[aria-expanded="false"] .role-chevron{transform:rotate(-90deg);}
+#modal .role-fold:focus-visible{outline:2px solid var(--accent,var(--navy));outline-offset:3px;}
+#modal .role-closed .role-body{display:none;}
+@media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}

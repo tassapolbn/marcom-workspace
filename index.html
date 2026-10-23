@@ -1103,7 +1103,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         </div>
       </div>
       <div class="form-group" id="m-event-group" style="display:none;"><label class="form-label"><i class="ti ti-confetti" style="font-size:11px;"></i> Event</label>
-        <select class="form-select" id="m-event"><option value="">None (General Task)</option></select>
+        <select class="form-select" id="m-event" onchange="syncDesignEvent()"><option value="">None (General Task)</option></select>
       </div>
       <div class="form-group evt-box" id="m-evt-group">
         <label class="evt-toggle"><input type="checkbox" id="m-evt-on" onchange="evtToggle()"> <span><i class="ti ti-users-group"></i> Share this card with the team <em>appears on every assigned person's board; the status stays in sync for everyone</em></span></label>
@@ -1123,17 +1123,18 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="tf-desc-wrap tf-hidden" id="m-desc-wrap"><label class="form-label">Description</label><textarea class="form-textarea" id="m-desc" placeholder="Details, instructions, context..." oninput="autoGrowDesc()"></textarea></div>
       </div>
       <div id="m-media-section" style="display:none;">
-        <div class="role-divider"><i class="ti ti-camera"></i> Media Tracking</div>
+        <button type="button" class="role-divider role-fold" aria-expanded="true" onclick="toggleRoleDetails(this)"><i class="ti ti-camera"></i> Media request details <i class="ti ti-chevron-down role-chevron"></i></button>
+        <div class="role-body">
         <div class="form-group"><label class="form-label">Event Name</label><input type="text" class="form-input" id="m-md-event" placeholder="e.g. Year 13 Graduation" /></div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Date Taken</label><input type="date" class="form-input" id="m-md-taken" /></div>
+          <div class="form-group"><label class="form-label">Shoot date</label><input type="date" class="form-input" id="m-md-taken" /></div>
           <div class="form-group"><label class="form-label">Location</label><input type="text" class="form-input" id="m-md-location" placeholder="e.g. Courtyard by Marriott" /></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Shoot Start (24h)</label><span class="t24-mount" data-id="m-md-start"></span></div>
           <div class="form-group"><label class="form-label">Shoot End (24h)</label><span class="t24-mount" data-id="m-md-end"></span></div>
         </div>
-        <div class="form-group"><label class="form-label">File Location</label><input type="text" class="form-input" id="m-md-file" placeholder="Drive link or folder path" /></div>
+        <div class="form-group"><label class="form-label">Final files (link or folder)</label><input type="text" class="form-input" id="m-md-file" placeholder="Drive link or folder path" /></div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Media Category</label>
             <select class="form-select" id="m-md-cat"><option value="">Select...</option><option value="Photos">Photos</option><option value="Videos">Videos</option><option value="Both">Both</option></select>
@@ -1145,28 +1146,32 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="form-group" style="display:flex;align-items:flex-end;"><label class="md-check"><input type="checkbox" id="m-md-mailsent" /> <span>Mail sent</span></label></div>
         </div>
       </div>
+      </div>
       <div id="m-design-section" style="display:none;">
-        <div class="role-divider"><i class="ti ti-palette"></i> Design Workflow</div>
+        <button type="button" class="role-divider role-fold" aria-expanded="true" onclick="toggleRoleDetails(this)"><i class="ti ti-palette"></i> Design request details <i class="ti ti-chevron-down role-chevron"></i></button>
+        <div class="role-body">
         <div class="form-row">
           <div class="form-group"><label class="form-label">Deadline Start (24h) <span style="color:var(--muted);font-weight:400;">for the Due Date above</span></label><span class="t24-mount" data-id="m-dz-start"></span></div>
           <div class="form-group"><label class="form-label">Deadline End (24h) <span style="color:var(--muted);font-weight:400;">optional</span></label><span class="t24-mount" data-id="m-dz-end"></span></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Design Type</label><input type="text" class="form-input" id="m-dz-type" placeholder="e.g. Poster, Social, Banner" /></div>
-          <div class="form-group"><label class="form-label">Requestor</label><input type="text" class="form-input" id="m-dz-requestor" placeholder="e.g. Khun Miki" /></div>
+          <div class="form-group"><label class="form-label">Requested by</label><input type="text" class="form-input" id="m-dz-requestor" placeholder="e.g. Khun Miki" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Brand / Campaign</label><input type="text" class="form-input" id="m-dz-brand" placeholder="e.g. Open Day 2026" /></div>
+          <div class="form-group"><label class="form-label">Brand / Campaign</label><input type="text" class="form-input" id="m-dz-brand" placeholder="Filled from the event, or type a campaign" /></div>
           <div class="form-group"><label class="form-label">Revision Rounds</label><input type="number" class="form-input" id="m-dz-revisions" value="0" min="0" step="1" /></div>
         </div>
-        <div class="form-group"><label class="form-label">Final File Location</label><input type="text" class="form-input" id="m-dz-file" placeholder="Drive link or folder path" /></div>
+        <div class="form-group"><label class="form-label">Final files (link or folder)</label><input type="text" class="form-input" id="m-dz-file" placeholder="Drive link or folder path" /></div>
         <div class="form-group"><label class="form-label">Design Status</label>
           <select class="form-select" id="m-dz-status">
             <option value="Waiting for Brief">Waiting for Brief</option><option value="Brief Received">Brief Received</option><option value="In Progress">In Progress</option>
             <option value="Review">Review</option><option value="Revision Required">Revision Required</option>
             <option value="Approved">Approved</option><option value="Delivered">Delivered</option>
+            <option value="__on-hold">On Hold</option><option value="__canceled">Canceled</option>
           </select>
         </div>
+      </div>
       </div>
       <div class="tf-more tf-more-closed" id="m-more">
         <button type="button" class="tf-more-toggle" id="m-more-toggle" aria-expanded="false" aria-controls="m-more-body" onclick="tfToggleMore()">
@@ -1180,14 +1185,14 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <div class="form-row">
         <div class="form-group"><label class="form-label">Category <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
           <select class="form-select" id="m-cat">
-            <option value="">None</option><option value="Work">Work</option><option value="Home">Home</option>
-            <option value="Shopping">Shopping</option><option value="Personal">Personal</option>
-            <option value="Together">Together</option><option value="Travel">Travel</option>
+            <option value="">None</option><option value="Design">Design</option><option value="Photo &amp; Video">Photo &amp; Video</option>
+            <option value="Social Media">Social Media</option><option value="Event">Event</option>
+            <option value="Print">Print</option><option value="Admin">Admin</option>
           </select>
         </div>
         <div class="form-group"></div>
       </div>
-      <div class="form-group"><label class="form-label">Attachment <span style="color:var(--muted);font-weight:400;">(link)</span></label><input type="url" class="form-input" id="m-attach" placeholder="https://drive.google.com/..." /></div>
+      <div class="form-group"><label class="form-label">Brief or reference link</label><input type="url" class="form-input" id="m-attach" placeholder="https://drive.google.com/..." /></div>
       <div class="links-section">
         <div class="links-section-title">Related Links</div>
         <div id="m-links-container"></div>
@@ -2178,6 +2183,20 @@ const SC={
   'canceled':{l:'Canceled',c:'b-danger',i:'ti-circle-x'}
 };
 const DZ_STATUSES=['Waiting for Brief','Brief Received','In Progress','Review','Revision Required','Approved','Delivered'];
+function dzToStatus(dz){
+  if(dz==='Waiting for Brief')return 'waiting';
+  if(dz==='Delivered')return 'done';
+  if(['In Progress','Review','Revision Required','Approved'].indexOf(dz)!==-1)return 'in-progress';
+  return 'pending';
+}
+function statusToDz(status,dz){
+  if(status==='done')return 'Delivered';
+  if(DZ_STATUSES.indexOf(dz)!==-1&&dzToStatus(dz)===status)return dz;
+  if(status==='waiting')return 'Waiting for Brief';
+  if(status==='in-progress')return 'In Progress';
+  if(status==='on-hold'||status==='canceled')return dz||'Brief Received';
+  return 'Brief Received';
+}
 function scColors(s){const m={'pending':['var(--gray-light)','var(--st-pending)'],'in-progress':['var(--blue-light)','var(--st-progress)'],'waiting':['var(--amber-light)','var(--st-waiting)'],'on-hold':['var(--purple-light)','var(--st-hold)'],'done':['var(--green-light)','var(--st-done)'],'canceled':['var(--danger-light)','var(--st-cancel)']};return m[s]||m.pending;}
 function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['#e6effd','#2563eb'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','#0f7a37'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
 function statusIconHTML(s){const sc=SC[s]||SC.pending;const c=scColors(s);return '<span class="tcard-sicon" style="background-color:'+c[0]+';color:'+c[1]+';" title="'+sc.l+'"><i class="ti '+sc.i+'"></i></span>';}
@@ -2187,7 +2206,7 @@ function statusIconHTML(s){const sc=SC[s]||SC.pending;const c=scColors(s);return
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({status:val,done:(val==='done')},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
-function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({dzStatus:val},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});}
+function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);ref.doc(id).update(Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
   var opts=MEMBER_ORDER.filter(function(w){return w!==who;});
@@ -2493,15 +2512,55 @@ function populateEventSelect(who,selId){
   evs.forEach(ev=>{h+='<option value="'+ev.id+'"'+(ev.id===selId?' selected':'')+'>'+escHtml(ev.name||'Untitled')+(ev.date?' \u00b7 '+fmtDate(ev.date):'')+'</option>';});
   sel.innerHTML=h;grp.style.display='block';sel.value=selId||'';
 }
+function setTaskCategory(value){
+  var select=document.getElementById('m-cat');
+  Array.prototype.slice.call(select.options).forEach(function(option){
+    if(option.getAttribute('data-old')==='true')select.removeChild(option);
+  });
+  value=value||'';
+  var known=Array.prototype.some.call(select.options,function(option){return option.value===value;});
+  if(value&&!known){
+    var option=document.createElement('option');
+    option.value=value;option.textContent=value+' (old)';
+    option.setAttribute('data-old','true');select.appendChild(option);
+  }
+  select.value=value;
+}
+function designEventName(){
+  var id=document.getElementById('m-event').value;
+  var event=eventsOf(modalState.who).find(function(item){return item.id===id;});
+  return event?(event.name||'Untitled'):'';
+}
+function syncDesignEvent(){
+  if(modalState.who!=='dew'||modalState.taskType!=='role')return;
+  var brand=document.getElementById('m-dz-brand');
+  if(!brand.value.trim()||brand.value===brand.getAttribute('data-auto')){
+    brand.value=designEventName();brand.setAttribute('data-auto',brand.value);
+  }
+}
+function toggleRoleDetails(button,force){
+  var section=button.parentElement;
+  var closed=(typeof MarcomMotion!=='undefined')
+    ?MarcomMotion.toggle(section,'role-closed',force,{reveal:':scope>.role-body'})
+    :section.classList.toggle('role-closed',typeof force==='boolean'?force:!section.classList.contains('role-closed'));
+  button.setAttribute('aria-expanded',closed?'false':'true');
+}
+function resetRoleDetails(){
+  ['m-media-section','m-design-section'].forEach(function(id){
+    toggleRoleDetails(document.getElementById(id).querySelector('.role-fold'),false);
+  });
+}
 function openAdd(who){
   modalState={who,editId:null};
+  resetRoleDetails();
+  document.getElementById('m-dz-brand').setAttribute('data-auto','');
   if(!window.__sopBatchOpening)window.__sopBatch=null;
   modalLinks=[];
   document.getElementById('modal-title').textContent='Add Task';
   ['m-topic','m-desc','m-due','m-assignedby','m-assigned','m-attach','m-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('m-assigned').value=todayStr();
   document.getElementById('m-status').value='pending';
-  document.getElementById('m-cat').value='';
+  setTaskCategory('');
   document.getElementById('m-priority').value='medium';
   ['m-md-event','m-md-taken','m-md-location','m-md-start','m-md-end','m-md-file','m-md-cat','m-md-upload','m-md-watermark','m-dz-type','m-dz-requestor','m-dz-brand','m-dz-file'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('m-md-mailsent').checked=false;
@@ -2524,6 +2583,7 @@ function openEdit(who,id){
   const task=(tasksOf(who)).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
+  resetRoleDetails();
   if(!window.__sopBatchOpening)window.__sopBatch=null;
   modalLinks=JSON.parse(JSON.stringify(task.links||[]));
   document.getElementById('modal-title').textContent=isEventTask(task)?'Edit Event Task':'Edit Task';
@@ -2532,7 +2592,7 @@ function openEdit(who,id){
   document.getElementById('m-desc').value=task.description||'';
   document.getElementById('m-due').value=task.dueDate||'';
   document.getElementById('m-status').value=task.status||'pending';
-  document.getElementById('m-cat').value=task.category||'';
+  setTaskCategory(task.category);
   let _pr=task.priority||'medium';if(_pr==='normal')_pr='medium';
   document.getElementById('m-priority').value=_pr;
   document.getElementById('m-assignedby').value=task.assignedBy||'';
@@ -2552,14 +2612,15 @@ function openEdit(who,id){
   document.getElementById('m-md-watermark').value=task.mdWatermark||'';
   document.getElementById('m-md-mailsent').checked=!!task.mdMailSent;
   document.getElementById('m-dz-type').value=task.dzType||'';
-  document.getElementById('m-dz-requestor').value=task.dzRequestor||'';
+  document.getElementById('m-dz-requestor').value=task.dzRequestor||task.assignedBy||'';
   document.getElementById('m-dz-brand').value=task.dzBrand||'';
   document.getElementById('m-dz-file').value=task.dzFile||'';
   document.getElementById('m-dz-revisions').value=(typeof task.dzRevisions==='number'?task.dzRevisions:0);
-  document.getElementById('m-dz-status').value=task.dzStatus||'Brief Received';
+  document.getElementById('m-dz-status').value=(task.status==='on-hold'||task.status==='canceled')?'__'+task.status:statusToDz(task.status||'pending',task.dzStatus);
   renderModalLinks();
   styleModal(who);
   populateEventSelect(who,task.eventId||'');
+  document.getElementById('m-dz-brand').setAttribute('data-auto',task.dzBrand===designEventName()?task.dzBrand:'');
   let _mode='standard';
   if(who==='o')_mode=(task.mdCategory||task.mdUpload||task.mdEvent||task.mdFile||task.mdLocation||task.mdTaken||task.mdStart||task.mdEnd||task.mdWatermark||task.mdMailSent)?'role':'standard';
   else if(who==='dew')_mode=(task.dzType||task.dzBrand||task.dzRequestor||task.dzFile||(task.dzRevisions>0)||(task.dzStatus&&task.dzStatus!=='Brief Received'))?'role':'standard';
@@ -2585,6 +2646,8 @@ function setTaskType(mode){
   if(r)r.classList.toggle('tt-active',isRole);
   document.getElementById('m-media-section').style.display=(who==='o'&&isRole)?'block':'none';
   document.getElementById('m-design-section').style.display=(who==='dew'&&isRole)?'block':'none';
+  document.getElementById('m-status').closest('.form-group').style.display=(who==='dew'&&isRole)?'none':'';
+  document.getElementById('m-assignedby').closest('.form-group').style.display=(who==='dew'&&isRole)?'none':'';
 }
 function calcWatermarkDate(){
   const u=document.getElementById('m-md-upload').value;
@@ -2613,7 +2676,11 @@ function closeModal(){document.getElementById('modal').classList.remove('open');
 function saveTask(){
   const topic=document.getElementById('m-topic').value.trim();
   if(!topic){document.getElementById('m-topic').focus();return;}
-  const status=document.getElementById('m-status').value;
+  const _prev=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
+  const designRole=modalState.who==='dew'&&modalState.taskType==='role';
+  const stage=document.getElementById('m-dz-status').value;
+  const paused=stage==='__on-hold'||stage==='__canceled';
+  const status=designRole?(paused?stage.slice(2):dzToStatus(stage)):document.getElementById('m-status').value;
   const data={
     topic,description:document.getElementById('m-desc').value.trim(),
     dueDate:document.getElementById('m-due').value||'',
@@ -2635,12 +2702,12 @@ function saveTask(){
   }
   if(modalState.who==='dew'&&modalState.taskType==='role'){
     data.dzType=gv('m-dz-type');data.dzRequestor=gv('m-dz-requestor');data.dzBrand=gv('m-dz-brand');
-    data.dzFile=gv('m-dz-file');data.dzStatus=document.getElementById('m-dz-status').value;
+    data.assignedBy=data.dzRequestor;
+    data.dzFile=gv('m-dz-file');data.dzStatus=paused?((_prev&&_prev.dzStatus)||'Brief Received'):stage;
     data.dzRevisions=parseInt(document.getElementById('m-dz-revisions').value||'0',10)||0;
     data.dzStart=gv('m-dz-start');data.dzEnd=gv('m-dz-end');
   }
   const evSel=document.getElementById('m-event');
-  const _prev=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
   if(evSel){
     data.eventId=evSel.value||'';
     const evObj=eventsOf(modalState.who).find(e=>e.id===data.eventId);
@@ -4399,6 +4466,10 @@ setInterval(function(){renderAllMeetings();renderAllUpcoming();},30000);
     var parts = [];
     var assigned = fieldText('m-assignedby');
     var category = fieldText('m-cat');
+    /* Design requests ask "Requested by" in their own section and hide this field. */
+    var assignedField = document.getElementById('m-assignedby');
+    var assignedGroup = assignedField && assignedField.closest ? assignedField.closest('.form-group') : null;
+    if(assignedGroup && assignedGroup.style.display === 'none')assigned = '';
     if(assigned)parts.push('Assigned by ' + assigned);
     if(category)parts.push(category);
     if(fieldText('m-attach'))parts.push('Attachment');
