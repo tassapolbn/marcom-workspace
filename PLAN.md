@@ -177,7 +177,7 @@ All motion respects the system "reduce motion" setting.
   - Test: the Overview at 1280 px is about 2.5 screens tall (from 6.5), and nothing is lost.
     Every moved item can still be reached in one or two clicks.
 
-- [ ] **11. Compact Overview cards**
+- [x] **11. Compact Overview cards**
   - Files: `index.html` (Announcements, Department Resources / Brand Guidelines / Asset Library, Today's Menu, Support Staff Calendar, payday strip), CSS
   - Announcements shows the latest few posts, with a "New announcement" button that opens the composer smoothly.
   - One Resources card with tabs (Department links / Brand guidelines / Asset library), instead of three cards.

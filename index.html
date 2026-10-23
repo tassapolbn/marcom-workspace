@@ -4812,9 +4812,9 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '<div class="ov-card" id="team-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users"></i> Team today <span class="team-sum" id="team-sum"></span></div><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div><div class="team-list" id="team-list"></div><div class="team-note" id="team-note"></div></div>'
    +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
-   +    '<div class="ov-card ov-ann" id="ov-ann-card">'
-   +      '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div></div>'
-   +      '<div class="ov-ann-compose">'
+   +    '<div class="ov-card ov-ann ov-ann-closed" id="ov-ann-card">'
+   +      '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div><button type="button" class="ov-mini-btn ov-ann-new" id="ov-ann-new" aria-expanded="false" aria-controls="ov-ann-compose" onclick="ovAnnCompose()"><i class="ti ti-plus"></i> New</button></div>'
+   +      '<div class="ov-ann-compose" id="ov-ann-compose">'
    +        '<textarea id="ov-ann-text" class="ov-ann-input" rows="2" placeholder="Share an announcement with the team..."></textarea>'
    +        '<div class="ov-ann-compose-row">'
    +          '<span class="ov-ann-aslabel" id="ov-ann-aslabel"><i class="ti ti-user-circle"></i> Posting as <b id="ov-ann-asname">you</b></span>'
@@ -4829,7 +4829,18 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'<section class="ov-more ov-more-closed" id="ov-more" aria-label="Resources and more">'
    +  '<button type="button" class="ov-more-toggle" id="ov-more-toggle" aria-expanded="false" aria-controls="ov-more-body" onclick="ovMoreToggle()"><i class="ti ti-layout-grid-add"></i><span class="ov-more-title">Resources &amp; more</span><span class="ov-more-sum">Links, brand guidelines, assets, lunch menu, staff calendar, team activity</span><i class="ti ti-chevron-down ov-more-chev"></i></button>'
    +  '<div class="ov-more-body" id="ov-more-body">'
-   +    '<div class="ov-card" id="ov-res-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-folder"></i> Department Resources</div><button class="ov-mini-btn" onclick="ovOpenResources()" title="Edit resource links"><i class="ti ti-edit"></i></button></div><div class="ov-res" id="ov-resources"></div></div>'
+   +    '<div class="ov-card" id="ov-resx-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-folders"></i> Resources</div></div>'
+   +      '<div class="ov-resx-tabs" role="tablist" aria-label="Resources">'
+   +        '<button type="button" role="tab" class="ov-resx-tab on" id="ov-resx-tab-links" aria-selected="true" aria-controls="ov-resx-links" onclick="ovResTab(\'links\')">Department links</button>'
+   +        '<button type="button" role="tab" class="ov-resx-tab" id="ov-resx-tab-brand" aria-selected="false" aria-controls="ov-resx-brand" tabindex="-1" onclick="ovResTab(\'brand\')">Brand</button>'
+   +        '<button type="button" role="tab" class="ov-resx-tab" id="ov-resx-tab-assets" aria-selected="false" aria-controls="ov-resx-assets" tabindex="-1" onclick="ovResTab(\'assets\')">Assets</button>'
+   +      '</div>'
+   +      '<div class="ov-resx-panel" role="tabpanel" id="ov-resx-links" aria-labelledby="ov-resx-tab-links">'
+   +        '<div class="ov-card" id="ov-res-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-folder"></i> Department Resources</div><button class="ov-mini-btn" onclick="ovOpenResources()" title="Edit resource links"><i class="ti ti-edit"></i></button></div><div class="ov-res" id="ov-resources"></div></div>'
+   +      '</div>'
+   +      '<div class="ov-resx-panel" role="tabpanel" id="ov-resx-brand" aria-labelledby="ov-resx-tab-brand" hidden></div>'
+   +      '<div class="ov-resx-panel" role="tabpanel" id="ov-resx-assets" aria-labelledby="ov-resx-tab-assets" hidden></div>'
+   +    '</div>'
    +    '<div class="ov-card" id="ov-act-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
    +  '</div>'
    +'</section>';
@@ -4838,7 +4849,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   var LAYOUT={
     main:['ov-dl-card','evb-card','ov-cal-card'],
     side:['team-card','ov-cd-card','ov-rc-card','ov-wm-card','ov-ann-card'],
-    more:['ov-res-card','ov-brand-card','ovasset-card','ov-menu-card','sscal-card','ov-act-card']
+    more:['ov-resx-card','ov-menu-card','ov-act-card','sscal-card']
   };
   /* Moves only the cards that are out of place, so a card someone is typing in
      stays where it is once the page has settled. */
@@ -4859,6 +4870,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     ovPlace(panel.querySelector('.ov-col-main'),LAYOUT.main);
     ovPlace(panel.querySelector('.ov-col-side'),LAYOUT.side);
     ovPlace(document.getElementById('ov-more-body'),LAYOUT.more);
+    ovPlace(document.getElementById('ov-resx-brand'),['ov-brand-card']);
+    ovPlace(document.getElementById('ov-resx-assets'),['ovasset-card']);
+    /* A card inside a tab never stays folded; the tab is the fold. */
+    ['ov-res-card','ov-brand-card','ovasset-card'].forEach(function(id){ var c=document.getElementById(id); if(c&&c.parentNode&&c.parentNode.classList&&c.parentNode.classList.contains('ov-resx-panel'))c.classList.remove('uxp-collapsed'); });
+    ovMenuCompact();
   }
   window.ovLayout=ovLayout;
   var ovLayoutPending=false;
@@ -4880,6 +4896,54 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     btn.setAttribute('aria-expanded',closed?'false':'true');
     try{ localStorage.setItem('ov_more_open',closed?'0':'1'); }catch(e){}
   };
+  /* ---------- compact cards: announcements, resources, lunch menu, activity ---------- */
+  window.ovAnnCompose=function(force){
+    var card=document.getElementById('ov-ann-card'),btn=document.getElementById('ov-ann-new'); if(!card)return;
+    var closed=typeof force==='boolean'?!force:undefined;
+    if(typeof window.MarcomMotion!=='undefined')closed=window.MarcomMotion.toggle(card,'ov-ann-closed',closed,{reveal:':scope>.ov-ann-compose'});
+    else{ if(typeof closed!=='boolean')closed=!card.classList.contains('ov-ann-closed'); card.classList.toggle('ov-ann-closed',closed); }
+    if(btn){ btn.setAttribute('aria-expanded',closed?'false':'true'); btn.innerHTML=closed?'<i class="ti ti-plus"></i> New':'<i class="ti ti-x"></i> Close'; }
+    if(!closed){ var t=document.getElementById('ov-ann-text'); if(t)setTimeout(function(){ try{ t.focus(); }catch(e){} },60); }
+  };
+  var RES_TABS=['links','brand','assets'];
+  window.ovResTab=function(k,focus){
+    if(RES_TABS.indexOf(k)<0)k='links';
+    RES_TABS.forEach(function(t){
+      var b=document.getElementById('ov-resx-tab-'+t),pnl=document.getElementById('ov-resx-'+t),on=t===k;
+      if(b){ b.setAttribute('aria-selected',on?'true':'false'); b.tabIndex=on?0:-1; b.classList.toggle('on',on); if(on&&focus)b.focus(); }
+      if(pnl)pnl.hidden=!on;
+    });
+    try{ localStorage.setItem('ov_res_tab',k); }catch(e){}
+  };
+  function ovResTabRestore(){
+    var k='links'; try{ k=localStorage.getItem('ov_res_tab')||'links'; }catch(e){}
+    window.ovResTab(k);
+    var list=document.querySelector('#ov-resx-card .ov-resx-tabs');
+    if(list&&!list.__keys){ list.__keys=true; list.addEventListener('keydown',function(e){
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;
+      var cur=RES_TABS.filter(function(t){ var b=document.getElementById('ov-resx-tab-'+t); return b&&b.getAttribute('aria-selected')==='true'; })[0]||'links';
+      var i=RES_TABS.indexOf(cur)+(e.key==='ArrowRight'?1:-1);
+      e.preventDefault(); window.ovResTab(RES_TABS[(i+RES_TABS.length)%RES_TABS.length],true);
+    }); }
+  }
+  /* Today's Menu shows today; the day pills and week picker open with Whole week. */
+  function ovMenuCompact(){
+    var w=document.getElementById('ov-menu-card'); if(!w)return;
+    var head=w.querySelector('.widget-head'); if(!head||head.querySelector('.menu-week-toggle'))return;
+    var b=document.createElement('button'); b.type='button'; b.className='menu-week-toggle'; b.setAttribute('aria-expanded','false');
+    b.textContent='Whole week';
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=!w.classList.contains('menu-week-open');
+      w.classList.toggle('menu-week-open',open);
+      b.setAttribute('aria-expanded',open?'true':'false'); b.textContent=open?'Today only':'Whole week';
+      if(!open&&typeof changeMenuDay==='function'){ var dw=new Date().getDay(); if(dw>=1&&dw<=5&&typeof MENU_DAYS!=='undefined')changeMenuDay(MENU_DAYS[dw-1]); }
+    });
+    var sel=head.querySelector('#menu-week');
+    if(sel)head.insertBefore(b,sel); else head.appendChild(b);
+  }
+  var ovActAll=false;
+  window.ovActMore=function(){ ovActAll=!ovActAll; renderActivity(); };
   function ovMoreRestore(){
     var open=false; try{ open=localStorage.getItem('ov_more_open')==='1'; }catch(e){}
     var sec=document.getElementById('ov-more'),btn=document.getElementById('ov-more-toggle');
@@ -5178,10 +5242,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     });
     acts.sort(function(a,b){ return b.dt-a.dt; });
     if(!acts.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No recent activity.</div>'); return; }
-    MarcomUI.setHTML(el,acts.slice(0,10).map(function(a){
+    MarcomUI.setHTML(el,acts.slice(0,ovActAll?10:5).map(function(a){
       var when=a.dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+a.dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       return '<div class="ov-act"><div class="ov-act-ic"><i class="ti '+a.i+'"></i></div><div class="ov-act-b"><div class="ov-act-txt">'+a.txt+'</div><div class="ov-act-t">'+when+'</div></div></div>';
-    }).join(''));
+    }).join('')+(acts.length>5?'<button type="button" class="ov-more-link" onclick="ovActMore()">'+(ovActAll?'Show fewer':'Show more')+'</button>':''));
   }
 
   /* ---------- watermark deletion queue (O's media tasks) ---------- */
@@ -5239,13 +5303,16 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function annAuthorName(){ var c=window.__cur; if(!c)return 'Team'; if(c.role==='admin')return (nm('boss')||'Boss'); if(c.workspace)return (nm(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
   function buildAuthorOptions(){ var s=document.getElementById('ov-ann-asname'); if(s)s.textContent=annAuthorName(); }
   try{ window.addEventListener('authchanged',function(){ try{buildAuthorOptions();}catch(e){} }); }catch(e){}
+  var ovAnnAll=false;
+  window.ovAnnShowAll=function(){ ovAnnAll=!ovAnnAll; renderAnnouncements(); };
   function renderAnnouncements(){
     try{buildAuthorOptions();}catch(e){}
     var el=document.getElementById('ov-ann-list'); if(!el)return;
     var items=(annItems||[]).slice();
     items.sort(function(a,b){ var pa=a.pinned?1:0,pb=b.pinned?1:0; if(pa!==pb)return pb-pa; return (b.createdAt||'').localeCompare(a.createdAt||''); });
-    if(!items.length){ el.innerHTML='<div class="ov-empty-sm">No announcements yet. Post one above to share with the team.</div>'; return; }
-    el.innerHTML=items.map(function(a){
+    if(!items.length){ el.innerHTML='<div class="ov-empty-sm">No announcements yet. Use New to share one with the team.</div>'; return; }
+    var annTotal=items.length;
+    el.innerHTML=(ovAnnAll?items:items.slice(0,3)).map(function(a){
       var dt=a.createdAt?new Date(a.createdAt):null;
       var when=(dt&&!isNaN(dt.getTime()))?dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
       return '<div class="ov-ann-item'+(a.pinned?' pinned':'')+'">'
@@ -5254,7 +5321,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
         +'<div class="ov-ann-foot"><span class="ov-ann-meta">'+esc(a.author||'Team')+(when?' · '+when:'')+'</span>'
         +'<span class="ov-ann-acts"><button class="ov-ann-act" onclick="ovTogglePin(\''+a.id+'\')" title="Pin / Unpin"><i class="ti ti-pin"></i></button><button class="ov-ann-act del" onclick="ovDeleteAnn(\''+a.id+'\')" title="Delete"><i class="ti ti-trash"></i></button></span></div>'
         +'</div>';
-    }).join('');
+    }).join('')+(annTotal>3?'<button type="button" class="ov-more-link" onclick="ovAnnShowAll()">'+(ovAnnAll?'Show fewer':'Show all '+annTotal+' announcements')+'</button>':'');
   }
   function saveAnn(items){ var d=db(); if(d)d.collection('dept_settings').doc('announcements').set({items:items},{merge:true}).catch(function(e){ console.error(e); }); }
 
@@ -5303,6 +5370,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var pin=document.getElementById('ov-ann-pinnew');
     var item={id:'a'+Date.now()+'_'+Math.floor(Math.random()*10000),text:txt,author:annAuthorName(),pinned:!!(pin&&pin.checked),createdAt:new Date().toISOString()};
     saveAnn([item].concat(annItems||[])); ta.value=''; if(pin)pin.checked=false;
+    window.ovAnnCompose(false);
   };
   window.ovTogglePin=function(id){ saveAnn((annItems||[]).map(function(a){ return a.id===id?Object.assign({},a,{pinned:!a.pinned}):a; })); };
   window.ovDeleteAnn=function(id){ uiConfirm({title:'Delete announcement',message:'This announcement will be removed for the whole team.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var prev=(annItems||[]).slice(); saveAnn(prev.filter(function(a){ return a.id!==id; })); uiToast('Announcement deleted',{undo:function(){ saveAnn(prev); }}); }); };
@@ -5325,7 +5393,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var ok=buildShell();
       /* Today's Menu lives in the folded Resources & more section now. */
       try{ var _more=document.getElementById('ov-more-body'); var _mw=document.querySelector('#panel-boss .menu-widget'); if(_more&&_mw){ var _w=_mw.querySelector('.wmove'); if(_w)_w.remove(); _mw.id=_mw.id||'ov-menu-card'; _more.appendChild(_mw); } if(typeof renderMenu==='function')renderMenu(); }catch(e){}
-      ovMoreRestore(); ovWatchLayout();
+      ovMoreRestore(); ovWatchLayout(); ovResTabRestore();
       buildAuthorOptions();
       renderAnnouncements();
       renderOverview();
@@ -10229,10 +10297,10 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       return '<div class="ov-rc-row"><span class="ov-rc-ic" style="background:'+bg+';color:'+cl+';"><i class="ti '+ic+'"></i></span><span class="ov-rc-lbl">'+lbl+'</span><span class="ov-rc-num"'+(warn&&n?' style="color:var(--st-overdue);"':'')+'>'+n+'</span></div>';
     }
     card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
-      +row('ti-palette','rgba(232,133,12,.15)','#e8850c','New Graphic Requests',newD)
-      +row('ti-camera','rgba(93,64,55,.16)','#7a5548','New Photography Requests',newP)
-      +row('ti-hourglass-high','var(--purple-light)','var(--st-hold)','Awaiting Approval',await_)
-      +row('ti-calendar-week','var(--gold-light)','var(--gold2)','Due This Week',dueWk)
+      +row('ti-palette','rgba(232,133,12,.15)','#e8850c','New design',newD)
+      +row('ti-camera','rgba(93,64,55,.16)','#7a5548','New photo',newP)
+      +row('ti-hourglass-high','var(--purple-light)','var(--st-hold)','Awaiting approval',await_)
+      +row('ti-calendar-week','var(--gold-light)','var(--gold2)','Due this week',dueWk)
       +row('ti-alert-triangle','var(--danger-light)','var(--st-overdue)','Overdue',over,1)
       +'<div class="ov-rc-btns"><button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open</button>'
       +'<button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy Link</button></div>';
@@ -10880,21 +10948,23 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       var v=!document.body.classList.contains('uxp-sal-collapsed');
       if(typeof window.MarcomMotion !== 'undefined')window.MarcomMotion.toggle(document.body,'uxp-sal-collapsed',v,{animate:dock,reveal:'#uxp-salary-dock .salary-strip'});else document.body.classList.toggle('uxp-sal-collapsed',v);
       try{localStorage.setItem('uxp_sal',v?'1':'0');}catch(e){}
-      paint();
+      /* The fold animates before the class changes, so paint the state being set. */
+      paint(v);
     };
     bar.appendChild(b);
     dock.appendChild(bar);
     hdr.insertAdjacentElement('afterend',dock);
     dock.appendChild(sal);
-    function paint(){
-      var c=document.body.classList.contains('uxp-sal-collapsed');
+    function paint(force){
+      var c=typeof force==='boolean'?force:document.body.classList.contains('uxp-sal-collapsed');
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');
       b.innerHTML=c
-        ?'<i class="ti ti-cash-banknote"></i> Salary period · '+esc(days)+' days left <i class="ti ti-chevron-down"></i>'
+        ?'<i class="ti ti-cash-banknote"></i> Payday <b>'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> &middot; '+esc(days)+' days left'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
         :'<i class="ti ti-chevron-up"></i> Hide salary period';
     }
-    try{ if(localStorage.getItem('uxp_sal')==='1')document.body.classList.add('uxp-sal-collapsed'); }catch(e){}
+    /* The payday strip starts as one compact line; Show salary period opens it. */
+    try{ if(localStorage.getItem('uxp_sal')!=='0')document.body.classList.add('uxp-sal-collapsed'); }catch(e){ document.body.classList.add('uxp-sal-collapsed'); }
     paint();
     setInterval(paint,60000);
   }

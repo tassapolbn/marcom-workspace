@@ -426,3 +426,63 @@ html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
 #settings-modal #trq-card{margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;box-shadow:none;background:var(--surface);}
 #settings-modal #trq-card .trq-hint{font-size:12px;color:var(--muted);margin:-4px 0 12px;}
 @media(prefers-reduced-motion:reduce){#panel-overview .ov-more-chev{transition:none;}}
+
+/* Compact Overview cards. */
+/* Announcements: the composer opens from New. */
+#ov-ann-card .ov-card-head{gap:8px;}
+#ov-ann-card .ov-ann-new{margin-left:auto;display:inline-flex;align-items:center;gap:5px;width:auto;padding:0 10px;font-size:12px;font-weight:700;}
+#ov-ann-card.ov-ann-closed .ov-ann-compose{display:none;}
+#panel-overview .ov-more-link{
+  display:block;width:100%;margin-top:6px;padding:7px 10px;border:0;border-radius:8px;background:transparent;
+  color:var(--muted);font:inherit;font-size:12px;font-weight:700;text-align:center;cursor:pointer;
+}
+#panel-overview .ov-more-link:hover,#panel-overview .ov-more-link:focus-visible{background:var(--gray-light);color:var(--navy);}
+html.dark #panel-overview .ov-more-link:hover,html.dark #panel-overview .ov-more-link:focus-visible{color:#9bd6ff;}
+/* One Resources card with tabs. */
+#ov-resx-card .ov-resx-tabs{display:flex;gap:4px;padding:4px;margin-bottom:12px;border-radius:12px;background:var(--gray-light);}
+#ov-resx-card .ov-resx-tab{
+  flex:1;padding:7px 8px;border:0;border-radius:9px;background:transparent;color:var(--muted);
+  font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background 160ms ease,color 160ms ease,box-shadow 160ms ease;
+}
+#ov-resx-card .ov-resx-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(16,24,40,.12);}
+html.dark #ov-resx-card .ov-resx-tab.on{background:rgba(255,255,255,.12);}
+#ov-resx-card .ov-resx-tab:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px;}
+#ov-resx-card .ov-resx-panel>.ov-card{border:0!important;box-shadow:none!important;background:transparent!important;padding:0!important;margin:0!important;}
+#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head{justify-content:flex-end;min-height:0;margin-bottom:6px;}
+#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head .ov-card-title,
+#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head .uxp-col-btn{display:none;}
+/* Today's Menu: today only, in two columns. */
+#ov-menu-card:not(.menu-week-open) .menu-days,#ov-menu-card:not(.menu-week-open) #menu-week{display:none;}
+#ov-menu-card .menu-week-toggle{
+  margin-left:auto;margin-right:6px;padding:4px 10px;border:1px solid var(--border);border-radius:99px;background:transparent;
+  color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;
+}
+#ov-menu-card .menu-week-toggle:hover,#ov-menu-card .menu-week-toggle:focus-visible{background:var(--gray-light);color:var(--text);}
+#ov-menu-card .menu-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;}
+#ov-menu-card .menu-row{margin:0;padding:8px 10px;border-radius:10px;background:var(--gray-light);min-width:0;}
+#ov-menu-card .menu-cat{font-size:10px;}
+#ov-menu-card .menu-item{font-size:12.5px;line-height:1.35;overflow-wrap:anywhere;}
+#ov-menu-card .menu-item-th{font-size:11px;}
+/* Support Staff Calendar: a short preview that opens full size. */
+#panel-overview .ov-more-body>#sscal-card{grid-column:auto;}
+#sscal-card .sscal-imgwrap{position:relative;max-height:240px;overflow:hidden;border-radius:12px;cursor:zoom-in;}
+#sscal-card .sscal-imgwrap img{display:block;width:100%;height:auto;}
+#sscal-card .sscal-imgwrap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(rgba(255,255,255,0),var(--surface));pointer-events:none;}
+#sscal-card .sscal-note{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+/* Payday: one compact line with a small progress bar. */
+.uxp-sal-mini{display:inline-block;width:56px;height:6px;border-radius:99px;background:rgba(16,24,40,.12);overflow:hidden;vertical-align:middle;margin-left:4px;}
+.uxp-sal-mini>span{display:block;height:100%;border-radius:inherit;background:var(--gold,#f0b323);}
+html.dark .uxp-sal-mini{background:rgba(255,255,255,.18);}
+/* Request Centre: counts in a compact grid. */
+#ov-rc-card{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+#ov-rc-card>.ov-card-head,#ov-rc-card>.ov-rc-btns{grid-column:1 / -1;}
+#ov-rc-card .ov-rc-row{margin:0;padding:7px 9px;min-width:0;}
+#ov-rc-card .ov-rc-lbl{font-size:12px;line-height:1.25;min-width:0;}
+/* Upcoming Deadlines: one line per task on wider screens. */
+@media(min-width:900px){
+  #ov-dl-card .ov-dl{padding-top:7px;padding-bottom:7px;}
+  #ov-dl-card .ov-dl-main{display:flex;align-items:baseline;gap:10px;min-width:0;}
+  #ov-dl-card .ov-dl-topic{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #ov-dl-card .ov-dl-sub{flex-shrink:0;margin:0;}
+}
+@media(prefers-reduced-motion:reduce){#ov-resx-card .ov-resx-tab{transition:none;}}
