@@ -199,7 +199,7 @@ All motion respects the system "reduce motion" setting.
   - Test: on every member tab the folded sidebar fits in one screen, slides open and closed smoothly,
     and works on a phone. Each widget opens, closes and remembers its state.
 
-- [ ] **13. Design refresh: elegant, modern, easy to read**
+- [x] **13. Design refresh: elegant, modern, easy to read**
   - Files: `assets/workspace-ui.css` (one set of design tokens and component styles), small markup touches in `index.html` only where needed
   - Keep the HeadStart navy and gold identity, refined:
     - one type scale and one spacing scale,

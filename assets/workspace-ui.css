@@ -532,7 +532,7 @@ html.dark .uxp-cal-seg button[aria-pressed="true"]{background:rgba(255,255,255,.
 .uxp-cal-month[hidden],.uxp-cal-upcoming[hidden]{display:none!important;}
 /* No repeated numbers: the member header chips are the board's quick filters. */
 .tab-panel .sub-panel>.stats-row{display:none;}
-.member-head button.mh-stat{font:inherit;line-height:inherit;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease;}
+.member-head button.mh-stat{font-family:inherit;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease;}
 .member-head button.mh-stat:hover{box-shadow:0 0 0 2px rgba(240,179,35,.45);}
 .member-head button.mh-stat:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
 /* Header: dark mode and settings live in the More menu; the sync status is a light. */
@@ -551,3 +551,93 @@ html.dark .uxp-cal-seg button[aria-pressed="true"]{background:rgba(255,255,255,.
 .widget.collapsed>.widget-head .cal-nav-mini{display:none;}
 /* Tab panels set z-index:1, which would trap the drawer under the header and its backdrop. */
 @media(max-width:980px){body.uxp-drawer-open .tab-panel.active{z-index:auto!important;}}
+
+/* =====================================================================
+   DESIGN REFRESH (October 2026): calm, elegant, easy to read.
+   One radius, spacing and type scale; a softly tinted page with crisp
+   white cards; quiet shadows; consistent controls. Colour is kept for
+   meaning: status, people and alerts. Loaded last, so it wins; the
+   !important flags only answer earlier layers that use them too.
+   ===================================================================== */
+:root{
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;
+  --fs-xs:11.5px;--fs-sm:12.5px;--fs-md:14px;--fs-lg:16px;--fs-xl:20px;
+  --ease:cubic-bezier(.2,.8,.2,1);--t-fast:140ms;--t-med:220ms;
+}
+html:not(.dark){
+  --canvas:#F4F6FA;--card:#FFFFFF;--card-border:rgba(16,24,40,.08);
+  --card-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);
+  --card-shadow-hover:0 2px 4px rgba(16,24,40,.05),0 12px 28px -14px rgba(16,24,40,.22);
+  --field:#FFFFFF;--field-border:rgba(16,24,40,.16);--ring:0 0 0 3px rgba(0,48,87,.16);
+  --icon-chip:rgba(0,48,87,.07);
+}
+html.dark{
+  --card-border:rgba(255,255,255,.08);--card-shadow:none;
+  --card-shadow-hover:0 12px 28px -14px rgba(0,0,0,.65);
+  --field:rgba(255,255,255,.04);--field-border:rgba(255,255,255,.16);--ring:0 0 0 3px rgba(155,214,255,.24);
+  --icon-chip:rgba(155,214,255,.10);
+}
+
+/* 1. Page and cards */
+html:not(.dark) body:not(.request-mode),
+html:not(.dark) body:is(.theme-overview,.theme-boss,.theme-dew,.theme-o,.theme-junior):not(.request-mode){background:var(--canvas)!important;}
+.ov-card,.widget,.stat-box,#panel-overview .ov-stat,.member-head{
+  border-radius:var(--r-lg)!important;border:1px solid var(--card-border)!important;
+  box-shadow:var(--card-shadow)!important;
+  transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
+}
+#panel-overview .ov-card{padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-4);}
+@media(hover:hover){
+  #panel-overview .ov-card:hover,.tab-panel .side-col>.widget:hover{box-shadow:var(--card-shadow-hover)!important;}
+}
+.task-card{border-radius:14px!important;}
+.kb-col{border-radius:var(--r-lg)!important;}
+#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--sp-4);}
+#panel-overview .ov-grid{gap:var(--sp-5);}
+
+/* Card headers and titles */
+.ov-card-head,.widget-head{gap:var(--sp-3);}
+#panel-overview .ov-card-head{margin-bottom:var(--sp-3);}
+.ov-card-title,.widget-title{font-size:var(--fs-md);font-weight:700;letter-spacing:-.1px;}
+.ov-card-title>i.ti:first-child,.widget-title>i.ti:first-of-type{
+  display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
+  margin-right:2px;border-radius:var(--r-sm);background:var(--icon-chip);font-size:15px;
+}
+
+/* 2. Controls */
+.btn{border-radius:10px!important;font-weight:700;transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease,transform 80ms ease;}
+.btn-sm{border-radius:var(--r-sm)!important;}
+html:not(.dark) .btn-navy{background:var(--navy)!important;color:#fff!important;box-shadow:0 1px 2px rgba(0,48,87,.25),0 6px 14px -8px rgba(0,48,87,.5)!important;}
+html:not(.dark) .btn-navy:hover{background:#0A4170!important;}
+.btn-ghost{border:1px solid var(--card-border)!important;}
+html:not(.dark) .btn-ghost:hover{background:var(--gray-light)!important;}
+.form-input,.form-select,.form-textarea{
+  border-radius:var(--r-md)!important;background:var(--field)!important;border:1px solid var(--field-border)!important;
+  font-size:var(--fs-md);transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--navy)!important;box-shadow:var(--ring)!important;}
+html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textarea:focus{border-color:#9bd6ff!important;}
+.form-label{font-size:var(--fs-xs);font-weight:700;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
+.fpill,.ov-fpill{transition:background var(--t-fast) ease,color var(--t-fast) ease,border-color var(--t-fast) ease;}
+
+/* Dialogs */
+.modal{border-radius:20px!important;}
+.modal-header{border-bottom:1px solid var(--card-border);}
+.modal-footer{border-top:1px solid var(--card-border);}
+
+/* Empty states */
+.ov-empty-sm,.empty-state,.evb-empty{color:var(--muted);font-size:var(--fs-sm);text-align:center;}
+.ov-empty-sm{padding:var(--sp-5) var(--sp-3);}
+
+/* 3. Tabs and navigation */
+.tab-nav .tab-btn{transition:background var(--t-fast) ease,color var(--t-fast) ease,border-color 200ms ease;}
+@media(hover:hover){.tab-nav .tab-btn:not(.a-active):hover{background:rgba(255,255,255,.08)!important;}}
+.sub-nav .sub-tab{transition:background var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease;}
+
+/* 4. Numbers line up */
+.ov-stat-num,.stat-num,.team-load b,.ov-cdn-n,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
+
+@media(prefers-reduced-motion:reduce){
+  .ov-card,.widget,.stat-box,.btn,.form-input,.form-select,.form-textarea,.tab-nav .tab-btn,.sub-nav .sub-tab,.fpill,.ov-fpill{transition:none!important;}
+}
