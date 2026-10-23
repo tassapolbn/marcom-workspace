@@ -641,3 +641,7 @@ html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textare
 @media(prefers-reduced-motion:reduce){
   .ov-card,.widget,.stat-box,.btn,.form-input,.form-select,.form-textarea,.tab-nav .tab-btn,.sub-nav .sub-tab,.fpill,.ov-fpill{transition:none!important;}
 }
+
+/* Dialogs opened from the widget drawer sit above it; merged widgets stay hidden. */
+body.uxp-drawer-open .modal-overlay,body.uxp-drawer-open .confirm-overlay,body.uxp-drawer-open .cmdk-overlay{z-index:700!important;}
+body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}

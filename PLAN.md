@@ -232,3 +232,43 @@ All motion respects the system "reduce motion" setting.
 ## Not in this plan
 - Rewriting `index.html` into modules, and the open security item in `UI-CODE-REVIEW.md`.
 - Any change to Firestore rules, Netlify functions or stored data formats.
+
+---
+
+# Follow-up plan (24 Oct 2026): approved by Boss, with the suggested decisions
+
+Steps 1–15 are done. Codex built steps 1–7 and Claude built steps 8–15 while Codex was at its usage
+limit. These are the next items, with Codex building again from about 05:48 when its limit resets.
+
+- [x] **16. Codex reviews the steps Claude built (8–15)**
+  - Read-only: Codex runs with `-s read-only` and changes nothing. It reports any bugs, gaps or
+    risky code in the step 8–15 commits. Claude checks each finding, and fixes go through the
+    usual one-step routine.
+  - Why: a second pair of eyes on code that Codex did not write and nobody else has reviewed.
+
+- [ ] **17. The server checks real dates and times on requests (review item P2)**
+  - Files: `netlify/functions/submit-request.js`, the Request Centre form in `index.html` (error display), a new test file
+  - Impossible dates (31 February) and times (29:70) are refused, and a photography request's
+    end time must be after its start time. Each error is reported for its field, so the requester
+    sees what to fix next to the field instead of a silent blank.
+  - Test: server tests for good, impossible and missing values; the preview form shows the field errors.
+
+- [ ] **18. Safer request tracking (review item P1)** *(needs your decision below)*
+  - Files: `netlify/functions/request-status.js`, the tracker in `index.html`, tests
+  - Today anyone who knows a requester's email address can list that person's requests. Suggested
+    now: tracking needs the request number **and** the email, and shows only that one request.
+    Later, once email sending is set up, a one-time code by email can replace it.
+  - Test: the wrong number, the wrong email, or an email alone return nothing; the right pair
+    returns exactly one request with the same few fields as today.
+
+- [ ] **19. Remove styles for parts that no longer exist (first step of the style clean-up)**
+  - Files: `index.html` (inline style blocks)
+  - Delete the CSS for Today's Focus, Today at a Glance, the old availability, workload and leave
+    cards, Quick Actions and the old "who is free" card, after checking that no element uses each selector.
+  - Test: a test confirms those selectors are gone, and the preview looks the same in both themes at
+    three widths.
+
+## Decisions needed
+1. Tracking: request number + email now, email code later? *(Claude suggests yes)*
+2. Do the Codex review (step 16) first? *(Claude suggests yes)*
+3. Before 05:48: wait for Codex, or let Claude start step 17 now? *(Either is fine)*

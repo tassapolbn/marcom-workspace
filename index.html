@@ -4900,6 +4900,9 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.ovAnnCompose=function(force){
     var card=document.getElementById('ov-ann-card'),btn=document.getElementById('ov-ann-new'); if(!card)return;
     var closed=typeof force==='boolean'?!force:undefined;
+    if((closed===false||(closed===undefined&&card.classList.contains('ov-ann-closed')))&&card.classList.contains('uxp-collapsed')){
+      var fold=card.querySelector('.uxp-col-btn'); if(fold)fold.click();
+    }
     if(typeof window.MarcomMotion!=='undefined')closed=window.MarcomMotion.toggle(card,'ov-ann-closed',closed,{reveal:':scope>.ov-ann-compose'});
     else{ if(typeof closed!=='boolean')closed=!card.classList.contains('ov-ann-closed'); card.classList.toggle('ov-ann-closed',closed); }
     if(btn){ btn.setAttribute('aria-expanded',closed?'false':'true'); btn.innerHTML=closed?'<i class="ti ti-plus"></i> New':'<i class="ti ti-x"></i> Close'; }
@@ -5057,8 +5060,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function renderTeam(){
     var el=document.getElementById('team-list'); if(!el)return;
     var counts=MORDER.map(function(w){ return {w:w,n:tReal(w).filter(isActive).length}; });
-    var max=1,total=0;
-    counts.forEach(function(c){ max=Math.max(max,c.n); total+=c.n; });
+    var max=1,total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },0);
+    counts.forEach(function(c){ max=Math.max(max,c.n); });
     MarcomUI.setHTML(el,counts.map(function(c){
       var w=c.w,lvl=c.n<=5?'low':(c.n<=12?'med':'high');
       var lbl=c.n<=5?'Low':(c.n<=12?'Medium':'High');
@@ -8008,17 +8011,37 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
 <script id="widget-collapse-script">
 (function(){
   function widgetKey(w){
+    if(w.classList.contains('gcal-widget'))return 'bb_wcol_Calendar';
     var t=w.querySelector('.widget-title');
     return 'bb_wcol_'+(t?t.textContent.trim():'');
+  }
+  function widgetControl(w,collapsed){
+    var t=w.querySelector('.widget-title'); if(!t)return;
+    t.setAttribute('tabindex','0'); t.setAttribute('role','button');
+    t.setAttribute('aria-expanded',collapsed?'false':'true');
   }
   /* Member-tab widgets start folded on a first visit, so the whole list fits on one
      screen with each header's key number; '0' means it was opened before. */
   function applyState(w){
-    var v=null; try{ v=localStorage.getItem(widgetKey(w)); }catch(e){}
-    if(v==='1'||(v!=='0'&&!w.closest('#panel-overview'))) w.classList.add('collapsed');
+    var key=widgetKey(w),v=null;
+    try{
+      v=localStorage.getItem(key);
+      if(key==='bb_wcol_Calendar'&&v===null){
+        v=localStorage.getItem('bb_wcol_Google Calendar');
+        if(v!==null)localStorage.setItem(key,v);
+      }
+    }catch(e){}
+    var shouldFold=v==='1'||(v!=='0'&&!w.closest('#panel-overview'));
+    w.classList.toggle('collapsed',shouldFold);
+    widgetControl(w,shouldFold);
   }
   function scan(root){
     (root||document).querySelectorAll('.widget').forEach(applyState);
+  }
+  function toggleWidget(widget){
+    var collapsed=typeof window.MarcomMotion !== 'undefined' ? window.MarcomMotion.toggle(widget,'collapsed',undefined,{reveal:':scope>.widget-body'}) : widget.classList.toggle('collapsed');
+    widgetControl(widget,collapsed);
+    try{ localStorage.setItem(widgetKey(widget),collapsed?'1':'0'); }catch(e){}
   }
   document.addEventListener('click',function(e){
     var head=e.target.closest('.widget-head');
@@ -8026,8 +8049,14 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
     if(e.target.closest('button,select,input,a,textarea')) return;
     var widget=head.closest('.widget');
     if(!widget) return;
-    var collapsed=typeof window.MarcomMotion !== 'undefined' ? window.MarcomMotion.toggle(widget,'collapsed',undefined,{reveal:':scope>.widget-body'}) : widget.classList.toggle('collapsed');
-    localStorage.setItem(widgetKey(widget),collapsed?'1':'0');
+    toggleWidget(widget);
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    var title=e.target.closest('.widget-title');
+    if(!title||e.target!==title||!title.closest('.widget-head'))return;
+    var widget=title.closest('.widget'); if(!widget)return;
+    e.preventDefault(); toggleWidget(widget);
   });
   scan();
   new MutationObserver(function(muts){
@@ -10887,8 +10916,21 @@ html.dark .uxp-rail-btn{color:#8fb4dc;}
     return b;
   }
   function drawerKeys(e){
-    if(e.key!=='Escape'||!document.body.classList.contains('uxp-drawer-open'))return;
-    e.preventDefault(); e.stopImmediatePropagation(); window.uxpDrawer(false);
+    if(!document.body.classList.contains('uxp-drawer-open'))return;
+    if(document.querySelector('.modal-overlay.open,.confirm-overlay.open,.cmdk-overlay.open,#uxp-modal.open'))return;
+    if(e.key==='Escape'){
+      e.preventDefault(); e.stopImmediatePropagation(); window.uxpDrawer(false); return;
+    }
+    if(e.key!=='Tab')return;
+    var panel=activePanel(),col=panel&&panel.querySelector('.two-col>.side-col'); if(!col)return;
+    var items=Array.prototype.filter.call(col.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),function(el){
+      return !el.matches(':disabled')&&el.tabIndex!==-1&&el.getClientRects().length>0&&window.getComputedStyle(el).visibility!=='hidden';
+    });
+    if(!items.length){ e.preventDefault(); return; }
+    var first=items[0],last=items[items.length-1],ae=document.activeElement;
+    if(items.indexOf(ae)===-1||(e.shiftKey?ae===first:ae===last)){
+      e.preventDefault(); (e.shiftKey?last:first).focus();
+    }
   }
   window.uxpDrawer=function(open){
     var body=document.body; open=!!open;

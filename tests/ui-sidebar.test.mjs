@@ -52,7 +52,7 @@ test('member-tab widgets start folded unless they were opened before',()=>{
   vm.runInContext(slice('  function widgetKey(w){','  function scan(root){')+'\nthis.applyState=applyState;',context);
   function w(title,overview=false){
     const set=new Set();
-    return {set,classList:{add:n=>set.add(n)},querySelector:()=>({textContent:title}),closest:sel=>overview&&sel==='#panel-overview'?{}:null};
+    return {set,classList:{contains:n=>set.has(n),toggle:(n,on)=>{on?set.add(n):set.delete(n);}},querySelector:()=>({textContent:title,setAttribute(){}}),closest:sel=>overview&&sel==='#panel-overview'?{}:null};
   }
   const fresh=w('Sick Leave');context.applyState(fresh);
   assert.ok(fresh.set.has('collapsed'),'nothing stored: folded');

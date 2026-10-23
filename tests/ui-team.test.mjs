@@ -19,7 +19,7 @@ function team({tasks={},sick={},leave={},calendar={},missing=[],names={},lieuTex
   if(lieuText)window.LIEU_balanceText=lieuText;
   const context=vm.createContext({window,document:{getElementById:id=>nodes[id]},
     MORDER:['boss','dew','o','junior'],
-    tReal:w=>tasks[w]||[],isActive:t=>t.status!=='done'&&t.status!=='canceled',
+    tReal:w=>tasks[w]||[],tOf:w=>tasks[w]||[],isActive:t=>t.status!=='done'&&t.status!=='canceled',
     statusOf:w=>leave[w]?{l:leave[w],c:'ov-st-sick',i:'ti-heart-broken'}:{l:'Available',c:'ov-st-ok',i:'ti-circle-check'},
     sOf:w=>sick[w]||[],lOf:()=>[],esc:escape,nm:w=>names[w]||w.toUpperCase(),roleOf:()=>'Role',iconOf:()=>'ti-user',
     MarcomUI:{setHTML:(el,html)=>{el.innerHTML=html;}}});
