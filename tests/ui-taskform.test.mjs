@@ -156,7 +156,7 @@ test('summary counts links and notes, excludes date, and safely uses plain text'
   h.fields['m-notes'].value = 'Notes content';
   h.links.push({ url: 'https://example.com/a' }, { url: ' ' }, { url: 'https://example.com/b' });
   h.window.tfSummary();
-  assert.equal(h.summary(), 'Assigned by <b>Khun Miki</b> \u00c2\u00b7 Work \u00c2\u00b7 Attachment \u00c2\u00b7 2 links \u00c2\u00b7 Notes');
+  assert.equal(h.summary(), 'Assigned by <b>Khun Miki</b> \u00b7 Work \u00b7 Attachment \u00b7 2 links \u00b7 Notes');
   assert.ok(!h.summary().includes('2026-10-24'));
   h.window.tfToggleMore(true);
   assert.equal(h.summary(), '');
@@ -209,10 +209,10 @@ test('delegated inputs, changes, and Add Link clicks refresh the summary', () =>
   assert.equal(h.summary(), 'Notes');
   h.fields['m-cat'].value = 'Work';
   listeners.change();
-  assert.equal(h.summary(), 'Work \u00c2\u00b7 Notes');
+  assert.equal(h.summary(), 'Work \u00b7 Notes');
   h.links.push({ url: 'https://example.com' });
   listeners.click();
-  assert.equal(h.summary(), 'Work \u00c2\u00b7 1 link \u00c2\u00b7 Notes');
+  assert.equal(h.summary(), 'Work \u00b7 1 link \u00b7 Notes');
 });
 
 test('Add defaults Assigned Date and syncs before offering drafts; Edit syncs before opening', () => {
