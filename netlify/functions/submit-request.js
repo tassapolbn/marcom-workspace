@@ -4,6 +4,7 @@
    the assigned task with the Admin SDK, and records any automation failure. */
 const crypto = require('crypto');
 const { admin, getDb, rateLimited, json, clientIp } = require('./lib/admin');
+const { scheduleErrors } = require('./lib/request-validation');
 
 const TYPES = {
   design: { label: 'Graphic Design Request', short: 'Graphic Design', ws: 'dew',
@@ -15,8 +16,6 @@ const TYPES = {
 const LONG = new Set(['purpose', 'wording', 'instructions', 'comments', 'moments', 'deliverablesText']);
 const SHORT_MAX = 300, LONG_MAX = 5000, NAME_MAX = 120;
 const ARRAY_FIELDS = new Set(['photoTypes', 'deliverables', 'usage']);
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE = /^\d{2}:\d{2}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const CTRL_RE = new RegExp('[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]', 'g');
 
@@ -138,9 +137,8 @@ exports.handler = async (event) => {
   const missing = T.required.filter(k => !d[k]);
   if (missing.length) return json(400, { ok: false, error: 'Missing required fields: ' + missing.join(', ') });
   if (!EMAIL_RE.test(d.email)) return json(400, { ok: false, error: 'Invalid email address' });
-  if (!DATE_RE.test(d.deadline)) return json(400, { ok: false, error: 'Invalid deadline date' });
-  if (d.eventDate && !DATE_RE.test(d.eventDate)) return json(400, { ok: false, error: 'Invalid event date' });
-  for (const tk of ['startTime', 'endTime']) if (d[tk] && !TIME_RE.test(d[tk])) d[tk] = '';
+  const fieldErrors = scheduleErrors(body.type, d);
+  if (Object.keys(fieldErrors).length) return json(400, { ok: false, error: 'Please check the highlighted fields.', fields: fieldErrors });
 
   let db;
   try { db = getDb(); } catch (e) { console.error(e); return json(500, { ok: false, error: 'Service not configured' }); }

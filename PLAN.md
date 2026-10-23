@@ -246,7 +246,7 @@ limit. These are the next items, with Codex building again from about 05:48 when
     usual one-step routine.
   - Why: a second pair of eyes on code that Codex did not write and nobody else has reviewed.
 
-- [ ] **17. The server checks real dates and times on requests (review item P2)**
+- [x] **17. The server checks real dates and times on requests (review item P2)**
   - Files: `netlify/functions/submit-request.js`, the Request Centre form in `index.html` (error display), a new test file
   - Impossible dates (31 February) and times (29:70) are refused, and a photography request's
     end time must be after its start time. Each error is reported for its field, so the requester

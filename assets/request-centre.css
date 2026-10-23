@@ -86,3 +86,7 @@ body.request-mode #rc-root .rc-lang button:focus-visible {outline:2px solid #fff
   body.request-mode #rc-root .rc-link-row {flex-wrap:wrap;}
   body.request-mode #rc-root .rc-link-row .form-input {min-width:0;flex:1 1 180px;}
 }
+.rc-field-msg{margin-top:5px;font-size:12px;font-weight:600;color:#b42318;}
+html.dark .rc-field-msg{color:#ffb4a8;}
+.t24.rc-err select{border-color:#b42318!important;box-shadow:0 0 0 3px rgba(180,35,24,.12);}
+html.dark .t24.rc-err select{border-color:#ffb4a8!important;}

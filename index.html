@@ -9440,6 +9440,14 @@ dlv_add:'เพิ่มชิ้นงาน',dlv_hint:'เพิ่มหน�
 dlv_type:'ประเภทงาน',dlv_orient:'แนวงาน',dlv_size:'ขนาด',dlv_qty:'จำนวนแบบ',dlv_none:'ยังไม่มีชิ้นงาน กด "เพิ่มชิ้นงาน" เพื่อเริ่ม',
 dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'กรุณาเพิ่มอย่างน้อยหนึ่งชิ้นงาน',dlv_remove:'ลบชิ้นงานนี้'}
   };
+  RC_UI.en.err_date='Please choose a real date.';
+  RC_UI.en.err_time='Please enter a time between 00:00 and 23:59.';
+  RC_UI.en.err_end='The end time must be after the start time.';
+  RC_UI.en.err_fields='Please check the highlighted fields.';
+  RC_UI.th.err_date='\u0e01\u0e23\u0e38\u0e13\u0e32\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e17\u0e35\u0e48\u0e21\u0e35\u0e2d\u0e22\u0e39\u0e48\u0e08\u0e23\u0e34\u0e07';
+  RC_UI.th.err_time='\u0e01\u0e23\u0e38\u0e13\u0e32\u0e43\u0e2a\u0e48\u0e40\u0e27\u0e25\u0e32\u0e23\u0e30\u0e2b\u0e27\u0e48\u0e32\u0e07 00:00 \u0e16\u0e36\u0e07 23:59';
+  RC_UI.th.err_end='\u0e40\u0e27\u0e25\u0e32\u0e2a\u0e34\u0e49\u0e19\u0e2a\u0e38\u0e14\u0e15\u0e49\u0e2d\u0e07\u0e2d\u0e22\u0e39\u0e48\u0e2b\u0e25\u0e31\u0e07\u0e40\u0e27\u0e25\u0e32\u0e40\u0e23\u0e34\u0e48\u0e21';
+  RC_UI.th.err_fields='\u0e01\u0e23\u0e38\u0e13\u0e32\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a\u0e0a\u0e48\u0e2d\u0e07\u0e17\u0e35\u0e48\u0e44\u0e2e\u0e44\u0e25\u0e15\u0e4c\u0e44\u0e27\u0e49';
   function U(k){var l=rcLang();return (RC_UI[l]&&RC_UI[l][k])||RC_UI.en[k]||k;}
   var RC_TH={
    'Graphic Design Request':'คำขอออกแบบกราฟิก','Photography Request':'คำขอถ่ายภาพ','Graphic Design':'งานออกแบบกราฟิก','Photography':'งานถ่ายภาพ',
@@ -9895,6 +9903,11 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
   }
   window.rcSubmit=function(key){
     var T=typeOf(key);if(!T)return;
+    document.querySelectorAll('.rc-field-msg').forEach(function(msg){
+      var el=document.getElementById('rcf-'+msg.id.slice(4));
+      if(el){ el.classList.remove('rc-err'); var tw=el.closest&&el.closest('.t24'); if(tw)tw.classList.remove('rc-err'); }
+      msg.remove();
+    });
     rcReadStep();
     var d={};
     allFields(T).forEach(function(f){
@@ -9944,6 +9957,26 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     fetch('/.netlify/functions/submit-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
       .then(function(res){return res.json().catch(function(){return {};}).then(function(j){return {ok:res.ok,j:j};});})
       .then(function(x){
+        if(x.j&&x.j.fields&&typeof x.j.fields==='object'&&!Array.isArray(x.j.fields)){
+          var first=null;
+          var messages={invalid_date:'err_date',invalid_time:'err_time',end_before_start:'err_end'};
+          Object.keys(x.j.fields).forEach(function(key){
+            var el=document.getElementById('rcf-'+key);if(!el)return;
+            /* A 24-hour time is a hidden input inside its picker: mark and label the picker. */
+            var anchor=(el.type==='hidden'&&el.closest&&el.closest('.t24'))||el;
+            el.classList.add('rc-err'); anchor.classList.add('rc-err');
+            var msg=document.createElement('div');
+            msg.className='rc-field-msg';msg.id='rcm-'+key;msg.setAttribute('role','alert');
+            msg.textContent=U(messages[x.j.fields[key]]||'err_fields');
+            anchor.insertAdjacentElement('afterend',msg);
+            if(!first)first=(anchor!==el&&anchor.querySelector('select'))||el;
+          });
+          var errBox=document.getElementById('rc-step-err');
+          if(errBox){errBox.textContent=U('err_fields');errBox.style.display='block';}
+          if(first){try{first.focus();first.scrollIntoView({block:'center',behavior:motionBehavior()});}catch(e){}}
+          if(btn){btn.disabled=false;btn.innerHTML='<i class="ti ti-send"></i> '+esc(U('submit'));}
+          return;
+        }
         if(!x.ok||!x.j||x.j.ok!==true||!x.j.refNo)throw new Error((x.j&&x.j.error)||'Submission failed');
         d.refNo=x.j.refNo;
         try{
