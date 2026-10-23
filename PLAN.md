@@ -253,7 +253,7 @@ limit. These are the next items, with Codex building again from about 05:48 when
     sees what to fix next to the field instead of a silent blank.
   - Test: server tests for good, impossible and missing values; the preview form shows the field errors.
 
-- [ ] **18. Safer request tracking (review item P1)** *(needs your decision below)*
+- [x] **18. Safer request tracking (review item P1)** *(needs your decision below)*
   - Files: `netlify/functions/request-status.js`, the tracker in `index.html`, tests
   - Today anyone who knows a requester's email address can list that person's requests. Suggested
     now: tracking needs the request number **and** the email, and shows only that one request.
