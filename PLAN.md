@@ -186,7 +186,7 @@ All motion respects the system "reduce motion" setting.
   - The payday strip starts as one compact line on every tab (days left, payday date, progress), with a "details" toggle.
   - Test: each card works in both themes and at phone width, and nothing that was there before is lost.
 
-- [ ] **12. Member tabs: a sidebar that slides away, widgets easy to find**
+- [x] **12. Member tabs: a sidebar that slides away, widgets easy to find**
   - Files: `index.html` (member sidebars, the "Hide widgets" toggle, widget collapse script, Google Calendar and Upcoming Events widgets, header buttons)
   - The widget column becomes a proper sidebar. It slides closed so the task board gets the full width,
     and slides back open, and the choice is remembered. On tablets and phones it opens as a drawer from the side.

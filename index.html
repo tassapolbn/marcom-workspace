@@ -7810,9 +7810,21 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
            dew:{role:'Graphic Designer',icon:'ti-palette'},
            o:{role:'Photographer & Video Editor',icon:'ti-camera'},
            junior:{role:'Junior Events Coordinator',icon:'ti-user-plus'}};
-  var STAT_CHIPS='<span class="mh-stat mh-stat-active"><i class="ti ti-clipboard-list"></i> <b>0</b> Active</span>'
-                +'<span class="mh-stat mh-stat-soon"><i class="ti ti-alarm"></i> <b>0</b> Due Soon</span>'
-                +'<span class="mh-stat mh-stat-done"><i class="ti ti-circle-check"></i> <b>0</b> Done</span>';
+  /* The header numbers are also the quickest filters for the board below. */
+  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> Active</button>'
+                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> Due Soon</button>'
+                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> Done</button>';
+  document.addEventListener('click',function(e){
+    var chip=e.target&&e.target.closest?e.target.closest('.member-head .mh-stat[data-f]'):null; if(!chip)return;
+    var panel=chip.closest('.tab-panel'); if(!panel)return;
+    var w=panel.id.replace(/^panel-/,''),f=chip.getAttribute('data-f');
+    var tasksBtn=panel.querySelector('.sub-nav .st-tasks');
+    if(tasksBtn&&typeof switchSub==='function'){ try{ switchSub(w,'tasks',tasksBtn); }catch(err){} }
+    var pill=panel.querySelector('.fpill[data-who="'+w+'"][data-f="'+f+'"]');
+    if(typeof setFilter==='function'){ try{ setFilter(w,f,pill); }catch(err){} }
+    var list=document.getElementById(w+'-list');
+    if(list){ try{ list.scrollIntoView({behavior:(typeof motionBehavior==='function'?motionBehavior():'auto'),block:'start'}); }catch(err){} }
+  });
   function ensureHeads(){
     Object.keys(DEF).forEach(function(w){
       var panel=document.getElementById('panel-'+w); if(!panel) return;
@@ -7999,8 +8011,11 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
     var t=w.querySelector('.widget-title');
     return 'bb_wcol_'+(t?t.textContent.trim():'');
   }
+  /* Member-tab widgets start folded on a first visit, so the whole list fits on one
+     screen with each header's key number; '0' means it was opened before. */
   function applyState(w){
-    if(localStorage.getItem(widgetKey(w))==='1') w.classList.add('collapsed');
+    var v=null; try{ v=localStorage.getItem(widgetKey(w)); }catch(e){}
+    if(v==='1'||(v!=='0'&&!w.closest('#panel-overview'))) w.classList.add('collapsed');
   }
   function scan(root){
     (root||document).querySelectorAll('.widget').forEach(applyState);
@@ -10796,7 +10811,7 @@ html.dark .uxp-rail-btn{color:#8fb4dc;}
   if(window.__uxpSbInit)return; window.__uxpSbInit=true;
   var KEY='uxp_sb_collapsed';
   function isCollapsed(){ try{return localStorage.getItem(KEY)==='1';}catch(e){return false;} }
-  function widgetsOf(col){ return [].slice.call(col.children).filter(function(el){ return el.classList&&el.classList.contains('widget'); }); }
+  function widgetsOf(col){ return [].slice.call(col.children).filter(function(el){ return el.classList&&el.classList.contains('widget')&&!el.hidden; }); }
   function labelOf(w){
     var t=w.querySelector('.widget-title');
     var txt=t?t.textContent.replace(/\s+/g,' ').trim():'Widget';
@@ -10833,18 +10848,129 @@ html.dark .uxp-rail-btn{color:#8fb4dc;}
     var v=isCollapsed();
     document.querySelectorAll('.uxp-sb-toggle').forEach(function(b){
       b.setAttribute('aria-expanded',v?'false':'true');
-      b.setAttribute('aria-label',v?'Show widget sidebar':'Hide widget sidebar');
-      b.title=v?'Show widget sidebar':'Hide widget sidebar';
-      b.innerHTML=v?'<i class="ti ti-chevrons-left"></i>':'<i class="ti ti-chevrons-right"></i><span class="uxp-sb-lbl">Hide widgets</span>';
+      b.setAttribute('aria-label',v?'Show sidebar':'Hide sidebar');
+      b.title=v?'Show sidebar':'Hide sidebar';
+      b.innerHTML=v?'<i class="ti ti-chevrons-left"></i>':'<i class="ti ti-chevrons-right"></i><span class="uxp-sb-lbl">Hide sidebar</span>';
     });
   }
+  /* On desktop the widgets fade out before the column slides closed, and fade in
+     after it opens, so nothing vanishes abruptly. */
   function setCollapsed(v){
+    var body=document.body,was=body.classList.contains('uxp-sb-collapsed');
+    var animate=!!v!==was&&window.innerWidth>980&&!(window.MarcomMotion&&MarcomMotion.reduced());
+    if(animate&&v){
+      body.classList.add('uxp-sb-leaving');
+      setTimeout(function(){ body.classList.remove('uxp-sb-leaving'); applyCollapsed(true); },140);
+      return;
+    }
+    if(animate&&!v){
+      body.classList.add('uxp-sb-entering');
+      applyCollapsed(false);
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ body.classList.remove('uxp-sb-entering'); }); });
+      return;
+    }
+    applyCollapsed(v);
+  }
+  function applyCollapsed(v){
     document.body.classList.toggle('uxp-sb-collapsed',!!v);
     try{localStorage.setItem(KEY,v?'1':'0');}catch(e){}
     if(v)document.querySelectorAll('.side-col').forEach(buildRail);
     paintToggles();
   }
   window.uxpSbToggle=function(){ setCollapsed(!isCollapsed()); };
+  /* ---- tablets and phones: the widgets open as a drawer from the right ---- */
+  var drawerOpener=null;
+  function activePanel(){ return document.querySelector('.tab-panel.active'); }
+  function backdrop(){
+    var b=document.getElementById('uxp-drawer-backdrop');
+    if(!b){ b=document.createElement('div'); b.id='uxp-drawer-backdrop'; b.className='uxp-drawer-backdrop'; b.addEventListener('click',function(){ window.uxpDrawer(false); }); document.body.appendChild(b); }
+    return b;
+  }
+  function drawerKeys(e){
+    if(e.key!=='Escape'||!document.body.classList.contains('uxp-drawer-open'))return;
+    e.preventDefault(); e.stopImmediatePropagation(); window.uxpDrawer(false);
+  }
+  window.uxpDrawer=function(open){
+    var body=document.body; open=!!open;
+    if(open===body.classList.contains('uxp-drawer-open'))return;
+    backdrop();
+    body.classList.toggle('uxp-drawer-open',open);
+    document.documentElement.classList.toggle('uxp-drawer-lock',open);
+    document.querySelectorAll('.uxp-drawer-btn').forEach(function(b){ b.setAttribute('aria-expanded',open?'true':'false'); });
+    var panel=activePanel(),col=panel&&panel.querySelector('.two-col>.side-col');
+    if(open){
+      /* Some browsers do not focus a clicked button, so fall back to this tab's Widgets button. */
+      var ae=document.activeElement;
+      drawerOpener=(ae&&ae!==document.body&&ae!==document.documentElement)?ae:(panel&&panel.querySelector('.uxp-drawer-btn'));
+      document.addEventListener('keydown',drawerKeys,true);
+      var x=col&&col.querySelector('.uxp-drawer-close'); if(x)setTimeout(function(){ try{ x.focus(); }catch(e){} },30);
+    }else{
+      document.removeEventListener('keydown',drawerKeys,true);
+      if(drawerOpener&&drawerOpener.focus){ try{ drawerOpener.focus(); }catch(e){} }
+      drawerOpener=null;
+    }
+  };
+  function decorateDrawer(panel){
+    var col=panel.querySelector('.two-col>.side-col'),nav=panel.querySelector('.sub-nav'); if(!col)return;
+    if(!col.querySelector(':scope>.uxp-drawer-head')){
+      var nmEl=panel.querySelector('.member-name'),who=nmEl?nmEl.textContent.trim():'Widgets';
+      var head=document.createElement('div'); head.className='uxp-drawer-head';
+      var t=document.createElement('div'); t.className='uxp-drawer-title'; t.textContent=who+' \u00b7 widgets';
+      var x=document.createElement('button'); x.type='button'; x.className='uxp-drawer-close'; x.setAttribute('aria-label','Close widgets'); x.innerHTML='<i class="ti ti-x"></i>';
+      x.onclick=function(){ window.uxpDrawer(false); };
+      head.appendChild(t); head.appendChild(x); col.insertBefore(head,col.firstChild);
+      col.setAttribute('aria-label',who+' widgets');
+    }
+    if(nav&&!nav.querySelector('.uxp-drawer-btn')){
+      var b=document.createElement('button'); b.type='button'; b.className='uxp-drawer-btn'; b.setAttribute('aria-expanded','false');
+      b.innerHTML='<i class="ti ti-layout-sidebar-right"></i> Widgets';
+      b.onclick=function(){ window.uxpDrawer(true); };
+      nav.appendChild(b);
+    }
+  }
+  /* ---- one Calendar widget: Month and Upcoming views of the same calendar ---- */
+  var CAL_KEY='uxp_cal_view';
+  function calView(widget,view){
+    view=view==='upcoming'?'upcoming':'month';
+    var month=widget.querySelector('.uxp-cal-month'),up=widget.querySelector('.uxp-cal-upcoming');
+    if(month)month.hidden=view!=='month';
+    if(up)up.hidden=view!=='upcoming';
+    Array.prototype.forEach.call(widget.querySelectorAll('.uxp-cal-seg button'),function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-view')===view?'true':'false'); });
+    return view;
+  }
+  window.uxpCalView=function(btn,view){
+    var w=btn&&btn.closest?btn.closest('.widget'):null; if(!w)return;
+    view=calView(w,view);
+    try{ localStorage.setItem(CAL_KEY,view); }catch(e){}
+    document.querySelectorAll('.tab-panel .gcal-widget').forEach(function(o){ if(o!==w)calView(o,view); });
+  };
+  function mergeCalendar(panel){
+    var cal=panel.querySelector('.side-col .gcal-widget'),up=panel.querySelector('.side-col .upcoming-widget');
+    if(!cal||!up||cal.querySelector('.uxp-cal-seg'))return;
+    var calBody=cal.querySelector('.widget-body'),upInner=up.querySelector('.widget-body>*');
+    if(!calBody||!upInner)return;
+    var month=document.createElement('div'); month.className='uxp-cal-month';
+    while(calBody.firstChild)month.appendChild(calBody.firstChild);
+    var upcoming=document.createElement('div'); upcoming.className='uxp-cal-upcoming';
+    upcoming.appendChild(upInner);
+    calBody.appendChild(month); calBody.appendChild(upcoming);
+    up.hidden=true;
+    var title=cal.querySelector('.widget-title');
+    if(title){ var tn=Array.prototype.filter.call(title.childNodes,function(n){ return n.nodeType===3&&n.textContent.trim(); })[0]; if(tn)tn.textContent=' Calendar'; }
+    var seg=document.createElement('div'); seg.className='uxp-cal-seg'; seg.setAttribute('role','group'); seg.setAttribute('aria-label','Calendar view');
+    seg.innerHTML='<button type="button" data-view="month" onclick="event.stopPropagation();uxpCalView(this,\'month\')">Month</button><button type="button" data-view="upcoming" onclick="event.stopPropagation();uxpCalView(this,\'upcoming\')">Upcoming</button>';
+    var head=cal.querySelector('.widget-head'),refresh=head&&head.querySelector('.gcal-refresh');
+    if(head)head.insertBefore(seg,refresh||null);
+    var view='month'; try{ view=localStorage.getItem(CAL_KEY)||'month'; }catch(e){}
+    calView(cal,view);
+  }
+  function decorateMembers(){
+    document.querySelectorAll('.tab-panel').forEach(function(panel){
+      if(panel.id==='panel-overview'||!panel.querySelector('.two-col>.side-col'))return;
+      decorateDrawer(panel); mergeCalendar(panel);
+    });
+  }
+  window.addEventListener('resize',function(){ if(window.innerWidth>980&&document.body.classList.contains('uxp-drawer-open'))window.uxpDrawer(false); });
   function decorate(){
     document.querySelectorAll('.tab-panel .two-col>.side-col').forEach(function(col){
       if(col.querySelector(':scope>.uxp-sb-head'))return;
@@ -10865,11 +10991,20 @@ html.dark .uxp-rail-btn{color:#8fb4dc;}
   }
   function boot(){
     decorate();
+    decorateMembers();
+    /* The header shows only the sync light; its text stays available as a tooltip. */
+    var syncText=document.getElementById('sync-text'),syncPill=document.querySelector('.sync-pill');
+    if(syncText&&syncPill&&typeof MutationObserver==='function'){
+      var mirror=function(){ var t=syncText.textContent.trim(); syncPill.title=t; syncPill.setAttribute('aria-label',t); };
+      mirror(); new MutationObserver(mirror).observe(syncText,{childList:true,characterData:true,subtree:true});
+    }
     if(isCollapsed())document.body.classList.add('uxp-sb-collapsed');
     paintToggles();
     document.querySelectorAll('.side-col').forEach(buildRail);
     /* keep rails in sync when widgets are added later (asset library, templates, etc.) */
-    setInterval(function(){ if(isCollapsed())document.querySelectorAll('.side-col').forEach(buildRail); },10000);
+    setInterval(function(){ decorateMembers(); if(isCollapsed())document.querySelectorAll('.side-col').forEach(buildRail); },10000);
+    /* Member tabs built after sign-in get their drawer and calendar shortly after. */
+    [800,2500,6000].forEach(function(ms){ setTimeout(decorateMembers,ms); });
   }
   function start(){ whenAuthed(boot); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start); else start();
@@ -11005,8 +11140,8 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     p.innerHTML=''
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search (Ctrl K)</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpQuickAdd()"><i class="ti ti-plus"></i> New task</button>'
-      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-moon"></i> Light / dark mode</button>'
-      +(admin?'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openSettings()"><i class="ti ti-settings"></i> Team settings</button>':'')
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-'+(document.documentElement.classList.contains('dark')?'sun':'moon')+'"></i> Dark mode: '+(document.documentElement.classList.contains('dark')?'on':'off')+'</button>'
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openSettings()"><i class="ti ti-settings"></i> '+(admin?'Team settings':'Settings')+'</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);authSignOut()"><i class="ti ti-logout"></i> Sign out</button>'
       +'<div class="uxp-mi-sync"><span class="sdot"></span>'+esc(syncTxt)+'</div>';
     return p;
@@ -13344,6 +13479,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
 <script src="assets/ui-motion.js"></script>
 <script src="assets/ui-dialogs.js"></script>
 <script src="assets/task-draft.js"></script>
+<script src="assets/widget-summary.js"></script>
 <link rel="stylesheet" href="assets/workspace-ui.css">
 <link rel="stylesheet" href="assets/request-centre.css">
 </body>

@@ -486,3 +486,68 @@ html.dark .uxp-sal-mini{background:rgba(255,255,255,.18);}
   #ov-dl-card .ov-dl-sub{flex-shrink:0;margin:0;}
 }
 @media(prefers-reduced-motion:reduce){#ov-resx-card .ov-resx-tab{transition:none;}}
+
+/* Member tabs: folded widgets show their key number. */
+.widget-head>.widget-sum{
+  margin-left:auto;padding:0 8px;color:var(--muted);font-size:11.5px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%;
+}
+.widget:not(.collapsed)>.widget-head>.widget-sum,.widget-head>.widget-sum:empty{display:none;}
+/* Desktop sidebar: widgets fade out before the column closes and fade in after it opens. */
+.tab-panel .two-col>.side-col>*{transition:opacity 180ms ease;}
+body.uxp-sb-leaving .tab-panel .two-col>.side-col>*:not(.uxp-sb-head):not(.uxp-sb-rail){opacity:0;transition-duration:140ms;}
+body.uxp-sb-entering .tab-panel .two-col>.side-col>*:not(.uxp-sb-head):not(.uxp-sb-rail){opacity:0;transition:none;}
+/* Tablets and phones: the widgets open as a drawer from the right. */
+.uxp-drawer-btn,.uxp-drawer-head{display:none;}
+.uxp-drawer-backdrop{position:fixed;inset:0;z-index:640;background:rgba(0,23,40,.45);opacity:0;visibility:hidden;transition:opacity 200ms ease,visibility 0s linear 200ms;}
+@media(max-width:980px){
+  .tab-panel .two-col>.side-col{
+    position:fixed;top:0;right:0;bottom:0;z-index:650;width:min(420px,92vw);overflow-y:auto;overscroll-behavior:contain;
+    padding:0 14px 24px;background:var(--bg,#fff);box-shadow:-24px 0 60px -24px rgba(0,0,0,.5);
+    transform:translateX(105%);visibility:hidden;
+    transition:transform 260ms cubic-bezier(.2,.8,.2,1),visibility 0s linear 260ms;
+  }
+  html.dark .tab-panel .two-col>.side-col{background:#0d1422;}
+  body.uxp-drawer-open .tab-panel.active .two-col>.side-col{transform:none;visibility:visible;transition:transform 260ms cubic-bezier(.2,.8,.2,1),visibility 0s;}
+  body.uxp-drawer-open .uxp-drawer-backdrop{opacity:1;visibility:visible;transition:opacity 200ms ease;}
+  html.uxp-drawer-lock,html.uxp-drawer-lock body{overflow:hidden;}
+  .uxp-drawer-head{
+    display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:2;margin:0 -14px 12px;padding:14px;
+    background:inherit;border-bottom:1px solid var(--border);
+  }
+  .uxp-drawer-title{flex:1;font-size:15px;font-weight:800;}
+  .uxp-drawer-close{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:17px;}
+  .uxp-drawer-btn{
+    display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:7px 12px;border:1px solid var(--border);border-radius:99px;
+    background:var(--surface);color:var(--text);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .uxp-drawer-btn:hover,.uxp-drawer-btn:focus-visible{background:var(--gray-light);}
+}
+/* One Calendar widget with Month and Upcoming views. */
+.uxp-cal-seg{display:inline-flex;gap:2px;padding:2px;margin-left:auto;margin-right:6px;border-radius:9px;background:var(--gray-light);}
+.uxp-cal-seg button{padding:4px 9px;border:0;border-radius:7px;background:transparent;color:var(--muted);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;}
+.uxp-cal-seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(16,24,40,.12);}
+html.dark .uxp-cal-seg button[aria-pressed="true"]{background:rgba(255,255,255,.12);}
+.widget.collapsed .uxp-cal-seg{display:none;}
+.uxp-cal-month[hidden],.uxp-cal-upcoming[hidden]{display:none!important;}
+/* No repeated numbers: the member header chips are the board's quick filters. */
+.tab-panel .sub-panel>.stats-row{display:none;}
+.member-head button.mh-stat{font:inherit;line-height:inherit;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease;}
+.member-head button.mh-stat:hover{box-shadow:0 0 0 2px rgba(240,179,35,.45);}
+.member-head button.mh-stat:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+/* Header: dark mode and settings live in the More menu; the sync status is a light. */
+#hdr-more{display:inline-flex;}
+#dm-btn,#settings-btn{display:none!important;}
+.sync-pill #sync-text{display:none;}
+.sync-pill{padding:6px;}
+@media(prefers-reduced-motion:reduce){
+  .tab-panel .two-col>.side-col,.tab-panel .two-col>.side-col>*,.uxp-drawer-backdrop{transition:none!important;}
+}
+/* Folded widget headers stay on one line: reorder arrows return when a widget is open. */
+.widget.collapsed .widget-title>.wmove{display:none;}
+.widget-head>.widget-title{min-width:0;flex:1 1 auto;}
+.widget.collapsed>.widget-head>.widget-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.widget-head>.widget-sum{flex:0 1 auto;max-width:55%;}
+.widget.collapsed>.widget-head .cal-nav-mini{display:none;}
+/* Tab panels set z-index:1, which would trap the drawer under the header and its backdrop. */
+@media(max-width:980px){body.uxp-drawer-open .tab-panel.active{z-index:auto!important;}}
