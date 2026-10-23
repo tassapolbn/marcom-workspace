@@ -68,7 +68,7 @@ function needs a Firebase service account:
 2. Set the environment variable above; trigger a redeploy.
 3. Test the Request Centre: submit a test request at `<site>?request=1`,
    confirm it appears in the workspace and the task is created, and test the
-   tracker with the requester's email address.
+   tracker with the requester's email address and the request number.
 4. ONLY THEN deploy the new rules:
    `npx firebase deploy --only firestore:rules` (or paste `firestore.rules`
    into Firebase Console -> Firestore -> Rules).
@@ -94,8 +94,11 @@ email/password, they must verify their email address first.
 - The public page has NO direct database access. Rules deny unauthenticated
   reads and writes everywhere; the Netlify Function validates and writes with
   the Admin SDK.
-- Request tracking uses the requester's email address and returns only a
-  minimal status summary.
+- Request tracking needs the request number and the requester's email
+  address together, and returns only a minimal status summary for those
+  requests. Requests sent from the same device list automatically.
+- Request dates and times are checked on the server (real calendar dates,
+  real 24-hour times, and an end after the start for photography).
 - Every collection is explicitly matched or whitelisted; unknown collections
   are denied, including for the admin.
 - ACL: users read only their own record; only the admin lists or edits users.

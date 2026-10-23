@@ -13,7 +13,13 @@ Fixed:
 - **Look:** calmer design tokens in `assets/workspace-ui.css`.
 - **Live site:** project files are hidden.
 
-Still open: the P1 and P2 items below, and folding the older inline style layers into `workspace-ui.css`.
+Follow-up, steps 16 to 19, on the same day:
+- Codex reviewed steps 8 to 15, and its seven findings were fixed.
+- P1 is resolved: tracking now needs the request number and the email together.
+- P2 is resolved: impossible dates and times are refused with a message on each field.
+- 84 dead CSS rules were removed.
+
+Still open: an emailed one-time code for tracking (once email sending is set up), and folding the older inline style layers into `workspace-ui.css`.
 
 # UI and code review — 6 September 2026
 
