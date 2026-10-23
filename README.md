@@ -12,7 +12,8 @@ and Video Editor), Eye (Junior Events Coordinator).
 | Path | Purpose |
 |---|---|
 | `index.html` | The whole application (internal workspace + public Request Centre) |
-| `assets/` | Static images (the support staff calendar was moved out of the HTML, saving ~650 KB per visit) |
+| `assets/` | Static images (the support staff calendar was moved out of the HTML, saving ~650 KB per visit) and the small UI helpers listed in section 9 |
+| `assets/workspace-ui.css` | Shared styles loaded after every inline layer, ending with the design tokens (radius, spacing, type, canvas, cards, controls) |
 | `netlify/functions/submit-request.js` | Public request submission endpoint (validation, sanitising, rate limiting, honeypot, server request number, task auto-creation, failure log, optional email notifications) |
 | `netlify/functions/request-status.js` | Secure status lookup by requester email, returns a minimal summary only |
 | `netlify/functions/team-board.js` | The Director's board page (`/team-board?token=...`), server rendered |
@@ -21,7 +22,8 @@ and Video Editor), Eye (Junior Events Coordinator).
 | `netlify/functions/lib/admin.js` | Shared Firebase Admin bootstrap and helpers |
 | `firestore.rules` | Least-privilege Firestore rules (deploy AFTER the site, see below) |
 | `tests/rules.test.mjs` | Emulator tests for every role |
-| `netlify.toml`, `firebase.json`, `package.json` | Build and tooling configuration |
+| `netlify.toml`, `firebase.json`, `package.json` | Build and tooling configuration. `netlify.toml` also hides every non-app file from the live site |
+| `CLAUDE.md`, `PLAN.md` | How Claude and Codex work on this project, and the current plan with its ticked steps |
 
 ## 1. Put the project on GitHub
 
@@ -223,3 +225,63 @@ menu and the server validation both read that one list.
 - Phased refactor of `index.html` into modules (shell, auth, data, features).
 - Boss dashboard upgrades (workload, overdue, capacity) per the improvement
   plan.
+
+## 9. Workspace layout (October 2026 tidy-up)
+
+**Overview**, top to bottom:
+
+- One row of five tiles: Overdue, Due today, Next 7 days, New requests and
+  Meetings today. Each number appears once on the page. The three task tiles
+  filter Upcoming Deadlines, which has All / Overdue / Today / 7 days pills.
+- Main column: Upcoming Deadlines, the Event Board, then the Master Calendar.
+  The Event Board shows open shared tasks only, folded by event and sorted by
+  what is due next, with a Show completed switch.
+- Side column: Team today, Event Countdown, Request Centre, watermark
+  deletions (only when one is due within 3 days), then Team Announcements.
+  Team today replaces the old availability, "who is free", workload and leave
+  cards. Announcements show the newest three and post from the New button.
+- A folded **Resources & more** section holds Resources (tabs for department
+  links, brand guidelines and the asset library), Today's Menu, Recent Team
+  Activity and the Support Staff Calendar preview. It remembers whether it was
+  left open.
+- `ovLayout()` in the Overview script keeps every card in its slot, including
+  cards other scripts add later, and moves only the cards that are out of
+  place.
+
+**Member tabs:**
+
+- Side widgets start folded on a first visit. Each header shows its key
+  number, so the list fits on one screen.
+- On desktop the sidebar slides away to an icon rail. On tablets and phones it
+  opens as a drawer from the Widgets button.
+- Google Calendar and Upcoming Events are one Calendar widget, with Month and
+  Upcoming views.
+- The header chips (Active, Due Soon, Done) filter the board.
+- Dark mode and Settings are in the "..." menu.
+
+**Forms and events:**
+
+- A dialog the user has typed into does not close on an outside click.
+  Closing the task or event form asks "Discard your changes?".
+- A new task keeps a draft in the browser, and the next Add Task offers to
+  restore it.
+- Add Task starts short: description and More details open on demand.
+- Design requests ask for the status, the requester and the campaign once.
+- Event countdowns delete in one click, with Undo, or after one question if
+  the event holds work. Past events fold away, with Clear past events.
+
+**Small helpers in `assets/`:**
+
+| File | Purpose |
+|---|---|
+| `ui-motion.js` | One fold and unfold animation, and the dropdown helper. Both respect reduced motion |
+| `ui-dialogs.js` | Background-click protection and the discard question |
+| `task-draft.js` | New-task drafts |
+| `event-board.js` | Grouping and sorting for the Event Board |
+| `widget-summary.js` | Key numbers in widget headers |
+
+Each helper has a matching `tests/ui-*.test.mjs` file.
+
+**Live site:** `netlify.toml` returns "not found" for the plans, README,
+review notes, rules, package files, tests, Apps Script and function sources.
+A test fails if a new top-level file is added without a rule.

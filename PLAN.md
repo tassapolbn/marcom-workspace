@@ -211,7 +211,7 @@ All motion respects the system "reduce motion" setting.
   - Test: walk through every tab in both themes at 390 / 768 / 1280 px. Text contrast must still pass
     (the existing contrast test). Nothing overlaps or jumps.
 
-- [ ] **14. Final check and notes**
+- [x] **14. Final check and notes**
   - Files: `README.md`, `UI-CODE-REVIEW.md`
   - Full `npm run test:ui`, a walk-through of every tab and every form, keyboard use and focus outlines.
     Update the README and the review notes.

@@ -1,3 +1,20 @@
+# UX tidy-up — 24 October 2026
+
+The plan is in `PLAN.md`; all 15 steps are done. `README.md` section 9 describes the new layout.
+
+Fixed:
+- **Forms:** typed-in dialogs no longer close on an outside click, and new tasks keep a draft.
+- **Overview:** each "today" number shows once. Four people cards became Team today, and less-used cards are folded into Resources & more. At 1280 x 860 the page is about 2.7 screens, down from 6.7.
+- **Event Board:** shows open tasks only. It no longer re-renders while an Assign dropdown is open.
+- **Event countdown:** deletes in one click with Undo. Older per-member events are now deleted and saved in their own collection; before, the delete silently did nothing.
+- **Add Task:** shorter. Design requests no longer repeat fields, and Category offers MARCOM types.
+- **Member tabs:** widgets start folded and show their key numbers. Tablets and phones get a drawer, and the two calendars are one.
+- **Motion:** shared fold motion, and dropdowns fade out as well as in.
+- **Look:** calmer design tokens in `assets/workspace-ui.css`.
+- **Live site:** project files are hidden.
+
+Still open: the P1 and P2 items below, and folding the older inline style layers into `workspace-ui.css`.
+
 # UI and code review — 6 September 2026
 
 The app's main interaction defects can be improved without changing its familiar
