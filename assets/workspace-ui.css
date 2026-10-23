@@ -178,3 +178,12 @@ html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
   }
   .btn:not(:disabled):active,.modal-close:not(:disabled):active{transform:none;}
 }
+@keyframes ui-shake{
+  0%,100%{transform:translateX(0);}
+  20%,60%{transform:translateX(-6px);}
+  40%,80%{transform:translateX(6px);}
+}
+.modal.ui-shake{animation:ui-shake .36s ease-in-out;}
+@media(prefers-reduced-motion:reduce){
+  .modal.ui-shake{animation:none;transform:none;outline:2px solid var(--muted);outline-offset:2px;}
+}

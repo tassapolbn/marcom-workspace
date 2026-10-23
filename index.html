@@ -1081,7 +1081,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="modal-title">Add Task</div>
-      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+      <button class="modal-close" onclick="requestCloseModal()"><i class="ti ti-x"></i></button>
     </div>
     <div class="modal-body" id="modal-body">
       <div id="m-tasktype" class="tasktype-toggle" style="display:none;">
@@ -1187,7 +1187,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="requestCloseModal()">Cancel</button>
       <button class="btn btn-navy" id="modal-save" style="flex:1;justify-content:center;" onclick="saveTask()"><i class="ti ti-check"></i> Save</button>
       <button class="btn btn-ghost" id="modal-save-cal" style="flex:0 0 auto;white-space:nowrap;" onclick="saveTaskAndCalendar()" title="Save this task and add it to the calendar"><i class="ti ti-calendar-plus"></i> Save + Calendar</button>
     </div>
@@ -1398,7 +1398,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="event-modal-title">Add Event</div>
-      <button class="modal-close" onclick="closeEventModal()"><i class="ti ti-x"></i></button>
+      <button class="modal-close" onclick="requestCloseEventModal()"><i class="ti ti-x"></i></button>
     </div>
     <div class="modal-body">
       <div class="form-group"><label class="form-label">Event name</label><input class="form-input" id="ev-name" placeholder="e.g. Graduation 2026" oninput="if(window.updateEvPreview)updateEvPreview()" /></div>
@@ -12937,6 +12937,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
+<script src="assets/ui-dialogs.js"></script>
 <link rel="stylesheet" href="assets/workspace-ui.css">
 <link rel="stylesheet" href="assets/request-centre.css">
 </body>

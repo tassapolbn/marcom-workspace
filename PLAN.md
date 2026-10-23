@@ -77,10 +77,10 @@ adds a test where the logic can be tested without a browser. Every check in the 
 in light and dark mode, at phone (390 px) and desktop (1280 px) width.
 All motion respects the system "reduce motion" setting.
 
-- [ ] **Setup (Claude, no app code).** Add the team protocol (`CLAUDE.md`) and this plan to the project.
+- [x] **Setup (Claude, no app code).** Add the team protocol (`CLAUDE.md`) and this plan to the project.
   Keep `.codex-tasks/` and `.claude/` out of Git, so they never go to the live site.
 
-- [ ] **1. Forms no longer close by accident**
+- [x] **1. Forms no longer close by accident**
   - Files: `index.html` (shared dialog handling, `closeModal`, `closeEventModal`), `tests/ui-interactions.test.mjs`
   - Clicking the dark background no longer closes any box that has form fields. The box gives a small shake instead.
   - Closing the task or event form with ×, Cancel or Escape after typing something asks
