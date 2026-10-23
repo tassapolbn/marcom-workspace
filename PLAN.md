@@ -216,7 +216,7 @@ All motion respects the system "reduce motion" setting.
   - Full `npm run test:ui`, a walk-through of every tab and every form, keyboard use and focus outlines.
     Update the README and the review notes.
 
-- [ ] **15. Keep docs and tests off the live site**
+- [x] **15. Keep docs and tests off the live site**
   - Files: `netlify.toml`
   - The live site no longer serves README, the plans, the tests, the rules or the Apps Script files.
   - Test: check the rules locally. The app, the Request Centre and the Team Board are unchanged.
