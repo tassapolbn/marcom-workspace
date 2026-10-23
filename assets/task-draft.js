@@ -103,6 +103,7 @@
        typeof root.MarcomDialogs.markDirty === 'function'){
       root.MarcomDialogs.markDirty(document.getElementById('modal'));
     }
+    if(typeof root.tfSync === 'function')root.tfSync();
   }
   function offer(who){
     hideOffer();

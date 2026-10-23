@@ -1089,13 +1089,11 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <button type="button" class="tt-btn" id="tt-role" onclick="setTaskType('role')"><i class="ti ti-clipboard-data"></i> <span id="tt-role-label">Request</span></button>
       </div>
       <div class="form-group"><label class="form-label">Task Title</label><input type="text" class="form-input" id="m-topic" placeholder="Main heading of the task" /></div>
-      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="m-desc" placeholder="Details, instructions, context..." oninput="autoGrowDesc()"></textarea></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Assigned By <span style="color:var(--muted);font-weight:400;">(optional)</span></label><input type="text" class="form-input" id="m-assignedby" placeholder="e.g. Khun Miki" /></div>
-        <div class="form-group"><label class="form-label">Assigned Date</label><input type="date" class="form-input" id="m-assigned" /></div>
-      </div>
-      <div class="form-row">
+      <div class="form-row form-row-3">
         <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="m-due" /></div>
+        <div class="form-group"><label class="form-label">Priority</label>
+          <select class="form-select" id="m-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+        </div>
         <div class="form-group"><label class="form-label">Status</label>
           <select class="form-select" id="m-status">
             <option value="pending">Pending</option><option value="in-progress">In Progress</option>
@@ -1120,20 +1118,10 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="evt-stamp" id="m-evt-stamp" style="display:none;"></div>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Priority</label>
-          <select class="form-select" id="m-priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
-        </div>
-        <div class="form-group"><label class="form-label">Category <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
-          <select class="form-select" id="m-cat">
-            <option value="">None</option><option value="Work">Work</option><option value="Home">Home</option>
-            <option value="Shopping">Shopping</option><option value="Personal">Personal</option>
-            <option value="Together">Together</option><option value="Travel">Travel</option>
-          </select>
-        </div>
+      <div class="form-group tf-desc" id="m-desc-group">
+        <button type="button" class="tf-add" id="m-desc-add" onclick="tfShowDesc(true)"><i class="ti ti-plus"></i> Add description</button>
+        <div class="tf-desc-wrap tf-hidden" id="m-desc-wrap"><label class="form-label">Description</label><textarea class="form-textarea" id="m-desc" placeholder="Details, instructions, context..." oninput="autoGrowDesc()"></textarea></div>
       </div>
-      <div class="form-group"><label class="form-label">Attachment <span style="color:var(--muted);font-weight:400;">(link)</span></label><input type="url" class="form-input" id="m-attach" placeholder="https://drive.google.com/..." /></div>
-      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="m-notes" placeholder="Extra notes for this task..." style="min-height:70px;"></textarea></div>
       <div id="m-media-section" style="display:none;">
         <div class="role-divider"><i class="ti ti-camera"></i> Media Tracking</div>
         <div class="form-group"><label class="form-label">Event Name</label><input type="text" class="form-input" id="m-md-event" placeholder="e.g. Year 13 Graduation" /></div>
@@ -1180,10 +1168,33 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           </select>
         </div>
       </div>
+      <div class="tf-more tf-more-closed" id="m-more">
+        <button type="button" class="tf-more-toggle" id="m-more-toggle" aria-expanded="false" aria-controls="m-more-body" onclick="tfToggleMore()">
+          <i class="ti ti-adjustments-horizontal"></i> More details <span class="tf-more-sum" id="m-more-sum"></span><i class="ti ti-chevron-down tf-chev"></i>
+        </button>
+        <div class="tf-more-body" id="m-more-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Assigned By <span style="color:var(--muted);font-weight:400;">(optional)</span></label><input type="text" class="form-input" id="m-assignedby" placeholder="e.g. Khun Miki" /></div>
+        <div class="form-group"><label class="form-label">Assigned Date</label><input type="date" class="form-input" id="m-assigned" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Category <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+          <select class="form-select" id="m-cat">
+            <option value="">None</option><option value="Work">Work</option><option value="Home">Home</option>
+            <option value="Shopping">Shopping</option><option value="Personal">Personal</option>
+            <option value="Together">Together</option><option value="Travel">Travel</option>
+          </select>
+        </div>
+        <div class="form-group"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Attachment <span style="color:var(--muted);font-weight:400;">(link)</span></label><input type="url" class="form-input" id="m-attach" placeholder="https://drive.google.com/..." /></div>
       <div class="links-section">
         <div class="links-section-title">Related Links</div>
         <div id="m-links-container"></div>
         <button class="btn btn-ghost btn-sm" onclick="addLinkRow()" style="margin-top:4px;"><i class="ti ti-plus"></i> Add Link</button>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="m-notes" placeholder="Extra notes for this task..." style="min-height:70px;"></textarea></div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2488,6 +2499,7 @@ function openAdd(who){
   modalLinks=[];
   document.getElementById('modal-title').textContent='Add Task';
   ['m-topic','m-desc','m-due','m-assignedby','m-assigned','m-attach','m-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('m-assigned').value=todayStr();
   document.getElementById('m-status').value='pending';
   document.getElementById('m-cat').value='';
   document.getElementById('m-priority').value='medium';
@@ -2504,6 +2516,7 @@ function openAdd(who){
   setTaskType((who==='o'||who==='dew')?'role':'standard');
   document.getElementById('modal').classList.add('open');
   autoGrowDesc();
+  tfSync();
   if(window.MarcomDraft)MarcomDraft.offer(who);
 }
 function openEdit(who,id){
@@ -2552,6 +2565,7 @@ function openEdit(who,id){
   else if(who==='dew')_mode=(task.dzType||task.dzBrand||task.dzRequestor||task.dzFile||(task.dzRevisions>0)||(task.dzStatus&&task.dzStatus!=='Brief Received'))?'role':'standard';
   setTaskType(_mode);
   if(window.rcTaskPanel)try{rcTaskPanel(task);}catch(e){}
+  tfSync();
   document.getElementById('modal').classList.add('open');
   autoGrowDesc();
 }
@@ -4372,6 +4386,72 @@ renderAllMeetings();
 renderAllUpcoming();
 renderPettyCash();
 setInterval(function(){renderAllMeetings();renderAllUpcoming();},30000);
+</script>
+
+<script id="taskform-script">
+(function(root){
+  'use strict';
+  function fieldText(id){
+    var field = document.getElementById(id);
+    return field ? field.value.trim() : '';
+  }
+  function details(){
+    var parts = [];
+    var assigned = fieldText('m-assignedby');
+    var category = fieldText('m-cat');
+    if(assigned)parts.push('Assigned by ' + assigned);
+    if(category)parts.push(category);
+    if(fieldText('m-attach'))parts.push('Attachment');
+    var links = typeof modalLinks !== 'undefined' ? modalLinks : [];
+    var count = links.filter(function(link){return link && typeof link.url === 'string' && link.url.trim();}).length;
+    if(count)parts.push(count + (count === 1 ? ' link' : ' links'));
+    if(fieldText('m-notes'))parts.push('Notes');
+    return parts;
+  }
+  root.tfShowDesc = function(focus){
+    var wrap = document.getElementById('m-desc-wrap');
+    if(typeof root.MarcomMotion !== 'undefined' && root.MarcomMotion){
+      root.MarcomMotion.toggle(wrap, 'tf-hidden', false, {reveal:':scope>*'});
+    }else wrap.classList.remove('tf-hidden');
+    document.getElementById('m-desc-add').classList.add('tf-hidden');
+    if(focus){
+      document.getElementById('m-desc').focus();
+      if(typeof autoGrowDesc === 'function')autoGrowDesc();
+    }
+  };
+  root.tfToggleMore = function(force){
+    var more = document.getElementById('m-more');
+    var closed = typeof force === 'boolean' ? !force : undefined;
+    if(typeof root.MarcomMotion !== 'undefined' && root.MarcomMotion){
+      closed = root.MarcomMotion.toggle(more, 'tf-more-closed', closed, {reveal:':scope>.tf-more-body'});
+    }else{
+      if(typeof closed !== 'boolean')closed = !more.classList.contains('tf-more-closed');
+      more.classList.toggle('tf-more-closed', closed);
+    }
+    document.getElementById('m-more-toggle').setAttribute('aria-expanded', String(!closed));
+    root.tfSummary();
+  };
+  root.tfSummary = function(){
+    // During a closing animation the class is applied only when motion finishes.
+    var closed = document.getElementById('m-more-toggle').getAttribute('aria-expanded') !== 'true';
+    document.getElementById('m-more-sum').textContent = closed ? details().join(' \u00b7 ') : '';
+  };
+  root.tfSync = function(){
+    var hasDesc = !!fieldText('m-desc');
+    document.getElementById('m-desc-wrap').classList.toggle('tf-hidden', !hasDesc);
+    document.getElementById('m-desc-add').classList.toggle('tf-hidden', hasDesc);
+    var open = details().length > 0;
+    document.getElementById('m-more').classList.toggle('tf-more-closed', !open);
+    document.getElementById('m-more-toggle').setAttribute('aria-expanded', String(open));
+    root.tfSummary();
+    if(hasDesc && typeof autoGrowDesc === 'function')autoGrowDesc();
+  };
+  var body = document.getElementById('m-more-body');
+  body.addEventListener('input', root.tfSummary);
+  body.addEventListener('change', root.tfSummary);
+  // Bubble after inline link handlers, including Add Link and removed link rows.
+  body.addEventListener('click', root.tfSummary);
+})(window);
 </script>
 
 <!-- ===== TEAM OVERVIEW TAB (additive: nothing above this line was changed) ===== -->

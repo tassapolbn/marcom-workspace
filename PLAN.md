@@ -3,7 +3,7 @@
 Status: **approved by Boss on 24 Oct 2026**, with Claude's suggested decisions (see the end).
 Boss also asked for a more elegant, modern look that is easy to use, smooth animations when things
 open and close, a sidebar that can slide away, and dropdowns that save space. These are now
-steps 3, 11 and 12.
+steps 3, 12 and 13.
 Branch: `ux/declutter-overview`. Builder: Codex, one step at a time (see CLAUDE.md).
 
 ## What the review found
@@ -63,7 +63,7 @@ Day-off in Lieu, Sick Leave and Deadlines end up below the fold. "Google Calenda
 
 ### Also noticed
 - Netlify publishes the whole folder, so README.md, the plans and the tests can be opened on the
-  live site. Nothing secret is in them, but they don't need to be public (step 14).
+  live site. Nothing secret is in them, but they don't need to be public (step 15).
 - The open P1 item in `UI-CODE-REVIEW.md` (request tracking by email only) is still open. Not in this plan.
 - `index.html` is about 12,900 lines and has 43 style blocks layered on top of each other. That's
   why the look is uneven. New styling goes into `assets/workspace-ui.css`, which loads last, rather
@@ -127,7 +127,7 @@ All motion respects the system "reduce motion" setting.
   - Test: the preview board shows only open tasks, folded. Completed tasks appear with the switch.
     An Assign dropdown stays open for more than 5 seconds. The test covers the filter and sorting.
 
-- [ ] **6. Shorter Add Task form (layout only, no data change)**
+- [x] **6. Shorter Add Task form (layout only, no data change)**
   - Files: `index.html` (task form markup and CSS, `openAdd`, `openEdit`)
   - Shown first: Title, Due date, Priority, Event, Share with team. Description sits under a "+ Add details" link.
   - Everything else goes under a folded "More details" section, which opens smoothly: Assigned by,
@@ -164,38 +164,42 @@ All motion respects the system "reduce motion" setting.
   - Test: each number appears once, matches the old counts on the same data, and filters the list.
 
 - [ ] **10. New Overview layout, with less-used items folded away**
-  - Files: `index.html` (Overview shell order and CSS; Today's Menu, Support Staff Calendar, Resources, Watermark queue, Team Requests, Quick Actions, payday strip)
+  - Files: `index.html` (Overview shell order, Watermark queue, Team Requests, Quick Actions), a small layout helper, CSS
   - Order:
     - Today tiles first.
     - Main column: Upcoming Deadlines, then Event Board, then Master Calendar.
     - Side column: Team today, then Event Countdown, then Request Centre, then Announcements.
-      Announcements becomes a short list, with a "New announcement" button that opens the composer.
-  - A folded "Resources & more" section at the bottom holds:
-    - one Resources card with a dropdown or tabs (Department links / Brand guidelines / Asset library),
-    - Today's Menu, showing only today with a "Whole week" link,
-    - the Support Staff Calendar as a thumbnail that opens full size.
-  - Other cards:
-    - Recent Team Activity is folded by default.
-    - The Watermark queue appears on the Overview only when something is due within 3 days. It always shows on O's tab.
-    - Team Requests (app feedback) moves to Settings as "Suggest an app improvement".
-    - Quick Actions is removed.
-  - The payday strip becomes one compact line on every tab, with a "details" toggle.
-  - Test: the Overview at 1280 px is at most about 2.5 screens tall (from 6.5), and nothing is lost.
-    Every moved item can still be reached in one or two clicks. Check phone width and both themes.
+  - A folded "Resources & more" section at the bottom holds Department links, Brand guidelines,
+    Asset library, Today's Menu, the Support Staff Calendar and Recent Team Activity.
+  - The Watermark queue appears on the Overview only when something is due within 3 days. It always shows on O's tab.
+  - Team Requests (app feedback) moves to Settings as "Suggest an app improvement".
+  - Quick Actions is removed.
+  - Test: the Overview at 1280 px is about 2.5 screens tall (from 6.5), and nothing is lost.
+    Every moved item can still be reached in one or two clicks.
 
-- [ ] **11. Member tabs: a sidebar that slides away, widgets easy to find**
+- [ ] **11. Compact Overview cards**
+  - Files: `index.html` (Announcements, Department Resources / Brand Guidelines / Asset Library, Today's Menu, Support Staff Calendar, payday strip), CSS
+  - Announcements shows the latest few posts, with a "New announcement" button that opens the composer smoothly.
+  - One Resources card with tabs (Department links / Brand guidelines / Asset library), instead of three cards.
+  - Today's Menu shows today only, with a "Whole week" link.
+  - The Support Staff Calendar shows as a short preview that opens full size.
+  - The payday strip starts as one compact line on every tab (days left, payday date, progress), with a "details" toggle.
+  - Test: each card works in both themes and at phone width, and nothing that was there before is lost.
+
+- [ ] **12. Member tabs: a sidebar that slides away, widgets easy to find**
   - Files: `index.html` (member sidebars, the "Hide widgets" toggle, widget collapse script, Google Calendar and Upcoming Events widgets, header buttons)
   - The widget column becomes a proper sidebar. It slides closed so the task board gets the full width,
-    and slides back open, and the choice is remembered. On a phone it opens as a drawer from the side.
+    and slides back open, and the choice is remembered. On tablets and phones it opens as a drawer from the side.
   - Widgets start folded on first visit and show their key number in the header, for example
     "Day-off in Lieu · 3 days" or "Sick Leave · 2 used". The whole list fits on one screen, and your own
     open/closed choices are still remembered.
   - "Google Calendar" and "Upcoming Events" become one Calendar widget.
+  - The repeated Active / Due soon / Done row under the tab menu goes, because the member header already shows those numbers.
   - Rarely used header buttons (dark mode, settings, sync status) move into the existing "More" (⋯) dropdown.
   - Test: on every member tab the folded sidebar fits in one screen, slides open and closed smoothly,
     and works on a phone. Each widget opens, closes and remembers its state.
 
-- [ ] **12. Design refresh: elegant, modern, easy to read**
+- [ ] **13. Design refresh: elegant, modern, easy to read**
   - Files: `assets/workspace-ui.css` (one set of design tokens and component styles), small markup touches in `index.html` only where needed
   - Keep the HeadStart navy and gold identity, refined:
     - one type scale and one spacing scale,
@@ -207,12 +211,12 @@ All motion respects the system "reduce motion" setting.
   - Test: walk through every tab in both themes at 390 / 768 / 1280 px. Text contrast must still pass
     (the existing contrast test). Nothing overlaps or jumps.
 
-- [ ] **13. Final check and notes**
+- [ ] **14. Final check and notes**
   - Files: `README.md`, `UI-CODE-REVIEW.md`
   - Full `npm run test:ui`, a walk-through of every tab and every form, keyboard use and focus outlines.
     Update the README and the review notes.
 
-- [ ] **14. Keep docs and tests off the live site**
+- [ ] **15. Keep docs and tests off the live site**
   - Files: `netlify.toml`
   - The live site no longer serves README, the plans, the tests, the rules or the Apps Script files.
   - Test: check the rules locally. The app, the Request Centre and the Team Board are unchanged.
@@ -223,7 +227,7 @@ All motion respects the system "reduce motion" setting.
 2. Design Status sets the main status automatically, with one menu.
 3. Team Requests moves into Settings; Quick Actions is removed.
 4. An event with no linked work is deleted in one click with Undo.
-5. The live site stops publishing docs and tests (step 14).
+5. The live site stops publishing docs and tests (step 15).
 
 ## Not in this plan
 - Rewriting `index.html` into modules, and the open security item in `UI-CODE-REVIEW.md`.

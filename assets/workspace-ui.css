@@ -281,3 +281,28 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #evb-card .evb-row-done{opacity:.6;}
 .evb-done-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);}
 @media(prefers-reduced-motion:reduce){#evb-card .evb-chevron{transition:none;}}
+
+/* Short task form with optional description and secondary details. */
+#modal .form-row.form-row-3>.form-group{flex:1 1 0;min-width:0;}
+#modal .tf-add{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;
+  background:transparent;color:var(--navy);font-family:inherit;font-size:13px;
+  font-weight:700;cursor:pointer;
+}
+#modal .tf-add:hover,#modal .tf-add:focus-visible{text-decoration:underline;}
+#modal .tf-hidden{display:none;}
+#modal .tf-more{border:1px solid var(--border);border-radius:12px;margin-top:6px;}
+#modal .tf-more-toggle{
+  display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;
+  background:transparent;border:0;border-radius:12px;font-family:inherit;
+  font-size:13px;font-weight:700;color:var(--text);text-align:left;cursor:pointer;
+}
+#modal .tf-more-sum{
+  margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--muted);font-size:12px;font-weight:400;
+}
+#modal .tf-chev{flex-shrink:0;transition:transform 200ms;}
+#modal .tf-more-toggle[aria-expanded="true"] .tf-chev{transform:rotate(180deg);}
+#modal .tf-more-toggle:hover{background:var(--gray-light);}
+#modal .tf-more-body{padding:4px 14px 14px;}
+#modal .tf-more.tf-more-closed .tf-more-body{display:none;}
