@@ -261,7 +261,7 @@ limit. These are the next items, with Codex building again from about 05:48 when
   - Test: the wrong number, the wrong email, or an email alone return nothing; the right pair
     returns exactly one request with the same few fields as today.
 
-- [ ] **19. Remove styles for parts that no longer exist (first step of the style clean-up)**
+- [x] **19. Remove styles for parts that no longer exist (first step of the style clean-up)**
   - Files: `index.html` (inline style blocks)
   - Delete the CSS for Today's Focus, Today at a Glance, the old availability, workload and leave
     cards, Quick Actions and the old "who is free" card, after checking that no element uses each selector.
