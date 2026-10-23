@@ -4787,35 +4787,21 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function pad2(n){ return String(n).padStart(2,'0'); }
 
   /* ---------- shell ---------- */
+  /* Layout: today tiles; main column (deadlines, Event Board, calendar); side
+     column (team, countdown, Request Centre, watermark when urgent, announcements);
+     and a folded "Resources & more" section for everything used less often.
+     ovLayout() keeps cards that other scripts add in these slots. */
   var SHELL=''
    +'<div class="ov-topbar">'
    +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
    +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
    +'</div>'
    +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
-   +'<div class="ov-ann-row ov-ann-row-single">'
-   +'<div class="ov-card ov-ann">'
-   +  '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div></div>'
-   +  '<div class="ov-ann-compose">'
-   +    '<textarea id="ov-ann-text" class="ov-ann-input" rows="2" placeholder="Share an announcement with the team..."></textarea>'
-   +    '<div class="ov-ann-compose-row">'
-   +      '<span class="ov-ann-aslabel" id="ov-ann-aslabel"><i class="ti ti-user-circle"></i> Posting as <b id="ov-ann-asname">you</b></span>'
-   +      '<label class="ov-ann-pin"><input type="checkbox" id="ov-ann-pinnew"> Pin to top</label>'
-   +      '<button class="btn btn-navy btn-sm" onclick="ovAddAnnouncement()"><i class="ti ti-send"></i> Post</button>'
-   +    '</div>'
-   +  '</div>'
-   +  '<div class="ov-ann-list" id="ov-ann-list"></div>'
-   +'</div>'
-   +'</div>'
    +'<div class="ov-stats" id="ov-stats" role="group" aria-label="Today at a glance"></div>'
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
-   +    '<div class="ov-main-list-grid">'
    +    '<div class="ov-card" id="ov-dl-card"><div class="ov-card-head"><div class="ov-card-title" id="ov-dl-title" tabindex="-1"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div><div class="ov-dl-filters" id="ov-dl-filters" role="group" aria-label="Filter deadlines"></div></div><div id="ov-deadlines"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown Hub</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
-   +    '</div>'
-   +    '<div class="ov-card ov-calendar-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button type="button" class="ov-fpill" onclick="ovCalToday()">Today</button><button class="cal-arrow" aria-label="Previous month" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title" aria-live="polite"></span><button class="cal-arrow" aria-label="Next month" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
+   +    '<div class="ov-card ov-calendar-card" id="ov-cal-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button type="button" class="ov-fpill" onclick="ovCalToday()">Today</button><button class="cal-arrow" aria-label="Previous month" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title" aria-live="polite"></span><button class="cal-arrow" aria-label="Next month" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
    +      '<div class="ov-cal-filters" id="ov-cal-filters"></div>'
    +      '<div class="ov-cal-layout"><div class="ov-cal-month"><div class="cal-grid ov-cal-grid" id="ov-cal-grid" role="group" aria-label="Choose a calendar date"></div>'
    +      '<div class="ov-cal-legend" id="ov-cal-legend"></div>'
@@ -4824,11 +4810,82 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '</div>'
    +  '<div class="ov-col-side">'
    +    '<div class="ov-card" id="team-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users"></i> Team today <span class="team-sum" id="team-sum"></span></div><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div><div class="team-list" id="team-list"></div><div class="team-note" id="team-note"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-bolt"></i> Quick Actions</div></div><div class="ov-qa" id="ov-qa"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark Deletion Queue</div></div><div id="ov-watermark"></div></div>'
-   +    '<div class="ov-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-folder"></i> Department Resources</div><button class="ov-mini-btn" onclick="ovOpenResources()" title="Edit resource links"><i class="ti ti-edit"></i></button></div><div class="ov-res" id="ov-resources"></div></div>'
+   +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
+   +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
+   +    '<div class="ov-card ov-ann" id="ov-ann-card">'
+   +      '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div></div>'
+   +      '<div class="ov-ann-compose">'
+   +        '<textarea id="ov-ann-text" class="ov-ann-input" rows="2" placeholder="Share an announcement with the team..."></textarea>'
+   +        '<div class="ov-ann-compose-row">'
+   +          '<span class="ov-ann-aslabel" id="ov-ann-aslabel"><i class="ti ti-user-circle"></i> Posting as <b id="ov-ann-asname">you</b></span>'
+   +          '<label class="ov-ann-pin"><input type="checkbox" id="ov-ann-pinnew"> Pin to top</label>'
+   +          '<button class="btn btn-navy btn-sm" onclick="ovAddAnnouncement()"><i class="ti ti-send"></i> Post</button>'
+   +        '</div>'
+   +      '</div>'
+   +      '<div class="ov-ann-list" id="ov-ann-list"></div>'
+   +    '</div>'
    +  '</div>'
-   +'</div>';
+   +'</div>'
+   +'<section class="ov-more ov-more-closed" id="ov-more" aria-label="Resources and more">'
+   +  '<button type="button" class="ov-more-toggle" id="ov-more-toggle" aria-expanded="false" aria-controls="ov-more-body" onclick="ovMoreToggle()"><i class="ti ti-layout-grid-add"></i><span class="ov-more-title">Resources &amp; more</span><span class="ov-more-sum">Links, brand guidelines, assets, lunch menu, staff calendar, team activity</span><i class="ti ti-chevron-down ov-more-chev"></i></button>'
+   +  '<div class="ov-more-body" id="ov-more-body">'
+   +    '<div class="ov-card" id="ov-res-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-folder"></i> Department Resources</div><button class="ov-mini-btn" onclick="ovOpenResources()" title="Edit resource links"><i class="ti ti-edit"></i></button></div><div class="ov-res" id="ov-resources"></div></div>'
+   +    '<div class="ov-card" id="ov-act-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-activity"></i> Recent Team Activity</div></div><div id="ov-activity"></div></div>'
+   +  '</div>'
+   +'</section>';
+
+  /* ---------- layout: one order for every card, wherever a script added it ---------- */
+  var LAYOUT={
+    main:['ov-dl-card','evb-card','ov-cal-card'],
+    side:['team-card','ov-cd-card','ov-rc-card','ov-wm-card','ov-ann-card'],
+    more:['ov-res-card','ov-brand-card','ovasset-card','ov-menu-card','sscal-card','ov-act-card']
+  };
+  /* Moves only the cards that are out of place, so a card someone is typing in
+     stays where it is once the page has settled. */
+  function ovPlace(container,ids){
+    if(!container)return;
+    var prev=null;
+    ids.forEach(function(id){
+      var el=document.getElementById(id); if(!el)return;
+      var ok=el.parentNode===container&&(prev?el.previousElementSibling===prev:el===container.firstElementChild);
+      if(!ok)container.insertBefore(el,prev?prev.nextSibling:container.firstChild);
+      prev=el;
+    });
+  }
+  function ovLayout(){
+    var panel=document.getElementById('panel-overview'); if(!panel)return;
+    var mw=document.getElementById('ov-menu-card')||document.querySelector('#panel-overview .menu-widget, #panel-boss .menu-widget');
+    if(mw&&!mw.id)mw.id='ov-menu-card';
+    ovPlace(panel.querySelector('.ov-col-main'),LAYOUT.main);
+    ovPlace(panel.querySelector('.ov-col-side'),LAYOUT.side);
+    ovPlace(document.getElementById('ov-more-body'),LAYOUT.more);
+  }
+  window.ovLayout=ovLayout;
+  var ovLayoutPending=false;
+  function ovLayoutSoon(){
+    if(ovLayoutPending)return; ovLayoutPending=true;
+    requestAnimationFrame(function(){ ovLayoutPending=false; try{ ovLayout(); }catch(e){ console.error(e); } });
+  }
+  function ovWatchLayout(){
+    if(typeof MutationObserver!=='function')return;
+    var panel=document.getElementById('panel-overview'); if(!panel)return;
+    var mo=new MutationObserver(ovLayoutSoon);
+    [panel,panel.querySelector('.ov-col-main'),panel.querySelector('.ov-col-side'),document.getElementById('ov-more-body')].forEach(function(n){ if(n)mo.observe(n,{childList:true}); });
+  }
+  window.ovMoreToggle=function(force){
+    var sec=document.getElementById('ov-more'),btn=document.getElementById('ov-more-toggle'); if(!sec||!btn)return;
+    var closed=typeof force==='boolean'?!force:undefined;
+    if(typeof window.MarcomMotion!=='undefined')closed=window.MarcomMotion.toggle(sec,'ov-more-closed',closed,{reveal:':scope>.ov-more-body'});
+    else{ if(typeof closed!=='boolean')closed=!sec.classList.contains('ov-more-closed'); sec.classList.toggle('ov-more-closed',closed); }
+    btn.setAttribute('aria-expanded',closed?'false':'true');
+    try{ localStorage.setItem('ov_more_open',closed?'0':'1'); }catch(e){}
+  };
+  function ovMoreRestore(){
+    var open=false; try{ open=localStorage.getItem('ov_more_open')==='1'; }catch(e){}
+    var sec=document.getElementById('ov-more'),btn=document.getElementById('ov-more-toggle');
+    if(sec)sec.classList.toggle('ov-more-closed',!open);
+    if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+  }
 
   function buildShell(){
     if(document.getElementById('panel-overview'))return true;
@@ -5081,8 +5138,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     function row(it){
       return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub">'+esc(nm(it.w))+' &middot; '+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
+    /* The All view shows three per group so the list stays short; a filter shows five. */
+    var cap=ovDl==='all'?3:5;
     var html=dlGroups(items,ovDl).map(function(g){
-      var list=ovDlOpen[g.key]?g.items:g.items.slice(0,5);
+      var list=ovDlOpen[g.key]?g.items:g.items.slice(0,cap);
       return '<div class="ov-dl-grp"><div class="ov-dl-grp-t'+(g.over?' od':'')+'">'+g.title+' <span class="ov-dl-count">'+g.items.length+'</span></div>'
         +list.map(row).join('')
         +(g.items.length>list.length?'<button type="button" class="ov-dl-more" onclick="ovDlMore(\''+g.key+'\')">Show '+(g.items.length-list.length)+' more</button>':'')
@@ -5128,8 +5187,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   /* ---------- watermark deletion queue (O's media tasks) ---------- */
   function renderWM(){
     var el=document.getElementById('ov-watermark'); if(!el)return;
-    var items=tOf('o').filter(function(t){ return t.mdWatermark; }).sort(function(a,b){ return (a.mdWatermark||'').localeCompare(b.mdWatermark||''); });
-    if(!items.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No media files queued for deletion.</div>'); return; }
+    /* The Overview shows only deletions due within 3 days (or overdue); the full
+       queue stays in O's tab. The card hides itself when nothing is urgent. */
+    var items=tOf('o').filter(function(t){ if(!t.mdWatermark)return false; var dr=dU(t.mdWatermark); return dr!==null&&dr<=3; }).sort(function(a,b){ return (a.mdWatermark||'').localeCompare(b.mdWatermark||''); });
+    var card=document.getElementById('ov-wm-card'); if(card)card.hidden=!items.length;
+    if(!items.length){ MarcomUI.setHTML(el,''); return; }
     MarcomUI.setHTML(el,items.map(function(t){
       var dr=dU(t.mdWatermark);
       var cls=dr<0?'od':(dr===0?'today':(dr<=7?'soon':'ok'));
@@ -5221,7 +5283,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var sub=document.getElementById('ov-datesub');
     if(sub){ var n=new Date(),dateLabel=DOW[n.getDay()]+', '+n.getDate()+' '+MON[n.getMonth()]+' '+n.getFullYear(); if(sub.textContent!==dateLabel)sub.textContent=dateLabel; }
     renderStats(); renderTeam(); calFilters(); renderCal(); renderDeadlines();
-    renderCountdown(); renderActivity(); renderWM(); renderRes();
+    renderCountdown(); renderActivity(); renderWM(); renderRes(); ovLayout();
     try{ if(window.ovDaily)window.ovDaily(); }catch(e){}
   }
 
@@ -5261,7 +5323,9 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function init(){
     try{
       var ok=buildShell();
-      try{ var _side=document.querySelector('#panel-overview .ov-col-side'); var _mw=document.querySelector('#panel-boss .menu-widget'); if(_side&&_mw){ var _w=_mw.querySelector('.wmove'); if(_w)_w.remove(); var _team=document.getElementById('team-card'); _side.insertBefore(_mw,_team?_team.nextSibling:_side.firstChild); } if(typeof renderMenu==='function')renderMenu(); }catch(e){}
+      /* Today's Menu lives in the folded Resources & more section now. */
+      try{ var _more=document.getElementById('ov-more-body'); var _mw=document.querySelector('#panel-boss .menu-widget'); if(_more&&_mw){ var _w=_mw.querySelector('.wmove'); if(_w)_w.remove(); _mw.id=_mw.id||'ov-menu-card'; _more.appendChild(_mw); } if(typeof renderMenu==='function')renderMenu(); }catch(e){}
+      ovMoreRestore(); ovWatchLayout();
       buildAuthorOptions();
       renderAnnouncements();
       renderOverview();
@@ -6925,39 +6989,39 @@ html.dark .dirq-ok{color:#f0b95f;}
 })();
 </script>
 <style id="trq-style">
-#panel-overview #trq-card .trq-compose{background:var(--gray-light);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;}
-#panel-overview .trq-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;resize:vertical;min-height:48px;}
-#panel-overview .trq-input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,95,.12);}
-#panel-overview .trq-row{display:flex;gap:9px;margin-top:9px;flex-wrap:wrap;align-items:center;}
-#panel-overview .trq-sel{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;font-weight:600;color:var(--text);background:var(--surface);outline:none;cursor:pointer;}
-#panel-overview .trq-list{display:flex;flex-direction:column;gap:10px;}
-#panel-overview .trq-item{border:1px solid var(--border);border-left:4px solid var(--navy2);border-radius:11px;padding:11px 13px;background:var(--surface);}
-#panel-overview .trq-item.st-progress{border-left-color:var(--gold2);}
-#panel-overview .trq-item.st-done{border-left-color:var(--green);opacity:.82;}
-#panel-overview .trq-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
-#panel-overview .trq-cat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;background:var(--navy-light);color:var(--navy);padding:2px 8px;border-radius:99px;}
-html.dark #panel-overview .trq-cat{color:#8fb4dc;}
-#panel-overview .trq-status{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;padding:2px 8px;border-radius:99px;}
-#panel-overview .trq-status.s-open{background:var(--blue-light);color:var(--blue);}
-#panel-overview .trq-status.s-progress{background:var(--gold-light);color:var(--gold2);}
-#panel-overview .trq-status.s-done{background:var(--green-light);color:#147c3b;}
-html.dark #panel-overview .trq-status.s-done{color:#5fcf85;}
-#panel-overview .trq-item.st-info{border-left-color:var(--purple);}
-#panel-overview .trq-item.st-reject{border-left-color:var(--danger);opacity:.9;}
-#panel-overview .trq-status.s-info{background:var(--purple-light);color:var(--purple);}
-html.dark #panel-overview .trq-status.s-info{color:#c4b5fd;}
-#panel-overview .trq-status.s-reject{background:var(--danger-light);color:var(--danger);}
-html.dark #panel-overview .trq-status.s-reject{color:#f4a3a3;}
-#panel-overview .trq-setwrap{display:inline-flex;align-items:center;gap:5px;margin-left:auto;}
-#panel-overview .trq-setlbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
-#panel-overview .trq-setsel{border:1.5px solid var(--border);border-radius:7px;padding:3px 7px;font-size:11px;font-family:inherit;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;}
-#panel-overview .trq-setsel:focus{border-color:var(--navy);}
-#panel-overview .trq-text{font-size:13.5px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word;}
-#panel-overview .trq-foot{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--muted);flex-wrap:wrap;}
-#panel-overview .trq-act{background:none;border:none;font-family:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;padding:0;}
-#panel-overview .trq-act:hover{color:var(--navy);}
-#panel-overview .trq-act.del:hover{color:var(--danger);}
-#panel-overview .trq-empty{font-size:12.5px;color:var(--muted);padding:14px 4px;text-align:center;}
+:is(#panel-overview,#settings-modal) #trq-card .trq-compose{background:var(--gray-light);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;}
+:is(#panel-overview,#settings-modal) .trq-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;resize:vertical;min-height:48px;}
+:is(#panel-overview,#settings-modal) .trq-input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,95,.12);}
+:is(#panel-overview,#settings-modal) .trq-row{display:flex;gap:9px;margin-top:9px;flex-wrap:wrap;align-items:center;}
+:is(#panel-overview,#settings-modal) .trq-sel{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;font-weight:600;color:var(--text);background:var(--surface);outline:none;cursor:pointer;}
+:is(#panel-overview,#settings-modal) .trq-list{display:flex;flex-direction:column;gap:10px;}
+:is(#panel-overview,#settings-modal) .trq-item{border:1px solid var(--border);border-left:4px solid var(--navy2);border-radius:11px;padding:11px 13px;background:var(--surface);}
+:is(#panel-overview,#settings-modal) .trq-item.st-progress{border-left-color:var(--gold2);}
+:is(#panel-overview,#settings-modal) .trq-item.st-done{border-left-color:var(--green);opacity:.82;}
+:is(#panel-overview,#settings-modal) .trq-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+:is(#panel-overview,#settings-modal) .trq-cat{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;background:var(--navy-light);color:var(--navy);padding:2px 8px;border-radius:99px;}
+html.dark :is(#panel-overview,#settings-modal) .trq-cat{color:#8fb4dc;}
+:is(#panel-overview,#settings-modal) .trq-status{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;padding:2px 8px;border-radius:99px;}
+:is(#panel-overview,#settings-modal) .trq-status.s-open{background:var(--blue-light);color:var(--blue);}
+:is(#panel-overview,#settings-modal) .trq-status.s-progress{background:var(--gold-light);color:var(--gold2);}
+:is(#panel-overview,#settings-modal) .trq-status.s-done{background:var(--green-light);color:#147c3b;}
+html.dark :is(#panel-overview,#settings-modal) .trq-status.s-done{color:#5fcf85;}
+:is(#panel-overview,#settings-modal) .trq-item.st-info{border-left-color:var(--purple);}
+:is(#panel-overview,#settings-modal) .trq-item.st-reject{border-left-color:var(--danger);opacity:.9;}
+:is(#panel-overview,#settings-modal) .trq-status.s-info{background:var(--purple-light);color:var(--purple);}
+html.dark :is(#panel-overview,#settings-modal) .trq-status.s-info{color:#c4b5fd;}
+:is(#panel-overview,#settings-modal) .trq-status.s-reject{background:var(--danger-light);color:var(--danger);}
+html.dark :is(#panel-overview,#settings-modal) .trq-status.s-reject{color:#f4a3a3;}
+:is(#panel-overview,#settings-modal) .trq-setwrap{display:inline-flex;align-items:center;gap:5px;margin-left:auto;}
+:is(#panel-overview,#settings-modal) .trq-setlbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);}
+:is(#panel-overview,#settings-modal) .trq-setsel{border:1.5px solid var(--border);border-radius:7px;padding:3px 7px;font-size:11px;font-family:inherit;font-weight:700;color:var(--text);background:var(--surface);cursor:pointer;outline:none;}
+:is(#panel-overview,#settings-modal) .trq-setsel:focus{border-color:var(--navy);}
+:is(#panel-overview,#settings-modal) .trq-text{font-size:13.5px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word;}
+:is(#panel-overview,#settings-modal) .trq-foot{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--muted);flex-wrap:wrap;}
+:is(#panel-overview,#settings-modal) .trq-act{background:none;border:none;font-family:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;padding:0;}
+:is(#panel-overview,#settings-modal) .trq-act:hover{color:var(--navy);}
+:is(#panel-overview,#settings-modal) .trq-act.del:hover{color:var(--danger);}
+:is(#panel-overview,#settings-modal) .trq-empty{font-size:12.5px;color:var(--muted);padding:14px 4px;text-align:center;}
 </style>
 <script id="trq-script">
 /* ===== TEAM REQUEST LOG (Overview, auth-linked, additive) ===== */
@@ -6985,16 +7049,21 @@ html.dark #panel-overview .trq-status.s-reject{color:#f4a3a3;}
   function myName(){ var c=me(); if(!c)return 'Member'; if(c.role==='admin')return (mn('boss')||'Boss'); if(c.workspace)return (mn(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
   function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
   function ensureCard(){
-    var main=document.querySelector('#panel-overview .ov-col-main'); if(!main)return false;
+    /* App feedback lives in Settings, so the Overview stays about the team's work. */
+    var main=document.querySelector('#settings-modal .modal-body'); if(!main)return false;
     if(document.getElementById('trq-card'))return true;
     var c=document.createElement('div'); c.className='ov-card'; c.id='trq-card';
     var opts=CATS.map(function(x){return '<option>'+esc(x)+'</option>';}).join('');
-    c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-message-report"></i> Team Requests</div></div>'
+    c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-bulb"></i> Suggest an app improvement</div></div>'
+      +'<div class="trq-hint">Ideas, bugs or workflow changes for this app. The whole team can see them.</div>'
       +'<div class="trq-compose"><textarea class="trq-input" id="trq-input" placeholder="Request an app upgrade, a fix, or anything work related..."></textarea>'
       +'<div class="trq-row"><select class="trq-sel" id="trq-cat">'+opts+'</select>'
       +'<button class="btn btn-navy btn-sm" id="trq-submit" style="margin-left:auto;"><i class="ti ti-send"></i> Submit request</button></div></div>'
       +'<div class="trq-list" id="trq-list"></div>';
     main.appendChild(c);
+    /* Other scripts add Settings sections when it opens (one after a short delay),
+       so keep app feedback last whenever the Settings content changes. */
+    try{ new MutationObserver(function(){ if(main.lastElementChild!==c)main.appendChild(c); }).observe(main,{childList:true}); }catch(e){}
     var sb=document.getElementById('trq-submit'); if(sb)sb.onclick=submit;
     render();
     return true;

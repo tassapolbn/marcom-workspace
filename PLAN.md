@@ -163,7 +163,7 @@ All motion respects the system "reduce motion" setting.
     and Today's Focus. Its items are already the Overdue and Today groups in Upcoming Deadlines.
   - Test: each number appears once, matches the old counts on the same data, and filters the list.
 
-- [ ] **10. New Overview layout, with less-used items folded away**
+- [x] **10. New Overview layout, with less-used items folded away**
   - Files: `index.html` (Overview shell order, Watermark queue, Team Requests, Quick Actions), a small layout helper, CSS
   - Order:
     - Today tiles first.

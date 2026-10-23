@@ -367,8 +367,8 @@ html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
 /* Today tiles (one set of numbers) and the Upcoming Deadlines filter. */
 #panel-overview .ov-stats{grid-template-columns:repeat(5,minmax(0,1fr));}
 @media(max-width:1100px){#panel-overview .ov-stats{grid-template-columns:repeat(3,minmax(0,1fr));}}
-@media(max-width:700px){#panel-overview .ov-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
-@media(max-width:420px){#panel-overview .ov-stats{grid-template-columns:minmax(0,1fr);}}
+@media(max-width:700px){#panel-overview .ov-stats{grid-template-columns:repeat(2,minmax(0,1fr));}#panel-overview .ov-stats>.ov-stat:last-child:nth-child(odd){grid-column:1 / -1;}}
+@media(max-width:340px){#panel-overview .ov-stats{grid-template-columns:minmax(0,1fr);}}
 #panel-overview .ov-stat[role=button]{cursor:pointer;transition:transform 160ms ease,box-shadow 160ms ease;}
 @media(hover:hover){
   #panel-overview .ov-stat[role=button]:hover{
@@ -392,3 +392,37 @@ html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-mor
   #panel-overview .ov-stat[role=button]{transition:none;}
   #panel-overview .ov-stat[role=button]:hover{transform:none;}
 }
+
+/* Overview layout: a folded "Resources & more" section for less-used cards. */
+#panel-overview .ov-more{margin:8px 0 24px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
+#panel-overview .ov-more-toggle{
+  display:flex;align-items:center;gap:10px;width:100%;padding:14px 18px;border:0;border-radius:18px;
+  background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;
+}
+#panel-overview .ov-more-toggle:hover{background:var(--gray-light);}
+#panel-overview .ov-more-toggle:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+#panel-overview .ov-more-toggle>.ti:first-child{font-size:18px;color:var(--navy);}
+html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
+#panel-overview .ov-more-title{font-size:14px;font-weight:800;white-space:nowrap;}
+#panel-overview .ov-more-sum{
+  flex:1;min-width:0;color:var(--muted);font-size:12px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#panel-overview .ov-more-chev{transition:transform 200ms ease;}
+#panel-overview .ov-more-toggle[aria-expanded="true"] .ov-more-chev{transform:rotate(180deg);}
+#panel-overview .ov-more-body{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;padding:4px 16px 16px;
+}
+#panel-overview .ov-more.ov-more-closed .ov-more-body{display:none;}
+#panel-overview .ov-more-body>*{margin:0!important;min-width:0;}
+#panel-overview .ov-more-body>#sscal-card{grid-column:1 / -1;}
+@media(max-width:1100px){#panel-overview .ov-more-body{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:700px){
+  #panel-overview .ov-more-body{grid-template-columns:minmax(0,1fr);padding:4px 10px 12px;}
+  #panel-overview .ov-more-sum{display:none;}
+}
+#panel-overview #ov-wm-card[hidden]{display:none!important;}
+/* App feedback, now inside Settings. */
+#settings-modal #trq-card{margin-top:18px;padding:16px;border:1px solid var(--border);border-radius:14px;box-shadow:none;background:var(--surface);}
+#settings-modal #trq-card .trq-hint{font-size:12px;color:var(--muted);margin:-4px 0 12px;}
+@media(prefers-reduced-motion:reduce){#panel-overview .ov-more-chev{transition:none;}}
