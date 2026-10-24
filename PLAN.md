@@ -338,7 +338,7 @@ light mode still exists and every text is readable in it, and a check that the a
     finds no failures in light mode on the Overview, all four member tabs (widgets open), Add Task,
     the event dialog, Settings, chat, the Request Centre and the Director's board.
 
-- [ ] **22. Phone-friendly fixes**
+- [x] **22. Phone-friendly fixes**
   - Files: `assets/workspace-ui.css` (one phone block), `index.html` (a two-line iPhone zoom fix
     next to the viewport tag), a new `tests/ui-mobile.test.mjs`
   - The Overview fits the screen: its columns can shrink, and the Event Board header wraps onto two lines.

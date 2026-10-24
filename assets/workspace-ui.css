@@ -681,3 +681,31 @@ html:not(.dark) body .menu-cat{color:#7f5704!important;}
 html:not(.dark) .meet-label{opacity:1;}
 html:not(.dark) .cmdk-trigger kbd{background:rgba(0,0,0,.24);color:#fff;}
 html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#5f6b7a!important;opacity:1;}
+
+/* Step 22: phone-friendly layout */
+/* Columns may shrink below their content, so a long one-line title truncates instead of widening the page. */
+#panel-overview .ov-col-main,#panel-overview .ov-col-side{min-width:0;}
+/* The Event Board header wraps onto two lines instead of pushing its card past the screen edge. */
+#evb-card>.ov-card-head{flex-wrap:wrap;row-gap:8px;}
+/* Add Task on a narrow screen: Save + Calendar gets its own full-width row. */
+@media(max-width:480px){
+  #modal .modal-footer{flex-wrap:wrap;}
+  #modal #modal-save-cal{flex:1 1 100%!important;justify-content:center;}
+}
+/* Phones: finger-sized buttons and no text under 11px. */
+@media(max-width:640px){
+  #panel-overview :is(.ov-fpill,.ov-mini-btn,.cal-arrow,.ov-search-clear,.ov-ann-act,.menu-week-toggle,.ov-dl-more,.ov-more-link),
+  .tab-panel :is(.filter-tabs .fpill,.mh-stat,.evhub-btn,.uxp-drawer-btn){min-height:36px;}
+  #panel-overview :is(.ov-mini-btn,.cal-arrow,.ov-search-clear,.ov-ann-act),.tab-panel .evhub-btn.icon-only{min-width:36px;justify-content:center;}
+  .ov-cdn>.ev-chip-del,.ev-tl-item>.ev-chip-del{width:36px;height:36px;}
+  .ev-chip>.ev-chip-del{width:32px;height:32px;top:4px;right:4px;}
+  .ev-chip-date,.ev-chip-name{padding-right:34px;}
+  .tab-panel :is(.tcard-sel,.tcard-move,.role-btn){min-height:32px;}
+  /* Event Board header: title and fold button on the first line, the filter and Show completed below. */
+  #evb-card>.ov-card-head>.ov-card-title{flex:1 1 calc(100% - 56px);}
+  #evb-card .ov-card-title{flex-wrap:wrap;row-gap:2px;}
+  #evb-card .ov-card-title>span{flex-basis:100%;}
+  #evb-card>.ov-card-head>.uxp-col-btn{order:1;}
+  #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
+  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.ov-agenda-eyebrow,.dzsel-tag,.ov-act-t,.ov-res-go,.team-lvl,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
+}
