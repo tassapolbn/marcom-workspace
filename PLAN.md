@@ -361,7 +361,7 @@ light mode still exists and every text is readable in it, and a check that the a
   - Files: `README.md`, `UI-CODE-REVIEW.md`
   - Run all tests and the contrast and phone checks in both themes, then record the changes.
 
-- [ ] **25. Merge and deploy** *(Boss: "once done merge and deploy")*
+- [x] **25. Merge and deploy** *(Boss: "once done merge and deploy")*
   - Merge `ux/declutter-overview` into `main`, push it, and deploy the site, including the
     Netlify functions from steps 17 and 18. Then check the live site: Overview, a member tab,
     the Request Centre and request tracking.
