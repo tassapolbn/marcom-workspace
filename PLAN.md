@@ -357,7 +357,7 @@ light mode still exists and every text is readable in it, and a check that the a
   - Test: the contrast checker finds no failures in dark mode on the same views; light mode results
     stay the same.
 
-- [ ] **24. Final check and docs**
+- [x] **24. Final check and docs**
   - Files: `README.md`, `UI-CODE-REVIEW.md`
   - Run all tests and the contrast and phone checks in both themes, then record the changes.
 

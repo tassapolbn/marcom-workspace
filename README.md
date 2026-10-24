@@ -233,16 +233,19 @@ menu and the server validation both read that one list.
 
 **Overview**, top to bottom:
 
+- Team Announcements first, right under the payday strip and above the
+  greeting: full width and always open. On wide screens the newest three sit
+  side by side (two on tablets, stacked on phones); pinned ones come first, and
+  New opens the composer.
 - One row of five tiles: Overdue, Due today, Next 7 days, New requests and
   Meetings today. Each number appears once on the page. The three task tiles
   filter Upcoming Deadlines, which has All / Overdue / Today / 7 days pills.
 - Main column: Upcoming Deadlines, the Event Board, then the Master Calendar.
   The Event Board shows open shared tasks only, folded by event and sorted by
   what is due next, with a Show completed switch.
-- Side column: Team today, Event Countdown, Request Centre, watermark
-  deletions (only when one is due within 3 days), then Team Announcements.
-  Team today replaces the old availability, "who is free", workload and leave
-  cards. Announcements show the newest three and post from the New button.
+- Side column: Team today, Event Countdown, Request Centre, then watermark
+  deletions (only when one is due within 3 days). Team today replaces the old
+  availability, "who is free", workload and leave cards.
 - A folded **Resources & more** section holds Resources (tabs for department
   links, brand guidelines and the asset library), Today's Menu, Recent Team
   Activity and the Support Staff Calendar preview. It remembers whether it was
@@ -260,7 +263,8 @@ menu and the server validation both read that one list.
 - Google Calendar and Upcoming Events are one Calendar widget, with Month and
   Upcoming views.
 - The header chips (Active, Due Soon, Done) filter the board.
-- Dark mode and Settings are in the "..." menu.
+- The light/dark switch and Settings are in the "..." menu. Each device
+  remembers the choice; dark is the default until someone picks light.
 
 **Forms and events:**
 
@@ -272,6 +276,17 @@ menu and the server validation both read that one list.
 - Design requests ask for the status, the requester and the campaign once.
 - Event countdowns delete in one click, with Undo, or after one question if
   the event holds work. Past events fold away, with Clear past events.
+
+**Readability and phones:**
+
+- Every text reaches the 4.5:1 contrast standard in light and dark mode.
+  `tests/ui-contrast.test.mjs` checks each colour pair that was fixed.
+- On screens up to 640 px, filter pills and small buttons are at least 36 px
+  tall (task card dropdowns 32 px) and no text is smaller than 11 px. The
+  Overview and Add Task fit a 360 px phone without sideways scrolling.
+- iPhones and iPads do not zoom into a field when it is tapped: a small script
+  next to the viewport tag adds `maximum-scale=1` on iOS only, and pinch-zoom
+  still works. `tests/ui-mobile.test.mjs` covers it.
 
 **Small helpers in `assets/`:**
 

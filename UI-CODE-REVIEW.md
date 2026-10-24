@@ -1,6 +1,6 @@
 # UX tidy-up — 24 October 2026
 
-The plan is in `PLAN.md`; all 15 steps are done. `README.md` section 9 describes the new layout.
+The plan is in `PLAN.md`; steps 1 to 24 are done. `README.md` section 9 describes the new layout.
 
 Fixed:
 - **Forms:** typed-in dialogs no longer close on an outside click, and new tasks keep a draft.
@@ -18,6 +18,14 @@ Follow-up, steps 16 to 19, on the same day:
 - P1 is resolved: tracking now needs the request number and the email together.
 - P2 is resolved: impossible dates and times are refused with a message on each field.
 - 84 dead CSS rules were removed.
+
+Follow-up 2, steps 20 to 24, on the same day:
+- Team Announcements are the first thing on the Overview, under the payday strip.
+- Light mode: every text reaches 4.5:1. The Boss board's selected filter had been white on white
+  since September, and the Request Centre's Submit Request button was white on gold after the design refresh.
+- Dark mode: the same check; the Move dropdown on task cards had been almost invisible.
+- Phones: the Overview no longer scrolls sideways at 375 px, Add Task's buttons fit, iPhones no longer
+  zoom into fields, and small buttons and labels are bigger.
 
 Still open: an emailed one-time code for tracking (once email sending is set up), and folding the older inline style layers into `workspace-ui.css`.
 
