@@ -313,7 +313,7 @@ light mode still exists and every text is readable in it, and a check that the a
 
 ## Steps (Codex builds each one; Claude reviews, tests and commits)
 
-- [ ] **20. Team Announcements back at the top of the Overview**
+- [x] **20. Team Announcements back at the top of the Overview**
   - Files: `index.html` (Overview shell and layout lists in `ov-script`), `assets/workspace-ui.css`,
     `tests/ui-layout.test.mjs`
   - The announcements card is the very first thing on the Overview, above the greeting and search,

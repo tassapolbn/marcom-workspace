@@ -4759,11 +4759,25 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function pad2(n){ return String(n).padStart(2,'0'); }
 
   /* ---------- shell ---------- */
-  /* Layout: today tiles; main column (deadlines, Event Board, calendar); side
-     column (team, countdown, Request Centre, watermark when urgent, announcements);
+  /* Layout: announcements at the top; today tiles; main column (deadlines, Event Board, calendar); side
+     column (team, countdown, Request Centre, watermark when urgent);
      and a folded "Resources & more" section for everything used less often.
      ovLayout() keeps cards that other scripts add in these slots. */
   var SHELL=''
+   +'<div class="ov-top" id="ov-top">'
+   +    '<div class="ov-card ov-ann ov-ann-closed" id="ov-ann-card">'
+   +      '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div><button type="button" class="ov-mini-btn ov-ann-new" id="ov-ann-new" aria-expanded="false" aria-controls="ov-ann-compose" onclick="ovAnnCompose()"><i class="ti ti-plus"></i> New</button></div>'
+   +      '<div class="ov-ann-compose" id="ov-ann-compose">'
+   +        '<textarea id="ov-ann-text" class="ov-ann-input" rows="2" placeholder="Share an announcement with the team..."></textarea>'
+   +        '<div class="ov-ann-compose-row">'
+   +          '<span class="ov-ann-aslabel" id="ov-ann-aslabel"><i class="ti ti-user-circle"></i> Posting as <b id="ov-ann-asname">you</b></span>'
+   +          '<label class="ov-ann-pin"><input type="checkbox" id="ov-ann-pinnew"> Pin to top</label>'
+   +          '<button class="btn btn-navy btn-sm" onclick="ovAddAnnouncement()"><i class="ti ti-send"></i> Post</button>'
+   +        '</div>'
+   +      '</div>'
+   +      '<div class="ov-ann-list" id="ov-ann-list"></div>'
+   +    '</div>'
+   +'</div>'
    +'<div class="ov-topbar">'
    +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
    +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
@@ -4784,18 +4798,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '<div class="ov-card" id="team-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users"></i> Team today <span class="team-sum" id="team-sum"></span></div><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div><div class="team-list" id="team-list"></div><div class="team-note" id="team-note"></div></div>'
    +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
-   +    '<div class="ov-card ov-ann ov-ann-closed" id="ov-ann-card">'
-   +      '<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-speakerphone"></i> Team Announcements</div><button type="button" class="ov-mini-btn ov-ann-new" id="ov-ann-new" aria-expanded="false" aria-controls="ov-ann-compose" onclick="ovAnnCompose()"><i class="ti ti-plus"></i> New</button></div>'
-   +      '<div class="ov-ann-compose" id="ov-ann-compose">'
-   +        '<textarea id="ov-ann-text" class="ov-ann-input" rows="2" placeholder="Share an announcement with the team..."></textarea>'
-   +        '<div class="ov-ann-compose-row">'
-   +          '<span class="ov-ann-aslabel" id="ov-ann-aslabel"><i class="ti ti-user-circle"></i> Posting as <b id="ov-ann-asname">you</b></span>'
-   +          '<label class="ov-ann-pin"><input type="checkbox" id="ov-ann-pinnew"> Pin to top</label>'
-   +          '<button class="btn btn-navy btn-sm" onclick="ovAddAnnouncement()"><i class="ti ti-send"></i> Post</button>'
-   +        '</div>'
-   +      '</div>'
-   +      '<div class="ov-ann-list" id="ov-ann-list"></div>'
-   +    '</div>'
    +  '</div>'
    +'</div>'
    +'<section class="ov-more ov-more-closed" id="ov-more" aria-label="Resources and more">'
@@ -4819,8 +4821,9 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
 
   /* ---------- layout: one order for every card, wherever a script added it ---------- */
   var LAYOUT={
+    top:['ov-ann-card'],
     main:['ov-dl-card','evb-card','ov-cal-card'],
-    side:['team-card','ov-cd-card','ov-rc-card','ov-wm-card','ov-ann-card'],
+    side:['team-card','ov-cd-card','ov-rc-card','ov-wm-card'],
     more:['ov-resx-card','ov-menu-card','ov-act-card','sscal-card']
   };
   /* Moves only the cards that are out of place, so a card someone is typing in
@@ -4839,6 +4842,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var panel=document.getElementById('panel-overview'); if(!panel)return;
     var mw=document.getElementById('ov-menu-card')||document.querySelector('#panel-overview .menu-widget, #panel-boss .menu-widget');
     if(mw&&!mw.id)mw.id='ov-menu-card';
+    ovPlace(document.getElementById('ov-top'),LAYOUT.top);
     ovPlace(panel.querySelector('.ov-col-main'),LAYOUT.main);
     ovPlace(panel.querySelector('.ov-col-side'),LAYOUT.side);
     ovPlace(document.getElementById('ov-more-body'),LAYOUT.more);
@@ -4858,7 +4862,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(typeof MutationObserver!=='function')return;
     var panel=document.getElementById('panel-overview'); if(!panel)return;
     var mo=new MutationObserver(ovLayoutSoon);
-    [panel,panel.querySelector('.ov-col-main'),panel.querySelector('.ov-col-side'),document.getElementById('ov-more-body')].forEach(function(n){ if(n)mo.observe(n,{childList:true}); });
+    [panel,document.getElementById('ov-top'),panel.querySelector('.ov-col-main'),panel.querySelector('.ov-col-side'),document.getElementById('ov-more-body')].forEach(function(n){ if(n)mo.observe(n,{childList:true}); });
   }
   window.ovMoreToggle=function(force){
     var sec=document.getElementById('ov-more'),btn=document.getElementById('ov-more-toggle'); if(!sec||!btn)return;
@@ -10574,6 +10578,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
   function decorate(){
     var panel=document.getElementById('panel-overview'); if(!panel)return;
     panel.querySelectorAll('.ov-card').forEach(function(card){
+      if(card.id==='ov-ann-card'){card.classList.remove('uxp-collapsed');return;}
       if(card.id==='uxp-today-card')return;
       var head=card.querySelector(':scope>.ov-card-head'); if(!head)return;
       if(head.querySelector('.uxp-col-btn'))return;

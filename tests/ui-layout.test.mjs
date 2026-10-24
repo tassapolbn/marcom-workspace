@@ -21,11 +21,53 @@ test('the Overview shell puts every card in its column and folds the rest away',
   const side=shell.slice(shell.indexOf('ov-col-side'),shell.indexOf('id="ov-more"'));
   const more=shell.slice(shell.indexOf('id="ov-more"'));
   assert.ok(order(['ov-dl-card','ov-cal-card'],main));
-  assert.ok(order(['team-card','ov-cd-card','ov-wm-card','ov-ann-card'],side));
+  assert.ok(order(['team-card','ov-cd-card','ov-wm-card'],side));
+  const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),barAt=shell.indexOf('class="ov-topbar"');
+  assert.ok(topAt>0&&annAt>topAt&&barAt>annAt,'announcements sit in the top slot before the greeting');
+  assert.doesNotMatch(side,/id="ov-ann-card"/);
   assert.ok(order(['ov-res-card','ov-act-card'],more));
   assert.match(shell,/class="ov-more ov-more-closed" id="ov-more"/,'Resources & more starts folded');
   assert.doesNotMatch(shell,/Quick Actions/);
   assert.doesNotMatch(shell,/ov-main-list-grid|ov-ann-row/);
+});
+
+test('the Overview layout keeps announcements in the top slot',()=>{
+  const context=vm.createContext({});
+  vm.runInContext(slice('  var LAYOUT={','  };')+'  };',context);
+  assert.deepEqual(Array.from(context.LAYOUT.top),['ov-ann-card']);
+  assert.ok(!context.LAYOUT.side.includes('ov-ann-card'));
+});
+
+test('announcements stay open without a fold button while other cards remain collapsible',()=>{
+  function card(id){
+    const classes=new Set(['uxp-collapsed']),buttons=[];
+    const head={querySelector:selector=>selector==='.uxp-col-btn'?(buttons[0]||null):null,
+      appendChild:button=>buttons.push(button)};
+    return {id,buttons,classList:{remove:name=>classes.delete(name),add:name=>classes.add(name),contains:name=>classes.has(name)},
+      querySelector:selector=>selector===':scope>.ov-card-head'?head:null};
+  }
+  const announcements=card('ov-ann-card'),other=card('team-card');
+  const document={
+    getElementById:id=>id==='panel-overview'?{querySelectorAll:()=>[announcements,other]}:null,
+    createElement:()=>({attributes:{},setAttribute(name,value){this.attributes[name]=value;}})
+  };
+  const localStorage={getItem:key=>{
+    assert.equal(key,'uxp_collapsed');
+    return JSON.stringify({'ov-ann-card':1,'team-card':1});
+  }};
+  const context=vm.createContext({document,localStorage});
+  vm.runInContext(slice("  var COLKEY='uxp_collapsed';",'  function decorate(){')+
+    slice('  function decorate(){','  var pend=false;'),context);
+  context.decorate();
+  assert.equal(announcements.buttons.length,0);
+  assert.equal(announcements.classList.contains('uxp-collapsed'),false);
+  assert.equal(other.buttons.length,1);
+  assert.equal(other.buttons[0].className,'uxp-col-btn');
+  assert.equal(other.buttons[0].attributes['aria-expanded'],'false');
+  context.decorate();
+  assert.equal(announcements.buttons.length,0,'later decoration still skips announcements');
+  assert.equal(announcements.classList.contains('uxp-collapsed'),false);
+  assert.equal(other.buttons.length,1,'later decoration does not duplicate fold buttons');
 });
 
 class Card{constructor(id){this.id=id;this.parentNode=null;}

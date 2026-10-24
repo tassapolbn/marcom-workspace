@@ -319,7 +319,6 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 @media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}
 
 /* One team snapshot for the Overview. */
-#panel-overview .ov-ann-row.ov-ann-row-single{grid-template-columns:1fr;}
 #team-card .team-list{display:flex;flex-direction:column;gap:6px;}
 #team-card .team-row{
   display:grid;grid-template-columns:36px minmax(0,1fr) auto;
@@ -645,3 +644,21 @@ html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textare
 /* Dialogs opened from the widget drawer sit above it; merged widgets stay hidden. */
 body.uxp-drawer-open .modal-overlay,body.uxp-drawer-open .confirm-overlay,body.uxp-drawer-open .cmdk-overlay{z-index:700!important;}
 body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
+
+/* Step 20: Team Announcements at the very top of the Overview */
+#ov-top{margin-top:0;margin-bottom:var(--sp-4,16px);}
+#ov-top>#ov-ann-card{margin:0;}
+@media(min-width:600px){
+  #ov-top .ov-ann-list{display:grid;gap:12px;}
+  #ov-top .ov-ann-item{margin-bottom:0;display:flex;flex-direction:column;}
+  #ov-top .ov-ann-foot{margin-top:auto;}
+  #ov-top .ov-ann-text{margin-bottom:9px;}
+  #ov-top .ov-more-link,#ov-top .ov-empty-sm{grid-column:1/-1;}
+}
+@media(min-width:600px) and (max-width:899.98px){
+  #ov-top .ov-ann-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(min-width:900px){
+  #ov-top .ov-ann-list{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+#ov-top .ov-ann-item:hover{transform:translateY(-1px);}
