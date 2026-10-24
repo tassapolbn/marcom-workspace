@@ -65,7 +65,7 @@ body.request-mode #rc-root .rc-form-head {flex-wrap:wrap;gap:12px;}
 body.request-mode #rc-root .rc-back {width:44px;height:44px;}
 body.request-mode #rc-root .rc-lead {background:#fff3d4;color:#624400;border:1px solid #F0B323;font-size:.875rem;padding:16px;}
 body.request-mode #rc-root .rc-lead i {color:#825a00;}
-body.request-mode #rc-root .rc-submit-btn {background:#F0B323!important;background-image:none!important;color:#003057;min-height:52px;font-size:1rem;min-width:0;}
+body.request-mode #rc-root .rc-submit-btn {background:#F0B323!important;background-image:none!important;color:#003057!important;min-height:52px;font-size:1rem;min-width:0;}
 body.request-mode #rc-root .rc-submit-btn:hover {background:#ffd16b!important;}
 body.request-mode #rc-root #rc-form>.rc-note {color:#e3edf5;}
 body.request-mode #rc-root #rc-step-err {color:#8d2118!important;background:#fff0ee;padding:14px 16px;border-radius:12px;}

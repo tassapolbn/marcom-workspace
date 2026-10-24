@@ -459,7 +459,7 @@ html.dark #ov-resx-card .ov-resx-tab.on{background:rgba(255,255,255,.12);}
 #ov-menu-card .menu-week-toggle:hover,#ov-menu-card .menu-week-toggle:focus-visible{background:var(--gray-light);color:var(--text);}
 #ov-menu-card .menu-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;}
 #ov-menu-card .menu-row{margin:0;padding:8px 10px;border-radius:10px;background:var(--gray-light);min-width:0;}
-#ov-menu-card .menu-cat{font-size:10px;}
+#ov-menu-card .menu-cat{font-size:11px;}
 #ov-menu-card .menu-item{font-size:12.5px;line-height:1.35;overflow-wrap:anywhere;}
 #ov-menu-card .menu-item-th{font-size:11px;}
 /* Support Staff Calendar: a short preview that opens full size. */
@@ -662,3 +662,22 @@ body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
   #ov-top .ov-ann-list{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
 #ov-top .ov-ann-item:hover{transform:translateY(-1px);}
+
+/* Step 21: light mode readability */
+html:not(.dark) .fpill.act-navy{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
+html:not(.dark) .btn-teal{background:linear-gradient(135deg,#0f766e,#115e59)!important;color:#fff!important;}
+html:not(.dark) #panel-boss .btn-accent{background:#366a9c!important;background-image:none!important;border-color:#366a9c!important;color:#fff!important;}
+html:not(.dark) #panel-dew .btn-accent{background:#a25816!important;background-image:none!important;border-color:#a25816!important;color:#fff!important;}
+html:not(.dark) #panel-o .btn-accent{background:#b73d0b!important;background-image:none!important;border-color:#b73d0b!important;color:#fff!important;}
+html:not(.dark) .dirq-n{background:#b45309;}
+html:not(.dark) .kb-col .kb-col-count{background:#fff!important;}
+html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member-role i,.mh-greet){color:#366a9c!important;}
+html:not(.dark) #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#a25816!important;}
+html:not(.dark) #panel-o :is(#o-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#b73d0b!important;}
+html:not(.dark) button[onclick^="confirmReset"]{color:#be123c!important;}
+html:not(.dark) .mb-event{color:#0b6e69!important;}
+html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b{color:#9a4a07;}
+html:not(.dark) body .menu-cat{color:#7f5704!important;}
+html:not(.dark) .meet-label{opacity:1;}
+html:not(.dark) .cmdk-trigger kbd{background:rgba(0,0,0,.24);color:#fff;}
+html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#5f6b7a!important;opacity:1;}

@@ -324,7 +324,7 @@ light mode still exists and every text is readable in it, and a check that the a
   - Test: the layout tests check the new order; in the preview at 1280 px and 375 px, the card comes
     first, above the greeting, and posting, pinning, deleting and Show all still work.
 
-- [ ] **21. Light mode: every text readable**
+- [x] **21. Light mode: every text readable**
   - Files: `assets/workspace-ui.css` (one light-mode readability block), `assets/request-centre.css`
     (Submit Request text colour), a new `tests/ui-contrast.test.mjs`
   - Fix each item listed above with the smallest colour change that reaches 4.5:1. For example:
