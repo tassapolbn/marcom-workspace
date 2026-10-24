@@ -272,3 +272,102 @@ limit. These are the next items, with Codex building again from about 05:48 when
 1. Tracking: request number + email now, email code later? *(Claude suggests yes)*
 2. Do the Codex review (step 16) first? *(Claude suggests yes)*
 3. Before 05:48: wait for Codex, or let Claude start step 17 now? *(Either is fine)*
+
+---
+
+# Follow-up plan 2 (24 Oct 2026): announcements, light mode, phones — approved by Boss
+
+Boss asked for three things: Team Announcements back at the top of the Overview, a check that
+light mode still exists and every text is readable in it, and a check that the app works on phones.
+
+## What the checks found
+- **Announcements:** before the tidy-up they sat right under the greeting, above the numbers. Now
+  they are the last card in the right column.
+- **Light mode switch:** still there, in the ⋯ menu ("Dark mode: on/off"), and remembered per device.
+  The header's sun/moon button was hidden in step 12.
+- **Light mode text:** every visible text was measured against its background (the usual standard
+  is 4.5:1, or 3:1 for large text). The Overview passes apart from two tiny labels. Problems:
+  - Boss board: the selected "All" filter is white text on white, so it is invisible. This has
+    been on the live site since the 5 September white theme.
+  - Request Centre: the Submit Request button is white on gold (1.9:1). This came from the step 13
+    button style; the button was designed with navy text.
+  - White text on mid-tone buttons: teal Add buttons on widgets, Boss and Dew Add Task, O's New,
+    the Director queue count (2.9–3.7:1).
+  - Coloured text on tinted chips: board column counts, the member header name, role and
+    greeting, Event Hub titles, Reset Year, the event badge on task cards, the "due today" chip,
+    the lunch-menu category and the Next Meeting label (3.2–4.5:1). Field hint text is slightly
+    pale (4.1–4.3:1).
+- **Phones (375 px):**
+  - The Overview is 481 px wide, so it scrolls sideways and the right edge of the cards is cut
+    off. The cause is the Event Board header from step 5, whose title, Show done, filter and
+    fold button don't wrap.
+  - In Add Task, the Save + Calendar button is cut off by about 10 px.
+  - Most fields use text smaller than 16 px, so iPhones zoom in when you tap one.
+  - Many buttons are only 24–30 px tall, and a few labels are 9.5–10 px.
+  - Member tabs, the widget drawer, the dialogs and the Request Centre already fit.
+- **Dark mode** is what anyone who hasn't picked light sees. Problems:
+  - The task card Move dropdown is navy on dark and almost invisible.
+  - Dew, O and Eye's selected board filter is dark on dark.
+  - Today's date in the small calendars and the teal Add buttons are white on bright colours.
+  - Some of the new Overview labels are too dim ("7 days", Med and High, Event Board group names).
+
+## Steps (Codex builds each one; Claude reviews, tests and commits)
+
+- [ ] **20. Team Announcements back at the top of the Overview**
+  - Files: `index.html` (Overview shell and layout lists in `ov-script`), `assets/workspace-ui.css`,
+    `tests/ui-layout.test.mjs`
+  - The announcements card is the very first thing on the Overview, above the greeting and search,
+    full width and always open (no fold button). The layout helper keeps it there. On wide screens,
+    up to three announcements sit side by side (two on tablets, stacked on phones) so the card stays
+    short. Nothing else changes: pinned first, newest three, Show all, New opens the composer, edit,
+    pin and delete.
+  - Test: the layout tests check the new order; in the preview at 1280 px and 375 px, the card comes
+    first, above the greeting, and posting, pinning, deleting and Show all still work.
+
+- [ ] **21. Light mode: every text readable**
+  - Files: `assets/workspace-ui.css` (one light-mode readability block), `assets/request-centre.css`
+    (Submit Request text colour), a new `tests/ui-contrast.test.mjs`
+  - Fix each item listed above with the smallest colour change that reaches 4.5:1. For example:
+    - the selected Boss filter becomes navy with white text
+    - Submit Request gets its navy text back
+    - teal buttons use #0f766e, and member buttons use a slightly deeper shade of their own colour
+    - column counts sit on white
+    - field hints become a darker grey
+  - Dark mode is untouched. The light/dark switch stays in the ⋯ menu.
+  - Test: the new test checks each colour pair reaches 4.5:1. In the preview, the contrast checker
+    finds no failures in light mode on the Overview, all four member tabs (widgets open), Add Task,
+    the event dialog, Settings, chat, the Request Centre and the Director's board.
+
+- [ ] **22. Phone-friendly fixes**
+  - Files: `assets/workspace-ui.css` (one phone block), `index.html` (a two-line iPhone zoom fix
+    next to the viewport tag), a new `tests/ui-mobile.test.mjs`
+  - The Overview fits the screen: its columns can shrink, and the Event Board header wraps onto two lines.
+  - Add Task's buttons wrap on narrow screens, so Save + Calendar is never cut off.
+  - iPhones and iPads stop zooming in when a field is tapped; pinch-zoom still works. Android is unchanged.
+  - On screens up to 640 px, filter pills and small icon buttons are at least 36 px tall, and the
+    smallest labels are at least 11 px.
+  - Test: the new test checks the rules and the iPhone tag. In the preview at 360, 375 and 414 px,
+    every tab, the drawer, Add Task and the Request Centre are exactly the screen width, with no
+    button under 32 px in the main views. Screenshots are checked.
+
+- [ ] **23. Dark mode: the same readability check**
+  - Files: `assets/workspace-ui.css` (one dark-mode readability block), `tests/ui-contrast.test.mjs`
+  - Fix the dark-mode items listed above: the Move dropdown, the selected filter for Dew, O and Eye,
+    today's date and the bright buttons, and the dim Overview labels and field hints. Light mode is untouched.
+  - Test: the contrast checker finds no failures in dark mode on the same views; light mode results
+    stay the same.
+
+- [ ] **24. Final check and docs**
+  - Files: `README.md`, `UI-CODE-REVIEW.md`
+  - Run all tests and the contrast and phone checks in both themes, then record the changes.
+
+- [ ] **25. Merge and deploy** *(Boss: "once done merge and deploy")*
+  - Merge `ux/declutter-overview` into `main`, push it, and deploy the site, including the
+    Netlify functions from steps 17 and 18. Then check the live site: Overview, a member tab,
+    the Request Centre and request tracking.
+
+## Decisions (Boss, 24 Oct 2026)
+1. The light/dark switch stays in the ⋯ menu; no header button.
+2. Step 23 (dark mode) is included.
+3. Announcements go at the very top of the Overview: the first thing people see.
+4. When everything is done: merge and deploy.
