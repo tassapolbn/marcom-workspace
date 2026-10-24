@@ -85,3 +85,62 @@ test('Request Centre submit text overrides the shared button colour and passes c
 test('Overview lunch menu categories use 11px text', () => {
   assert.ok(css.includes('#ov-menu-card .menu-cat{font-size:11px;}'));
 });
+
+/* Step 23: the same check for dark mode. */
+const darkHeader = '/* Step 23: dark mode readability */';
+const darkStart = css.indexOf(darkHeader);
+const darkNext = css.indexOf('/* Step ', darkStart + darkHeader.length);
+const darkBlock = css.slice(darkStart + darkHeader.length, darkNext < 0 ? undefined : darkNext)
+  .replace(/\/\*[\s\S]*?\*\//g, '');
+const darkRules = [...darkBlock.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+  .map(([, selector, declarations]) => ({ selector: selector.trim(), declarations }));
+
+test('every Step 23 selector is restricted to dark mode', () => {
+  assert.ok(darkStart >= 0, 'Step 23 block exists');
+  assert.ok(darkRules.length > 0);
+  for (const { selector } of darkRules) {
+    for (const part of selector.split(/,(?![^()]*\))/)) {
+      assert.ok(part.trim().startsWith('html.dark'), part);
+    }
+  }
+});
+
+// [selector fragment, property, value in the rule, the colour it is read against]
+const darkPairs = [
+  ['html.dark{', '--muted', '#a3b1c4', '#3f3a31'],
+  ['html.dark{', '--st-progress', '#95a2ff', '#2c3b4d'],
+  ['html.dark{', '--st-cancel', '#ff8aa0', '#3c2a36'],
+  ['.tcard-move', 'color', '#e6edf5', '#1b2c44'],
+  ['#panel-boss .btn-accent', 'color', '#0b1220', '#6fa5d9'],
+  ['.btn-teal', 'color', '#032b28', '#2dd4bf'],
+  ['sick-mode-label', 'color', '#fb7185', '#252c37'],
+  ['confirmReset', 'color', '#fda4af', '#370f1a'],
+  ['.mh-stat-soon b', 'color', '#f6879d', '#3f3a31'],
+  ['.ov-cdn-tag', 'color', '#fbbf24', '#2c2208'],
+  ['#panel-overview .ov-pri{', 'color', '#a3adba', '#242831'],
+  ['.ov-pri.high', 'color', '#f08a8a', '#3a2834'],
+  ['.evb-g-h', 'color', '#f59e0b', '#161a24'],
+  ['#ov-ann-new', 'color', '#e6edf5', '#195685'],
+  ['::placeholder', 'color', '#9aa6b8', '#282e39'],
+];
+
+for (const [fragment, property, value, background] of darkPairs) {
+  test(`dark mode ${fragment} ${property} has at least 4.5:1 contrast`, () => {
+    const rule = darkRules.find(({ selector }) => (selector + '{').includes(fragment));
+    assert.ok(rule, `missing selector ${fragment}`);
+    const declaration = rule.declarations.split(';').map(part => part.trim())
+      .find(part => part.toLowerCase().startsWith(property + ':'));
+    const declared = declaration && declaration.slice(property.length + 1).trim().match(/^#[\da-f]{3,6}\b/i);
+    assert.ok(declared, `${fragment} sets ${property}`);
+    assert.equal(hexColour(declared[0]), hexColour(value));
+    const ratio = contrast(value, background);
+    assert.ok(ratio >= 4.5, `${fragment}: ${ratio.toFixed(2)}:1`);
+  });
+}
+
+test('dark mode buttons with white text keep a dark enough background', () => {
+  const badge = darkRules.find(({ selector }) => selector.includes('.dirq-n'));
+  assert.match(badge.declarations, /background:\s*#b45309/i);
+  assert.ok(contrast('#ffffff', '#b45309') >= 4.5);
+  assert.ok(contrast('#032b28', '#5eead4') >= 4.5, 'dark text on the light end of the teal gradient');
+});

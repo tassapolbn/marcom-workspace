@@ -709,3 +709,29 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
   :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.ov-agenda-eyebrow,.dzsel-tag,.ov-act-t,.ov-res-go,.team-lvl,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
 }
+
+/* Step 23: dark mode readability */
+/* Grey text, "in progress" and "canceled" one step brighter, so they read on raised dark surfaces. */
+html.dark{--muted:#a3b1c4;--st-progress:#95a2ff;--st-cancel:#ff8aa0;}
+/* The Move dropdown on task cards kept light mode's navy text and arrow. */
+html.dark .tcard-move{color:#e6edf5;border-color:rgba(255,255,255,.28);background-color:rgba(255,255,255,.08);background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e6edf5' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");}
+/* Dew, O and Eye: the selected filter sits on a tint of their colour, so its text uses the light shade. */
+html.dark .tab-panel .fpill.act-accent{color:var(--accent-ondark,#fcd34d)!important;}
+/* Today's date and the bright buttons take dark text. */
+html.dark .tab-panel:not(#panel-overview) .cal-day.today{color:var(--accent-on,#0b1220)!important;}
+html.dark #panel-boss .btn-accent{color:#0b1220!important;}
+html.dark .btn-teal{background:linear-gradient(135deg,#5eead4,#2dd4bf)!important;color:#032b28!important;}
+html.dark .dirq-n{background:#b45309;}
+/* Canceled cards fade less, so their small coloured labels stay readable. */
+html.dark .task-card.tc-canceled{opacity:.88;}
+/* Small coloured labels. */
+html.dark [id$="sick-mode-label"]{color:#fb7185!important;}
+html.dark button[onclick^="confirmReset"]{color:#fda4af!important;}
+html.dark .mh-stat-soon b{color:#f6879d!important;}
+html.dark #panel-overview .ov-cdn-tag{color:#fbbf24!important;}
+html.dark #panel-overview .ov-pri{color:#a3adba!important;}
+html.dark #panel-overview .ov-pri.high{color:#f08a8a!important;}
+html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#f59e0b;}
+html.dark #ov-ann-new{color:#e6edf5!important;}
+/* Field hints. */
+html.dark body:not(.request-mode) :is(input,textarea)::placeholder{color:#9aa6b8!important;opacity:1;}

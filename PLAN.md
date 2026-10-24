@@ -350,7 +350,7 @@ light mode still exists and every text is readable in it, and a check that the a
     every tab, the drawer, Add Task and the Request Centre are exactly the screen width, with no
     button under 32 px in the main views. Screenshots are checked.
 
-- [ ] **23. Dark mode: the same readability check**
+- [x] **23. Dark mode: the same readability check**
   - Files: `assets/workspace-ui.css` (one dark-mode readability block), `tests/ui-contrast.test.mjs`
   - Fix the dark-mode items listed above: the Move dropdown, the selected filter for Dew, O and Eye,
     today's date and the bright buttons, and the dim Overview labels and field hints. Light mode is untouched.
