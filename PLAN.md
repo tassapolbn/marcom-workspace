@@ -429,7 +429,7 @@ Direction A addresses.
 Boss approves this list before any code is written. Each step is small and
 self-contained, gets reviewed and tested, then committed.
 
-- [ ] **26. One quiet status strip replaces the payday pill and the lunch banner**
+- [x] **26. One quiet status strip replaces the payday pill and the lunch banner**
   - Files: `index.html` (header and status area), `assets/workspace-ui.css`,
     `tests/ui-layout.test.mjs`
   - Payday, lunch and the sync state merge into one slim line directly under the
@@ -439,6 +439,14 @@ self-contained, gets reviewed and tested, then committed.
   - Test: at 1440 and 375 in the preview, the first real card starts higher, no
     gold band is drawn, and payday and lunch are still readable. Layout test
     checks the strip sits between the tab bar and the first card.
+  - Done (26 Oct): payday and lunch share one plain line aligned to the cards, in
+    both themes; no gold band. At 1440 the first card moved up from about y=235
+    to y=181, so about 55px recovered, less than the 95px estimated above. On
+    iPhone the two items wrap onto two lines, each a 44pt tap target. Lunch now
+    uses a gold dot instead of the icon font. **Deviation:** the sync indicator
+    stays in the header: it is already a quiet dot there, so moving it would add
+    risk for no gain. Three new layout tests, one of them checked to fail
+    without the change. Suite 245/245.
 
 - [ ] **27. One greeting on a member tab, not three**
   - Files: `index.html` (`memberPanelHTML`), `assets/workspace-ui.css`,
