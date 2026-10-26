@@ -761,3 +761,22 @@ html.dark #lunch-banner .lb-close{background:transparent;}
 html.dark #lunch-banner .lb-close:hover,html.dark #lunch-banner .lb-close:focus-visible{background:rgba(255,255,255,.1);}
 @media(max-width:1024px){.salary-dock{padding:0 1.1rem;}}
 @media(max-width:600px){.salary-dock{padding:0 12px;}}
+
+/* Step 27: one greeting on a member tab */
+/* "Good morning" appears once, in the my-day line, which also knows the time of
+   day and whose desk you are on ("Dew's day" on someone else's tab). */
+.member-head-extra .mh-greet{display:none;}
+/* The greeting and today's counts share one line; the focus list runs below. */
+.myday{display:flex;flex-wrap:wrap;align-items:center;column-gap:16px;row-gap:8px;}
+.myday-top{flex:0 1 auto;}
+.myday-chips{margin-top:0;}
+.myday-list{flex:1 1 100%;margin-top:2px;}
+/* An empty "No upcoming meetings" card is not drawn. Both meeting renderers set
+   .none only when nothing is booked, so a real meeting still shows as before. */
+.meet-card.none{display:none;}
+/* Light mode: the header card and the my-day card read as one card, who then
+   today, with one hairline border, one radius and one light shadow. The header
+   keeps its 12% wash of the member's own colour: it says whose desk this is.
+   Older shared card rules force radius, shadow and spacing with !important. */
+html:not(.dark) .member-head{border-bottom:0;border-radius:16px 16px 0 0!important;box-shadow:none!important;margin-bottom:0!important;}
+html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba(16,24,40,.06);border-radius:0 0 16px 16px!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)!important;}

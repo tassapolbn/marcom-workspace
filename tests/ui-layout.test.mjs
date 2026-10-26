@@ -183,3 +183,43 @@ test('the strip is plain text in both themes, with iPhone-sized tap targets',()=
   assert.match(step,/#lunch-banner \.lb-close\{[^}]*width:44px;height:44px/,'dismissing lunch is a 44px target');
   assert.match(step,/#lunch-banner \.lb-ico i\{display:none;\}/,'lunch does not rely on the icon font');
 });
+
+/* ===== Step 27: one greeting on a member tab ===== */
+const step27=css26.slice(css26.indexOf('/* Step 27:'));
+const renderMeeting=slice('function renderMeeting(who){','function renderAllMeetings(){');
+function meetingCard(list){
+  const classes=new Set(['meet-card','none']);
+  const card={classList:{toggle:(c,on)=>{on?classes.add(c):classes.delete(c);}},
+    querySelector:()=>({set textContent(v){},set innerHTML(v){}})};
+  const context=vm.createContext({document:{getElementById:()=>card},gcalData:{boss:{list}},
+    curTab:()=>'boss',escHtml:s=>String(s),Date});
+  vm.runInContext(renderMeeting+';renderMeeting("boss");',context);
+  return classes;
+}
+
+test('an empty meetings card is hidden, and a booked meeting still shows',()=>{
+  assert.ok(meetingCard([]).has('none'),'no meetings: the card is marked empty');
+  const soon=new Date(Date.now()+3600000).toISOString();
+  assert.ok(!meetingCard([{start:soon,title:'Open Day briefing'}]).has('none'),'a booked meeting clears the mark');
+  assert.match(step27,/\.meet-card\.none\{display:none;\}/,'only the empty card is hidden');
+  /* The later renderer must follow the same rule, or a real meeting could vanish. */
+  const rmeet=slice('  function rmeet(who){','\n  }\n');
+  assert.match(rmeet,/if\(!up\.length\)\{[\s\S]*?card\.classList\.add\('none'\)/,'empty adds the mark');
+  assert.match(rmeet,/card\.classList\.remove\('none'\)/,'a meeting removes it');
+});
+
+test('a member tab greets once, and the greeting and counts share one line',()=>{
+  assert.match(step27,/\.member-head-extra \.mh-greet\{display:none;\}/,'the header card drops its plain greeting');
+  assert.match(source,/var title=isOwn\(w\)\?\(greet\+', '/,'the my-day greeting stays: it knows the hour and whose desk it is');
+  assert.match(step27,/\.myday\{display:flex;flex-wrap:wrap;/,'greeting and chips sit on one line and wrap on iPhone');
+  assert.match(step27,/\.myday-list\{flex:1 1 100%;/,'the focus list runs full width below');
+});
+
+test('in light mode the two cards read as one, keeping the member colour wash',()=>{
+  const head=step27.match(/html:not\(\.dark\) \.member-head\{([^}]*)\}/)[1];
+  const day=step27.match(/html:not\(\.dark\) \.myday\{([^}]*)\}/)[1];
+  assert.match(head,/border-radius:16px 16px 0 0!important/,'rounded on top only');
+  assert.match(day,/border-radius:0 0 16px 16px!important/,'rounded on the bottom only');
+  assert.match(head,/margin-bottom:0!important/,'no gap between them');
+  assert.doesNotMatch(head,/background/,'the 12% wash of the member colour is kept, it says whose desk this is');
+});

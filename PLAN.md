@@ -448,7 +448,7 @@ self-contained, gets reviewed and tested, then committed.
     risk for no gain. Three new layout tests, one of them checked to fail
     without the change. Suite 245/245.
 
-- [ ] **27. One greeting on a member tab, not three**
+- [x] **27. One greeting on a member tab, not three**
   - Files: `index.html` (`memberPanelHTML`), `assets/workspace-ui.css`,
     `tests/ui-layout.test.mjs`
   - Merge the member header card, the "Good morning" card and the "Next meeting"
@@ -459,6 +459,20 @@ self-contained, gets reviewed and tested, then committed.
   - No change to what the counters count or to any action.
   - Test: at 1440, the All Tasks list is visible on the first screen; with no
     meetings, no empty card exists in the DOM.
+  - Done (26 Oct): one greeting, in the my-day line, which already knows the hour
+    and whose desk it is ("Dew's day" on someone else's tab); the header card's
+    plain "Good morning" is hidden. The greeting, focus line and both chips share
+    one line and wrap on iPhone. In light mode the two cards read as one: the
+    header keeps its 12% wash of the member's colour, which says whose desk this
+    is, over a white "today" body, with one border, one radius and one shadow.
+    At 1440 the task board now reaches the first screen (status columns from
+    about y=780). **Deviation:** the empty meetings card is hidden rather than
+    removed from the DOM: both renderers already mark it `.none` only when
+    nothing is booked, so hiding that state needs no logic change, and a booked
+    meeting still shows. Dark mode gets the same layout but keeps two separate
+    cards, since fusing translucent dark surfaces risked a two-tone card.
+    **Noted for step 35:** on iPhone the header card is about 370px tall in its
+    existing phone layout. Three new tests; suite 248/248.
 
 - [ ] **28. One card language**
   - Files: `assets/workspace-ui.css`, `index.html` where card shells are built
