@@ -7893,8 +7893,11 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
     if(banner)return banner;
     banner=document.createElement('div');banner.id='lunch-banner';
     banner.innerHTML='<span class="lb-ico"><i class="ti ti-tools-kitchen-2"></i></span><div class="lb-text"><span class="lb-title"></span><span class="lb-sub"></span></div><button class="lb-close" type="button" title="Dismiss for today" aria-label="Dismiss">&times;</button>';
-    var hdr=document.querySelector('.app-header');
-    if(hdr&&hdr.parentNode){hdr.insertAdjacentElement('afterend',banner);}else{document.body.insertBefore(banner,document.body.firstChild);}
+    /* Lunch shares the quiet status line with the payday pill when that line
+       exists, instead of a full-width band of its own. */
+    var strip=document.querySelector('.uxp-sal-bar'),hdr=document.querySelector('.app-header');
+    if(strip){strip.appendChild(banner);}
+    else if(hdr&&hdr.parentNode){hdr.insertAdjacentElement('afterend',banner);}else{document.body.insertBefore(banner,document.body.firstChild);}
     banner.querySelector('.lb-close').addEventListener('click',function(){try{localStorage.setItem(DISMISS_KEY,todayKey()+'|'+cfg.start+'-'+cfg.end);}catch(e){}banner.classList.remove('show');});
     return banner;
   }
@@ -11135,6 +11138,9 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       paint(v);
     };
     bar.appendChild(b);
+    /* Adopt the lunch notice if it was built first: one line, not two bands. */
+    var lunch=document.getElementById('lunch-banner');
+    if(lunch)bar.appendChild(lunch);
     dock.appendChild(bar);
     hdr.insertAdjacentElement('afterend',dock);
     dock.appendChild(sal);

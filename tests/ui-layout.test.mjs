@@ -133,3 +133,53 @@ test('app feedback moved to Settings and keeps its styles there',()=>{
   const style=slice('<style id="trq-style">','</style>');
   assert.doesNotMatch(style,/(^|[^(,])#panel-overview /m,'every Team Requests rule also applies in Settings');
 });
+
+/* ===== Step 26: one quiet status strip ===== */
+const css26=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
+/* A minimal DOM: enough for the real lunch placement code to run unchanged. */
+function stripDom(withStrip){
+  const nodes=[];
+  const mk=(id,cls)=>{const n={id:id||'',className:cls||'',kids:[],parent:null,
+    get parentNode(){return this.parent;},
+    appendChild(c){if(c.parent)c.parent.kids=c.parent.kids.filter(k=>k!==c);this.kids.push(c);c.parent=this;return c;},
+    insertAdjacentElement(where,c){c.parent=this.parent;this.parent.kids.splice(this.parent.kids.indexOf(this)+1,0,c);return c;},
+    querySelector(){return {addEventListener(){}};}};nodes.push(n);return n;};
+  const body=mk('body'),hdr=mk('','app-header');body.appendChild(hdr);
+  let strip=null;
+  if(withStrip){const dock=mk('uxp-salary-dock','salary-dock');body.appendChild(dock);strip=mk('','uxp-sal-bar');dock.appendChild(strip);}
+  const document={body,createElement:()=>mk(),
+    getElementById:id=>nodes.find(n=>n.id===id&&n.parent)||null,
+    querySelector:sel=>sel==='.uxp-sal-bar'?strip:sel==='.app-header'?hdr:null};
+  return {document,strip,hdr,body,mk};
+}
+const ensureBanner=slice('  function ensureBanner(){','    return banner;\n  }')+'    return banner;\n  }';
+const adoptLunch=slice('    /* Adopt the lunch notice','    dock.appendChild(bar);');
+
+test('lunch joins the payday line when the payday line is built first',()=>{
+  const dom=stripDom(true);
+  const context=vm.createContext({document:dom.document,banner:null,localStorage:{},cfg:{},DISMISS_KEY:'k',todayKey:()=>'t'});
+  vm.runInContext(ensureBanner+';ensureBanner();',context);
+  const lunch=dom.document.getElementById('lunch-banner');
+  assert.equal(lunch.parent,dom.strip,'lunch sits inside the strip, not in a band after the header');
+});
+
+test('the payday line adopts lunch when lunch is built first, so order never matters',()=>{
+  const dom=stripDom(false);
+  const context=vm.createContext({document:dom.document,banner:null,localStorage:{},cfg:{},DISMISS_KEY:'k',todayKey:()=>'t'});
+  vm.runInContext(ensureBanner+';ensureBanner();',context);
+  const lunch=dom.document.getElementById('lunch-banner');
+  assert.equal(lunch.parent,dom.body,'with no strip yet, lunch falls back to its old place');
+  const bar=dom.mk('','uxp-sal-bar');
+  vm.runInContext(adoptLunch,vm.createContext({document:dom.document,bar}));
+  assert.equal(lunch.parent,bar,'once the strip exists, lunch moves into it');
+});
+
+test('the strip is plain text in both themes, with iPhone-sized tap targets',()=>{
+  const step=css26.slice(css26.indexOf('/* Step 26:'));
+  assert.ok(step.length>0,'the step 26 styles exist');
+  assert.match(step,/#lunch-banner\{background:none;/,'no lunch band in light mode');
+  assert.match(step,/html\.dark #lunch-banner\{background:none;/,'no lunch band in dark mode');
+  assert.match(step,/\.uxp-sal-toggle\{[^}]*min-height:44px/,'the payday toggle is at least 44px tall');
+  assert.match(step,/#lunch-banner \.lb-close\{[^}]*width:44px;height:44px/,'dismissing lunch is a 44px target');
+  assert.match(step,/#lunch-banner \.lb-ico i\{display:none;\}/,'lunch does not rely on the icon font');
+});

@@ -735,3 +735,29 @@ html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassi
 html.dark #ov-ann-new{color:#e6edf5!important;}
 /* Field hints. */
 html.dark body:not(.request-mode) :is(input,textarea)::placeholder{color:#9aa6b8!important;opacity:1;}
+
+/* Step 26: one quiet status strip */
+/* Payday and lunch share one line of plain text under the tab bar, aligned to the
+   cards below. Ambient information should never be the loudest thing on screen. */
+.salary-dock{padding:0 24px;margin-top:6px;}
+.uxp-sal-bar{justify-content:flex-start;flex-wrap:wrap;gap:2px 20px;margin:0 0 4px;}
+.uxp-sal-toggle{background:transparent;border-color:transparent;box-shadow:none;color:var(--muted);font-size:13px;font-weight:600;min-height:44px;padding:6px 10px;margin-left:-10px;}
+.uxp-sal-toggle b{color:var(--text);font-weight:700;}
+.uxp-sal-toggle:hover,.uxp-sal-toggle:focus-visible{background:var(--surface-3);color:var(--text);border-color:transparent;}
+/* Lunch: the same line, no band. A gold dot stands in for the icon, so it still
+   shows when the icon font fails to load. */
+#lunch-banner{background:none;border:0;box-shadow:none;padding:0;position:static;z-index:auto;justify-content:flex-start;gap:8px;text-align:left;}
+#lunch-banner.show{display:inline-flex;}
+#lunch-banner .lb-ico{width:8px;height:8px;border-radius:50%;background:var(--gold,#f0b323);font-size:0;}
+#lunch-banner .lb-ico i{display:none;}
+#lunch-banner .lb-text{justify-content:flex-start;gap:6px;}
+#lunch-banner .lb-title{font-size:13px;font-weight:700;}
+#lunch-banner .lb-sub{font-size:13px;font-weight:500;opacity:1;}
+#lunch-banner .lb-close{position:static;transform:none;width:44px;height:44px;margin:0 -10px 0 -6px;background:transparent;font-size:17px;}
+#lunch-banner .lb-close:hover,#lunch-banner .lb-close:focus-visible{background:rgba(16,24,40,.07);}
+/* The same component in dark mode: the band goes there too; its text colour stays. */
+html.dark #lunch-banner{background:none;border-bottom:0;}
+html.dark #lunch-banner .lb-close{background:transparent;}
+html.dark #lunch-banner .lb-close:hover,html.dark #lunch-banner .lb-close:focus-visible{background:rgba(255,255,255,.1);}
+@media(max-width:1024px){.salary-dock{padding:0 1.1rem;}}
+@media(max-width:600px){.salary-dock{padding:0 12px;}}
