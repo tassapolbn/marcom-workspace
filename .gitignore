@@ -9,3 +9,7 @@ service-account*.json
 # Local tooling (Claude preview config, Codex task files)
 .claude/
 .codex-tasks/
+# Agent skills installed with `npx skills add`, and their design workspace
+.agents/
+skills-lock.json
+.oil-ui/
