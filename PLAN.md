@@ -371,3 +371,149 @@ light mode still exists and every text is readable in it, and a check that the a
 2. Step 23 (dark mode) is included.
 3. Announcements go at the very top of the Overview: the first thing people see.
 4. When everything is done: merge and deploy.
+
+---
+
+# Follow-up plan 3 (26 Oct 2026): Direction A "Quiet Desk" — awaiting Boss's approval
+
+Scope Boss set: **UX and UI only.** No features, no flows, no business logic.
+**Light mode is the focus**; dark mode is only checked for no regression.
+Direction chosen by Boss from three written options: **A, Quiet Desk.**
+
+Quiet Desk in one line: *a calm operations console where the work is the first
+thing you see, navy carries structure, gold is reserved for the brand mark and
+one primary action, and colour elsewhere only ever means a status.*
+
+Brand assets are fixed: navy `#003057`, gold `#F0B323`, Sarabun, the HeadStart
+landscape logo.
+
+## What the new baseline found (26 Oct, current `main`, light mode, 1440x900)
+
+Re-shot after steps 20-25 landed, so this supersedes the earlier notes.
+Evidence: `.oil-ui/workspace-redesign/shots/now-light-boss/` and
+`.oil-ui/workspace-redesign/shots/now-light-overview/`.
+
+Steps 20-25 already fixed a great deal. The payday panel is now a compact pill,
+the sidebar widgets collapse, Overview has real triage tiles, and light-mode
+contrast failures dropped from 13 to 5 on the Boss tab and to zero on Overview.
+What is left is mostly *too many competing surfaces*, which is exactly what
+Direction A addresses.
+
+1. **About 225px of ambient chrome before any work.** Navy masthead, navy tab
+   bar, payday pill, then a full-width gold lunch banner. The gold banner is the
+   loudest colour on the page and it carries ambient information.
+2. **The member tab greets you three times.** The member header card (name,
+   role, three counters, "GOOD MORNING" and the date), then a "Good morning,
+   Boss" card with the same overdue and due-today counts, then a full-width
+   "NEXT MEETING / No upcoming meetings" band that uses a whole card to say
+   nothing. The task list sits below the fold at 1440x900.
+3. **Five triage tiles, five different coloured top bars.** Red, gold, navy,
+   blue and purple. A tile reading `0 MEETINGS TODAY` currently has the same
+   visual weight as `4 OVERDUE`.
+4. **Three card languages on one page.** Team Announcements has a filled navy
+   header with a gold rule; Event Hub has a 5px coloured left border; the rest
+   are plain white cards. The lint counts 10 coloured single-side borders on the
+   Boss tab.
+5. **Cards inside cards:** 6 on Overview (team rows inside the team card, the
+   day agenda inside the calendar card), 2 on the member tab.
+6. **Readability still short in a few places (light mode):** struck-through task
+   topics at 4.32:1, the `Medium` badge at 3.71:1, and 11.5px body text in the
+   team note.
+7. **Two floating round buttons overlap content** at the bottom right of both
+   tabs.
+8. **The `O` tab reads as a bare letter** in the tab bar, much weaker than the
+   other three names.
+
+## Steps
+
+Boss approves this list before any code is written. Each step is small and
+self-contained, gets reviewed and tested, then committed.
+
+- [ ] **26. One quiet status strip replaces the payday pill and the lunch banner**
+  - Files: `index.html` (header and status area), `assets/workspace-ui.css`,
+    `tests/ui-layout.test.mjs`
+  - Payday, lunch and the sync state merge into one slim line directly under the
+    tab bar: plain text on the page canvas, no fill, no full-width colour band.
+    The gold band disappears; the information stays. Recovers roughly 95px of
+    first screen and removes the loudest non-work colour on the page.
+  - Test: at 1440 and 375 in the preview, the first real card starts higher, no
+    gold band is drawn, and payday and lunch are still readable. Layout test
+    checks the strip sits between the tab bar and the first card.
+
+- [ ] **27. One greeting on a member tab, not three**
+  - Files: `index.html` (`memberPanelHTML`), `assets/workspace-ui.css`,
+    `tests/ui-layout.test.mjs`
+  - Merge the member header card, the "Good morning" card and the "Next meeting"
+    band into one header block: name and role, the three counters, the date, and
+    the overdue and due-today pills on one line. "Next meeting" becomes a line
+    inside that block and is not drawn at all when there is nothing. The task
+    list moves up.
+  - No change to what the counters count or to any action.
+  - Test: at 1440, the All Tasks list is visible on the first screen; with no
+    meetings, no empty card exists in the DOM.
+
+- [ ] **28. One card language**
+  - Files: `assets/workspace-ui.css`, `index.html` where card shells are built
+  - Settle on one card: white surface, hairline border, one radius, one shadow.
+    Team Announcements loses its filled navy header and matches the rest. The
+    coloured single-side borders go, except where a rail genuinely carries a
+    status, which step 30 defines.
+  - Test: the shoot lint reports no coloured single-side border that is not a
+    status rail; checked at 100% and 200% zoom.
+
+- [ ] **29. Quiet the triage tiles, and let zero be quiet**
+  - Files: `index.html` (Overview tiles), `assets/workspace-ui.css`
+  - Keep colour only where it means something: overdue red, due today amber,
+    the rest neutral. A tile whose value is `0` drops to a muted treatment, so
+    `4 OVERDUE` is plainly louder than `0 MEETINGS TODAY`.
+  - Test: at 1440 the eye lands on overdue first; a tile at 0 is visibly quieter.
+
+- [ ] **30. Adopt the Team Board's status and member colour scales**
+  - Files: `assets/workspace-ui.css`, `index.html` where status chips are drawn,
+    a new check in `tests/ui-contrast.test.mjs`
+  - Reuse the scales already live on the Team Board so the two surfaces read as
+    one product: status In progress `#0e6ba8`, Waiting `#a97614`, Pending
+    `#6b7a8c`, On hold `#7a5ea7`, each keeping a glyph so status is never
+    colour-only; members Boss `#003057`, Dew `#A65614`, O `#C2410C`, Eye
+    `#14532D`. Give every tab label its member colour at a readable weight,
+    which also fixes the `O` tab reading as a bare letter.
+  - Test: a test asserts the app and `assets/team-board.css` use the same hex
+    values, so the two cannot drift apart.
+
+- [ ] **31. Clear the last light-mode readability failures**
+  - Files: `assets/workspace-ui.css`, `tests/ui-contrast.test.mjs`
+  - Struck-through task topics to at least 4.5:1, the `Medium` badge to at least
+    4.5:1, and no body text below 13px (the team note is 11.5px).
+  - Test: `ui-contrast` finds no failures; the shoot lint reports no "body text
+    under 13px".
+
+- [ ] **32. Flatten the nested cards**
+  - Files: `assets/workspace-ui.css`, `index.html`
+  - The 6 nested cards on Overview and 2 on the member tab become rows separated
+    by hairlines inside their parent card.
+  - Test: the lint reports no cards inside cards; the panels still read as lists.
+
+- [ ] **33. The floating buttons stop covering content**
+  - Files: `assets/workspace-ui.css`
+  - The two round buttons at the bottom right currently sit on top of the
+    sidebar and the task list. Give the scroll area enough bottom padding, or
+    move them clear, so nothing is ever hidden underneath.
+  - Test: at 1440, 1024 and 375, nothing in the last card is covered.
+
+- [ ] **34. Final check and notes**
+  - Run the full UI suite, the contrast checks and the phone widths in **both**
+    themes, confirm dark mode has not regressed, take the evidence set, send one
+    independent visual review, then record what changed.
+
+## Noticed, not in this plan
+
+- **Icons load from a CDN** (`cdn.jsdelivr.net`, Tabler webfont). Whenever that
+  request fails, every icon in the app renders as a blank box. That is an
+  infrastructure change rather than UX or UI, so it is outside the scope Boss
+  set. Worth its own small step later: self-host the font.
+
+## Decisions needed from Boss
+
+1. The lunch banner becomes a line of text instead of a gold band. Lunch stays
+   visible, it just stops being the loudest thing on screen. Acceptable?
+2. Dark mode: checked for no regression only, not redesigned. Correct?
