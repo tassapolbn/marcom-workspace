@@ -495,15 +495,82 @@ self-contained, gets reviewed and tested, then committed.
 
 - [ ] **33. The floating buttons stop covering content**
   - Files: `assets/workspace-ui.css`
-  - The two round buttons at the bottom right currently sit on top of the
-    sidebar and the task list. Give the scroll area enough bottom padding, or
-    move them clear, so nothing is ever hidden underneath.
-  - Test: at 1440, 1024 and 375, nothing in the last card is covered.
+  - The two round buttons at the bottom right are **Team Chat** (`.chat-fab`)
+    and **Quick Add** (`.quickadd-fab`). They currently sit on top of the
+    sidebar and the task list. Give the page enough bottom padding that nothing
+    is ever hidden beneath them. On iPhone, step 34 adds a bottom dock, so these
+    two buttons, the chat panel and the toast stack (`#uxp-toasts`) all lift
+    above it.
+  - Test: at 1440, 1024 and the iPhone widths, nothing in the last card is
+    covered, and with the dock showing, neither button overlaps it.
 
-- [ ] **34. Final check and notes**
+- [ ] **34. The tab bar: a sliding pill on desktop, a bottom dock on iPhone**
+  *(option 2 of 3, recommended; Boss to confirm)*
+  - Files: `index.html` (the viewport tag, and a one-letter initial on each tab
+    where the tabs are created), a new `assets/ui-tabs.js` (the sliding
+    indicator and the view transition), `assets/workspace-ui.css`, a new
+    `tests/ui-tabs.test.mjs`
+  - **Desktop and iPad:** the five tabs become one compact group on the navy
+    header, instead of five slots stretched across the full width. One white
+    pill glides behind the selected name and changes width as it moves. The
+    name takes that person's Team Board colour: Boss navy, Dew burnt orange,
+    O orange-red, Eye green, and the school gold for the team Overview. About a
+    quarter of a second, a crisp snap.
+  - **iPhone:** the same tabs move to a dock along the bottom of the screen,
+    the standard iPhone place for top-level sections. Five equal slots, each a
+    round monogram (B, D, O, E, and a four-square mark for Overview) above the
+    name. The selected monogram fills with that person's colour and lifts
+    slightly, and the indicator glides along the dock. The monograms are text,
+    so unlike today's icons they never turn into blank boxes when the icon font
+    fails to load.
+  - **Moving between tabs, everywhere:** the new view fades in and travels a
+    short distance from the side you moved towards, so going right comes in
+    from the right and going left from the left. The switch itself happens at
+    once; the motion never makes you wait, rapid tapping never queues up
+    animations, and with Reduce Motion on, everything is placed instantly.
+  - **Unchanged:** the five destinations, what each tab shows, the request
+    badges, arrow-key navigation and the screen-reader tab roles. It is the same
+    tab bar, presented differently.
+  - Test: the indicator always lands under the selected tab, including after a
+    resize and once fonts finish loading; the slide direction follows tab order;
+    Reduce Motion places everything instantly; tab roles and arrow keys are
+    unchanged; at 320, 375, 390 and 430 the dock shows all five tabs with no
+    sideways scrolling and every slot is at least 44pt; nothing fixed overlaps
+    the dock.
+  - Order: build after step 33, since the floating buttons must already know to
+    lift above the dock. Absorbs the tab-label part of step 30.
+
+- [ ] **35. Final check and notes**
   - Run the full UI suite, the contrast checks and the phone widths in **both**
     themes, confirm dark mode has not regressed, take the evidence set, send one
     independent visual review, then record what changed.
+
+## The team all uses iPhone
+
+Boss confirmed all four of the team use iPhone, so "mobile" means iPhone
+specifically. That shapes several details:
+
+- **Widths to test:** 375 (iPhone SE, 13 mini), 390 and 393 (the standard
+  iPhones), 430 and 440 (Pro Max), and 320, which is what a standard iPhone
+  shows with Display Zoom switched on.
+- **Touch targets:** at least 44pt, Apple's minimum.
+- **The home bar:** the dock must sit clear of the line at the bottom of Face ID
+  iPhones. That needs `viewport-fit=cover` in the viewport tag. The header's
+  existing safe-area padding was written to expect it, but the tag never
+  enabled it, so that padding does nothing today. The existing iPhone zoom fix
+  only appends `maximum-scale=1` to the tag, so the two work together, and no
+  test pins the tag's exact content.
+- **Home Screen app:** the manifest is set to `standalone`, so if any of you
+  have added the workspace to your Home Screen, it runs without Safari's bars
+  and the dock sits at the very bottom edge. The safe-area padding covers that.
+- **No grey tap flash,** no effects that rely on hover, and Reduce Motion from
+  the iPhone's Accessibility settings is honoured.
+- **No vibration:** iPhone Safari does not let web pages trigger haptic
+  feedback, so all feedback is visual.
+- **Testing limitation:** this cloud environment has Chromium only, not Safari.
+  I can emulate every iPhone screen size, but not Safari itself, its address
+  bar or the home bar. The final check of steps 33 and 34 needs one of you on a
+  real iPhone, using the Netlify deploy preview, before anything is merged.
 
 ## Noticed, not in this plan
 
@@ -517,3 +584,7 @@ self-contained, gets reviewed and tested, then committed.
 1. The lunch banner becomes a line of text instead of a gold band. Lunch stays
    visible, it just stops being the loudest thing on screen. Acceptable?
 2. Dark mode: checked for no regression only, not redesigned. Correct?
+3. The tab bar (step 34): option 2, a sliding pill on desktop and a bottom dock
+   on iPhone, is recommended. Option 1 keeps the sliding pill at the top on
+   iPhone too; option 3 is a single travelling underline. Choosing 1 or 3 means
+   step 34 is rewritten to match before any code.
