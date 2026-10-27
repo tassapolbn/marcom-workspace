@@ -147,6 +147,8 @@ function fixtureBootstrap() {
     localStorage.removeItem('bb_dark'); localStorage.removeItem('uxp_sal'); localStorage.removeItem('uxp_sb_collapsed');
     sessionStorage.setItem('preview-initialized', '1');
   }
+  /* ?theme=light opens in light mode even on a fresh session (the app defaults to dark). */
+  if (params.get('theme') === 'light') localStorage.setItem('bb_dark', '0');
   window.addEventListener('DOMContentLoaded', () => setTimeout(() => {
     if (params.get('theme') === 'dark') document.documentElement.classList.add('dark');
     const tab = params.get('tab') || 'boss';
