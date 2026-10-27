@@ -629,3 +629,70 @@ test('the sub-tabs stay on one line and scroll, and Widgets never looks like a s
   assert.match(btn,/box-shadow:none/);
   assert.match(tablet,/\.sub-nav \.uxp-drawer-btn::before\{content:'';width:1px;/,'a hairline sets it apart from the tabs');
 });
+
+/* ===== Step 39: nothing fixed covers the work; no label is cut off ===== */
+const step39=stepBlock(39);
+/* A tiny page: a header with the bell, and a body that can hold the chat button. */
+function chatPage(phone){
+  const kids=n=>n.children;
+  const mk=(id,cls)=>({id,className:cls||'',children:[],parentNode:null,
+    insertBefore(el,ref){if(el.parentNode)el.parentNode.children.splice(el.parentNode.children.indexOf(el),1);
+      const i=ref?this.children.indexOf(ref):-1;this.children.splice(i<0?this.children.length:i,0,el);el.parentNode=this;},
+    appendChild(el){this.insertBefore(el,null);}});
+  const body=mk('body'),host=mk('','header-right'),bell=mk('uxp-bell'),fab=mk('tc-fab','chat-fab');
+  host.appendChild(bell);body.appendChild(fab);
+  const classes=new Set();body.classList={toggle:(n,on)=>on?classes.add(n):classes.delete(n)};
+  const listeners=[],mq={matches:phone,addEventListener:(t,f)=>listeners.push(f)};
+  const document={body,getElementById:id=>({'tc-fab':fab,'uxp-bell':bell})[id]||null,querySelector:s=>s==='.header-right'?host:null};
+  const context=vm.createContext({document,window:{matchMedia:()=>mq}});
+  vm.runInContext(slice('  var phoneMq=null;','  function notify(d){')+'\nthis.placeChat=placeChat;this.watchPlace=watchPlace;',context);
+  context.watchPlace();context.placeChat();
+  return {fab,host,body,classes,mq,flip(v){mq.matches=v;listeners.forEach(f=>f());},kids};
+}
+
+test('Team Chat sits in the header next to the bell on computers and iPads, and stays a round button on phones',()=>{
+  const desk=chatPage(false);
+  assert.equal(desk.fab.parentNode,desk.host);
+  assert.equal(desk.host.children.indexOf(desk.fab),0,'just before the bell');
+  assert.equal(desk.fab.className,'dm-toggle hdr-chat');
+  assert.ok(desk.classes.has('tc-in-header'));
+  desk.flip(true);
+  assert.equal(desk.fab.parentNode,desk.body,'turning to phone width puts it back above the dock');
+  assert.equal(desk.fab.className,'chat-fab');
+  assert.ok(!desk.classes.has('tc-in-header'));
+  const phone=chatPage(true);
+  assert.equal(phone.fab.parentNode,phone.body);
+  phone.flip(false);
+  assert.equal(phone.fab.parentNode,phone.host);
+  assert.match(source,/fab\.setAttribute\('aria-label','Team chat'\); fab\.setAttribute\('aria-expanded','false'\);/);
+  assert.match(source,/if\(fb\)fb\.setAttribute\('aria-expanded',open\?'true':'false'\);/,'the button says whether the chat is open');
+});
+
+test('one Quick Add per screen: the header "+" on computers and iPads, the round one on phones',()=>{
+  assert.match(media(step39,'min-width:601px'),/\.quickadd-fab\{display:none!important;\}/);
+  assert.match(step39,/@media\(max-width:600px\)\{#hdr-add\{display:none;\}\}/);
+  /* The header "+" adds to Boss's board on the Overview, as the round one did,
+     never to O's ("theme-overview" starts with "theme-o"). */
+  const calls=[];
+  const run=cls=>{const context=vm.createContext({document:{body:{className:cls}},window:{__cur:{role:'admin',workspace:null}},
+    openAdd:w=>calls.push(w),uxpMoreToggle(){},MEMBERS:{boss:1,dew:1,o:1,junior:1}});
+    vm.runInContext(slice('  window.uxpQuickAdd=function(){','  /* overflow menu for small screens */'),context);
+    context.window.uxpQuickAdd();return calls.pop();};
+  assert.equal(run('uxp-sal-collapsed theme-overview'),'boss');
+  assert.equal(run('theme-o'),'o');
+  assert.equal(run('theme-dew uxp-sal-collapsed'),'dew');
+});
+
+test('opened from the header, the chat panel drops down under it',()=>{
+  const desk=media(step39,'min-width:601px');
+  assert.match(desk,/body\.tc-in-header \.chat-panel\{top:var\(--tc-top,96px\);bottom:auto;max-height:calc\(100vh - var\(--tc-top,96px\) - 16px\);\}/);
+  assert.match(desk,/\.hdr-chat \.chat-unread\{top:2px;right:2px;/,'the unread count sits on the header button like the bell\'s');
+  assert.match(source,/if\(\(window\.innerHeight\|\|0\)-top<360\)top=8;/,'on a phone held sideways it opens over the header instead');
+});
+
+test('sidebar widgets keep their whole name, with the summary under it',()=>{
+  assert.match(step39,/\.side-col \.widget-head\{display:grid;grid-template-columns:auto minmax\(0,1fr\);/);
+  assert.match(step39,/\.side-col \.widget-head>\.widget-title\{grid-column:2;grid-row:1;\}/);
+  assert.match(step39,/\.side-col \.widget-head>\.widget-sum\{grid-column:2;grid-row:2;justify-self:start;max-width:calc\(100% - 52px\);margin:-1px 0 0 52px;\}/);
+  assert.match(step39,/\.side-col \.widget-head>\*\{grid-row:1\/3;\}/,'the handle and the buttons span both lines');
+});

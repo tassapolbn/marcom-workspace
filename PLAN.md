@@ -894,7 +894,7 @@ colour stays as it is.
     failures on all five tabs, light and dark, at 1440 and 390 wide. Tests:
     295/295.
 
-- [ ] **39. Nothing fixed covers the work; no label is cut off**
+- [x] **39. Nothing fixed covers the work; no label is cut off**
   - Files: `assets/workspace-ui.css`, `index.html` (only if Team Chat moves),
     `tests/ui-layout.test.mjs`
   - Today the round Quick Add and Team Chat buttons cover content in the first
@@ -910,6 +910,24 @@ colour stays as it is.
   - Test: at 1440x900, 810x1080, 390x664 and 390x844 no fixed element covers
     text or a control in the first view (checked rectangle by rectangle); no
     sidebar label is cut off at 1440 with icons loaded.
+  - Done (27 Oct): on computers and iPads (above 600px) the floating "+" is
+    gone, since the header "+" does the same, and Team Chat is a header
+    button next to the bell with its unread count; its panel drops down under
+    the header (over it on a phone held sideways). It is the same button with
+    the same badge, moved by the screen width. On iPhone both stay round
+    buttons above the dock, as decided, and the header has no "+". Fixed on
+    the way: on the Overview the header "+" opened O's task form, because
+    "theme-overview" starts with "theme-o"; it now opens Boss's, as the round
+    "+" did. Sidebar widgets keep their whole name ("Petty Cash", "Day-off in
+    Lieu", "Sick Leave") with the summary under it. Checked rectangle by
+    rectangle on all five tabs: nothing covers text or a control at 1440x900
+    and 810x1080, and no sidebar label is cut off at 1440. On iPhone
+    (390x664, 390x844) the two round buttons still sit over the right end of
+    a few controls in the first view (a card's fold and "Add event" buttons,
+    a "Med" label, the end of the sub-tab row), which scroll clear; task names
+    and dates are not covered. Moving the round buttons into the iPhone
+    header or dock would clear them too; that would change decision 1, so it
+    is left for Boss. Tests: 299/299; contrast unchanged, zero failures.
 
 - [ ] **40. Task cards lead with the task**
   - Files: `index.html` (the task card), `assets/workspace-ui.css`,

@@ -6642,8 +6642,10 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   function build(){
     if(document.getElementById('tc-fab'))return;
     var fab=document.createElement('button'); fab.className='chat-fab'; fab.id='tc-fab'; fab.title='Team chat';
+    fab.type='button'; fab.setAttribute('aria-label','Team chat'); fab.setAttribute('aria-expanded','false'); fab.setAttribute('aria-controls','tc-panel');
     fab.innerHTML='<i class="ti ti-message-circle-2"></i><span class="chat-unread" id="tc-unread"></span>';
     fab.onclick=toggle; document.body.appendChild(fab);
+    watchPlace(); placeChat();
     var p=document.createElement('div'); p.className='chat-panel'; p.id='tc-panel';
     p.innerHTML='<div class="chat-header"><div class="chat-header-title"><i class="ti ti-messages"></i> Team Chat</div><button class="tc-x" id="tc-close"><i class="ti ti-x"></i></button></div>'
       +'<div class="tc-presence" id="tc-presence"></div>'
@@ -6673,6 +6675,37 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     inp.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
     inp.addEventListener('focus',closePops);
   }
+  /* Team Chat sits in the header next to the bell on computers and iPads, so
+     nothing floats over the work there, and stays a round button above the
+     dock on phones (Boss, 27 Oct). It is one button with one unread badge that
+     moves between the two places. */
+  var phoneMq=null;
+  function placeChat(){
+    var fab=document.getElementById('tc-fab'); if(!fab)return;
+    var host=document.querySelector('.header-right'),bell=document.getElementById('uxp-bell');
+    var inHeader=!!host&&!(phoneMq&&phoneMq.matches);
+    if(inHeader){
+      if(fab.parentNode!==host)host.insertBefore(fab,(bell&&bell.parentNode===host)?bell:host.firstChild);
+      fab.className='dm-toggle hdr-chat';
+    }else{
+      if(fab.parentNode!==document.body)document.body.appendChild(fab);
+      fab.className='chat-fab';
+    }
+    document.body.classList.toggle('tc-in-header',inHeader);
+  }
+  function watchPlace(){
+    if(phoneMq||!window.matchMedia)return;
+    phoneMq=window.matchMedia('(max-width:600px)');
+    if(phoneMq.addEventListener)phoneMq.addEventListener('change',placeChat); else if(phoneMq.addListener)phoneMq.addListener(placeChat);
+  }
+  /* Opened from the header, the panel drops down under it; on a short screen
+     (a phone on its side) it opens over the header instead of being squeezed. */
+  function anchorPanel(p){
+    var hdr=document.querySelector('.app-header'); if(!p||!hdr)return;
+    var top=Math.max(8,Math.round(hdr.getBoundingClientRect().bottom+8));
+    if((window.innerHeight||0)-top<360)top=8;
+    p.style.setProperty('--tc-top',top+'px');
+  }
   function notify(d){
     try{
       if(!('Notification' in window) || Notification.permission!=='granted') return;
@@ -6695,7 +6728,8 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       if(open&&gotNew)beat(true);   // the chat is open, so these count as read by me
     },function(e){console.error(e);}); }catch(e){console.error(e);}
   }
-  function toggle(){ open=!open; var p=document.getElementById('tc-panel'); if(p)p.classList.toggle('open',open);
+  function toggle(){ open=!open; var p=document.getElementById('tc-panel'); if(open)anchorPanel(p); if(p)p.classList.toggle('open',open);
+    var fb=document.getElementById('tc-fab'); if(fb)fb.setAttribute('aria-expanded',open?'true':'false');
     if(open){ try{ if(('Notification' in window) && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
       seen=msgs.length; localStorage.setItem('tc_seen',seen); var b=document.getElementById('tc-unread'); if(b)b.style.display='none'; beat(true); setTimeout(function(){ var m=document.getElementById('tc-messages'); if(m)m.scrollTop=m.scrollHeight; var i=document.getElementById('tc-input'); if(i)i.focus(); },40); render(); }
   }
@@ -11162,7 +11196,9 @@ html.dark .uxp-mi i{color:#8fb4dc;}
 
   /* quick add: opens the task form for the board you are on (or your own board) */
   window.uxpQuickAdd=function(){
-    var m=(document.body.className.match(/theme-(boss|dew|o|junior)/)||[])[1];
+    /* "theme-overview" starts with "theme-o": match whole class names only, so
+       the Overview adds to your own board (Boss's for Boss), never to O's. */
+    var m=(document.body.className.match(/(?:^|\s)theme-(boss|dew|o|junior)(?![\w-])/)||[])[1];
     var c=window.__cur||{};
     var w=m||c.workspace||'boss';
     try{ if(typeof MEMBERS==='object'&&!MEMBERS[w])w=c.workspace||'boss'; }catch(e){}

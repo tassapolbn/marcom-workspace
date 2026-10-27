@@ -1116,3 +1116,23 @@ html.dark .tm-meet{color:#93c5fd;}
   .myday-chip{padding:5px 9px;}
   .myday-row{padding:5px 4px;}
 }
+
+/* Step 39: nothing fixed covers the work; no label is cut off */
+/* Computers and iPads: one Quick Add, the header "+", and Team Chat in the
+   header next to the bell, so nothing floats over the work. Phones keep both
+   as round buttons above the dock (Boss, 27 Oct), and their header has no "+". */
+@media(min-width:601px){
+  .quickadd-fab{display:none!important;}
+  .hdr-chat{position:relative;}
+  .hdr-chat .chat-unread{top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border:0;background:#dc2626;font-size:10px;line-height:1;}
+  body.tc-in-header .chat-panel{top:var(--tc-top,96px);bottom:auto;max-height:calc(100vh - var(--tc-top,96px) - 16px);}
+}
+@media(max-width:600px){#hdr-add{display:none;}}
+/* Sidebar widgets: the title keeps its whole name and the summary sits under
+   it; the drag handle and the buttons span both lines. */
+.side-col .widget-head{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-columns:auto;align-items:center;column-gap:10px;row-gap:0;}
+.side-col .widget-head>*{grid-row:1/3;}
+.side-col .widget-head>.widget-title{grid-column:2;grid-row:1;}
+/* 52px: the fold arrow and the icon tile, so the summary lines up with the name. */
+.side-col .widget-head>.widget-sum{grid-column:2;grid-row:2;justify-self:start;max-width:calc(100% - 52px);margin:-1px 0 0 52px;}
+.side-col .widget-head>.widget-sum:empty{display:none;}
