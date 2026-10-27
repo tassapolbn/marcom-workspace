@@ -281,3 +281,41 @@ test('colour stays only where it means something, and a zero overrides it',()=>{
   assert.match(step29,/\.ov-stat\.is-zero \.ov-stat-num\{color:var\(--muted\);\}/);
   assert.doesNotMatch(step29,/\.ov-s-red[^{]*\{/,'overdue keeps its red bar and number whenever it is not zero');
 });
+
+/* ===== Step 30: one status and member palette with the Team Board ===== */
+const step30=css26.slice(css26.indexOf('/* Step 30:'));
+const boardCss=readFileSync(new URL('../assets/team-board.css',import.meta.url),'utf8');
+const boardJs=readFileSync(new URL('../netlify/functions/team-board.js',import.meta.url),'utf8');
+const hex=(css,name)=>{const m=css.match(new RegExp('--'+name+':(#[0-9a-fA-F]{6})'));assert.ok(m,'--'+name+' is defined');return m[1].toLowerCase();};
+function contrast(a,b){
+  const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);
+    return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+  const [x,y]=[lum(a),lum(b)].sort((m,n)=>n-m);return (x+.05)/(y+.05);
+}
+const PAIRS=[['pending','pending'],['progress','in-progress'],['waiting','waiting'],['hold','on-hold']];
+
+test('the workspace and the Team Board cannot drift apart on status colours',()=>{
+  for(const [app,board] of PAIRS){
+    assert.equal(hex(step30,'st-'+app),hex(boardCss,'s-'+board),app+' accent matches the board');
+    assert.equal(hex(step30,'st-'+app+'-ink'),hex(boardCss,'s-'+board+'-fg'),app+' ink matches the board');
+  }
+});
+
+test('status is written in ink, which reads on white and on its own tint',()=>{
+  for(const [app,board] of PAIRS){
+    const ink=hex(step30,'st-'+app+'-ink');
+    assert.ok(contrast(ink,'#ffffff')>=4.5,app+' ink on white: '+contrast(ink,'#ffffff').toFixed(2));
+    assert.ok(contrast(ink,hex(boardCss,'s-'+board+'-bg'))>=4.5,app+' ink on its tint');
+  }
+  assert.match(step30,/\.kb-col\[data-status\] \.kb-col-name\{color:var\(--c-ink,var\(--c\)\);\}/,'column names use the ink');
+  assert.match(step30,/\.evc-cd\.u-amber,html:not\(\.dark\) \.rq-due\.soon\{color:var\(--st-waiting-ink\);\}/);
+  assert.match(step30,/\.trq-status\.s-progress\{color:var\(--st-progress-ink\);\}/);
+});
+
+test('each member is the same colour in the workspace tabs and on the Team Board',()=>{
+  for(const [ws,colour] of [['boss','#003057'],['dew','#A65614'],['o','#C2410C'],['junior','#14532D']]){
+    assert.match(source,new RegExp('html:not\\(\\.dark\\) \\.tab-btn\\.a-'+ws+'\\{color:'+colour),ws+' tab label');
+    assert.match(boardJs,new RegExp(ws+':\\s*\\[\''+colour+'\''),ws+' on the board');
+    assert.match(boardCss,new RegExp('\\.m-'+ws+'\\{--mc:'+colour),ws+' name tag on the board');
+  }
+});

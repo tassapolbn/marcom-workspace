@@ -513,7 +513,7 @@ self-contained, gets reviewed and tested, then committed.
     agreed scope: every rule is scoped to it. Two new tests, one running the
     real tile helper at 0 and at 4. Suite 254/254.
 
-- [ ] **30. Adopt the Team Board's status and member colour scales**
+- [x] **30. Adopt the Team Board's status and member colour scales**
   - Files: `assets/workspace-ui.css`, `index.html` where status chips are drawn,
     a new check in `tests/ui-contrast.test.mjs`
   - Reuse the scales already live on the Team Board so the two surfaces read as
@@ -524,6 +524,23 @@ self-contained, gets reviewed and tested, then committed.
     which also fixes the `O` tab reading as a bare letter.
   - Test: a test asserts the app and `assets/team-board.css` use the same hex
     values, so the two cannot drift apart.
+  - Done (27 Oct): the workspace now uses the Team Board's status scale in its
+    three tiers: accent for rails, icons and fills; ink for text; the board's
+    tints. The accent alone is too light for text in two cases (Pending 4.4:1,
+    Waiting 3.8:1 on white), so the four places that write a status as text
+    (kanban column names, the amber event countdown, a request's "due soon",
+    a team request's "in progress") use the ink, which reaches AA on white and
+    on its tint. Pending moves from teal to slate and In progress from indigo
+    to blue, matching the board; Done and Canceled have no board equivalent
+    and keep theirs. Status is always written out too, so never colour-only.
+    Member colours already matched (the board took them from the app's tab
+    labels); a test now guards that. **Note:** Dew's fill tone inside the app
+    (`--accent` #e07a1f, used for its 12% wash and buttons) is lighter than
+    Dew's label colour #A65614; O and Eye match in both. Changing it would
+    re-theme Dew's whole tab, so it is left as is. The tab-label weight part
+    of this step moves to step 34. The rendered-text lint finds no new
+    contrast failures, only the five step 31 owns. Three new tests, including
+    the drift guard and a computed contrast check. Suite 257/257.
 
 - [ ] **31. Clear the last light-mode readability failures**
   - Files: `assets/workspace-ui.css`, `tests/ui-contrast.test.mjs`

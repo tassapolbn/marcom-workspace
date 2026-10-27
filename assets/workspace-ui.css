@@ -818,3 +818,21 @@ html:not(.dark) #panel-overview .ov-s-gold:not(.is-zero) .ov-stat-num{color:#8a5
 html:not(.dark) #panel-overview .ov-stat.is-zero::before{background:transparent;}
 html:not(.dark) #panel-overview .ov-stat.is-zero .ov-stat-num{color:var(--muted);}
 html:not(.dark) #panel-overview .ov-stat.is-zero .ov-stat-ic{background:var(--surface-3);color:var(--muted);}
+
+/* Step 30: one status palette with the Team Board */
+/* The Team Board's status scale in its three tiers: an accent for rails, icons
+   and fills, a darker ink for text, and the pale tints its fills mix down to.
+   Alone, the accent is too light for text in two cases (Pending 4.4:1, Waiting
+   3.8:1 on white), so everything that writes a status as text uses the ink.
+   Status is always written out as well as coloured, so it is never colour-only.
+   Done and Canceled have no board equivalent and keep their colours. Light mode. */
+html:not(.dark){
+  --st-pending:#6b7a8c;--st-progress:#0e6ba8;--st-waiting:#a97614;--st-hold:#7a5ea7;
+  --st-pending-ink:#4a5866;--st-progress-ink:#0b4f7d;--st-waiting-ink:#7d5406;--st-hold-ink:#584079;}
+html:not(.dark) .kb-col[data-status="pending"]{--c-ink:var(--st-pending-ink);}
+html:not(.dark) .kb-col[data-status="in-progress"]{--c-ink:var(--st-progress-ink);}
+html:not(.dark) .kb-col[data-status="waiting"]{--c-ink:var(--st-waiting-ink);}
+html:not(.dark) .kb-col[data-status="on-hold"]{--c-ink:var(--st-hold-ink);}
+html:not(.dark) .kb-col[data-status] .kb-col-name{color:var(--c-ink,var(--c));}
+html:not(.dark) .evc-cd.u-amber,html:not(.dark) .rq-due.soon{color:var(--st-waiting-ink);}
+html:not(.dark) .trq-status.s-progress{color:var(--st-progress-ink);}
