@@ -51,6 +51,8 @@ function fixture() {
   context.window = context;
   vm.runInContext(extract('function eventsOf(', 'function eventsLoadedOf('), context);
   vm.runInContext(extract('function evCountdown(', 'function evSorted('), context);
+  /* Text in an event's colour (step 46); colours stay ignored here, since evOkClr is stubbed. */
+  vm.runInContext(extract('function evInk(', 'const EV_TEXT_COLORS'), context);
   vm.runInContext(extract('function deleteWithUndo(', '// TASK MODAL'), context);
   const realDelete = context.deleteWithUndo;
   context.deleteWithUndo = (...args) => { state.calls.push(args); return realDelete(...args); };
@@ -289,5 +291,52 @@ test('a chip with its own text colour is marked as a coloured tile', () => {
   assert.doesNotMatch(chip('Tint'), /ev-chip-filled/, 'a colour alone stays a flat row in light mode');
   assert.match(chip('Tint'), /border-top-color:#0d9488/);
   assert.doesNotMatch(chip('Plain'), /ev-chip-filled|style=/);
+});
+
+/* Step 46: an event colour used as text reads on white in light mode. */
+const lum = hex => hex.slice(1).match(/../g).map(h => parseInt(h, 16) / 255)
+  .map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+  .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+const onWhite = hex => 1.05 / (lum(hex) + 0.05);
+const presets = JSON.parse(source.match(/const EV_COLORS=(\[[^\]]+\])/)[1].replace(/'/g, '"'));
+
+test('every event colour has a shade that reads on white, and a readable colour stays as chosen', () => {
+  const { context: c } = fixture();
+  vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
+  assert.equal(presets.length, 10);
+  for (const hex of presets.concat(['#ffff00', '#4B8FD0', '#ffffff'])) {
+    const ink = c.evInk(hex);
+    assert.ok(onWhite(ink) >= 4.5, hex + ' -> ' + ink + ' reads at ' + onWhite(ink).toFixed(2));
+    if (onWhite(hex) >= 4.5) assert.equal(ink, hex, hex + ' already reads, so it is kept');
+    else {
+      const a = hex.slice(1).match(/../g).map(h => parseInt(h, 16)), b = ink.slice(1).match(/../g).map(h => parseInt(h, 16));
+      assert.ok(b.every((v, i) => v <= a[i]), ink + ' is a darker shade of ' + hex);
+      const k = Math.max(...b) / Math.max(...a);
+      assert.ok(b.every((v, i) => Math.abs(v - a[i] * k) <= 1), ink + ' keeps the hue of ' + hex);
+    }
+  }
+  assert.equal(c.evTextAttrs('ov-cdn-n', ''), ' class="ov-cdn-n"');
+  assert.equal(c.evTextAttrs('ov-cdn-n', '#1f3a5f'), ' class="ov-cdn-n" style="color:#1f3a5f;"');
+  assert.match(c.evTextAttrs('ev-tl-name', '#e6a417'), /^ class="ev-tl-name ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};"$/);
+});
+
+test('the Timeline names and the Overview countdown numbers use the readable shade', () => {
+  const { context: c } = fixture();
+  vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
+  c.evTimelineMode = true;
+  const amber = { id: 'a', name: 'Teacher Day', date: '2099-01-01', color: '#e6a417' };
+  const navy = { id: 'n', name: 'Concert', date: '2099-01-02', color: '#1f3a5f' };
+  const html = c.evHubHTML([amber, navy], 'boss');
+  assert.match(html, /<div class="ev-tl-name ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};">Teacher Day</, 'a light colour gets its darker shade');
+  assert.match(html, /<div class="ev-tl-name" style="color:#1f3a5f;">Concert</, 'a dark colour is unchanged');
+  assert.match(html, /class="ev-tl-dot evu-\w+" style="color:#e6a417;"/, 'the dot keeps the colour as chosen');
+  let rendered;
+  c.MORDER = ['boss']; c.eOf = () => [amber, navy]; c.dU = () => 3; c.fdt = () => 'Soon';
+  c.MarcomUI = { setHTML: (el, value) => { rendered = value; } };
+  c.document = { getElementById: () => ({}) };
+  vm.runInContext(countdown, c);
+  c.renderCountdown();
+  assert.match(rendered, /<div class="ov-cdn-n ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};">3</);
+  assert.match(rendered, /<div class="ov-cdn-n" style="color:#1f3a5f;">3</);
 });
 

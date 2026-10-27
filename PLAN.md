@@ -1195,7 +1195,7 @@ had a single event with a colour but no text colour, and no task linked to it.
     again after the tap. Tests: 317/317 (two new: the real buttons' code
     against a stand-in database, and the touch styles).
 
-- [ ] **46. Event colours readable as text (older issue, recommended)**
+- [x] **46. Event colours readable as text (older issue, recommended)**
   - Files: `index.html` (Timeline names and Overview countdown numbers),
     `assets/workspace-ui.css`, tests.
   - Change: in light mode, when an event's colour is too light to read on
@@ -1203,6 +1203,17 @@ had a single event with a colour but no text colour, and no task linked to it.
     the dots keep the exact colour; dark mode unchanged.
   - Test: the rendered scan with the five light colours finds no failure in
     the Timeline view or the Overview in light mode.
+  - Done (28 Oct): for an event colour too light to read on white, a small
+    helper finds the lightest darker shade of the same colour that reads at
+    4.5:1; a colour that already reads stays exactly as chosen. In light mode
+    the Timeline names and the Overview countdown numbers use it (amber
+    becomes a deep amber, light blue a deeper blue); the dots, the coloured
+    tiles and dark mode keep the colour as chosen. All ten colours in the event
+    colour picker, and pure yellow, now read at 4.5:1 or better as text.
+    Rendered scan with events coloured like the team's, all five tabs plus the
+    Timeline view on the four person tabs, at 390x844 and 1440x900, light
+    mode: zero failures. Dark mode shows the colours exactly as before.
+    Tests: 320/320 (three new).
 
 Then: the suite, the rendered checks above, a new pull request from `main`,
 and, if Boss agrees, merge, deploy and confirm the live deploy.

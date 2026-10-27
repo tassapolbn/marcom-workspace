@@ -1264,3 +1264,9 @@ html:not(.dark) .evhub .ev-chip.ev-chip-filled{border:0;border-radius:12px;}
 .rev-btn:active{background:var(--accent-ink,var(--navy));color:#fff;}
 /* Big enough to tap on a phone. */
 @media(max-width:600px){.rev-step .rev-btn{width:32px;height:32px;font-size:18px;}}
+
+/* Step 46: event colours readable as text */
+/* In light mode an event colour too light for text on white (a name in the
+   Timeline, a number in the Overview countdown) shows a darker shade of itself.
+   Dots, tiles and dark mode keep the colour as chosen. */
+html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}

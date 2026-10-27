@@ -898,3 +898,13 @@ test('on a touch screen a Revisions tap leaves no colour behind, and the buttons
   assert.ok(step45.indexOf('.rev-btn:active')>step45.indexOf('@media(hover:none)'),'while the finger is down, the press wins');
   assert.match(media(step45,'max-width:600px'),/\.rev-step \.rev-btn\{width:32px;height:32px;/);
 });
+
+/* ===== Step 46: event colours readable as text ===== */
+const step46=stepBlock(46);
+
+test('in light mode only, an event colour too light for text shows its darker shade',()=>{
+  assert.match(step46,/html:not\(\.dark\) \.ev-ink\{color:var\(--evc-ink\)!important;\}/);
+  assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink/,'dark mode keeps the colour as chosen');
+  assert.doesNotMatch(source,/class="ov-cdn-n"'\+\(\(it\.e\.color/,'the countdown number goes through evTextAttrs');
+});
+
