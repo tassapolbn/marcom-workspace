@@ -319,3 +319,27 @@ test('each member is the same colour in the workspace tabs and on the Team Board
     assert.match(boardCss,new RegExp('\\.m-'+ws+'\\{--mc:'+colour),ws+' name tag on the board');
   }
 });
+
+/* ===== Step 31: the last light-mode readability failures ===== */
+const step31=css26.slice(css26.indexOf('/* Step 31:'));
+
+test('finished work recedes by colour, not by fading everything inside it',()=>{
+  const rule=step31.match(/html:not\(\.dark\) \.task-card:is\(\.tc-done,\.tc-canceled\)\{([^}]*)\}/);
+  assert.ok(rule,'done and canceled cards have their own rule');
+  assert.match(rule[1],/opacity:1/,'fully opaque, so nothing inside drops below AA');
+  const surface=rule[1].match(/background-color:(#[0-9a-f]{6})/)[1];
+  /* The colours that failed only because of the fade, at full opacity. */
+  assert.ok(contrast('#55637a',surface)>=4.5,'struck topic on the finished-card surface');
+  assert.ok(contrast('#8f5e0e','#fbf0dc')>=4.5,'the "Medium" badge');
+  assert.ok(contrast('#55637a','#eef1f5')>=4.5,'the "Details" button');
+  assert.ok(contrast('#92400e','#fdf3d6')>=4.5,'a dated badge on Dew\'s tab');
+  assert.ok(contrast('#2563a8','#e7f0fa')>=4.5,'a role button on O\'s tab');
+});
+
+test('kanban counts are written in ink, and body text is at least 13px',()=>{
+  assert.match(step31,/\.kb-col\[data-status\] \.kb-col-count\{color:var\(--c-ink,var\(--c\)\)!important;\}/,'counts use the ink, like the column names');
+  for(const [app] of PAIRS){
+    assert.ok(contrast(hex(step30,'st-'+app+'-ink'),'#ffffff')>=4.5,app+' count on white');
+  }
+  assert.match(step31,/#team-card \.team-note\{font-size:13px;\}/,'the Overview team note is no longer 11.5px');
+});

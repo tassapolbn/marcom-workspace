@@ -836,3 +836,16 @@ html:not(.dark) .kb-col[data-status="on-hold"]{--c-ink:var(--st-hold-ink);}
 html:not(.dark) .kb-col[data-status] .kb-col-name{color:var(--c-ink,var(--c));}
 html:not(.dark) .evc-cd.u-amber,html:not(.dark) .rq-due.soon{color:var(--st-waiting-ink);}
 html:not(.dark) .trq-status.s-progress{color:var(--st-progress-ink);}
+
+/* Step 31: the last light-mode readability failures */
+/* Finished work receded by fading whole cards (done to 85%, canceled to 72%),
+   which dragged every topic, badge and button inside them below AA. The cards
+   now stay fully opaque and recede through colour instead: a faint grey surface,
+   the struck muted topic, their Done or Canceled column and their rail. */
+html:not(.dark) .task-card:is(.tc-done,.tc-canceled){opacity:1;background-color:#f8fafc;}
+/* Step 30 wrote kanban counts in the status accent, too light for text on
+   Pending (4.4:1) and Waiting (3.8:1); counts use the ink like the names. An
+   older rule forces the accent with !important, so this needs it too. */
+html:not(.dark) .kb-col[data-status] .kb-col-count{color:var(--c-ink,var(--c))!important;}
+/* Body text is at least 13px. Size is structure, not colour, so both themes. */
+#team-card .team-note{font-size:13px;}

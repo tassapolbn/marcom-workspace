@@ -542,12 +542,28 @@ self-contained, gets reviewed and tested, then committed.
     contrast failures, only the five step 31 owns. Three new tests, including
     the drift guard and a computed contrast check. Suite 257/257.
 
-- [ ] **31. Clear the last light-mode readability failures**
+- [x] **31. Clear the last light-mode readability failures**
   - Files: `assets/workspace-ui.css`, `tests/ui-contrast.test.mjs`
   - Struck-through task topics to at least 4.5:1, the `Medium` badge to at least
     4.5:1, and no body text below 13px (the team note is 11.5px).
   - Test: `ui-contrast` finds no failures; the shoot lint reports no "body text
     under 13px".
+  - Done (27 Oct): a full scan of every text element on all five tabs found
+    more than the three items named above, and one root cause behind most of
+    them. Done cards were drawn at 85% opacity and canceled ones at 72%, which
+    dragged every topic, badge and button inside them below AA (struck topics
+    4.32:1, "Medium" 3.71:1, "Details" 3.93:1, Dew's dated and tagged badges,
+    O's "Pending upload" and role buttons). Their colours all pass at full
+    opacity, so the cards now stay opaque and recede through colour instead: a
+    faint grey surface, the struck muted topic, their column and their rail.
+    One rule, not eight badge patches. **Regression from step 30 fixed:** the
+    kanban count badge was written in the new slate and amber accents (4.39:1,
+    3.82:1); it now uses the ink, like the column names. The Overview team note
+    moves from 11.5px to 13px. Result in light mode: zero contrast failures and
+    no body text under 13px on any tab, by both the shoot lint and a full
+    rendered-text scan; dark mode stays clean. **Observation for step 35:**
+    badge and label text sits at 10 to 12px, which is conventional for labels
+    but small on iPhone. Two new tests; suite 259/259.
 
 - [ ] **32. Flatten the nested cards**
   - Files: `assets/workspace-ui.css`, `index.html`
