@@ -474,7 +474,7 @@ self-contained, gets reviewed and tested, then committed.
     **Noted for step 35:** on iPhone the header card is about 370px tall in its
     existing phone layout. Three new tests; suite 248/248.
 
-- [ ] **28. One card language**
+- [x] **28. One card language**
   - Files: `assets/workspace-ui.css`, `index.html` where card shells are built
   - Settle on one card: white surface, hairline border, one radius, one shadow.
     Team Announcements loses its filled navy header and matches the rest. The
@@ -482,6 +482,20 @@ self-contained, gets reviewed and tested, then committed.
     status, which step 30 defines.
   - Test: the shoot lint reports no coloured single-side border that is not a
     status rail; checked at 100% and 200% zoom.
+  - Done (27 Oct): every card now uses one calm shadow and one 16px radius. The
+    design refresh had already defined both (`--card-shadow`, `--r-lg`), but
+    older rules kept most cards on the heavy `--shadow`, so in light mode that
+    one token now means the calm shadow. Hover still deepens, and search results
+    still float, each with a named elevation. Team Announcements matches the
+    other card heads on every measured property. Decorative rails are gone
+    (Event Hub, plain announcements); rails that carry meaning stay: task
+    status, a pinned announcement, and a Director request. At 1440 and at 200%
+    zoom: no overflow, no rails other than those. **Side effect fixed:**
+    removing Event Hub's 4px rail tipped its event grid from five columns to
+    six at 1440, shrinking chips to the 150px minimum so "School Open Day"
+    wrapped. That minimum was already too tight at other widths, so it rises
+    to 176px above phone width; phones keep two columns. Four new tests; suite
+    252/252.
 
 - [ ] **29. Quiet the triage tiles, and let zero be quiet**
   - Files: `index.html` (Overview tiles), `assets/workspace-ui.css`

@@ -780,3 +780,30 @@ html.dark #lunch-banner .lb-close:hover,html.dark #lunch-banner .lb-close:focus-
    Older shared card rules force radius, shadow and spacing with !important. */
 html:not(.dark) .member-head{border-bottom:0;border-radius:16px 16px 0 0!important;box-shadow:none!important;margin-bottom:0!important;}
 html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba(16,24,40,.06);border-radius:0 0 16px 16px!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)!important;}
+
+/* Step 28: one card language */
+/* One card everywhere: white surface, hairline border, one 16px radius and one
+   calm shadow. The design refresh defined --r-lg and --card-shadow for this, but
+   older rules kept most cards on the heavy --shadow, so every card floated. In
+   light mode --shadow now means the calm card shadow; anything that should stay
+   raised names its own elevation. */
+html:not(.dark){--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);--shadow-hover:0 2px 4px rgba(16,24,40,.05),0 10px 22px -8px rgba(16,24,40,.14);}
+/* Raised on purpose: hover still deepens as cards lift, and search results float. */
+html:not(.dark) :is(.task-card,.evc-card,.rq-card):hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
+html:not(.dark) #panel-overview .ov-search-results{box-shadow:var(--shadow-lg);}
+/* One card radius: task cards were 14px and the Resources fold 18px. */
+.task-card,#panel-overview .ov-more{border-radius:var(--r-lg,16px)!important;}
+/* Decorative side rails go. Rails that carry meaning stay: task status, a pinned
+   announcement and a Director request. */
+.evhub{border-left-width:1px!important;border-left-color:var(--border)!important;}
+#panel-overview .ov-ann-item:not(.pinned){border-left:1px solid var(--border);}
+html:not(.dark) #panel-overview .ov-ann-item.pinned{box-shadow:var(--shadow);}
+/* Team Announcements loses its navy header and reads like every other card. */
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head{background:none;margin:0 0 12px;padding:0;border-bottom:0;}
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title{color:var(--text);font-size:14px;font-weight:700;letter-spacing:normal;}
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title i{color:var(--navy);font-size:18px;}
+/* Removing Event Hub's 4px rail widened its grid just enough to add a column at
+   1440, shrinking chips to the 150px minimum, where names like "School Open Day"
+   wrap. That minimum was already too tight at other widths, so it rises to 176px.
+   Phones keep their two columns. */
+@media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));}}

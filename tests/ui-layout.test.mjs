@@ -223,3 +223,36 @@ test('in light mode the two cards read as one, keeping the member colour wash',(
   assert.match(head,/margin-bottom:0!important/,'no gap between them');
   assert.doesNotMatch(head,/background/,'the 12% wash of the member colour is kept, it says whose desk this is');
 });
+
+/* ===== Step 28: one card language ===== */
+const step28=css26.slice(css26.indexOf('/* Step 28:'));
+
+test('in light mode every card shares one calm shadow, and raised things keep their lift',()=>{
+  const tokens=step28.match(/html:not\(\.dark\)\{--shadow:([^;]+);--shadow-hover:([^;]+);\}/);
+  assert.ok(tokens,'the light shadow tokens are set');
+  assert.doesNotMatch(tokens[1],/12px 30px/,'the floating card shadow is gone');
+  assert.equal(tokens[1],'0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)','cards use the calm design-refresh shadow');
+  assert.match(step28,/:is\(\.task-card,\.evc-card,\.rq-card\):hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'hover still deepens as a card lifts');
+  assert.match(step28,/\.ov-search-results\{box-shadow:var\(--shadow-lg\);\}/,'search results still float above the page');
+});
+
+test('cards share one radius, decorative rails go and meaningful rails stay',()=>{
+  assert.match(step28,/\.task-card,#panel-overview \.ov-more\{border-radius:var\(--r-lg,16px\)!important;\}/);
+  assert.match(step28,/\.evhub\{border-left-width:1px!important;/,'Event Hub loses its decorative rail');
+  assert.match(step28,/\.ov-ann-item:not\(\.pinned\)\{border-left:1px solid var\(--border\);\}/,'plain announcements lose theirs');
+  assert.doesNotMatch(step28,/\.ov-ann-item\.pinned\{[^}]*border-left/,'a pinned announcement keeps its rail: only pinned items have one');
+  assert.doesNotMatch(step28,/\.task-card[^{]*\{[^}]*border-left/,'task status rails are untouched');
+});
+
+test('Team Announcements reads like every other card',()=>{
+  const head=step28.match(/#panel-overview \.ov-ann>\.ov-card-head\{([^}]*)\}/)[1];
+  assert.match(head,/background:none/,'no navy band');
+  assert.match(head,/border-bottom:0/,'no gold rule');
+  assert.match(head,/margin:0 0 12px/,'the same spacing as the other card heads');
+  assert.match(step28,/\.ov-ann>\.ov-card-head \.ov-card-title\{color:var\(--text\);font-size:14px;font-weight:700;/);
+});
+
+test('event chips have room for their names, and phones keep two columns',()=>{
+  assert.match(step28,/@media\(min-width:481px\)\{\.ev-grid\{grid-template-columns:repeat\(auto-fill,minmax\(176px,1fr\)\);\}\}/);
+  assert.match(source,/@media\(max-width:480px\)\{\.ev-grid\{grid-template-columns:repeat\(2,1fr\);\}\}/,'the phone grid is unchanged');
+});
