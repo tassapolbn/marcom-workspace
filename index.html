@@ -4997,7 +4997,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     var rc=window.__rcCounts||{}, unread=rc.unread||0, waiting=rc.waiting||0;
     function many(n,one,more){ return n+' '+(n===1?one:more); }
     function tile(icon,n,label,cls,sub,subCls,action,aria){
-      return '<div class="ov-stat '+cls+'" role="button" tabindex="0" data-action="'+action+'" aria-label="'+esc(aria)+'">'
+      /* is-zero is presentational only: a count of 0 reads quietly. */
+      return '<div class="ov-stat '+cls+(n?'':' is-zero')+'" role="button" tabindex="0" data-action="'+action+'" aria-label="'+esc(aria)+'">'
         +'<div class="ov-stat-top"><div class="ov-stat-ic"><i class="ti '+icon+'"></i></div><div class="ov-stat-main"><div class="ov-stat-num">'+n+'</div><div class="ov-stat-lbl">'+label+'</div></div></div>'
         +'<div class="ov-stat-subs"><span class="ov-sub'+(subCls?' '+subCls:'')+'">'+sub+'</span></div></div>';
     }

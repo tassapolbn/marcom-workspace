@@ -807,3 +807,14 @@ html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title i{color:var
    wrap. That minimum was already too tight at other widths, so it rises to 176px.
    Phones keep their two columns. */
 @media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));}}
+
+/* Step 29: quiet the triage tiles, and let zero be quiet */
+/* Colour only where it means something: overdue red, due today amber, the rest
+   neutral. A tile at 0 reads quietly, so "4 overdue" is plainly louder than
+   "0 meetings today". Light mode, per the agreed scope. */
+html:not(.dark) #panel-overview :is(.ov-s-navy,.ov-s-blue,.ov-s-purple)::before{background:transparent;}
+html:not(.dark) #panel-overview :is(.ov-s-navy,.ov-s-blue,.ov-s-purple) .ov-stat-ic{background:var(--surface-3);color:var(--muted);}
+html:not(.dark) #panel-overview .ov-s-gold:not(.is-zero) .ov-stat-num{color:#8a5b00;}
+html:not(.dark) #panel-overview .ov-stat.is-zero::before{background:transparent;}
+html:not(.dark) #panel-overview .ov-stat.is-zero .ov-stat-num{color:var(--muted);}
+html:not(.dark) #panel-overview .ov-stat.is-zero .ov-stat-ic{background:var(--surface-3);color:var(--muted);}

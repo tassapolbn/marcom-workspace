@@ -497,12 +497,21 @@ self-contained, gets reviewed and tested, then committed.
     to 176px above phone width; phones keep two columns. Four new tests; suite
     252/252.
 
-- [ ] **29. Quiet the triage tiles, and let zero be quiet**
+- [x] **29. Quiet the triage tiles, and let zero be quiet**
   - Files: `index.html` (Overview tiles), `assets/workspace-ui.css`
   - Keep colour only where it means something: overdue red, due today amber,
     the rest neutral. A tile whose value is `0` drops to a muted treatment, so
     `4 OVERDUE` is plainly louder than `0 MEETINGS TODAY`.
   - Test: at 1440 the eye lands on overdue first; a tile at 0 is visibly quieter.
+  - Done (27 Oct): the five tiles no longer carry five coloured bars. Overdue
+    keeps red (bar and number) and Due today keeps amber (bar, and its number
+    now in amber ink, 5.8:1); Next 7 days, New requests and Meetings are
+    neutral. A count of 0 reads quietly with a muted number (6.1:1), including
+    Overdue at 0, which is good news; its "All clear" note stays. The tile
+    helper adds one presentational class for a zero; data, labels, click
+    actions and screen-reader text are unchanged. Light mode only, per the
+    agreed scope: every rule is scoped to it. Two new tests, one running the
+    real tile helper at 0 and at 4. Suite 254/254.
 
 - [ ] **30. Adopt the Team Board's status and member colour scales**
   - Files: `assets/workspace-ui.css`, `index.html` where status chips are drawn,

@@ -256,3 +256,28 @@ test('event chips have room for their names, and phones keep two columns',()=>{
   assert.match(step28,/@media\(min-width:481px\)\{\.ev-grid\{grid-template-columns:repeat\(auto-fill,minmax\(176px,1fr\)\);\}\}/);
   assert.match(source,/@media\(max-width:480px\)\{\.ev-grid\{grid-template-columns:repeat\(2,1fr\);\}\}/,'the phone grid is unchanged');
 });
+
+/* ===== Step 29: quiet the triage tiles, and let zero be quiet ===== */
+const step29=css26.slice(css26.indexOf('/* Step 29:'));
+const tileFn=slice('    function tile(icon,n,label,cls,sub,subCls,action,aria){','\n    var meetSub=');
+
+test('a tile at zero is marked to read quietly, and the tile keeps working',()=>{
+  const context=vm.createContext({esc:s=>String(s)});
+  vm.runInContext(tileFn,context);
+  const zero=context.tile('ti-x',0,'Overdue','ov-s-red','All clear','ov-sub-up','overdue','0 overdue tasks. Show them.');
+  const four=context.tile('ti-x',4,'Overdue','ov-s-red','Oldest is 1d overdue','ov-sub-bad','overdue','4 overdue tasks. Show them.');
+  assert.match(zero,/class="ov-stat ov-s-red is-zero"/,'0 overdue reads quietly: it is good news');
+  assert.match(four,/class="ov-stat ov-s-red"/,'4 overdue keeps its red');
+  for(const html of [zero,four]){
+    assert.match(html,/role="button" tabindex="0" data-action="overdue"/,'still a focusable button with its action');
+  }
+  assert.match(zero,/aria-label="0 overdue tasks\. Show them\."/,'screen-reader text is unchanged');
+});
+
+test('colour stays only where it means something, and a zero overrides it',()=>{
+  assert.match(step29,/:is\(\.ov-s-navy,\.ov-s-blue,\.ov-s-purple\)::before\{background:transparent;\}/,'neutral tiles lose their bars');
+  assert.match(step29,/\.ov-s-gold:not\(\.is-zero\) \.ov-stat-num\{color:#8a5b00;\}/,'due today reads in amber ink');
+  assert.match(step29,/\.ov-stat\.is-zero::before\{background:transparent;\}/);
+  assert.match(step29,/\.ov-stat\.is-zero \.ov-stat-num\{color:var\(--muted\);\}/);
+  assert.doesNotMatch(step29,/\.ov-s-red[^{]*\{/,'overdue keeps its red bar and number whenever it is not zero');
+});
