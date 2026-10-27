@@ -2,7 +2,7 @@
 <html lang="en" id="html-root">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>/* iPhone and iPad zoom into any field whose text is under 16px and stay zoomed in.
    maximum-scale=1 stops that automatic zoom; iOS still lets people pinch to zoom.
    Other phones and computers keep the tag as it is. */
@@ -876,7 +876,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div id="sal-badge"></div>
   </div>
   <nav class="tab-nav" role="tablist" aria-label="Workspaces">
-    <button class="tab-btn a-boss a-active" role="tab" aria-selected="true" aria-controls="panel-boss" onclick="switchTab('boss')" id="tab-boss"><i class="ti ti-user"></i>Boss</button>
+    <button class="tab-btn a-boss a-active" role="tab" aria-selected="true" aria-controls="panel-boss" onclick="switchTab('boss')" id="tab-boss"><span class="tab-mono" aria-hidden="true">B</span><i class="ti ti-user"></i><span class="tab-name">Boss</span></button>
   </nav>
  </div>
 </div>
@@ -1763,7 +1763,8 @@ function buildDepartment(){
       const b=document.createElement('button');
       b.className='tab-btn';b.id='tab-'+w;
       b.setAttribute('onclick',"switchTab('"+w+"')");
-      b.innerHTML='<i class="ti '+MEMBERS[w].icon+'"></i><span id="'+w+'-tablabel"></span>';
+      b.innerHTML='<span class="tab-mono" aria-hidden="true"></span><i class="ti '+MEMBERS[w].icon+'"></i><span class="tab-name" id="'+w+'-tablabel"></span>';
+      b.firstChild.textContent=tabLabel(w).charAt(0).toUpperCase();
       nav.appendChild(b);
     });
   }
@@ -4943,7 +4944,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var b=document.createElement('button');
       b.className='tab-btn'; b.id='tab-overview';
       b.setAttribute('onclick','ovGo()');
-      b.innerHTML='<i class="ti ti-layout-dashboard"></i>Overview';
+      b.innerHTML='<span class="tab-mono" data-mark aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false"><rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="1.5" width="5.5" height="5.5" rx="1.5"/><rect x="1.5" y="9" width="5.5" height="5.5" rx="1.5"/><rect x="9" y="9" width="5.5" height="5.5" rx="1.5"/></svg></span><i class="ti ti-layout-dashboard"></i><span class="tab-name">Overview</span>';
       nav.insertBefore(b, nav.firstChild);
     }
     var panel=document.createElement('div');
@@ -13514,6 +13515,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
 </script>
 <script src="assets/event-board.js"></script>
 <script src="assets/ui-motion.js"></script>
+<script src="assets/ui-tabs.js"></script>
 <script src="assets/ui-dialogs.js"></script>
 <script src="assets/task-draft.js"></script>
 <script src="assets/widget-summary.js"></script>

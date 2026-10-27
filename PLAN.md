@@ -607,7 +607,7 @@ self-contained, gets reviewed and tested, then committed.
     pretend 64px dock raised each of them by exactly 64px. Two new tests;
     suite 263/263.
 
-- [ ] **34. The tab bar: a sliding pill on desktop, a bottom dock on iPhone**
+- [x] **34. The tab bar: a sliding pill on desktop, a bottom dock on iPhone**
   *(option 2 of 3, recommended; Boss to confirm)*
   - Files: `index.html` (the viewport tag, and a one-letter initial on each tab
     where the tabs are created), a new `assets/ui-tabs.js` (the sliding
@@ -642,6 +642,37 @@ self-contained, gets reviewed and tested, then committed.
     the dock.
   - Order: build after step 33, since the floating buttons must already know to
     lift above the dock. Absorbs the tab-label part of step 30.
+  - Done (27 Oct): built as planned. **Desktop and iPad:** the five tabs are one
+    compact group in a recessed track on the navy header, lined up with the
+    logo. A white pill glides to the selected tab in about a third of a second
+    and changes width as it goes, settling with a 3% overshoot. The selected
+    name takes that person's colour on the pill (Overview in the school gold,
+    #8a5b00 on white), and saved custom tab colours carry through. Inside the
+    pill each tab is drawn by a clipped copy in the selected colours, so no
+    name is ever dark on navy or light on white, even halfway through a move.
+    All names now share one weight, so selecting a tab never shifts the others.
+    **iPhone:** the tabs become a navy dock floating above the home bar, as
+    wide as its tabs: five 56 to 72pt slots for Boss, two for a member who
+    sees only Overview and their own tab. Each slot is a monogram (B, D, O, E,
+    and a four-square mark for Overview, drawn inline so it never depends on
+    the icon font) above the name; the selected monogram fills with the
+    person's colour, which blends as the pill travels. The header is 49px
+    shorter on iPhone, and the old tab row, which cut Eye off and needed a
+    sideways swipe, is gone. **Moving between tabs:** the new view slides 16px
+    in from the side you moved towards. Only what the person does is animated
+    (start-up and restored tabs are placed), and Reduce Motion places
+    everything at once. **Unchanged:** destinations, request badges, arrow
+    keys and tab roles. **Found and fixed on the way:** the slide briefly
+    widened the page, which on a phone zooms the layout out and dropped the
+    dock off screen for 0.3s, so the page now clips it; dark mode's blurred
+    header would have held the dock inside itself, so on phones that header is
+    solid; and `viewport-fit=cover` also lets a phone on its side draw under
+    the notch, so the page, the floating buttons and the widget drawer now keep
+    clear of it. Checked in Chromium with emulated iPhone safe areas at 320,
+    375, 390, 393, 430 and 440: no sideways scroll, nothing fixed overlaps the
+    dock, every tab name at AA in both themes (lowest 4.61:1, Dew's selected
+    name). A real iPhone check on the deploy preview is still needed. 14 new
+    tests; suite 277/277.
 
 - [ ] **35. Final check and notes**
   - Run the full UI suite, the contrast checks and the phone widths in **both**
