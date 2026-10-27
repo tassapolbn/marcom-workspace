@@ -272,3 +272,22 @@ test('dialog updates and deletes legacy events in their own collection; new even
   c.saveEvent();
   assert.equal(state.adds[0].name, 'school_events');
 });
+
+test('a chip with its own text colour is marked as a coloured tile', () => {
+  const { context: c } = fixture();
+  /* The real colour helpers, instead of the stub that ignores colours. */
+  vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
+  const html = c.evHubHTML([
+    { id: 'tile', name: 'Tile', date: '2099-01-01', color: '#d6336c', textColor: '#ffffff' },
+    { id: 'tint', name: 'Tint', date: '2099-01-02', color: '#0d9488' },
+    { id: 'plain', name: 'Plain', date: '2099-01-03' },
+  ], 'boss');
+  const chip = name => html.split('<div class="ev-chip ').find(part => part.includes('>' + name + '<'));
+  assert.match(chip('Tile'), /^evt-\w+ ev-chip-filled"/, 'a fill with its own text colour');
+  assert.match(chip('Tile'), /background:linear-gradient\(180deg,#d6336c,rgba\(214,51,108,0\.86\)\)/);
+  assert.match(chip('Tile'), /class="ev-chip-name" style="color:#ffffff;"/);
+  assert.doesNotMatch(chip('Tint'), /ev-chip-filled/, 'a colour alone stays a flat row in light mode');
+  assert.match(chip('Tint'), /border-top-color:#0d9488/);
+  assert.doesNotMatch(chip('Plain'), /ev-chip-filled|style=/);
+});
+

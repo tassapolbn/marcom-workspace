@@ -3011,7 +3011,7 @@ function taskCardHTML(task,who){
       evBadge+='<span class="mb mb-shared"><i class="ti ti-users-group" style="font-size:11px;"></i> Unassigned</span>';
     }
   } else if(task.eventId||task.eventName){
-    evBadge='<span class="mb mb-event"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>';
+    evBadge='<span class="mb mb-event'+(_evTc?' mb-event-filled':'')+'"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>';
   }
   const reqBadge=task.requestRef?'<span class="mb mb-req"><i class="ti ti-send" style="font-size:11px;"></i> '+escHtml(task.requestRef)+'</span>':'';
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
@@ -4202,7 +4202,9 @@ function evHubHTML(evs,who){
       var clr=evOkClr(ev.color)?ev.color:'',tc=(clr&&evOkClr(ev.textColor))?ev.textColor:'';
       var chipStyle='';
       if(clr)chipStyle=tc?('border-top-color:'+clr+';background:linear-gradient(180deg,'+clr+','+evTint(clr,0.86)+');'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
-      html+='<div class="ev-chip evt-'+u+(isPast?' ev-chip-past':'')+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
+      /* ev-chip-filled: the event has its own text colour, so it is a coloured
+         tile in every theme; its text is chosen for that fill (step 44). */
+      html+='<div class="ev-chip evt-'+u+(tc?' ev-chip-filled':'')+(isPast?' ev-chip-past':'')+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
         +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';opacity:.78;"':'')+'>'+evChipDate(ev)+'</div>'
         +'<div class="ev-chip-name"'+(tc?' style="color:'+tc+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
         +'<div class="ev-chip-cd evu-'+u+'"'+(tc?' style="color:'+tc+';"':'')+'>'+evShort(cd.ms)+'</div>'

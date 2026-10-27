@@ -614,7 +614,7 @@ html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member
 html:not(.dark) #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#a25816!important;}
 html:not(.dark) #panel-o :is(#o-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#b73d0b!important;}
 html:not(.dark) button[onclick^="confirmReset"]{color:#be123c!important;}
-html:not(.dark) .mb-event{color:#0b6e69!important;}
+html:not(.dark) .mb-event:not(.mb-event-filled){color:#0b6e69!important;}
 html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b{color:#9a4a07;}
 html:not(.dark) body .menu-cat{color:#7f5704!important;}
 html:not(.dark) .meet-label{opacity:1;}
@@ -794,7 +794,7 @@ html:not(.dark) #ov-cal-card .ov-cal-detail{border:0!important;border-radius:0!i
 html:not(.dark) #panel-overview .ov-ann-item{border:0!important;box-shadow:none!important;background:transparent;border-radius:0;padding-left:0;padding-right:0;}
 html:not(.dark) #panel-overview .ov-ann-item.pinned{background:var(--gold-light);border-left:3px solid var(--gold2)!important;border-radius:8px;padding-left:12px;padding-right:12px;}
 /* Event Hub chips keep their urgency rule, without a box around each date. */
-html:not(.dark) .evhub .ev-chip{border-left:0!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;}
+html:not(.dark) .evhub .ev-chip:not(.ev-chip-filled){border-left:0!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;}
 /* A Director request is a tinted section at the foot of its task, not a card. */
 html:not(.dark) .task-card .dirq{border-top:1px solid #f0d8b6!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;}
 
@@ -1250,3 +1250,9 @@ body:not(.hdr-scrolled) .app-header{box-shadow:inset 0 1px 0 rgba(255,255,255,.0
 .member-head .member-head-extra{border-left:0;padding-left:0;}
 /* A person with no sick days and no lieu balance has no leave line. */
 .tm-lv:empty{display:none;}
+
+/* Step 44: event colours the team chose stay readable */
+/* An event with its own text colour keeps its coloured tile in light mode too,
+   as in dark mode and before step 32, so white or cream text sits on its own
+   colour. Events without one stay flat rows (step 32). */
+html:not(.dark) .evhub .ev-chip.ev-chip-filled{border:0;border-radius:12px;}

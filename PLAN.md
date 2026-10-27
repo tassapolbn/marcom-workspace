@@ -1104,7 +1104,8 @@ Next review: shoot the iPhone evidence at 390x664 as well as 390x844.
 
 Boss reported two bugs on the live site after the merge, both on iPhone in
 light mode. Both are reproduced in the preview with data like the team's.
-Nothing here is built until Boss approves.
+Approved by Boss on 28 Oct: option A (the coloured tiles come back), steps 44
+to 46, then merge and deploy once every check passes.
 
 ## What the checks found
 
@@ -1116,10 +1117,11 @@ Nothing here is built until Boss approves.
    Hub on all four person tabs, at every screen size, in light mode only; dark
    mode still shows the tiles. Caused by the redesign (step 32).
 2. **The same pattern on task cards.** A task linked to a coloured event shows
-   a label in that event's colours. Step 31 darkened the label's text so the
-   default teal label reads well, but it also overrides the event's own text
-   colour, so a label on a pink event reads dark teal on pink (1.32:1). Caused
-   by the redesign (step 31).
+   a label in that event's colours. The light-mode readability fix of 24 Oct
+   (plan 2, step 21) darkened the label's text so the default teal label reads
+   well, but it also overrides the event's own text colour, so a label on a
+   pink event reads dark teal on pink (1.32:1). Caused by that earlier fix,
+   not by the redesign.
 3. **Revisions "+" and "−" do nothing on a shared card.** The buttons save
    the new count to Dew's own task list, but a card shared by Boss and Dew is
    kept in the shared list, so the live database refuses the save and nothing
@@ -1138,20 +1140,35 @@ had a single event with a colour but no text colour, and no task linked to it.
 
 ## Steps
 
-- [ ] **44. Event names readable again in the Event Hub and on task cards**
+- [x] **44. Event names readable again in the Event Hub and on task cards**
   - Files: `index.html` (a chip and a task card label say when they carry the
-    event's own colours), `assets/workspace-ui.css` (the step 32 and step 31
+    event's own colours), `assets/workspace-ui.css` (the step 32 and step 21
     rules leave those alone), `tests/ui-preview.mjs`, tests.
   - Change (decision 1, recommended A): a chip whose event has a chosen text
     colour keeps the team's coloured tile, as before the redesign and as in
     dark mode; a chip with only a colour stays a flat row with the colour as
     its top line. A task card label on a coloured event shows the event's own
-    colours again; other labels keep the darker teal from step 31.
+    colours again; other labels keep the darker teal from step 21.
   - Test: the preview's sample data gains coloured events like the team's
     (white, cream and dark text) and a task linked to one, so every later check
     sees them. With them, a rendered scan of all five tabs at 390x844 and
     1440x900 in light mode finds no unreadable text, dark mode is unchanged,
     and screenshots of the Event Hub at 390 and 1440 match the approved look.
+  - Done (28 Oct): a chip whose event has its own text colour is now marked as
+    a coloured tile, and the step 32 flattening and the 24 Oct label rule leave
+    such chips and labels alone, so in light mode they keep their fill, as in
+    dark mode (a 12px tile, no outline). With events coloured like the team's
+    on an iPhone-size screen, white, cream and dark text sit on their own
+    colours again: 1.00:1 and 1.10:1 before, now the team's own pairs at 2.5:1
+    to 7.6:1, the same as before the redesign. A task linked to a coloured
+    event shows its label in the event's colours (white on pink, 4.6:1);
+    labels without colours keep the darker teal. The preview's sample data has
+    four more events coloured the way the team colours theirs, and two of
+    Boss's tasks are linked to coloured events. Rendered scan of all five tabs
+    at 390x844 and 1440x900, light mode: no failure on the four person tabs;
+    only the Overview countdown numbers and the Timeline names remain, which
+    step 46 takes up. Dark mode unchanged. Tests: 315/315 (three new, and the
+    step 32 test follows the narrowed rule).
 
 - [ ] **45. Revisions "+" and "−" save on every card**
   - Files: `index.html` (the buttons save through the same helper as the

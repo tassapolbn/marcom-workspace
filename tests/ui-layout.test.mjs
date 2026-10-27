@@ -346,7 +346,8 @@ test('boxes inside a card become rows separated by hairlines',()=>{
 });
 
 test('what carries meaning survives the flattening',()=>{
-  const chip=step32.match(/\.evhub \.ev-chip\{([^}]*)\}/)[1];
+  /* A chip with its own text colour keeps its fill (step 44), so only plain chips flatten. */
+  const chip=step32.match(/\.evhub \.ev-chip:not\(\.ev-chip-filled\)\{([^}]*)\}/)[1];
   assert.doesNotMatch(chip,/border-top/,'an event chip keeps its urgency rule');
   assert.doesNotMatch(chip,/border:0/,'only the side and bottom edges go');
   const dirq=step32.match(/\.task-card \.dirq\{([^}]*)\}/)[1];
@@ -839,3 +840,26 @@ test('small fixes from the second review',()=>{
   assert.match(step43,/\.member-head \.member-head-extra \.mh-dt\{display:none;\}/);
   assert.doesNotMatch(source,/DAY AGENDA|shared by the whole team/);
 });
+
+/* ===== Step 44: event colours the team chose stay readable ===== */
+const step44=stepBlock(44);
+
+test('an event with its own text colour keeps its coloured tile in light mode',()=>{
+  /* Any rule that clears a chip's fill must skip filled chips, or their white or
+     cream text lands on white (Boss's report, 28 Oct). */
+  const chipSel=/\.ev-chip(?![\w-])/;
+  const clears=[...css26.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+    .filter(([,sel,decl])=>chipSel.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
+  assert.ok(clears.length>=1,'plain chips are still flat rows (step 32)');
+  for(const [,sel] of clears)for(const part of sel.split(/,(?![^()]*\))/))
+    if(chipSel.test(part))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone');
+  assert.match(step44,/html:not\(\.dark\) \.evhub \.ev-chip\.ev-chip-filled\{border:0;border-radius:12px;\}/,'a filled chip is a neat tile');
+  assert.match(source,/\(tc\?' ev-chip-filled':''\)/,'only an event with a text colour is marked filled');
+});
+
+test("a task label on a coloured event keeps the event's own colours",()=>{
+  assert.match(css26,/html:not\(\.dark\) \.mb-event:not\(\.mb-event-filled\)\{color:#0b6e69!important;\}/,'the darker teal is only for labels without their own colours');
+  assert.doesNotMatch(css26,/html:not\(\.dark\) \.mb-event\{color/,'no rule repaints a filled label');
+  assert.match(source,/class="mb mb-event'\+\(_evTc\?' mb-event-filled':''\)\+'"'\+_evStyle/);
+});
+
