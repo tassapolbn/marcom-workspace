@@ -565,11 +565,26 @@ self-contained, gets reviewed and tested, then committed.
     badge and label text sits at 10 to 12px, which is conventional for labels
     but small on iPhone. Two new tests; suite 259/259.
 
-- [ ] **32. Flatten the nested cards**
+- [x] **32. Flatten the nested cards**
   - Files: `assets/workspace-ui.css`, `index.html`
   - The 6 nested cards on Overview and 2 on the member tab become rows separated
     by hairlines inside their parent card.
   - Test: the lint reports no cards inside cards; the panels still read as lists.
+  - Done (27 Oct): no card sits inside another card on any of the five tabs,
+    by a scan of every surface with a border or shadow and a radius (buttons
+    and pills, which belong inside cards, excluded). Team today rows, Upcoming
+    Deadlines rows, Event Board groups and countdown items are now rows
+    separated by hairlines, and still highlight on hover; the day agenda is a
+    section of the calendar card; announcements sit side by side as plain
+    blocks. **Wider than the count above:** the 13 Upcoming Deadlines rows were
+    each an outlined box. The lint did not count them because they have no
+    fill, but they were the most visible instance of the problem, so they are
+    included. Meaning is kept: an event chip keeps its urgency rule, a Director
+    request becomes a tinted section at the foot of its task with its amber
+    rail, and a pinned announcement keeps its gold. No `index.html` change was
+    needed. Light mode. Also fixed in the tests: each step's styles are now
+    read from its own block, so a later step cannot trip an earlier step's
+    checks; one already had. Two new tests; suite 261/261.
 
 - [ ] **33. The floating buttons stop covering content**
   - Files: `assets/workspace-ui.css`

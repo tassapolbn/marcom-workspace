@@ -136,6 +136,13 @@ test('app feedback moved to Settings and keeps its styles there',()=>{
 
 /* ===== Step 26: one quiet status strip ===== */
 const css26=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
+/* One step's own styles: from its marker to the next step's, so a later step's
+   rules can never trip an earlier step's checks. */
+function stepBlock(n){
+  const a=css26.indexOf('/* Step '+n+':');assert.ok(a>=0,'the step '+n+' styles exist');
+  /* A marker is "/* Step N:"; comments that merely mention a step do not end it. */
+  const b=css26.slice(a+1).search(/\/\* Step \d+:/);return css26.slice(a,b<0?undefined:a+1+b);
+}
 /* A minimal DOM: enough for the real lunch placement code to run unchanged. */
 function stripDom(withStrip){
   const nodes=[];
@@ -175,7 +182,7 @@ test('the payday line adopts lunch when lunch is built first, so order never mat
 });
 
 test('the strip is plain text in both themes, with iPhone-sized tap targets',()=>{
-  const step=css26.slice(css26.indexOf('/* Step 26:'));
+  const step=stepBlock(26);
   assert.ok(step.length>0,'the step 26 styles exist');
   assert.match(step,/#lunch-banner\{background:none;/,'no lunch band in light mode');
   assert.match(step,/html\.dark #lunch-banner\{background:none;/,'no lunch band in dark mode');
@@ -185,7 +192,7 @@ test('the strip is plain text in both themes, with iPhone-sized tap targets',()=
 });
 
 /* ===== Step 27: one greeting on a member tab ===== */
-const step27=css26.slice(css26.indexOf('/* Step 27:'));
+const step27=stepBlock(27);
 const renderMeeting=slice('function renderMeeting(who){','function renderAllMeetings(){');
 function meetingCard(list){
   const classes=new Set(['meet-card','none']);
@@ -225,7 +232,7 @@ test('in light mode the two cards read as one, keeping the member colour wash',(
 });
 
 /* ===== Step 28: one card language ===== */
-const step28=css26.slice(css26.indexOf('/* Step 28:'));
+const step28=stepBlock(28);
 
 test('in light mode every card shares one calm shadow, and raised things keep their lift',()=>{
   const tokens=step28.match(/html:not\(\.dark\)\{--shadow:([^;]+);--shadow-hover:([^;]+);\}/);
@@ -258,7 +265,7 @@ test('event chips have room for their names, and phones keep two columns',()=>{
 });
 
 /* ===== Step 29: quiet the triage tiles, and let zero be quiet ===== */
-const step29=css26.slice(css26.indexOf('/* Step 29:'));
+const step29=stepBlock(29);
 const tileFn=slice('    function tile(icon,n,label,cls,sub,subCls,action,aria){','\n    var meetSub=');
 
 test('a tile at zero is marked to read quietly, and the tile keeps working',()=>{
@@ -283,7 +290,7 @@ test('colour stays only where it means something, and a zero overrides it',()=>{
 });
 
 /* ===== Step 30: one status and member palette with the Team Board ===== */
-const step30=css26.slice(css26.indexOf('/* Step 30:'));
+const step30=stepBlock(30);
 const boardCss=readFileSync(new URL('../assets/team-board.css',import.meta.url),'utf8');
 const boardJs=readFileSync(new URL('../netlify/functions/team-board.js',import.meta.url),'utf8');
 const hex=(css,name)=>{const m=css.match(new RegExp('--'+name+':(#[0-9a-fA-F]{6})'));assert.ok(m,'--'+name+' is defined');return m[1].toLowerCase();};
@@ -321,7 +328,7 @@ test('each member is the same colour in the workspace tabs and on the Team Board
 });
 
 /* ===== Step 31: the last light-mode readability failures ===== */
-const step31=css26.slice(css26.indexOf('/* Step 31:'));
+const step31=stepBlock(31);
 
 test('finished work recedes by colour, not by fading everything inside it',()=>{
   const rule=step31.match(/html:not\(\.dark\) \.task-card:is\(\.tc-done,\.tc-canceled\)\{([^}]*)\}/);
@@ -342,4 +349,26 @@ test('kanban counts are written in ink, and body text is at least 13px',()=>{
     assert.ok(contrast(hex(step30,'st-'+app+'-ink'),'#ffffff')>=4.5,app+' count on white');
   }
   assert.match(step31,/#team-card \.team-note\{font-size:13px;\}/,'the Overview team note is no longer 11.5px');
+});
+
+/* ===== Step 32: flatten the nested cards ===== */
+const step32=stepBlock(32);
+
+test('boxes inside a card become rows separated by hairlines',()=>{
+  const rows=step32.match(/html:not\(\.dark\) #team-card \.team-row,\s*html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) #ov-cd-card \.ov-cdn\{([^}]*)\}/);
+  assert.ok(rows,'Team today, Upcoming Deadlines, Event Board and countdown rows share one rule');
+  for(const want of [/border:0!important/,/border-radius:0!important/,/box-shadow:none!important/,/border-top:1px solid var\(--border\)!important/])
+    assert.match(rows[1],want);
+  assert.match(step32,/\.ov-cdn:first-of-type\{border-top-color:transparent!important;\}/,'no hairline above the first row');
+  assert.match(step32,/#ov-cal-card \.ov-cal-detail\{border:0!important;border-radius:0!important;/,'the day agenda is a section, not a card');
+});
+
+test('what carries meaning survives the flattening',()=>{
+  const chip=step32.match(/\.evhub \.ev-chip\{([^}]*)\}/)[1];
+  assert.doesNotMatch(chip,/border-top/,'an event chip keeps its urgency rule');
+  assert.doesNotMatch(chip,/border:0/,'only the side and bottom edges go');
+  const dirq=step32.match(/\.task-card \.dirq\{([^}]*)\}/)[1];
+  assert.doesNotMatch(dirq,/border-left/,'a Director request keeps its amber rail');
+  assert.doesNotMatch(dirq,/background/,'and its amber tint');
+  assert.match(step32,/\.ov-ann-item\.pinned\{background:var\(--gold-light\);border-left:3px solid var\(--gold2\)!important;/,'a pinned announcement keeps its gold');
 });
