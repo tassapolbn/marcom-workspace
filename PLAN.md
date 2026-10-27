@@ -275,7 +275,7 @@ limit. These are the next items, with Codex building again from about 05:48 when
 
 ---
 
-# Follow-up plan 2 (24 Oct 2026): announcements, light mode, phones — approved by Boss
+# Follow-up plan 2 (24 Oct 2026): announcements, light mode, phones, approved by Boss
 
 Boss asked for three things: Team Announcements back at the top of the Overview, a check that
 light mode still exists and every text is readable in it, and a check that the app works on phones.
@@ -374,7 +374,7 @@ light mode still exists and every text is readable in it, and a check that the a
 
 ---
 
-# Follow-up plan 3 (26 Oct 2026): Direction A "Quiet Desk" — awaiting Boss's approval
+# Follow-up plan 3 (26 Oct 2026): Direction A "Quiet Desk", approved by Boss
 
 Scope Boss set: **UX and UI only.** No features, no flows, no business logic.
 **Light mode is the focus**; dark mode is only checked for no regression.
