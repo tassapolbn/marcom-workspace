@@ -586,7 +586,7 @@ self-contained, gets reviewed and tested, then committed.
     read from its own block, so a later step cannot trip an earlier step's
     checks; one already had. Two new tests; suite 261/261.
 
-- [ ] **33. The floating buttons stop covering content**
+- [x] **33. The floating buttons stop covering content**
   - Files: `assets/workspace-ui.css`
   - The two round buttons at the bottom right are **Team Chat** (`.chat-fab`)
     and **Quick Add** (`.quickadd-fab`). They currently sit on top of the
@@ -596,6 +596,16 @@ self-contained, gets reviewed and tested, then committed.
     above it.
   - Test: at 1440, 1024 and the iPhone widths, nothing in the last card is
     covered, and with the dock showing, neither button overlaps it.
+  - Done (27 Oct): every tab now ends 160px clear of the bottom edge (it was
+    72px on desktop, 64px at tablet width and 48px on phones), so the last
+    item can always scroll out from under the 140px button stack. Before,
+    the "Resources & more" toggle at the end of Overview sat under the
+    buttons at every size, and "No tasks" on Boss's tab did on iPhone;
+    neither is covered now at 1440, 1024, iPhone 13 or 375. Everything that
+    floats (both buttons, the open chat and the toast stack) reads one lift,
+    `--float-lift`, made of the dock height and the home-bar inset; a
+    pretend 64px dock raised each of them by exactly 64px. Two new tests;
+    suite 263/263.
 
 - [ ] **34. The tab bar: a sliding pill on desktop, a bottom dock on iPhone**
   *(option 2 of 3, recommended; Boss to confirm)*

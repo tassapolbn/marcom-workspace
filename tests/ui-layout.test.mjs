@@ -372,3 +372,33 @@ test('what carries meaning survives the flattening',()=>{
   assert.doesNotMatch(dirq,/background/,'and its amber tint');
   assert.match(step32,/\.ov-ann-item\.pinned\{background:var\(--gold-light\);border-left:3px solid var\(--gold2\)!important;/,'a pinned announcement keeps its gold');
 });
+
+/* ===== Step 33: the floating buttons stop covering content ===== */
+const step33=stepBlock(33);
+/* A fixed element's resting place, read from index.html where it is defined. */
+function px(sel,prop){
+  const rule=source.match(new RegExp(sel.replace(/\./g,'\\.')+'\\{position:fixed;[^}]*\\}'));
+  assert.ok(rule,sel+' is defined in index.html');
+  const m=rule[0].match(new RegExp('[;{]'+prop+':(\\d+)px'));
+  assert.ok(m,sel+' has a '+prop);return +m[1];
+}
+
+test('every tab ends with room to scroll its last item clear of the floating buttons',()=>{
+  assert.match(step33,/:root\{--dock-h:0px;--float-lift:calc\(var\(--dock-h\) \+ env\(safe-area-inset-bottom,0px\)\);\}/,'one lift for the dock and the home bar, zero by default');
+  const pad=+step33.match(/\.tab-panel\{padding-bottom:calc\((\d+)px \+ var\(--float-lift\)\);\}/)[1];
+  /* Quick Add is the top of the stack; Team Chat sits below it. */
+  const stackTop=px('.quickadd-fab','bottom')+px('.quickadd-fab','height');
+  assert.ok(px('.chat-fab','bottom')+px('.chat-fab','height')<stackTop,'Team Chat sits below Quick Add');
+  assert.ok(pad>stackTop,'the panel ends '+pad+'px up, clear of the '+stackTop+'px stack');
+  /* Each panel is also the page container; this replaces its old bottom padding. */
+  assert.match(source,/class="container tab-panel active" id="panel-boss"/);
+  assert.ok(css26.indexOf('.tab-panel{padding-bottom')>css26.indexOf('.container{max-width:100%;padding:14px 12px 48px;}'),'the phone padding cannot win back');
+});
+
+test('everything that floats lifts by the same amount, and rests where it always did',()=>{
+  assert.match(step33,/\.chat-fab,#uxp-toasts,\.chat-panel\{bottom:calc\(22px \+ var\(--float-lift\)\);\}/);
+  assert.match(step33,/\.quickadd-fab\{bottom:calc\(88px \+ var\(--float-lift\)\);\}/);
+  assert.match(step33,/\.chat-panel\{max-height:calc\(100vh - 90px - var\(--float-lift\)\);\}/,'an open chat still fits the screen');
+  for(const [sel,at] of [['.chat-fab',22],['.quickadd-fab',88],['.chat-panel',22],['#uxp-toasts',22]])
+    assert.equal(px(sel,'bottom'),at,sel+' rests at '+at+'px with no dock');
+});
