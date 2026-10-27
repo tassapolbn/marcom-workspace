@@ -696,3 +696,54 @@ test('sidebar widgets keep their whole name, with the summary under it',()=>{
   assert.match(step39,/\.side-col \.widget-head>\.widget-sum\{grid-column:2;grid-row:2;justify-self:start;max-width:calc\(100% - 52px\);margin:-1px 0 0 52px;\}/);
   assert.match(step39,/\.side-col \.widget-head>\*\{grid-row:1\/3;\}/,'the handle and the buttons span both lines');
 });
+
+/* ===== Step 40: task cards lead with the task ===== */
+const step40=stepBlock(40);
+function card(task,{who='dew',admin=true,soon=false}={}){
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const context=vm.createContext({window:{__cur:admin?{role:'admin'}:{role:'designer',workspace:who}},
+    SC:{pending:{l:'Pending',i:'ti-circle'},waiting:{l:'Waiting',i:'ti-clock'},done:{l:'Done',i:'ti-check'}},
+    DZ_STATUSES:['Brief Received'],MEMBER_ORDER:['boss','dew','o','junior'],
+    daysUntil:()=>-1,isSoon:()=>soon,eventsOf:()=>[],evOkClr:()=>false,evTint:()=>'',isEventTask:()=>false,taskAssignees:()=>[],
+    memberName:w=>w,escHtml:esc,fmtDate:d=>d,safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
+  vm.runInContext(slice('function scColors(s){','function setTaskStatus(')+slice('function moveSelectHTML(who,task){','function moveCardTo(')
+    +slice('function taskCardHTML(task,who){','function kanbanHTML(')+'\nthis.taskCardHTML=taskCardHTML;',context);
+  return context.taskCardHTML(task,who);
+}
+const sample={id:'t1',topic:'Plan the open day',status:'pending',dueDate:'2026-10-25',priority:'high',eventName:'Open Day',description:'More',links:[]};
+
+test('a task card opens with its name, the done tick beside it, then one line of facts',()=>{
+  const html=card(sample);
+  assert.match(html,/^<div class="task-card tc-pending" draggable="true" data-id="t1" onclick="taskCardClick\(event,'dew','t1'\)" ondragstart="taskDragStart\(event,'dew','t1'\)" ondragend="taskDragEnd\(event\)"><div class="task-head"><div class="task-topic [^"]*" title="Plan the open day">Plan the open day<\/div><button class="task-check /,
+    'the name is the first thing inside the card, and drag and drop is unchanged');
+  assert.match(html,/aria-label="Mark as done"/);
+  const meta=html.slice(html.indexOf('<div class="task-meta">'),html.indexOf('<div class="role-x">'));
+  assert.match(meta,/^<div class="task-meta"><select class="tcard-sel" title="Task status"/,'the status leads the facts, as its menu');
+  assert.ok(meta.indexOf('Overdue')<meta.indexOf('High')&&meta.indexOf('High')<meta.indexOf('Open Day'),'then due, priority, event');
+});
+
+test('the status shows once and the "close to deadline" dot is gone',()=>{
+  const html=card(sample,{soon:true});
+  assert.equal((html.match(/class="tcard-sel"/g)||[]).length,1);
+  assert.doesNotMatch(html,/tcard-sicon|dl-dot|Close to deadline/);
+  assert.doesNotMatch(source,/function statusIconHTML|class="dl-dot"/);
+});
+
+test('every action is still on the card: the tick at the top, the rest in one row at the foot',()=>{
+  const html=card(sample);
+  const foot=html.slice(html.indexOf('<div class="task-foot">'));
+  for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
+  assert.match(html,/toggleTaskDone\('dew','t1'\)/);
+  assert.match(html,/setTaskStatus\('dew','t1',this\.value\)/);
+  assert.match(html,/tcToggleDetails\(this,'dew_t1'\)/,'details still open and close');
+  assert.ok(html.indexOf('tc-open-hint')<html.indexOf('task-foot'),'a Director request lands above the foot, before the hint');
+  assert.match(foot,/aria-label="Duplicate this task"/);
+  assert.doesNotMatch(card(sample,{admin:false}),/tcard-move/,'"Move to…" stays Boss\'s only');
+});
+
+test('inside a status column a card has no coloured rail, and a long name may take three lines',()=>{
+  assert.match(step40,/\.kb-col \.task-card\{border-left-width:1px!important;border-left-color:var\(--border\)!important;\}/);
+  assert.match(step40,/\.kb-col \.task-card \.task-topic\{-webkit-line-clamp:3;line-clamp:3;\}/);
+  assert.match(step40,/\.task-card \.task-foot\{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var\(--border\);\}/);
+  assert.match(step40,/\.task-card \.task-meta \.mb:not\(\.mb-event\):not\(\.mb-evt\):not\(\.mb-shared\)\{padding:0;background:none;/,'facts read as text; an event keeps its coloured chip');
+});

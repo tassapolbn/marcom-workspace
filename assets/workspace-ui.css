@@ -1136,3 +1136,24 @@ html.dark .tm-meet{color:#93c5fd;}
 /* 52px: the fold arrow and the icon tile, so the summary lines up with the name. */
 .side-col .widget-head>.widget-sum{grid-column:2;grid-row:2;justify-self:start;max-width:calc(100% - 52px);margin:-1px 0 0 52px;}
 .side-col .widget-head>.widget-sum:empty{display:none;}
+
+/* Step 40: task cards lead with the task */
+/* The name comes first, with the done tick beside it; a column card allows a
+   third line so a long name is not cut short by the tick. */
+.task-card .task-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:7px;}
+.kb-col .task-card .task-topic{-webkit-line-clamp:3;line-clamp:3;}
+.task-card .task-head .task-topic{flex:1 1 auto;min-width:0;margin:2px 0 0;}
+.task-card .task-head .task-check{flex:0 0 auto;margin:0;}
+/* Then one line of facts, read as text: the status as its own small menu, the
+   due date, priority and the rest. An event keeps its coloured chip. */
+.task-card .task-meta{column-gap:10px;row-gap:5px;}
+.task-card .task-meta .mb:not(.mb-event):not(.mb-evt):not(.mb-shared){padding:0;background:none;border-radius:0;font-size:12px;}
+/* The other actions wait in a quiet row at the foot. */
+.task-card .task-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
+.task-card .task-foot .task-acts{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.task-card .task-foot .icon-btn{padding:4px;color:var(--muted);}
+.task-card .tc-open-hint{display:none;}
+/* Inside a status column the column already names the status: no coloured rail. */
+/* An older layer forces a 5px rail with !important, so this answers in kind. */
+.kb-col .task-card{border-left-width:1px!important;border-left-color:var(--border)!important;}
+html.dark .kb-col .task-card{border-left-color:rgba(255,255,255,.10)!important;}

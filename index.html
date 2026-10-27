@@ -169,7 +169,6 @@ body{font-family:'Plus Jakarta Sans','Sarabun',sans-serif;background:var(--bg);c
 .task-card.tc-on-hold{border-color:rgba(124,58,237,.22);border-left-color:#7c3aed;background:linear-gradient(135deg,var(--surface) 0%,var(--purple-light) 100%);}
 .task-card.tc-done{border-color:rgba(22,163,74,.24);border-left-color:#16a34a;background:linear-gradient(135deg,var(--surface) 0%,var(--green-light) 100%);}
 .task-card.tc-canceled{border-color:rgba(220,38,38,.20);border-left-color:#dc2626;background:linear-gradient(135deg,var(--surface) 0%,var(--danger-light) 100%);}
-.tcard-sicon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:7px;font-size:14px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04);}
 .lhub-list{display:flex;flex-direction:column;gap:8px;}
 .lhub-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid var(--border);border-radius:11px;background:var(--surface);text-decoration:none;color:var(--text);transition:all .12s;}
 .lhub-item:hover{border-color:var(--navy);background:var(--navy-light);transform:translateY(-1px);}
@@ -219,7 +218,6 @@ html.dark .lhub-ic{color:#8fb4dc;}
 .task-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:9px;border-top:1px solid var(--border);}
 .task-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-light);padding:4px 10px;border-radius:7px;text-decoration:none;transition:all 0.12s;}
 .task-link:hover{filter:brightness(0.97);}
-.dl-dot{width:9px;height:9px;border-radius:50%;background:var(--danger);flex-shrink:0;animation:pulse 1.8s infinite;}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,0.45);}70%{box-shadow:0 0 0 7px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0);}}
 
 /* BADGES */
@@ -2232,7 +2230,6 @@ function statusToDz(status,dz){
 }
 function scColors(s){const m={'pending':['var(--gray-light)','var(--st-pending)'],'in-progress':['var(--blue-light)','var(--st-progress)'],'waiting':['var(--amber-light)','var(--st-waiting)'],'on-hold':['var(--purple-light)','var(--st-hold)'],'done':['var(--green-light)','var(--st-done)'],'canceled':['var(--danger-light)','var(--st-cancel)']};return m[s]||m.pending;}
 function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['#e6effd','#2563eb'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','#0f7a37'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
-function statusIconHTML(s){const sc=SC[s]||SC.pending;const c=scColors(s);return '<span class="tcard-sicon" style="background-color:'+c[0]+';color:'+c[1]+';" title="'+sc.l+'"><i class="ti '+sc.i+'"></i></span>';}
 /* this.blur() after choosing: the board redraw is deferred while a select
    inside it keeps focus, so releasing focus lets the card move to its new
    column immediately instead of waiting for a click elsewhere. */
@@ -3030,26 +3027,29 @@ function taskCardHTML(task,who){
   const descHtml=task.description?'<div class="task-desc">'+escHtml(task.description)+'</div>':'';
   const detHtml=descHtml+linksHtml; /* role controls stay visible on the card */
   const detOpen=!!(window.__tcOpen&&window.__tcOpen[who+'_'+task.id]);
+  /* The task leads: its name with the done tick beside it, then one line of
+     facts (the status as its menu, the due date, priority and event), the
+     role's own controls and the details. The other actions wait in a quiet
+     row at the foot. Every control and handler is the one the card always had. */
+  const doneLbl=status==='done'?'Mark as not done':'Mark as done';
   return '<div class="task-card tc-'+status+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
-    +'<div class="task-top"><div class="task-badges">'
-      +statusIconHTML(status)
-      +statusSelectHTML(who,task)
-      +moveSelectHTML(who,task)
-      +(soon||overdue?'<span class="dl-dot" title="Close to deadline"></span>':'')
-    +'</div><div class="task-actions">'
-      +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+(status==='done'?'Mark as not done':'Mark as done')+'"><i class="ti ti-check"></i></button>'
-      +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
-      +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate"><i class="ti ti-copy"></i></button>'
-      +'<button class="icon-btn" onclick="event.stopPropagation();openEdit(\''+who+'\',\''+task.id+'\')" title="Edit"><i class="ti ti-edit"></i></button>'
-      +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete"><i class="ti ti-trash"></i></button>'
-    +'</div></div>'
-    +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
-    +'<div class="task-meta">'+dueLabel+evBadge+reqBadge+byBadge
+    +'<div class="task-head">'
+      +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
+      +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+doneLbl+'" aria-label="'+doneLbl+'"><i class="ti ti-check"></i></button>'
+    +'</div>'
+    +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
-      +prBadge
     +'</div>'+roleHtml
     +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button><div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
+    +'<div class="task-foot">'+moveSelectHTML(who,task)
+      +'<span class="task-acts">'
+        +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
+        +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate" aria-label="Duplicate this task"><i class="ti ti-copy"></i></button>'
+        +'<button class="icon-btn" onclick="event.stopPropagation();openEdit(\''+who+'\',\''+task.id+'\')" title="Edit" aria-label="Edit this task"><i class="ti ti-edit"></i></button>'
+        +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete" aria-label="Delete this task"><i class="ti ti-trash"></i></button>'
+      +'</span>'
+    +'</div>'
     +'</div>';
 }
 function kanbanHTML(tasks,who,filter){
@@ -11596,11 +11596,6 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
    Not borrowed: fused hairline tiles and the full-card link overlay (both would
    break drag-and-drop and swallow the card's own buttons). */
 .task-card{position:relative;padding:15px 17px 17px;}
-/* ringed status chip: the ring colour is derived from the status colour automatically */
-.tcard-sicon{width:26px;height:26px;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05);}
-@supports (box-shadow: inset 0 0 0 2px color-mix(in srgb, red 30%, transparent)){
-  .tcard-sicon{box-shadow:inset 0 0 0 1.5px color-mix(in srgb, currentColor 34%, transparent);}
-}
 /* corner affordance: shows that clicking the card opens the task editor */
 .tc-open-hint{position:absolute;right:12px;bottom:11px;font-size:15px;color:var(--muted);opacity:0;transform:translate(-2px,2px);transition:opacity .16s ease,transform .16s ease;pointer-events:none;}
 .task-card:hover .tc-open-hint,.task-card:focus-within .tc-open-hint{opacity:.62;transform:translate(0,0);}

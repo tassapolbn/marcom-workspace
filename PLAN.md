@@ -929,7 +929,7 @@ colour stays as it is.
     header or dock would clear them too; that would change decision 1, so it
     is left for Boss. Tests: 299/299; contrast unchanged, zero failures.
 
-- [ ] **40. Task cards lead with the task**
+- [x] **40. Task cards lead with the task**
   - Files: `index.html` (the task card), `assets/workspace-ui.css`,
     `tests/ui-layout.test.mjs` and the existing task card tests
   - Today each card opens with up to three rows of controls (status icon and
@@ -946,6 +946,22 @@ colour stays as it is.
   - Test: the title is the first line of every card; status appears once;
     every action is still reachable by mouse, touch and keyboard; at 1440x900
     the first row of task titles is visible on a person tab.
+  - Done (27 Oct): each card now opens with the task's name and the done
+    tick beside it; then one line of facts, read as text: the status as its
+    own small menu, the due date, priority, then the event (which keeps its
+    coloured chip) and the rest; then the role's controls and Details; then
+    one quiet row at the foot with "Move to…" (Boss only), calendar,
+    duplicate, edit and delete. The separate status chip and the pulsing
+    "close to deadline" dot are gone, and cards inside a status column have
+    no coloured rail (an older rule forced a 5px one). A long name may take a
+    third line in a column. A Director request still lands inside the card,
+    above the action row. Checked by mouse at 1440, by touch at 390 and by
+    keyboard (the Tab order runs tick, status, role status, Details, Move to,
+    calendar, duplicate, edit, delete): every action calls exactly what it
+    did, and dragging a card to another column still moves it. At 1440x900
+    the first task names on a person tab now start at 846px (939 before).
+    The icon buttons gained spoken names ("Duplicate this task" and so on).
+    Contrast: zero failures, light and dark, 1440 and 390. Tests: 303/303.
 
 - [ ] **41. Gold back to the brand; red only for trouble**
   - Files: `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
