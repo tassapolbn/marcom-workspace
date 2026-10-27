@@ -906,13 +906,15 @@ html:not(.dark) .tab-nav,html.dark .tab-nav{border-top:0!important;}
 .tab-nav .tab-btn:is(.a-active,.a-boss,.a-best){font-weight:700;}
 @media(pointer:coarse){.tab-nav .tab-btn{min-height:44px;}}
 .tab-nav .tab-name{white-space:nowrap;}
+/* A press reads differently from a hover: the tab under your finger or pointer darkens. */
+.tab-nav .tab-btn:not(.a-active):active{background:rgba(255,255,255,.16)!important;}
 .tab-nav .tab-mono{display:none;}
 .tab-nav .tab-ind{position:absolute;z-index:0;left:0;top:var(--ind-inset);bottom:var(--ind-inset);width:var(--ind-w);
   transform:translateX(var(--ind-x));border-radius:var(--ind-r);pointer-events:none;}
 html:not(.dark) .tab-nav .tab-ind{background:#fff;box-shadow:0 1px 2px rgba(0,16,36,.3),0 2px 6px -2px rgba(0,16,36,.3);}
 html.dark .tab-nav .tab-ind{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);}
 .tab-nav .tab-ink{position:absolute;inset:0;z-index:1;display:flex;flex-direction:inherit;align-items:inherit;justify-content:inherit;
-  gap:inherit;padding:inherit;pointer-events:none;color:var(--tab-ink);transition:color .34s ease;
+  gap:inherit;padding:inherit;pointer-events:none;color:var(--tab-ink);transition:color .33s ease;
   -webkit-clip-path:inset(0 calc(100% - var(--ind-x) - var(--ind-w) + var(--tab-x,0px)) 0 calc(var(--ind-x) - var(--tab-x,0px)) round var(--ind-r));
   clip-path:inset(0 calc(100% - var(--ind-x) - var(--ind-w) + var(--tab-x,0px)) 0 calc(var(--ind-x) - var(--tab-x,0px)) round var(--ind-r));}
 .tab-nav .tab-ink .rc-tabbadge{visibility:hidden;}
@@ -927,16 +929,18 @@ html.dark body.theme-overview .tab-nav{--tab-disc:#f0b323;}
 html:not(.dark) .tab-nav.has-ind .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active,
 html.dark .tab-nav.has-ind .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active{background:transparent!important;}
 html:not(.dark) .tab-nav.has-ind .tab-btn.a-active:focus-visible{outline-color:var(--tab-ink);}
-/* The glide: about a third of a second, a crisp settle with a 3% overshoot. */
-.tab-nav.has-ind{transition-property:--ind-x,--ind-w;transition-duration:.34s;transition-timing-function:cubic-bezier(.25,1.15,.4,1);
-  transition-timing-function:linear(0,0.031,0.109,0.212,0.328,0.445,0.555,0.655,0.742,0.816,0.876,0.923,0.96,0.986,1.005,1.017,1.024,1.028,1.028,1.027,1.025,1.022,1.018,1.015,1.012,1.009,1.007,1.005,1.003,1.002,1);}
+/* The glide: a third of a second on a spring that settles with about 1% overshoot,
+   a crisp stop that never pushes the pill into the end of the bar. */
+.tab-nav.has-ind{transition-property:--ind-x,--ind-w;transition-duration:.33s;transition-timing-function:cubic-bezier(.25,1.05,.45,1);
+  transition-timing-function:linear(0,0.034,0.117,0.224,0.341,0.457,0.564,0.659,0.74,0.808,0.863,0.906,0.939,0.964,0.982,0.994,1.002,1.007,1.01,1.011,1.011,1.01,1.009,1.008,1.007,1.005,1.004,1.003,1);}
 .tab-nav.ind-snap,.tab-nav.ind-snap .tab-ink,.tab-nav.ind-snap .tab-ink .tab-mono{transition:none!important;}
-/* The new view enters from the side you moved towards; the switch itself is
-   immediate, and the old view simply goes. */
-@keyframes tab-in-next{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:none;}}
-@keyframes tab-in-prev{from{opacity:0;transform:translateX(-16px);}to{opacity:1;transform:none;}}
-html[data-tab-dir="next"] .tab-panel.active{animation:tab-in-next .3s cubic-bezier(.2,.8,.2,1) 40ms backwards;}
-html[data-tab-dir="prev"] .tab-panel.active{animation:tab-in-prev .3s cubic-bezier(.2,.8,.2,1) 40ms backwards;}
+/* The new view enters from the side you moved towards, in the same beat as the
+   pill. It starts partly visible, so the page is never blank between views;
+   the switch itself is immediate, and the old view simply goes. */
+@keyframes tab-in-next{from{opacity:.25;transform:translateX(16px);}to{opacity:1;transform:none;}}
+@keyframes tab-in-prev{from{opacity:.25;transform:translateX(-16px);}to{opacity:1;transform:none;}}
+html[data-tab-dir="next"] .tab-panel.active{animation:tab-in-next .3s cubic-bezier(.2,.8,.2,1);}
+html[data-tab-dir="prev"] .tab-panel.active{animation:tab-in-prev .3s cubic-bezier(.2,.8,.2,1);}
 /* The 16px slide must never widen the page: on a phone that zooms the layout
    out and drops the dock off screen. With html set too, body clips the slide
    itself instead of handing the setting to the window. */
@@ -974,7 +978,7 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
   .tab-nav .tab-mono svg{width:13px;height:13px;fill:currentColor;}
   .tab-nav .tab-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:700;line-height:1.15;}
   .tab-nav .tab-ink .tab-mono{background:var(--tab-disc);color:var(--tab-on);box-shadow:0 3px 8px -3px rgba(0,16,36,.5);
-    transform:translateY(-1px);transition:background-color .34s ease,color .34s ease,transform .1s ease;}
+    transform:translateY(-1px);transition:background-color .33s ease,color .33s ease,transform .1s ease;}
   /* A press squeezes the monogram, never the tab, so measurements stay true. */
   .tab-nav .tab-mono{transition:transform .1s ease;}
   .tab-nav .tab-btn:active .tab-mono{transform:scale(.9);}

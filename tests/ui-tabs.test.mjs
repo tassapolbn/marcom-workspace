@@ -275,7 +275,7 @@ test('one pair of animated variables drives both the indicator and the colour co
   assert.match(pill, /transform:translateX\(var\(--ind-x\)\);/);
   const clip = 'inset(0 calc(100% - var(--ind-x) - var(--ind-w) + var(--tab-x,0px)) 0 calc(var(--ind-x) - var(--tab-x,0px)) round var(--ind-r))';
   assert.ok(step34.includes('-webkit-clip-path:' + clip) && step34.includes(' clip-path:' + clip), 'the copy is clipped to exactly where the indicator is');
-  assert.match(step34, /\.tab-nav\.has-ind\{transition-property:--ind-x,--ind-w;transition-duration:\.34s;/);
+  assert.match(step34, /\.tab-nav\.has-ind\{transition-property:--ind-x,--ind-w;transition-duration:\.33s;/);
   assert.match(step34, /transition-timing-function:linear\(0,[^)]*,1\);/, 'a spring curve that settles exactly on the tab');
   assert.match(step34, /\.tab-nav:not\(\.has-ind\) \.tab-ind,\.tab-nav:not\(\.has-ind\) \.tab-ink\{display:none;\}/, 'without the script, the old look stays');
   assert.match(step34, /html:not\(\.dark\) \.tab-nav\.has-ind \.tab-btn:is\(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior\)\.a-active,/);
@@ -286,7 +286,9 @@ test('Reduce Motion stops the glide and the slide; the slide never widens the pa
   assert.match(reduce, /html\[data-tab-dir\] \.tab-panel\.active\{animation:none;\}/);
   assert.match(reduce, /\.tab-nav,\.tab-nav \.tab-btn,\.tab-nav \.tab-ink,\.tab-nav \.tab-ink \.tab-mono\{transition:none!important;\}/);
   assert.match(step34, /html\[data-tab-dir="next"\] \.tab-panel\.active\{animation:tab-in-next /);
-  assert.match(step34, /@keyframes tab-in-prev\{from\{opacity:0;transform:translateX\(-16px\);\}/);
+  assert.match(step34, /@keyframes tab-in-prev\{from\{opacity:\.25;transform:translateX\(-16px\);\}/, 'never a blank frame between views');
+  assert.match(step34, /html\[data-tab-dir="prev"\] \.tab-panel\.active\{animation:tab-in-prev \.3s cubic-bezier\(\.2,\.8,\.2,1\);\}/, 'in the same beat as the pill, with no delay');
+  assert.match(step34, /\.tab-nav \.tab-btn:not\(\.a-active\):active\{background:rgba\(255,255,255,\.16\)!important;\}/, 'a press looks different from a hover');
   assert.match(step34, /html,body\{overflow-x:clip;\}/, 'a wider page would zoom a phone out and drop the dock');
 });
 
