@@ -563,3 +563,69 @@ test('what needs attention is written in the shared status inks, which read at A
   for(const c of members.slice(1))assert.ok(contrast(c.toLowerCase(),'#ffffff')>=4.5,c+' behind a white initial');
   assert.match(source,/css\+=':root\{--member-'\+w\+':'\+ink\+';\}';/,'a saved tab colour carries into Team today');
 });
+
+/* ===== Step 38: iPhone person tabs put the work above the dock ===== */
+const step38=stepBlock(38);
+const myDaySource=slice('  function tmr(){var n=new Date();n.setDate','  function renderMyDay(w){');
+function myDay(w,{tasks=[],hour=11,unread=[],own=false}={}){
+  const TODAY='2026-10-26';
+  class At extends Date{constructor(...a){if(a.length)super(...a);else super(TODAY+'T'+String(hour).padStart(2,'0')+':30:00');}}
+  const window={__cur:own?{workspace:w}:{role:'admin'},__rcCounts:{unreadList:unread}};
+  const context=vm.createContext({window,Date:At,tdy:()=>TODAY,esc:s=>String(s),
+    memberName:x=>x[0].toUpperCase()+x.slice(1),tasksOf:()=>tasks,eventsOf:()=>[],fmtDate:d=>d,daysUntil:()=>1,
+    MEMBER_ORDER:['boss','dew','o','junior'],document:{}});
+  vm.runInContext(myDaySource+'\nthis.myDayHTML=myDayHTML;',context);
+  return context.myDayHTML(w);
+}
+
+test('My day draws only the counts that are there, and never repeats "due today" as a focus line',()=>{
+  const due={id:'a',status:'pending',topic:'Newsletter',dueDate:'2026-10-26'};
+  let html=myDay('dew',{tasks:[due]});
+  assert.doesNotMatch(html,/Focus:/,'the chip already says it');
+  assert.doesNotMatch(html,/class="myday-sub"/,'nothing else to say before 5pm when work is due today');
+  assert.match(html,/<b>1<\/b> due today/);
+  assert.doesNotMatch(html,/<b>0<\/b>/,'a zero is not drawn');
+  assert.doesNotMatch(html,/overdue<\/button>/);
+  assert.doesNotMatch(html,/new request/);
+  html=myDay('dew',{tasks:[],hour:9});
+  assert.doesNotMatch(html,/myday-chips/,'no counts, no row of chips');
+  assert.match(html,/Here is the plan for today/);
+  assert.match(html,/All clear for now/);
+  html=myDay('dew',{tasks:[due],hour:18});
+  assert.match(html,/Tomorrow is clear so far|due tomorrow/,'after 5pm the line still looks ahead');
+  html=myDay('o',{unread:[{ws:'o'}]});
+  assert.match(html,/<b>1<\/b> new request<\/button>/,'one request, singular');
+  html=myDay('o',{unread:[{ws:'o'},{ws:'o'}]});
+  assert.match(html,/<b>2<\/b> new requests<\/button>/);
+});
+
+test('on a phone the name bar is one row, the counters one short row, and the date gives way',()=>{
+  const phone=media(step38,'max-width:600px');
+  assert.match(phone,/\.member-head \.member-head-text\{flex:1 1 0;min-width:0;display:flex;align-items:baseline;/,'name and role share a line');
+  assert.match(phone,/\.member-head \.member-role\{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;/,'a long role ends with an ellipsis');
+  assert.match(phone,/\.member-head \.member-head-extra\{order:2;/,'the colour button ends the first row');
+  assert.match(phone,/\.member-head \.member-head-extra \.mh-dt\{display:none;\}/);
+  assert.match(phone,/\.member-head \.member-head-extra \.tcp-pop\{top:100%;right:0;left:auto;\}/,'the colour picker opens on screen');
+  assert.match(phone,/\.member-head \.member-head-stats\{order:3;flex:1 1 100%;flex-wrap:nowrap;/);
+  assert.match(media(step38,'max-width:360px'),/\.member-head \.mh-stat i\{display:none;\}/,'at 320px the counters drop their icons to stay on one line');
+});
+
+test('on a phone each today row puts its date under the name, clear of the round buttons',()=>{
+  const phone=media(step38,'max-width:600px');
+  assert.match(phone,/\.myday-row\{flex-wrap:wrap;align-items:flex-start;/);
+  assert.match(phone,/\.myday-row \.md-sub\{flex:1 1 100%;margin-left:23px;white-space:nowrap;/,'the date sits under the name, left-aligned, in one piece');
+  assert.match(phone,/\.uxp-sal-toggle\{flex-wrap:wrap;white-space:nowrap;/,'"Fri, 30 October" and "4 days left" never break in the middle');
+});
+
+test('the sub-tabs stay on one line and scroll, and Widgets never looks like a selected tab',()=>{
+  const phone=media(step38,'max-width:600px');
+  assert.match(phone,/\.tab-panel \.sub-nav\{flex-wrap:nowrap;overflow-x:auto;/);
+  assert.match(phone,/\.tab-panel \.sub-nav \.sub-tab\{flex:0 0 auto;\}/);
+  assert.match(phone,/\.tab-panel \.sub-nav \.uxp-drawer-btn\{position:sticky;right:-5px;/,'Widgets stays in view at the end of the row');
+  const tablet=media(step38,'max-width:980px');
+  const btn=rule(tablet,'.sub-nav .uxp-drawer-btn');
+  assert.match(btn,/order:99/,'it ends the row');
+  assert.match(btn,/background:transparent/,'never the white pill of the selected tab');
+  assert.match(btn,/box-shadow:none/);
+  assert.match(tablet,/\.sub-nav \.uxp-drawer-btn::before\{content:'';width:1px;/,'a hairline sets it apart from the tabs');
+});

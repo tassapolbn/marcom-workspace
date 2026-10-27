@@ -11402,13 +11402,16 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var h=new Date().getHours();
     var greet=h<12?'Good morning':(h<17?'Good afternoon':'Good evening');
     var title=isOwn(w)?(greet+', '+esc(nm(w))):(esc(nm(w))+"'s day");
-    var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):(dueToday.length?'Focus: '+dueToday.length+' due today':'Here is the plan for today');
+    /* Before 5pm the "due today" chip already gives today's focus, so the line
+       under the greeting only speaks when there is nothing due today. */
+    var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):(dueToday.length?'':'Here is the plan for today');
     var rc=window.__rcCounts||{};
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
+    /* A count of zero is not drawn: only what is there takes room. */
     var chips=''
-      +'<button type="button" class="myday-chip '+(overdue.length?'bad':'')+'" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+overdue.length+'</b> overdue</button>'
-      +'<button type="button" class="myday-chip '+(dueToday.length?'warn':'')+'" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+dueToday.length+'</b> due today</button>'
-      +((w==='dew'||w==='o')?'<button type="button" class="myday-chip '+(myNew?'info':'')+'" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new requests</button>':'');
+      +(overdue.length?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+overdue.length+'</b> overdue</button>':'')
+      +(dueToday.length?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+dueToday.length+'</b> due today</button>':'')
+      +((w==='dew'||w==='o')&&myNew?'<button type="button" class="myday-chip info" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new request'+(myNew>1?'s':'')+'</button>':'');
     var rows='';
     overdue.slice(0,2).forEach(function(x){
       rows+='<button type="button" class="myday-row bad" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti ti-alert-triangle"></i>'+esc(x.topic||x.title||'Task')+'<span class="md-sub">was due '+esc(fdt(x.dueDate))+'</span></button>';
@@ -11423,8 +11426,8 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     if(rf)rows+='<div class="myday-row '+rf.cls+'" style="cursor:default;"><i class="ti '+rf.ic+'"></i>'+esc(rf.txt)+'</div>';
     if(!rows&&!overdue.length&&!dueToday.length)rows='<div class="myday-clear"><i class="ti ti-circle-check"></i>All clear for now. A good moment to plan ahead.</div>';
     return '<div class="myday" role="region" aria-label="Today summary for '+esc(nm(w))+'">'
-      +'<div class="myday-top"><span class="myday-greet">'+title+'</span><span class="myday-sub">'+esc(sub)+'</span></div>'
-      +'<div class="myday-chips">'+chips+'</div>'
+      +'<div class="myday-top"><span class="myday-greet">'+title+'</span>'+(sub?'<span class="myday-sub">'+esc(sub)+'</span>':'')+'</div>'
+      +(chips?'<div class="myday-chips">'+chips+'</div>':'')
       +'<div class="myday-list">'+rows+'</div></div>';
   }
   function renderMyDay(w){

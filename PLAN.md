@@ -858,7 +858,7 @@ colour stays as it is.
     people see". The work still starts on the first screen at every size.
     Moving them below the work is a one-line change if Boss prefers.
 
-- [ ] **38. iPhone person tabs: your work above the dock**
+- [x] **38. iPhone person tabs: your work above the dock**
   - Files: `assets/workspace-ui.css`, `index.html` (the zero chips),
     `tests/ui-layout.test.mjs`
   - Today on a 390x664 screen your name card is the biggest thing on your tab
@@ -877,6 +877,22 @@ colour stays as it is.
     and due date) are readable above the dock and clear of the floating
     buttons; exactly one sub-tab looks selected; nothing breaks mid-date at
     320.
+  - Done (27 Oct): on a phone the name bar is one row (initial, name, role
+    and the colour button; a long role ends with an ellipsis) over one short
+    row of counters, 112px instead of 182; today's date gives way there. My
+    day no longer repeats "Focus: 1 due today", draws only counts above zero
+    at every size ("1 new request" is now singular), and on a phone puts each
+    row's date under its name, on the left. Payday, the counters and the chips
+    never break inside a date or a count. The sub-tabs stay on one line and
+    scroll, with Widgets at the end after a hairline, never in the white
+    selected pill (also on iPads). Checked on all four person tabs at lunch
+    time and in the afternoon: at 390x664, 375x667 and 390x844 the first two
+    rows (name and date) are above the dock and clear of the round buttons;
+    at 320x568 (the first iPhone SE) they are above the dock, but the round
+    buttons still cover the end of a long name there, which Step 39 takes up.
+    The colour picker opens on screen at 320, 390 and 1440. Contrast: zero
+    failures on all five tabs, light and dark, at 1440 and 390 wide. Tests:
+    295/295.
 
 - [ ] **39. Nothing fixed covers the work; no label is cut off**
   - Files: `assets/workspace-ui.css`, `index.html` (only if Team Chat moves),
