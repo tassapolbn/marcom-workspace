@@ -14,7 +14,16 @@ const removed=[
   'ov-mem-name','ov-mem-role','ov-mem-bot','ov-mem-load','ov-st',
   'avl-card','avl-wrap','avl-row','avl-dot','avl-nm','avl-st','avl-note',
   'ov-hm','ov-hm-top','ov-hm-name','ov-hm-val','ov-hm-bar','ov-hm-fill',
-  'ov-lv-name','ov-lv-stats','ov-main-list-grid','ov-ann-row','ov-ann-row-single'
+  'ov-lv-name','ov-lv-stats','ov-main-list-grid','ov-ann-row','ov-ann-row-single',
+  // Step 37: the five number tiles and the old Team today rows.
+  'ov-stats','ov-stat','ov-stat-ic','ov-stat-num','ov-stat-lbl','ov-stat-top','ov-stat-main','ov-stat-subs',
+  'ov-s-red','ov-s-gold','ov-s-navy','ov-s-blue','ov-s-purple','ov-s-green','ov-sub-bad','ov-sub-up',
+  'team-card','team-row','team-av','team-who','team-name','team-role','team-st','team-load','team-lvl',
+  'team-bar','team-fill','team-meta',
+  // Step 40: the status chip and the "close to deadline" dot on task cards.
+  'tcard-sicon','dl-dot',
+  // Step 43: the "DAY AGENDA" label above the selected day.
+  'ov-agenda-eyebrow'
 ];
 // These names still occur in markup or JavaScript, including legacy renderers.
 const retained=[
@@ -57,8 +66,17 @@ test('key live Overview, widget, team and event styles remain',()=>{
   for(const name of ['ov-card','widget','ov-dl','evb-g']){
     assert.match(inlineSelectors,selectorName(name),name+' lost its CSS selector');
   }
-  assert.match(selectors(stylesheet),selectorName('team-row'));
-  // #ov-stats is the live element ID; its existing CSS uses .ov-stats.
-  assert.match(outsideStyles,/class="ov-stats" id="ov-stats"/);
-  assert.match(inlineSelectors,/\.ov-stats(?![\w-])/);
+  // Team today (Step 37): the live section and its cells keep their styles.
+  assert.match(outsideStyles,/class="ov-team" id="ov-team"/);
+  assert.match(outsideStyles,/class="tm"/);
+  for(const name of ['ov-team','ov-team-list','tm','tm-mono','tm-st','tm-x','tm-lv']){
+    assert.match(selectors(stylesheet),selectorName(name),name+' lost its CSS selector');
+  }
+});
+
+test('the removed names are gone from the shared stylesheet too',()=>{
+  const sheet=selectors(stylesheet);
+  for(const name of removed){
+    assert.doesNotMatch(sheet,selectorName(name),name+' still has a selector in workspace-ui.css');
+  }
 });

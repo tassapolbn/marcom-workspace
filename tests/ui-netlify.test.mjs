@@ -11,7 +11,7 @@ const rules=toml.split('[[redirects]]').slice(1).map(block=>{
 const hidden=new Set(rules.filter(r=>r.status===404&&r.force).map(r=>r.from));
 /* What the live site needs; everything else in the published folder is hidden. */
 const APP=new Set(['index.html','assets','site.webmanifest']);
-const LOCAL=new Set(['.git','.claude','.codex-tasks','node_modules','.netlify']);
+const LOCAL=new Set(['.git','.claude','.codex-tasks','.agents','.oil-ui','skills-lock.json','node_modules','.netlify']);
 
 test('every published file that is not part of the app answers not found',()=>{
   const missing=readdirSync(root).filter(name=>!APP.has(name)&&!LOCAL.has(name)&&!/^\.env/.test(name)).filter(name=>{

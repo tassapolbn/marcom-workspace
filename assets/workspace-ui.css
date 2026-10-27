@@ -109,7 +109,6 @@ html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
   margin:0;padding:20px;border:1px solid var(--border);border-radius:16px;
   background:var(--gray-light);min-width:0;
 }
-#panel-overview .ov-agenda-eyebrow{font-size:10px;letter-spacing:1px;font-weight:700;color:var(--muted);margin-bottom:8px;}
 #panel-overview .ov-cal-detail-title{font-size:18px;letter-spacing:0;text-transform:none;color:var(--text);margin-bottom:4px;}
 #panel-overview .ov-agenda-count{font-size:12px;color:var(--muted);margin-bottom:16px;}
 #panel-overview .ov-agenda-items{max-height:260px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
@@ -318,64 +317,8 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #modal .role-closed .role-body{display:none;}
 @media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}
 
-/* One team snapshot for the Overview. */
-#team-card .team-list{display:flex;flex-direction:column;gap:6px;}
-#team-card .team-row{
-  display:grid;grid-template-columns:36px minmax(0,1fr) auto;
-  grid-template-areas:"av who st" "av load load" "av meta meta";
-  column-gap:10px;row-gap:4px;padding:10px;border-radius:12px;
-  border:1px solid var(--border);cursor:pointer;transition:background 150ms;
-}
-#team-card .team-row:hover,#team-card .team-row:focus-visible{background:var(--gray-light);}
-#team-card .team-row:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
-#team-card .team-av{
-  grid-area:av;width:36px;height:36px;border-radius:50%;background:var(--navy-light);
-  color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:19px;
-}
-#team-card .team-who{grid-area:who;min-width:0;overflow-wrap:anywhere;}
-#team-card .team-name{font-size:13.5px;font-weight:700;}
-#team-card .team-role,#team-card .team-meta{font-size:11.5px;color:var(--muted);}
-#team-card .team-meta{grid-area:meta;}
-#team-card .team-st{
-  grid-area:st;align-self:start;max-width:160px;border-radius:99px;font-size:11px;
-  font-weight:700;padding:3px 9px;color:var(--muted);background:var(--gray-light);
-  text-align:center;overflow-wrap:anywhere;
-}
-#team-card .team-st.free{color:var(--st-done,var(--green));background:var(--green-light);}
-#team-card .team-st.busy{color:var(--danger);background:var(--danger-light);}
-#team-card .team-st.soon{color:var(--amber);background:var(--amber-light);}
-#team-card .team-st.away{color:var(--muted);background:var(--gray-light);}
-#team-card .team-load{grid-area:load;display:flex;gap:8px;align-items:center;font-size:12px;min-width:0;}
-#team-card .team-bar{flex:1;min-width:16px;height:6px;border-radius:99px;background:var(--gray-light);overflow:hidden;}
-#team-card .team-fill{height:100%;border-radius:inherit;}
-#team-card .team-fill.low{background:var(--st-done,var(--green));}
-#team-card .team-fill.med{background:var(--amber);}
-#team-card .team-fill.high{background:var(--danger);}
-#team-card .team-lvl{font-size:10.5px;font-weight:700;}
-#team-card .team-lvl.low{color:var(--st-done,var(--green));}
-#team-card .team-lvl.med{color:var(--amber);}
-#team-card .team-lvl.high{color:var(--danger);}
-#team-card .team-sum{color:var(--muted);font-weight:600;font-size:11.5px;}
-#team-card .team-note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
-#team-card .ov-card-title{flex-wrap:wrap;}
-html.dark #team-card .team-av{color:#8fb4dc;}
-html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
-@media(max-width:400px){#team-card .team-st{max-width:120px;}}
-@media(prefers-reduced-motion:reduce){#team-card .team-row{transition:none;}}
 
-/* Today tiles (one set of numbers) and the Upcoming Deadlines filter. */
-#panel-overview .ov-stats{grid-template-columns:repeat(5,minmax(0,1fr));}
-@media(max-width:1100px){#panel-overview .ov-stats{grid-template-columns:repeat(3,minmax(0,1fr));}}
-@media(max-width:700px){#panel-overview .ov-stats{grid-template-columns:repeat(2,minmax(0,1fr));}#panel-overview .ov-stats>.ov-stat:last-child:nth-child(odd){grid-column:1 / -1;}}
-@media(max-width:340px){#panel-overview .ov-stats{grid-template-columns:minmax(0,1fr);}}
-#panel-overview .ov-stat[role=button]{cursor:pointer;transition:transform 160ms ease,box-shadow 160ms ease;}
-@media(hover:hover){
-  #panel-overview .ov-stat[role=button]:hover{
-    transform:translateY(-2px);
-    box-shadow:0 2px 4px rgba(16,24,40,.05),0 12px 26px -12px rgba(16,24,40,.25);
-  }
-}
-#panel-overview .ov-stat[role=button]:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
+/* The Upcoming Deadlines filter. */
 #panel-overview #ov-dl-card .ov-card-head{flex-wrap:wrap;gap:8px;}
 #panel-overview .ov-dl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
 #panel-overview .ov-dl-more{
@@ -387,10 +330,6 @@ html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
 html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-more:focus-visible{color:#9bd6ff;}
 #ov-dl-title:focus{outline:none;}
 #ov-dl-title:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
-@media(prefers-reduced-motion:reduce){
-  #panel-overview .ov-stat[role=button]{transition:none;}
-  #panel-overview .ov-stat[role=button]:hover{transform:none;}
-}
 
 /* Overview layout: a folded "Resources & more" section for less-used cards. */
 #panel-overview .ov-more{margin:8px 0 24px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
@@ -581,7 +520,7 @@ html.dark{
 /* 1. Page and cards */
 html:not(.dark) body:not(.request-mode),
 html:not(.dark) body:is(.theme-overview,.theme-boss,.theme-dew,.theme-o,.theme-junior):not(.request-mode){background:var(--canvas)!important;}
-.ov-card,.widget,.stat-box,#panel-overview .ov-stat,.member-head{
+.ov-card,.widget,.stat-box,.member-head{
   border-radius:var(--r-lg)!important;border:1px solid var(--card-border)!important;
   box-shadow:var(--card-shadow)!important;
   transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
@@ -635,7 +574,7 @@ html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textare
 .sub-nav .sub-tab{transition:background var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease;}
 
 /* 4. Numbers line up */
-.ov-stat-num,.stat-num,.team-load b,.ov-cdn-n,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
+.stat-num,.ov-cdn-n,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
 
 @media(prefers-reduced-motion:reduce){
   .ov-card,.widget,.stat-box,.btn,.form-input,.form-select,.form-textarea,.tab-nav .tab-btn,.sub-nav .sub-tab,.fpill,.ov-fpill{transition:none!important;}
@@ -707,7 +646,7 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #evb-card .ov-card-title>span{flex-basis:100%;}
   #evb-card>.ov-card-head>.uxp-col-btn{order:1;}
   #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
-  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.ov-agenda-eyebrow,.dzsel-tag,.ov-act-t,.ov-res-go,.team-lvl,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
+  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
 }
 
 /* Step 23: dark mode readability */
@@ -735,3 +674,579 @@ html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassi
 html.dark #ov-ann-new{color:#e6edf5!important;}
 /* Field hints. */
 html.dark body:not(.request-mode) :is(input,textarea)::placeholder{color:#9aa6b8!important;opacity:1;}
+
+/* Step 26: one quiet status strip */
+/* Payday and lunch share one line of plain text under the tab bar, aligned to the
+   cards below. Ambient information should never be the loudest thing on screen. */
+.salary-dock{padding:0 24px;margin-top:6px;}
+.uxp-sal-bar{justify-content:flex-start;flex-wrap:wrap;gap:2px 20px;margin:0 0 4px;}
+.uxp-sal-toggle{background:transparent;border-color:transparent;box-shadow:none;color:var(--muted);font-size:13px;font-weight:600;min-height:44px;padding:6px 10px;margin-left:-10px;}
+.uxp-sal-toggle b{color:var(--text);font-weight:700;}
+.uxp-sal-toggle:hover,.uxp-sal-toggle:focus-visible{background:var(--surface-3);color:var(--text);border-color:transparent;}
+/* Lunch: the same line, no band. A gold dot stands in for the icon, so it still
+   shows when the icon font fails to load. */
+#lunch-banner{background:none;border:0;box-shadow:none;padding:0;position:static;z-index:auto;justify-content:flex-start;gap:8px;text-align:left;}
+#lunch-banner.show{display:inline-flex;}
+#lunch-banner .lb-ico{width:8px;height:8px;border-radius:50%;background:var(--gold,#f0b323);font-size:0;}
+#lunch-banner .lb-ico i{display:none;}
+#lunch-banner .lb-text{justify-content:flex-start;gap:6px;}
+#lunch-banner .lb-title{font-size:13px;font-weight:700;}
+#lunch-banner .lb-sub{font-size:13px;font-weight:500;opacity:1;}
+#lunch-banner .lb-close{position:static;transform:none;width:44px;height:44px;margin:0 -10px 0 -6px;background:transparent;font-size:17px;}
+#lunch-banner .lb-close:hover,#lunch-banner .lb-close:focus-visible{background:rgba(16,24,40,.07);}
+/* The same component in dark mode: the band goes there too; its text colour stays. */
+html.dark #lunch-banner{background:none;border-bottom:0;}
+html.dark #lunch-banner .lb-close{background:transparent;}
+html.dark #lunch-banner .lb-close:hover,html.dark #lunch-banner .lb-close:focus-visible{background:rgba(255,255,255,.1);}
+@media(max-width:1024px){.salary-dock{padding:0 1.1rem;}}
+@media(max-width:600px){.salary-dock{padding:0 12px;}}
+
+/* Step 27: one greeting on a member tab */
+/* "Good morning" appears once, in the my-day line, which also knows the time of
+   day and whose desk you are on ("Dew's day" on someone else's tab). */
+.member-head-extra .mh-greet{display:none;}
+/* The greeting and today's counts share one line; the focus list runs below. */
+.myday{display:flex;flex-wrap:wrap;align-items:center;column-gap:16px;row-gap:8px;}
+.myday-top{flex:0 1 auto;}
+.myday-chips{margin-top:0;}
+.myday-list{flex:1 1 100%;margin-top:2px;}
+/* An empty "No upcoming meetings" card is not drawn. Both meeting renderers set
+   .none only when nothing is booked, so a real meeting still shows as before. */
+.meet-card.none{display:none;}
+/* Light mode: the header card and the my-day card read as one card, who then
+   today, with one hairline border, one radius and one light shadow. The header
+   keeps its 12% wash of the member's own colour: it says whose desk this is.
+   Older shared card rules force radius, shadow and spacing with !important. */
+html:not(.dark) .member-head{border-bottom:0;border-radius:16px 16px 0 0!important;box-shadow:none!important;margin-bottom:0!important;}
+html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba(16,24,40,.06);border-radius:0 0 16px 16px!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)!important;}
+
+/* Step 28: one card language */
+/* One card everywhere: white surface, hairline border, one 16px radius and one
+   calm shadow. The design refresh defined --r-lg and --card-shadow for this, but
+   older rules kept most cards on the heavy --shadow, so every card floated. In
+   light mode --shadow now means the calm card shadow; anything that should stay
+   raised names its own elevation. */
+html:not(.dark){--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);--shadow-hover:0 2px 4px rgba(16,24,40,.05),0 10px 22px -8px rgba(16,24,40,.14);}
+/* Raised on purpose: hover still deepens as cards lift, and search results float. */
+html:not(.dark) :is(.task-card,.evc-card,.rq-card):hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
+html:not(.dark) #panel-overview .ov-search-results{box-shadow:var(--shadow-lg);}
+/* One card radius: task cards were 14px and the Resources fold 18px. */
+.task-card,#panel-overview .ov-more{border-radius:var(--r-lg,16px)!important;}
+/* Decorative side rails go. Rails that carry meaning stay: task status, a pinned
+   announcement and a Director request. */
+.evhub{border-left-width:1px!important;border-left-color:var(--border)!important;}
+#panel-overview .ov-ann-item:not(.pinned){border-left:1px solid var(--border);}
+html:not(.dark) #panel-overview .ov-ann-item.pinned{box-shadow:var(--shadow);}
+/* Team Announcements loses its navy header and reads like every other card. */
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head{background:none;margin:0 0 12px;padding:0;border-bottom:0;}
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title{color:var(--text);font-size:14px;font-weight:700;letter-spacing:normal;}
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title i{color:var(--navy);font-size:18px;}
+/* Removing Event Hub's 4px rail widened its grid just enough to add a column at
+   1440, shrinking chips to the 150px minimum, where names like "School Open Day"
+   wrap. That minimum was already too tight at other widths, so it rises to 176px.
+   Phones keep their two columns. */
+@media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));}}
+
+/* Step 30: one status palette with the Team Board */
+/* The Team Board's status scale in its three tiers: an accent for rails, icons
+   and fills, a darker ink for text, and the pale tints its fills mix down to.
+   Alone, the accent is too light for text in two cases (Pending 4.4:1, Waiting
+   3.8:1 on white), so everything that writes a status as text uses the ink.
+   Status is always written out as well as coloured, so it is never colour-only.
+   Done and Canceled have no board equivalent and keep their colours. Light mode. */
+html:not(.dark){
+  --st-pending:#6b7a8c;--st-progress:#0e6ba8;--st-waiting:#a97614;--st-hold:#7a5ea7;
+  --st-pending-ink:#4a5866;--st-progress-ink:#0b4f7d;--st-waiting-ink:#7d5406;--st-hold-ink:#584079;}
+html:not(.dark) .kb-col[data-status="pending"]{--c-ink:var(--st-pending-ink);}
+html:not(.dark) .kb-col[data-status="in-progress"]{--c-ink:var(--st-progress-ink);}
+html:not(.dark) .kb-col[data-status="waiting"]{--c-ink:var(--st-waiting-ink);}
+html:not(.dark) .kb-col[data-status="on-hold"]{--c-ink:var(--st-hold-ink);}
+html:not(.dark) .kb-col[data-status] .kb-col-name{color:var(--c-ink,var(--c));}
+html:not(.dark) .evc-cd.u-amber,html:not(.dark) .rq-due.soon{color:var(--st-waiting-ink);}
+html:not(.dark) .trq-status.s-progress{color:var(--st-progress-ink);}
+
+/* Step 31: the last light-mode readability failures */
+/* Finished work receded by fading whole cards (done to 85%, canceled to 72%),
+   which dragged every topic, badge and button inside them below AA. The cards
+   now stay fully opaque and recede through colour instead: a faint grey surface,
+   the struck muted topic, their Done or Canceled column and their rail. */
+html:not(.dark) .task-card:is(.tc-done,.tc-canceled){opacity:1;background-color:#f8fafc;}
+/* Step 30 wrote kanban counts in the status accent, too light for text on
+   Pending (4.4:1) and Waiting (3.8:1); counts use the ink like the names. An
+   older rule forces the accent with !important, so this needs it too. */
+html:not(.dark) .kb-col[data-status] .kb-col-count{color:var(--c-ink,var(--c))!important;}
+
+/* Step 32: flatten the nested cards */
+/* Boxes inside a box become rows inside the card, separated by hairlines. What
+   carries meaning stays: a chip's urgency rule, a pinned announcement's gold, a
+   Director request's amber. Light mode. */
+html:not(.dark) #ov-dl-card .ov-dl,
+html:not(.dark) #evb-card .evb-g,
+html:not(.dark) #ov-cd-card .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
+html:not(.dark) #ov-dl-card .ov-dl:first-of-type,
+html:not(.dark) #evb-card .evb-g:first-of-type,
+html:not(.dark) #ov-cd-card .ov-cdn:first-of-type{border-top-color:transparent!important;}
+/* Rows still answer the pointer, without a box around them. */
+html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);}
+/* The day agenda is a section of the calendar card, not a card within it. */
+html:not(.dark) #ov-cal-card .ov-cal-detail{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;border-top:1px solid var(--border)!important;}
+/* Announcements sit side by side as plain blocks; a pinned one keeps its gold. */
+html:not(.dark) #panel-overview .ov-ann-item{border:0!important;box-shadow:none!important;background:transparent;border-radius:0;padding-left:0;padding-right:0;}
+html:not(.dark) #panel-overview .ov-ann-item.pinned{background:var(--gold-light);border-left:3px solid var(--gold2)!important;border-radius:8px;padding-left:12px;padding-right:12px;}
+/* Event Hub chips keep their urgency rule, without a box around each date. */
+html:not(.dark) .evhub .ev-chip{border-left:0!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;}
+/* A Director request is a tinted section at the foot of its task, not a card. */
+html:not(.dark) .task-card .dirq{border-top:1px solid #f0d8b6!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;}
+
+/* Step 33: the floating buttons stop covering content */
+/* Team Chat and Quick Add float over the page while it scrolls, as floating
+   buttons do, but every tab now ends with room for them, so the last item can
+   always scroll clear. Their stack reaches 140px above the bottom edge; the
+   panel ends 160px clear of it. --dock-h stays 0 until step 34's iPhone dock
+   sets it; it lifts everything that floats above the dock and the home bar. */
+:root{--dock-h:0px;--float-lift:calc(var(--dock-h) + env(safe-area-inset-bottom,0px));}
+.tab-panel{padding-bottom:calc(160px + var(--float-lift));}
+.chat-fab,#uxp-toasts,.chat-panel{bottom:calc(22px + var(--float-lift));}
+.quickadd-fab{bottom:calc(88px + var(--float-lift));}
+.chat-panel{max-height:calc(100vh - 90px - var(--float-lift));}
+
+/* Step 34: the tab bar, a sliding pill on desktop and a dock on iPhone */
+/* One indicator glides to the selected tab and changes width as it goes.
+   assets/ui-tabs.js sets --ind-x and --ind-w from the selected tab; the browser
+   animates them. Inside the indicator each tab is drawn in the selected
+   person's colours by a copy clipped to the indicator (.tab-ink), so no label
+   is ever dark on navy or light on white, even halfway through a move. Without
+   the script the bar keeps its earlier look (no .has-ind). */
+@property --ind-x{syntax:'<length>';inherits:true;initial-value:0px;}
+@property --ind-w{syntax:'<length>';inherits:true;initial-value:0px;}
+.tab-nav{position:relative;display:flex;gap:2px;width:max-content;max-width:calc(100% - 36px);margin:0 18px 10px;padding:4px;
+  border-radius:14px;background:rgba(0,12,28,.24);box-shadow:inset 0 1px 2px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.07);
+  --ind-r:10px;--ind-inset:4px;overflow:hidden;-webkit-user-select:none;user-select:none;}
+html:not(.dark) .tab-nav,html.dark .tab-nav{border-top:0!important;}
+@media(max-width:900px){.tab-nav{margin-left:12px;margin-right:12px;max-width:calc(100% - 24px);overflow-x:auto;scrollbar-width:none;}}
+@media(max-width:720px){.tab-nav{margin-left:14px;margin-right:14px;max-width:calc(100% - 28px);}}
+.tab-nav .tab-btn{position:relative;z-index:1;flex:0 0 auto;min-height:36px;padding:0 14px;gap:7px;border-radius:var(--ind-r);border-bottom-width:0;
+  font-size:13px;font-weight:700;-webkit-tap-highlight-color:transparent;transition:background-color .14s ease,color .14s ease;}
+.tab-nav .tab-btn:is(.a-active,.a-boss,.a-best){font-weight:700;}
+@media(pointer:coarse){.tab-nav .tab-btn{min-height:44px;}}
+.tab-nav .tab-name{white-space:nowrap;}
+/* A press reads differently from a hover: the tab under your finger or pointer darkens. */
+.tab-nav .tab-btn:not(.a-active):active{background:rgba(255,255,255,.16)!important;}
+.tab-nav .tab-mono{display:none;}
+.tab-nav .tab-ind{position:absolute;z-index:0;left:0;top:var(--ind-inset);bottom:var(--ind-inset);width:var(--ind-w);
+  transform:translateX(var(--ind-x));border-radius:var(--ind-r);pointer-events:none;}
+html:not(.dark) .tab-nav .tab-ind{background:#fff;box-shadow:0 1px 2px rgba(0,16,36,.3),0 2px 6px -2px rgba(0,16,36,.3);}
+html.dark .tab-nav .tab-ind{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);}
+.tab-nav .tab-ink{position:absolute;inset:0;z-index:1;display:flex;flex-direction:inherit;align-items:inherit;justify-content:inherit;
+  gap:inherit;padding:inherit;pointer-events:none;color:var(--tab-ink);transition:color .33s ease;
+  -webkit-clip-path:inset(0 calc(100% - var(--ind-x) - var(--ind-w) + var(--tab-x,0px)) 0 calc(var(--ind-x) - var(--tab-x,0px)) round var(--ind-r));
+  clip-path:inset(0 calc(100% - var(--ind-x) - var(--ind-w) + var(--tab-x,0px)) 0 calc(var(--ind-x) - var(--tab-x,0px)) round var(--ind-r));}
+.tab-nav .tab-ink .rc-tabbadge{visibility:hidden;}
+.tab-nav:not(.has-ind) .tab-ind,.tab-nav:not(.has-ind) .tab-ink{display:none;}
+/* The selected person's colours: their ink on the white pill (custom tab colours
+   arrive through --accent-ink), the school gold for the team Overview. */
+html:not(.dark) .tab-nav{--tab-ink:var(--accent-ink,#003057);--tab-disc:var(--accent-ink,#003057);--tab-on:#fff;}
+html:not(.dark) body.theme-overview .tab-nav{--tab-ink:#8a5b00;--tab-disc:#f0b323;--tab-on:#003057;}
+html.dark .tab-nav{--tab-ink:#fff;--tab-disc:var(--accent-ondark,#f7cf6a);--tab-on:#0b1220;}
+html.dark body.theme-overview .tab-nav{--tab-disc:#f0b323;}
+/* The indicator replaces the selected tab's own fill and underline. */
+html:not(.dark) .tab-nav.has-ind .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active,
+html.dark .tab-nav.has-ind .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active{background:transparent!important;}
+html:not(.dark) .tab-nav.has-ind .tab-btn.a-active:focus-visible{outline-color:var(--tab-ink);}
+/* The glide: a third of a second on a spring that settles with about 1% overshoot,
+   a crisp stop that never pushes the pill into the end of the bar. */
+.tab-nav.has-ind{transition-property:--ind-x,--ind-w;transition-duration:.33s;transition-timing-function:cubic-bezier(.25,1.05,.45,1);
+  transition-timing-function:linear(0,0.034,0.117,0.224,0.341,0.457,0.564,0.659,0.74,0.808,0.863,0.906,0.939,0.964,0.982,0.994,1.002,1.007,1.01,1.011,1.011,1.01,1.009,1.008,1.007,1.005,1.004,1.003,1);}
+.tab-nav.ind-snap,.tab-nav.ind-snap .tab-ink,.tab-nav.ind-snap .tab-ink .tab-mono{transition:none!important;}
+/* The new view enters from the side you moved towards, in the same beat as the
+   pill. It starts partly visible, so the page is never blank between views;
+   the switch itself is immediate, and the old view simply goes. */
+@keyframes tab-in-next{from{opacity:.25;transform:translateX(16px);}to{opacity:1;transform:none;}}
+@keyframes tab-in-prev{from{opacity:.25;transform:translateX(-16px);}to{opacity:1;transform:none;}}
+html[data-tab-dir="next"] .tab-panel.active{animation:tab-in-next .3s cubic-bezier(.2,.8,.2,1);}
+html[data-tab-dir="prev"] .tab-panel.active{animation:tab-in-prev .3s cubic-bezier(.2,.8,.2,1);}
+/* The 16px slide must never widen the page: on a phone that zooms the layout
+   out and drops the dock off screen. With html set too, body clips the slide
+   itself instead of handing the setting to the window. */
+html,body{overflow-x:clip;}
+@media(prefers-reduced-motion:reduce){
+  html[data-tab-dir] .tab-panel.active{animation:none;}
+  .tab-nav,.tab-nav .tab-btn,.tab-nav .tab-ink,.tab-nav .tab-ink .tab-mono{transition:none!important;}
+}
+/* viewport-fit=cover also lets a phone on its side draw under the notch. Keep the
+   page, the floating buttons and the widget drawer clear of it; the header
+   already pads itself, so it reaches under the notch with its colour only.
+   Every inset is 0 on computers and on phones held upright. */
+body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);}
+.app-header{margin-left:calc(-1 * env(safe-area-inset-left,0px));margin-right:calc(-1 * env(safe-area-inset-right,0px));}
+.chat-fab,.quickadd-fab,.chat-panel{right:calc(22px + env(safe-area-inset-right,0px));}
+@media(max-width:980px){.tab-panel .two-col>.side-col{padding-right:max(14px,env(safe-area-inset-right,0px));padding-bottom:max(24px,env(safe-area-inset-bottom,0px));}}
+/* iPhone: the same tabs become a dock along the bottom of the screen, clear of
+   the home bar. It is as wide as its tabs, so a member who sees two tabs gets
+   a small two-slot dock. --dock-h lifts the floating buttons above it (step 33). */
+@media(max-width:600px){
+  :root{--dock-h:max(44px,calc(64px - env(safe-area-inset-bottom,0px)));}
+  html{scroll-padding-bottom:calc(var(--float-lift) + 12px);}
+  .tab-nav{position:fixed;z-index:390;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));
+    bottom:max(10px,calc(env(safe-area-inset-bottom,0px) - 10px));width:max-content;max-width:calc(100% - 20px);height:62px;
+    margin:0 auto;padding:5px;gap:2px;overflow:hidden;border-radius:22px;--ind-r:17px;--ind-inset:5px;
+    -webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);}
+  html:not(.dark) .tab-nav{--dock-bg:rgba(0,35,63,.9);background:var(--dock-bg);
+    box-shadow:0 14px 32px -12px rgba(0,22,44,.55),0 2px 8px rgba(0,22,44,.18),inset 0 0 0 1px rgba(255,255,255,.08);}
+  html.dark .tab-nav{--dock-bg:rgba(10,15,26,.92);background:var(--dock-bg);
+    box-shadow:0 14px 32px -12px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.08);}
+  .tab-nav .tab-btn{flex:0 1 72px;width:72px;min-width:0;min-height:0;flex-direction:column;justify-content:center;gap:3px;padding:3px 2px 4px;}
+  .tab-nav .tab-btn i{display:none;}
+  .tab-nav .tab-mono{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;
+    box-shadow:inset 0 0 0 1.5px currentColor;font-size:13px;font-weight:800;line-height:1;letter-spacing:0;}
+  .tab-nav .tab-mono svg{width:13px;height:13px;fill:currentColor;}
+  .tab-nav .tab-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:11px;font-weight:700;line-height:1.15;}
+  .tab-nav .tab-ink .tab-mono{background:var(--tab-disc);color:var(--tab-on);box-shadow:0 3px 8px -3px rgba(0,16,36,.5);
+    transform:translateY(-1px);transition:background-color .33s ease,color .33s ease,transform .1s ease;}
+  /* A press squeezes the monogram, never the tab, so measurements stay true. */
+  .tab-nav .tab-mono{transition:transform .1s ease;}
+  .tab-nav .tab-btn:active .tab-mono{transform:scale(.9);}
+  .tab-nav .tab-btn:active .tab-ink .tab-mono{transform:translateY(-1px) scale(.9);}
+  .tab-nav .rc-tabbadge{position:absolute;top:2px;left:calc(50% + 7px);z-index:2;height:16px;min-width:16px;padding:0 4px;font-size:10px;
+    box-shadow:0 0 0 2px var(--dock-bg);}
+  /* A blurred header would hold the dock inside itself instead of the screen. */
+  html.dark .app-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(180deg,#0b111c,#090d16);}
+}
+
+/* Step 37: the Overview's first screen puts the work first */
+/* The five number tiles are gone: their numbers already head the work list. The
+   announcements stay first (Boss, 24 Oct) as one slim line, Team today is a
+   strip of people showing only what needs attention, then the work list. */
+#panel-overview .ov-hello{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:10px;row-gap:2px;}
+#panel-overview .ov-topbar{margin-bottom:12px;}
+
+/* Announcements: the pinned or newest one on a single line; "All N" opens the rest. */
+#ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:8px 10px 8px 16px;}
+#ov-ann-card:not(.ov-ann-all)>.ov-card-head{display:contents;}
+#ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{grid-column:1;grid-row:1;margin:0;white-space:nowrap;}
+#ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-ann-new{grid-column:3;grid-row:1;margin:0;}
+#ov-ann-card:not(.ov-ann-all)>.ov-ann-compose{grid-column:1/-1;grid-row:2;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all)>.ov-ann-list{grid-column:2;grid-row:1;min-width:0;display:flex;align-items:center;gap:12px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-item{flex:1 1 auto;min-width:0;display:flex;flex-direction:row;align-items:center;gap:10px;margin:0;
+  padding:2px 0!important;background:transparent!important;border:0!important;border-radius:0;box-shadow:none!important;transform:none;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-pinbadge{flex:0 0 auto;margin:0;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text{flex:1 1 auto;min-width:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text br{display:none;}
+/* The line's text opens the full list; it reads as text until pointed at. */
+#ov-ann-card .ov-ann-open{display:block;width:100%;padding:0;border:0;background:none;font-family:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+#ov-ann-card .ov-ann-open:hover{text-decoration:underline;text-decoration-color:var(--border-strong,#c3ccd7);text-underline-offset:3px;}
+#ov-ann-card .ov-ann-open:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:4px;}
+#ov-ann-list:focus{outline:none;}
+#ov-ann-list:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:8px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-foot{flex:0 0 auto;margin:0;padding:0;border:0;display:flex;align-items:center;gap:8px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-more-link{flex:0 0 auto;margin:0;white-space:nowrap;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-align:left;}
+
+/* Team today: one cell per person, showing only what needs attention, written
+   out in the shared status colours with their icons (never colour alone). Plain
+   text runs, not pills, so a busy person still fits one line. The person
+   colours follow saved custom tab colours. */
+:root{--member-boss:#003057;--member-dew:#A65614;--member-o:#C2410C;--member-junior:#14532D;}
+#ov-team{margin:0 0 var(--sp-4,16px);padding:8px 10px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg,16px);box-shadow:var(--shadow);}
+.ov-team-head{display:flex;align-items:center;gap:10px;padding:2px 6px 4px;}
+.ov-team-title{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;}
+.ov-team-title i{font-size:18px;color:var(--navy);}
+.ov-team-sum{font-size:13px;font-weight:600;color:var(--muted);}
+.ov-team-next{display:block;flex:0 1 auto;min-width:0;margin-left:auto;font-size:13px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-team-next i{font-size:15px;vertical-align:-2px;}
+.ov-team-next .nx-btn{display:block;max-width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;}
+.ov-team-next .nx-btn:hover{text-decoration:underline;text-underline-offset:3px;}
+.ov-team-next .nx-btn:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:4px;}
+.ov-team-next:empty{display:none;}
+.ov-team-next:empty+.ov-mini-btn{margin-left:auto;}
+.ov-team-head .ov-mini-btn{flex:0 0 auto;}
+.ov-team-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
+.ov-team-note{padding:4px 6px 2px;font-size:13px;color:var(--muted);}
+.tm{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"mono name open" "mono st st" "mono lv lv";
+  align-items:center;align-content:start;column-gap:10px;row-gap:2px;min-width:0;padding:6px 8px;border:0;border-radius:12px;background:transparent;
+  color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .14s ease;}
+.tm+.tm::before{content:'';position:absolute;left:-1px;top:10px;bottom:10px;width:1px;background:var(--border);}
+.tm:hover{background:var(--surface-3,#f3f5f8);}
+.tm:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px;}
+.tm-mono{grid-area:mono;align-self:start;margin-top:1px;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;line-height:1;color:#fff;background:var(--tm-c,var(--navy));}
+.tm[data-member="boss"]{--tm-c:var(--member-boss);}
+.tm[data-member="dew"]{--tm-c:var(--member-dew);}
+.tm[data-member="o"]{--tm-c:var(--member-o);}
+.tm[data-member="junior"]{--tm-c:var(--member-junior);}
+.tm-body{display:contents;}
+.tm-top{display:contents;}
+.tm-name{grid-area:name;min-width:0;font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tm-open{grid-area:open;font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.tm-st{grid-area:st;display:flex;flex-wrap:wrap;column-gap:10px;row-gap:0;min-width:0;}
+.tm-x{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;line-height:1.5;white-space:nowrap;}
+.tm-x i{font-size:14px;}
+.tm-n{font-variant-numeric:tabular-nums;}
+.tm-s{display:none;}
+.tm-over{color:#b91c1c;}
+.tm-wait{color:var(--st-waiting-ink,#7d5406);}
+.tm-hold{color:var(--st-hold-ink,#584079);}
+.tm-out{color:var(--st-pending-ink,#4a5866);}
+.tm-meet{color:var(--st-progress-ink,#0b4f7d);}
+.tm-clear,.tm-soon{font-weight:600;color:var(--muted);}
+/* Sick days and the lieu balance, kept from the old Leave card: quiet, one line. */
+.tm-lv{grid-area:lv;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html.dark .ov-team-title i{color:#8fb4dc;}
+html.dark .tm:hover{background:rgba(255,255,255,.05);}
+html.dark .tm-over{color:#fca5a5;}
+html.dark .tm-wait{color:#fcd34d;}
+html.dark .tm-hold{color:#c4b5fd;}
+html.dark .tm-out{color:#cbd5e1;}
+html.dark .tm-meet{color:#93c5fd;}
+@media(prefers-reduced-motion:reduce){.tm{transition:none;}}
+/* Two people per row below 1100px, with hairlines between them. */
+@media(max-width:1100px){
+  .ov-team-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .tm:nth-child(odd)::before{display:none;}
+  .tm:nth-child(n+3)::after{content:'';position:absolute;top:-1px;left:10px;right:10px;height:1px;background:var(--border);}
+}
+/* A phone: two people per row, each showing the icon and count of what needs
+   attention (the words stay in the label and tooltip; "Out" stays a word), so
+   the work list still starts on the first screen. The greeting and the calendar
+   setup note give way (Settings still connects a calendar); search, refresh and
+   a next meeting stay; the deadline filters share the title line. */
+@media(max-width:600px){
+  #ov-team{padding:4px 6px;}
+  .ov-team-head{padding:2px 4px;}
+  /* One heading line: the total, the next meeting's time and title as far as it
+     fits, and refresh. */
+  .ov-team-head{gap:8px;}
+  .ov-team-title{flex:0 1 auto;min-width:0;flex-wrap:wrap;white-space:normal;}
+  .ov-team-next{flex:1 1 0;}
+  .ov-team-sum,.ov-team-done{white-space:nowrap;}
+  .ov-team-sum-w,.nx-l{display:none;}
+  /* A next meeting needs the room more than the week's done count. */
+  .ov-team-head:has(.nx-btn) .ov-team-done{display:none;}
+  /* Refresh keeps a 36px target without making the heading taller. */
+  .ov-team-head .ov-mini-btn{margin:-6px 0 -6px auto;}
+  .ov-team-next+.ov-mini-btn{margin-left:0;}
+  .ov-team-note{display:none!important;}
+  /* Each person reads like a line of text: the name, then the flags, which wrap
+     under the name instead of being cut off when a narrow phone runs out of room. */
+  .tm{display:flex;align-items:flex-start;column-gap:7px;padding:5px 2px;line-height:22px;}
+  .tm-mono{flex:0 0 22px;width:22px;height:22px;margin:0;font-size:11.5px;}
+  .tm-body{display:block;flex:1 1 auto;min-width:0;}
+  .tm-top,.tm-st{display:inline;}
+  .tm-name{display:inline;margin-right:6px;white-space:normal;}
+  .tm-x{vertical-align:top;margin-right:6px;gap:2px;line-height:22px;}
+  .tm-open,.tm-w,.tm-lv{display:none;}
+  .tm-s{display:inline;}
+  .tm:nth-child(n+3)::after{left:6px;right:6px;}
+  #panel-overview .ov-hello{display:none;}
+  /* A 12px rhythm on a phone, so the first deadline clears the dock even at lunch. */
+  #ov-top,#ov-team{margin-bottom:12px;}
+  #panel-overview #ov-dl-card{padding-top:12px;}
+  #panel-overview #ov-dl-card>.ov-card-head{margin-bottom:8px;}
+  #panel-overview #ov-dl-card .ov-card-head{flex-wrap:nowrap;}
+  #ov-dl-title{font-size:0!important;gap:0;}
+  #ov-dl-title i{font-size:18px!important;}
+  #panel-overview .ov-dl-filters{flex-wrap:nowrap;margin-left:4px;}
+  /* On a phone the announcement line keeps its icon, the text and its two buttons. */
+  #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:6px 6px 6px 12px;}
+  #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{font-size:0!important;gap:0;}
+  #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title i{font-size:18px!important;}
+  html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-foot{display:none;}
+}
+@media(max-width:600px){
+  #panel-overview .ov-dl-filters{overflow-x:auto;scrollbar-width:none;}
+  #panel-overview .ov-dl-filters::-webkit-scrollbar{display:none;}
+  #panel-overview .ov-dl-filters .ov-fpill{flex:0 0 auto;white-space:nowrap;padding-left:11px;padding-right:11px;}
+}
+
+/* Step 38: iPhone person tabs put the work above the dock */
+/* The Widgets button opens a drawer; it is an action, not a tab, so it never
+   wears the white "selected" pill. It ends the row, after a hairline. */
+@media(max-width:980px){
+  .sub-nav .uxp-drawer-btn{order:99;margin-left:auto;padding:7px 12px;border:0;border-radius:10px;background:transparent;color:var(--muted);box-shadow:none;}
+  .sub-nav .uxp-drawer-btn::before{content:'';width:1px;height:18px;margin-right:6px;background:var(--border);}
+  .sub-nav .uxp-drawer-btn:hover,.sub-nav .uxp-drawer-btn:focus-visible{background:rgba(16,24,40,.06);color:var(--text);}
+  .sub-nav .uxp-drawer-btn[aria-expanded="true"]{color:var(--text);}
+  html.dark .sub-nav .uxp-drawer-btn:hover,html.dark .sub-nav .uxp-drawer-btn:focus-visible{background:rgba(255,255,255,.08);}
+}
+@media(max-width:600px){
+  /* The name bar is one row (initial, name, role, colour button) and the three
+     counters one short row below it; today's date gives way, the phone shows it. */
+  .tab-panel .member-head{flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px;padding:10px 12px;}
+  .member-head .member-avatar{flex:0 0 36px;width:36px;height:36px;font-size:17px;}
+  .member-head .member-head-text{flex:1 1 0;min-width:0;display:flex;align-items:baseline;gap:8px;overflow-wrap:normal;}
+  .member-head .member-name{flex:0 0 auto;font-size:17px;line-height:1.2;}
+  .member-head .member-role{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;}
+  .member-head .member-role i{vertical-align:-2px;margin-right:4px;}
+  .member-head .member-head-extra{order:2;flex:0 0 auto;margin:0;padding:0;border:0;}
+  .member-head .member-head-extra .mh-dt{display:none;}
+  .member-head .tcp-btn{width:36px;height:36px;}
+  .member-head .member-head-extra .tcp-pop{top:100%;right:0;left:auto;}
+  .member-head .member-head-stats{order:3;flex:1 1 100%;flex-wrap:nowrap;gap:6px;justify-content:flex-start;margin:0;}
+  .member-head .mh-stat{flex:0 0 auto;gap:5px;padding:4px 10px;white-space:nowrap;}
+  /* My day: the due date sits under the task's name, on the left, clear of the
+     round buttons on the right. */
+  .myday{padding:10px 12px;}
+  .myday-chips{gap:6px;}
+  .myday-row{flex-wrap:wrap;align-items:flex-start;row-gap:0;padding:6px 6px;line-height:1.35;}
+  .myday-row i{margin-top:2px;}
+  .myday-row .md-sub{flex:1 1 100%;margin-left:23px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* Dates and counts never break in the middle. */
+  .uxp-sal-toggle{flex-wrap:wrap;white-space:nowrap;row-gap:0;}
+  .mh-stat,.myday-chip{white-space:nowrap;}
+  /* The sub-tabs stay one line and scroll, Widgets last. A fade rides the
+     right edge while more tabs wait beyond it, and the last tab peeks out
+     under it, so the row reads as one that scrolls; nothing covers a tab. */
+  .tab-panel .sub-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .tab-panel .sub-nav::-webkit-scrollbar{display:none;}
+  .tab-panel .sub-nav .sub-tab,.tab-panel .sub-nav .uxp-drawer-btn{flex:0 0 auto;}
+  .tab-panel .sub-nav::after{content:'';position:sticky;right:-5px;flex:0 0 32px;align-self:stretch;margin:-5px -5px -5px 0;
+    pointer-events:none;background:linear-gradient(90deg,rgba(245,247,250,0),#F5F7FA 75%);}
+  html.dark .tab-panel .sub-nav::after{background:linear-gradient(90deg,rgba(15,21,32,0),#0f1520 75%);}
+}
+/* The first iPhone SE and other 320px screens: the counters and today's chips
+   drop their icons and some padding so each stays on one line. */
+@media(max-width:360px){
+  .member-head .mh-stat i{display:none;}
+  .member-head .mh-stat{padding:4px 9px;}
+  .tab-panel .member-head{padding:8px 10px;row-gap:6px;}
+  .myday{padding:8px 10px;row-gap:6px;}
+  .myday-chip{padding:5px 9px;}
+  .myday-row{padding:5px 4px;}
+}
+
+/* Step 39: nothing fixed covers the work; no label is cut off */
+/* Computers and iPads: one Quick Add, the header "+", and Team Chat in the
+   header next to the bell, so nothing floats over the work. Phones keep both
+   as round buttons above the dock (Boss, 27 Oct), and their header has no "+". */
+@media(min-width:601px){
+  .quickadd-fab{display:none!important;}
+  .hdr-chat{position:relative;}
+  .hdr-chat .chat-unread{top:2px;right:2px;min-width:17px;height:17px;padding:0 4px;border:0;background:#dc2626;font-size:10px;line-height:1;}
+  body.tc-in-header .chat-panel{top:var(--tc-top,96px);bottom:auto;max-height:calc(100vh - var(--tc-top,96px) - 16px);}
+}
+@media(max-width:600px){#hdr-add{display:none;}}
+/* Sidebar widgets: the title keeps its whole name and the summary sits under
+   it; the drag handle and the buttons span both lines. */
+.side-col .widget-head{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-columns:auto;align-items:center;column-gap:10px;row-gap:0;}
+.side-col .widget-head>*{grid-row:1/3;}
+.side-col .widget-head>.widget-title{grid-column:2;grid-row:1;}
+/* 52px: the fold arrow and the icon tile, so the summary lines up with the name. */
+.side-col .widget-head>.widget-sum{grid-column:2;grid-row:2;justify-self:start;max-width:calc(100% - 52px);margin:-1px 0 0 52px;}
+.side-col .widget-head>.widget-sum:empty{display:none;}
+
+/* Step 40: task cards lead with the task */
+/* The name comes first, with the done tick beside it; a column card allows a
+   third line so a long name is not cut short by the tick. */
+.task-card .task-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:7px;}
+.kb-col .task-card .task-topic{-webkit-line-clamp:3;line-clamp:3;}
+.task-card .task-head .task-topic{flex:1 1 auto;min-width:0;margin:2px 0 0;}
+.task-card .task-head .task-check{flex:0 0 auto;margin:0;}
+/* Then one line of facts, read as text: the status as its own small menu, the
+   due date, priority and the rest. An event keeps its coloured chip. */
+.task-card .task-meta{column-gap:10px;row-gap:5px;}
+.task-card .task-meta .mb:not(.mb-event):not(.mb-evt):not(.mb-shared){padding:0;background:none;border-radius:0;font-size:12px;}
+/* The other actions wait in a quiet row at the foot. */
+.task-card .task-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
+.task-card .task-foot .task-acts{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.task-card .task-foot .icon-btn{padding:4px;color:var(--muted);}
+.task-card .tc-open-hint{display:none;}
+/* Inside a status column the column already names the status: no coloured rail. */
+/* An older layer forces a 5px rail with !important, so this answers in kind. */
+.kb-col .task-card{border-left-width:1px!important;border-left-color:var(--border)!important;}
+html.dark .kb-col .task-card{border-left-color:rgba(255,255,255,.10)!important;}
+
+/* Step 41: gold back to the brand; red only for trouble */
+/* Gold is the brand mark, the header rule and the Overview tab's own colour.
+   Everything else that was gold returns to navy or to the status scale. */
+.uxp-sal-mini>span{background:var(--navy,#003057);}
+html.dark .uxp-sal-mini>span{background:#8fb4dc;}
+#lunch-banner .lb-ico{background:var(--navy,#003057);}
+html.dark #lunch-banner .lb-ico{background:#8fb4dc;}
+/* ADMIN is a quiet outline on the header, not a gold pill. */
+.auth-banner-role{background:transparent;color:rgba(255,255,255,.9);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);}
+/* An event on the master calendar wears the event teal, as event chips do. */
+#panel-overview .ov-cd-ev{background:var(--teal,#0d9488);}
+/* Countdowns use one scale on every tab: amber within a week, calm before that. */
+#panel-overview .ov-cdn.soon .ov-cdn-tag{background:var(--amber-light);color:var(--st-waiting-ink,#7d5406);}
+html.dark #panel-overview .ov-cdn.soon .ov-cdn-tag{color:#fcd34d!important;}
+.evu-calm{color:var(--navy,#003057);}
+.evt-calm{border-top-color:var(--border-strong,#d6dbe4);}
+.evc-cd.u-calm{background:var(--navy-light);color:var(--navy,#003057);}
+html.dark .evu-calm,html.dark .evc-cd.u-calm{color:#8fb4dc;}
+html:not(.dark) .evu-amber{color:var(--st-waiting-ink,#7d5406);}
+html:not(.dark) .evt-amber{border-top-color:var(--st-waiting,#a97614);}
+html.dark .evu-amber{color:#fcd34d;}
+/* Due soon or today is close, not trouble: amber. Only overdue is red. */
+.mb-soon{background:var(--amber-light);color:var(--st-waiting-ink,#7d5406);}
+html.dark .mb-soon{color:#fcd34d;}
+.mh-stat-soon i,.mh-stat-soon b{color:var(--st-waiting-ink,#7d5406);}
+html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
+.fpill .pill-dot{background:var(--st-waiting,#a97614);}
+/* A due date that is not close is just a date. */
+.task-card .task-meta .mb-date{color:var(--muted);}
+
+/* Step 42: quiet details */
+/* The chip beside the product name repeated the selected tab: the tab bar says
+   it. The role line drops the icon its avatar already shows. */
+.hdr-context{display:none!important;}
+.member-head .member-role i{display:none;}
+/* Two left edges: the page edge for anything outside a card, and one inner
+   edge 16px inside every card, for headings, rows and icons alike. */
+#panel-overview .ov-card{padding-left:16px;padding-right:16px;}
+#panel-overview .ov-more-toggle{padding-left:16px;padding-right:16px;}
+.myday-list{margin-left:-8px;margin-right:-8px;}
+@media(min-width:601px){.tm{padding-left:6px;}}
+@media(max-width:600px){.myday-list{margin-left:-6px;margin-right:-6px;}}
+/* The Event Hub fits its events: the tiles share the row, and a single event
+   is one slim line instead of a small tile in a wide card. */
+@media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fit,minmax(176px,1fr));}}
+.ev-grid>.ev-chip:only-child{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;min-height:0;padding-right:46px;}
+.ev-grid>.ev-chip:only-child .ev-chip-date,.ev-grid>.ev-chip:only-child .ev-chip-name{padding-right:0;}
+.ev-grid>.ev-chip:only-child .ev-chip-name{flex:1 1 auto;min-width:0;margin-top:0;}
+.ev-grid>.ev-chip:only-child .ev-chip-cd{margin-top:0;white-space:nowrap;}
+.ev-grid>.ev-chip:only-child .ev-chip-del{top:50%;transform:translateY(-50%);}
+/* A phone or small tablet on its side: the header is two slim rows, the
+   brand with its controls and then the tabs, instead of three. */
+@media(max-height:500px) and (min-width:601px){
+  .app-header .header-top{flex-wrap:nowrap;padding-top:6px;padding-bottom:4px;}
+  .app-header .app-logo{flex:0 1 auto;min-width:0;}
+  .app-header .app-tagline{display:none;}
+  .app-header .logo-icon{width:32px;height:32px;}
+  .app-header .header-right{width:auto;flex:1 1 auto;}
+  .app-header .header-right .auth-banner{margin-right:0;}
+  .app-header .auth-banner-em{display:none;}
+  .tab-nav{margin-top:0;margin-bottom:6px;}
+  .tab-nav .tab-btn{min-height:36px;padding-top:6px;padding-bottom:6px;}
+  html{scroll-padding-top:110px;}
+}
+
+/* Step 43: the final check's fixes */
+/* iPhone: Team Chat opens as a sheet with even margins, below the header. */
+@media(max-width:600px){
+  .chat-panel{left:12px;right:12px;width:auto;max-width:none;top:var(--tc-top,118px);height:auto;max-height:none;}
+  /* The two round buttons match, one above the other. */
+  .chat-fab{width:52px;height:52px;font-size:21px;}
+  /* Task card menus are full touch targets. */
+  .task-card .tcard-sel,.task-card .tcard-move{min-height:40px;}
+}
+/* An announcement's edit, pin and delete read at 3:1 at least. */
+#panel-overview .ov-ann-act{color:var(--muted);}
+/* An empty search box has nothing to clear. */
+#panel-overview .ov-search-input:placeholder-shown~.ov-search-clear{visibility:hidden;}
+/* One event chip: a task that belongs to an event wears the event teal, never
+   the violet of On hold. */
+.mb-evt{background:var(--teal-light);color:#0b6e69;}
+html.dark .mb-evt{background:rgba(13,148,136,.2);color:#5ad4c6;}
+/* The header casts its shadow only once something scrolls under it. */
+body:not(.hdr-scrolled) .app-header{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;}
+/* Opened details show the whole description. */
+.tc-details.open .task-desc{display:block;-webkit-line-clamp:unset;line-clamp:unset;max-height:none;overflow:visible;}
+/* The person header no longer carries a clock; the colour button stays. */
+.member-head .member-head-extra .mh-dt{display:none;}
+.member-head .member-head-extra{border-left:0;padding-left:0;}
+/* A person with no sick days and no lieu balance has no leave line. */
+.tm-lv:empty{display:none;}
