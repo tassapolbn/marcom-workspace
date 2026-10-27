@@ -5945,7 +5945,6 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
   function escJs(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,' '); }
   function fdt(d){ try{return fmtDate(d);}catch(e){return d||'';} }
   function tOf(w){ try{return tasksOf(w)||[];}catch(e){return [];} }
-  function refOfT(w){ try{return refOf(w);}catch(e){return null;} }
   function sOf(w){ try{return sickOf(w)||[];}catch(e){return [];} }
   function sRef(w){ try{return sickRefOf(w);}catch(e){return null;} }
   function lOf(w){ try{return lieuOf(w)||[];}catch(e){return [];} }
@@ -5962,8 +5961,13 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     return '<div class="rev-step"><span class="rev-lbl">Revisions</span><button class="rev-btn" onclick="dzRev(event,\'dew\',\''+id+'\',-1)">&minus;</button><span class="rev-val">'+n+'</span><button class="rev-btn" onclick="dzRev(event,\'dew\',\''+id+'\',1)">+</button></div>'; }
   window.dzRev=function(ev,who,id,delta){ if(ev&&ev.stopPropagation)ev.stopPropagation();
     var t=tOf(who).find(function(x){return x.id===id;}); if(!t)return;
-    var n=Math.max(0,((typeof t.dzRevisions==='number')?t.dzRevisions:0)+delta);
-    var ref=refOfT(who); if(ref)ref.doc(id).update({dzRevisions:n,updatedAt:ts()}); };
+    var cur=(typeof t.dzRevisions==='number')?t.dzRevisions:0, n=Math.max(0,cur+delta);
+    if(n===cur)return; /* "-" at zero: nothing to save */
+    /* Save where the card lives: a card shared by Boss and Dew is in event_tasks,
+       whose rules need the editor recorded, as for every other card control. */
+    var ref=taskRef(t,who); if(!ref)return;
+    ref.doc(id).update(Object.assign({dzRevisions:n,updatedAt:ts()},stampEdit()))
+      .catch(function(e){ dbSaveFailed(e,'the revision count'); }); };
 
   /* ---------- Sick leave: editable + last modified (override) ---------- */
   window.renderSickWidget=function(who){ who=who||'boss';

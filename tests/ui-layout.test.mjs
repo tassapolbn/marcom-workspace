@@ -863,3 +863,38 @@ test("a task label on a coloured event keeps the event's own colours",()=>{
   assert.match(source,/class="mb mb-event'\+\(_evTc\?' mb-event-filled':''\)\+'"'\+_evStyle/);
 });
 
+
+/* ===== Step 45: the Revisions buttons save on every card ===== */
+const step45=stepBlock(45);
+
+test('the Revisions buttons save where the card lives',async()=>{
+  /* The real buttons' code and the real save routing, against a stand-in database. */
+  const writes=[],failed=[];let refuse=false;
+  const list=name=>({doc:id=>({update:data=>{writes.push(JSON.parse(JSON.stringify({name,id,data})));
+    return refuse?Promise.reject(new Error('refused')):Promise.resolve();}})});
+  const tasks={dew:[{id:'own',dzRevisions:2},{id:'shared',__src:'event',assignees:['boss','dew'],dzRevisions:0}]};
+  const c=vm.createContext({eventTasksRef:list('event_tasks'),db:null,refOf:w=>list(w+'_tasks'),
+    tasksOf:w=>tasks[w]||[],tOf:w=>tasks[w]||[],ts:()=>'now',
+    stampEdit:()=>({lastEditedBy:'boss@example.test'}),dbSaveFailed:(e,what)=>failed.push(what)});
+  c.window=c;
+  vm.runInContext(slice('function taskRef(','function isEventTask(')+slice('  window.dzRev=function(','  /* ---------- Sick leave: editable'),c);
+  let stopped=0;const tap={stopPropagation:()=>stopped++};
+  c.dzRev(tap,'dew','shared',1);
+  assert.deepEqual(writes.pop(),{name:'event_tasks',id:'shared',data:{dzRevisions:1,updatedAt:'now',lastEditedBy:'boss@example.test'}},
+    'a card shared by Boss and Dew is saved to the shared list, with the editor recorded');
+  c.dzRev(tap,'dew','own',1);
+  assert.deepEqual(writes.pop(),{name:'dew_tasks',id:'own',data:{dzRevisions:3,updatedAt:'now',lastEditedBy:'boss@example.test'}},"Dew's own card stays in Dew's list");
+  c.dzRev(tap,'dew','shared',-1);
+  assert.equal(writes.length,0,'"-" at zero saves nothing');
+  refuse=true;c.dzRev(tap,'dew','own',-1);await new Promise(r=>setImmediate(r));
+  assert.deepEqual(failed,['the revision count'],'a refused save says so');
+  assert.equal(stopped,4,'a tap never opens the card behind it');
+  assert.doesNotMatch(slice('  window.dzRev=function(','  /* ---------- Sick leave: editable'),/refOf/,'no shortcut to the personal list');
+});
+
+test('on a touch screen a Revisions tap leaves no colour behind, and the buttons are big enough',()=>{
+  assert.match(media(step45,'hover:none'),/\.rev-btn:hover\{background:var\(--surface\);color:var\(--text\);\}/,'no colour that stays after a tap');
+  assert.match(step45,/\.rev-btn:active\{background:var\(--accent-ink,var\(--navy\)\);color:#fff;\}/,'a short press instead');
+  assert.ok(step45.indexOf('.rev-btn:active')>step45.indexOf('@media(hover:none)'),'while the finger is down, the press wins');
+  assert.match(media(step45,'max-width:600px'),/\.rev-step \.rev-btn\{width:32px;height:32px;/);
+});

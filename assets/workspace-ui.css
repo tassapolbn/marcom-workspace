@@ -1256,3 +1256,11 @@ body:not(.hdr-scrolled) .app-header{box-shadow:inset 0 1px 0 rgba(255,255,255,.0
    as in dark mode and before step 32, so white or cream text sits on its own
    colour. Events without one stay flat rows (step 32). */
 html:not(.dark) .evhub .ev-chip.ev-chip-filled{border:0;border-radius:12px;}
+
+/* Step 45: the Revisions buttons on iPhone */
+/* The filled colour follows a mouse pointer. A touch screen keeps :hover after a
+   tap, which looked like a stuck button, so there a short press shows instead. */
+@media(hover:none){.rev-btn:hover{background:var(--surface);color:var(--text);}}
+.rev-btn:active{background:var(--accent-ink,var(--navy));color:#fff;}
+/* Big enough to tap on a phone. */
+@media(max-width:600px){.rev-step .rev-btn{width:32px;height:32px;font-size:18px;}}

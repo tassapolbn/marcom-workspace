@@ -1170,7 +1170,7 @@ had a single event with a colour but no text colour, and no task linked to it.
     step 46 takes up. Dark mode unchanged. Tests: 315/315 (three new, and the
     step 32 test follows the narrowed rule).
 
-- [ ] **45. Revisions "+" and "−" save on every card**
+- [x] **45. Revisions "+" and "−" save on every card**
   - Files: `index.html` (the buttons save through the same helper as the
     status menu, which picks the right list and records who edited, and show
     the usual message if a save fails), `assets/workspace-ui.css` (the filled
@@ -1181,6 +1181,19 @@ had a single event with a colour but no text colour, and no task linked to it.
     own card to Dew's list, and "−" at zero saves nothing. In the preview on an
     iPhone-size screen, "+" raises the count on a shared card and on Dew's own
     card, nothing new appears in Dew's list, and no colour stays after the tap.
+  - Done (28 Oct): the buttons now save through the same helper as the status
+    menu: a card shared by Boss and Dew is saved to the shared list with the
+    editor recorded, as its rules require; Dew's own cards to Dew's list; a
+    refused save shows the usual message; "−" at zero saves nothing. The
+    helper that pointed only at the personal list is gone. Every other card
+    control already used the right helper. On a touch screen the filled colour
+    no longer stays after a tap (a short press shows instead), and on iPhone the
+    buttons are 32px instead of 24. Checked in the preview on an iPhone-size
+    screen: "+" raised the count on a shared card (0, 1, 2) and on Dew's own
+    card; the shared card recorded the editor and kept its creator; nothing new
+    appeared in Dew's list (before, a nameless task did); the button is white
+    again after the tap. Tests: 317/317 (two new: the real buttons' code
+    against a stand-in database, and the touch styles).
 
 - [ ] **46. Event colours readable as text (older issue, recommended)**
   - Files: `index.html` (Timeline names and Overview countdown numbers),
