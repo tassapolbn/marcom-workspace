@@ -784,3 +784,34 @@ test('gold stays with the brand: payday, lunch, ADMIN and the calendar\'s events
   assert.match(step41,/\.evc-cd\.u-calm\{background:var\(--navy-light\);color:var\(--navy,#003057\);\}/);
   assert.doesNotMatch(step41,/var\(--gold|#f0b323|#e6a417/i,'the step itself adds no gold');
 });
+
+/* ===== Step 42: quiet details ===== */
+const step42=stepBlock(42);
+
+test('the header no longer repeats the selected tab, and the role line no longer repeats the avatar icon',()=>{
+  assert.match(step42,/\.hdr-context\{display:none!important;\}/);
+  assert.match(step42,/\.member-head \.member-role i\{display:none;\}/);
+});
+
+test('headings and rows share two left edges: the page edge and one inner edge in every card',()=>{
+  assert.match(step42,/#panel-overview \.ov-card\{padding-left:16px;padding-right:16px;\}/,'every Overview card writes from the same inner edge');
+  assert.match(step42,/#panel-overview \.ov-more-toggle\{padding-left:16px;padding-right:16px;\}/);
+  assert.match(step42,/\.myday-list\{margin-left:-8px;margin-right:-8px;\}/,'today\'s rows start under "Dew\'s day", their hover still has room');
+  assert.match(media(step42,'max-width:600px'),/\.myday-list\{margin-left:-6px;margin-right:-6px;\}/);
+  assert.match(media(step42,'min-width:601px'),/\.tm\{padding-left:6px;\}/,'Team today\'s initials line up with its heading');
+});
+
+test('the Event Hub fits its events: tiles share the row and a single event is one slim line',()=>{
+  assert.match(media(step42,'min-width:481px'),/\.ev-grid\{grid-template-columns:repeat\(auto-fit,minmax\(176px,1fr\)\);\}/);
+  const one=rule(step42,'.ev-grid>.ev-chip:only-child');
+  for(const want of [/grid-column:1\/-1/,/flex-direction:row/,/align-items:center/,/min-height:0/])assert.match(one,want);
+  assert.match(step42,/\.ev-grid>\.ev-chip:only-child \.ev-chip-del\{top:50%;transform:translateY\(-50%\);\}/,'its delete button stays reachable at the end of the line');
+});
+
+test('a phone on its side gets a two-row header instead of three',()=>{
+  const land=media(step42,'max-height:500px) and (min-width:601px');
+  assert.match(land,/\.app-header \.header-top\{flex-wrap:nowrap;/,'the brand and its controls share one row');
+  assert.match(land,/\.app-header \.app-tagline\{display:none;\}/);
+  assert.match(land,/\.app-header \.auth-banner-em\{display:none;\}/,'the signed-in name gives way; ADMIN and sign out stay');
+  assert.match(land,/\.tab-nav \.tab-btn\{min-height:36px;/);
+});

@@ -993,7 +993,7 @@ colour stays as it is.
     Small markup touches were needed in `index.html` (the countdown scale,
     the due-soon class and one Request Centre colour).
 
-- [ ] **42. Quiet details**
+- [x] **42. Quiet details**
   - Files: `assets/workspace-ui.css`, `index.html` where a label is drawn,
     `tests/ui-layout.test.mjs`
   - Stacked headings share two or three left edges (on Dew's tab they start at
@@ -1003,6 +1003,20 @@ colour stays as it is.
     around one small tile; an iPhone on its side gets a slimmer sticky header
     (it takes 150 of 342px today).
   - Test: screenshots at 1440, 810 and 390, and an iPhone on its side.
+  - Done (27 Oct): the chip that repeated the selected tab beside the
+    product name is gone, and so is the icon on the role line that the avatar
+    already shows. Headings and rows now share two left edges at 1440: the
+    page edge (38px) and one inner edge 16px inside every card (55px); on
+    Dew's tab today's rows moved under "Dew's day", and on the Overview the
+    deadlines, calendar, Event Board and fold all write from the same edge as
+    Team today and the announcement (before: 38, 49, 55, 57, 59, 63). The
+    Event Hub's tiles now share the row, and a single event is one slim line
+    (date, name, countdown, delete) instead of a small tile in a wide card. A
+    phone or small tablet on its side gets a two-row header, the brand with
+    its controls and then the tabs: 95px instead of 151 at 844x342 (iPhone 13
+    in Safari), also at 667x375 and 932x430; the signed-in name gives way
+    there, ADMIN and sign out stay. Screenshots at 1440, 810, 390 and on its
+    side in `.oil-ui`. Contrast unchanged, zero failures. Tests: 310/310.
 
 - [ ] **43. Final check and a second independent review**
   - The step 35 routine: suite, contrast in both themes, iPhone widths,

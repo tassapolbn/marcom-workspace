@@ -1187,3 +1187,38 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
 .fpill .pill-dot{background:var(--st-waiting,#a97614);}
 /* A due date that is not close is just a date. */
 .task-card .task-meta .mb-date{color:var(--muted);}
+
+/* Step 42: quiet details */
+/* The chip beside the product name repeated the selected tab: the tab bar says
+   it. The role line drops the icon its avatar already shows. */
+.hdr-context{display:none!important;}
+.member-head .member-role i{display:none;}
+/* Two left edges: the page edge for anything outside a card, and one inner
+   edge 16px inside every card, for headings, rows and icons alike. */
+#panel-overview .ov-card{padding-left:16px;padding-right:16px;}
+#panel-overview .ov-more-toggle{padding-left:16px;padding-right:16px;}
+.myday-list{margin-left:-8px;margin-right:-8px;}
+@media(min-width:601px){.tm{padding-left:6px;}}
+@media(max-width:600px){.myday-list{margin-left:-6px;margin-right:-6px;}}
+/* The Event Hub fits its events: the tiles share the row, and a single event
+   is one slim line instead of a small tile in a wide card. */
+@media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fit,minmax(176px,1fr));}}
+.ev-grid>.ev-chip:only-child{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;min-height:0;padding-right:46px;}
+.ev-grid>.ev-chip:only-child .ev-chip-date,.ev-grid>.ev-chip:only-child .ev-chip-name{padding-right:0;}
+.ev-grid>.ev-chip:only-child .ev-chip-name{flex:1 1 auto;min-width:0;margin-top:0;}
+.ev-grid>.ev-chip:only-child .ev-chip-cd{margin-top:0;white-space:nowrap;}
+.ev-grid>.ev-chip:only-child .ev-chip-del{top:50%;transform:translateY(-50%);}
+/* A phone or small tablet on its side: the header is two slim rows, the
+   brand with its controls and then the tabs, instead of three. */
+@media(max-height:500px) and (min-width:601px){
+  .app-header .header-top{flex-wrap:nowrap;padding-top:6px;padding-bottom:4px;}
+  .app-header .app-logo{flex:0 1 auto;min-width:0;}
+  .app-header .app-tagline{display:none;}
+  .app-header .logo-icon{width:32px;height:32px;}
+  .app-header .header-right{width:auto;flex:1 1 auto;}
+  .app-header .header-right .auth-banner{margin-right:0;}
+  .app-header .auth-banner-em{display:none;}
+  .tab-nav{margin-top:0;margin-bottom:6px;}
+  .tab-nav .tab-btn{min-height:36px;padding-top:6px;padding-bottom:6px;}
+  html{scroll-padding-top:110px;}
+}
