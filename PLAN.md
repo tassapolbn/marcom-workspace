@@ -674,10 +674,38 @@ self-contained, gets reviewed and tested, then committed.
     name). A real iPhone check on the deploy preview is still needed. 14 new
     tests; suite 277/277.
 
-- [ ] **35. Final check and notes**
+- [x] **35. Final check and notes**
   - Run the full UI suite, the contrast checks and the phone widths in **both**
     themes, confirm dark mode has not regressed, take the evidence set, send one
     independent visual review, then record what changed.
+  - Done (27 Oct): **Checks:** UI suite 277/277. A rendered scan of all five
+    tabs at 1440 finds no contrast failures in either theme; its only notes
+    are badges and small buttons under 13px, which are not body text. Every
+    tab name reads at AA on the pill, the bar and the dock (lowest 4.61:1).
+    iPhone widths 320 to 440 pass in both themes with emulated safe areas;
+    200% zoom has no sideways scroll; the tab behaviour checks passed three
+    runs in a row. **Dark mode** keeps its look against the original dark
+    baseline; only the structure changed. **Evidence** (oil-ui, light mode):
+    `.oil-ui/workspace-redesign/evidence/` (desktop 1440x900 and phone
+    390x844, with recordings). **Independent review** (one round, scored, by a
+    reviewer with no history): **6/10.** Keep: the sliding pill with its
+    colour sweep, the iPhone dock including the two-tab member dock, and the
+    today list under the name on desktop person tabs. Findings, most impact
+    first: (1) redo the Overview's first screen, which reads as a generic
+    greeting plus equal tiles plus cards and repeats its own numbers; (2) the
+    first load shows an older layout and, on iPhone, a sign-in card before the
+    redesign settles; (3) on iPhone your own work starts low on your own tab,
+    and the sub-tab row wraps with two items looking selected; (4) the
+    floating buttons cover content at the default sizes, and Boss's sidebar
+    cuts off its labels; (5) task cards lead with three rows of controls before
+    the title. **Fixed at once**, inside step 34 (commit f863cfa): the new view
+    arrives in the same beat as the pill and is never blank, a softer spring
+    stops the pill pushing into the end of the bar, and a press now looks
+    different from a hover. The review's note that the view "always rises from
+    below" did not reproduce: real clicks and taps slide in from the side of
+    travel on desktop and iPhone. **Everything else** is new design work beyond
+    this plan, so it is written up as follow-up plan 4 below, for Boss's
+    approval before any code.
 
 ## The team all uses iPhone
 
@@ -713,7 +741,10 @@ specifically. That shapes several details:
   infrastructure change rather than UX or UI, so it is outside the scope Boss
   set. Worth its own small step later: self-host the font.
 
-## Decisions needed from Boss
+## Decisions needed from Boss (plan 3, settled)
+
+Settled on 26 Oct: Boss chose option 2 for the tab bar. Items 1 and 2 went
+ahead on the defaults stated at the time; Boss can still overrule either.
 
 1. The lunch banner becomes a line of text instead of a gold band. Lunch stays
    visible, it just stops being the loudest thing on screen. Acceptable?
@@ -722,3 +753,158 @@ specifically. That shapes several details:
    on iPhone, is recommended. Option 1 keeps the sliding pill at the top on
    iPhone too; option 3 is a single travelling underline. Choosing 1 or 3 means
    step 34 is rewritten to match before any code.
+
+# Follow-up plan 4 (27 Oct 2026): what the independent review found, awaiting Boss's approval
+
+Scope stays the same: UX and UI only, light mode first, dark mode checked for
+no regression. The review scored the redesign 6/10, named one block to redo
+and four issues. The steps follow its ranking, most impact first. Nothing here
+is built until Boss approves.
+
+- [ ] **36. Opening the app shows one calm screen**
+  - Files: `index.html` (a cover at the top of the page, and where sign-in
+    starts), `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
+  - Today every open passes through three screens: the page as written in the
+    HTML (the old large payday panel, only the Boss tab), then the sign-in
+    card, which the app shows at once and keeps up until Firebase confirms the
+    session and reads the access list, then the real workspace. A signed-in
+    person therefore sees a sign-in screen flash on every open, longest on a
+    phone connection. This predates the redesign.
+  - Change: a branded cover (navy, the logo, "Opening your workspace") is the
+    first thing drawn and stays until the person is signed in and their first
+    tab is set, then fades out once. The sign-in form appears only when the
+    person really is signed out. If anything stalls, the cover gives way after
+    a few seconds, so it can never trap anyone. Sign-in itself is unchanged.
+  - Test: record the first load at 1440x900 and 390x844 as Boss and as a
+    member: from the first frame to settled, only the cover and then the
+    redesigned workspace appear, the selected tab never changes after the
+    cover lifts, and no sign-in screen shows for a signed-in person; a
+    signed-out person still gets the sign-in form.
+
+- [ ] **37. Redo the Overview's first screen: the work first**
+  - Files: `index.html` (the Overview layout and its team rows),
+    `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
+  - The review's main point: the Overview reads as a generic dashboard (a
+    greeting over five equal number tiles over a grid of cards); the tiles
+    repeat the list right below them; the first work row sits about two thirds
+    of the way down at 1440x900, and none shows on an iPhone's first screen.
+    Nothing answers "is anyone blocked?": every person shows the same green
+    "Available", and the workload bar is scaled to whoever has the most tasks,
+    so "5 open, Low" can draw 80% full.
+  - New skeleton, top to bottom:
+    1. **Team today:** one slim row per person showing only what needs
+       attention, in the shared status colours: overdue (red), waiting
+       (amber), on hold (purple), out sick or on leave. Someone with nothing
+       wrong reads "Clear", quietly. Tapping a person opens their tab. All of
+       it comes from data the app already holds.
+    2. **The work list** (overdue, today, tomorrow, this week) as the largest
+       block, its first rows on the first screen at 1440x900 and 390x664.
+    3. Everything else below it: announcements (pinned ones as one slim
+       line), requests, meetings (only when a calendar is connected),
+       countdowns, resources.
+  - The five tiles go: their numbers already head the work list, so no figure
+    appears twice. Payday, announcements, search, requests and meetings all
+    stay reachable.
+  - Test: the first work row's position at both sizes; the work list is the
+    largest shape in a 480px thumbnail; no number appears twice on the first
+    screen; a person with overdue or waiting work, or out sick, is flagged in
+    their row.
+
+- [ ] **38. iPhone person tabs: your work above the dock**
+  - Files: `assets/workspace-ui.css`, `index.html` (the zero chips),
+    `tests/ui-layout.test.mjs`
+  - Today on a 390x664 screen your name card is the biggest thing on your tab
+    (about 180px: name, role, three counters, the date, and a palette button on
+    a row of its own), so "Dew's day" starts around y=430 and its due dates
+    sit under the floating buttons. At 320 the payday line breaks mid-date.
+  - Change: a compact name row on phones (name, role and the palette button on
+    one line; the counters as one short line); drop "Focus: 1 due today",
+    which repeats the chip beside it; hide chips that read zero; keep dates and
+    counts from breaking across lines.
+  - The sub-tab row (Tasks, Events, Links, Notes, Requests) stays on one line
+    and scrolls if needed, and the "Widgets" button stops looking like a
+    second selected tab: today it is a white pill inside the row, the same look
+    as the selected tab.
+  - Test: at 390x664, 375x667 and 320x568 the first two "today" rows (title
+    and due date) are readable above the dock and clear of the floating
+    buttons; exactly one sub-tab looks selected; nothing breaks mid-date at
+    320.
+
+- [ ] **39. Nothing fixed covers the work; no label is cut off**
+  - Files: `assets/workspace-ui.css`, `index.html` (only if Team Chat moves),
+    `tests/ui-layout.test.mjs`
+  - Today the round Quick Add and Team Chat buttons cover content in the first
+    view: "Add" and "Reset Year" in Boss's sidebar at 1440, O's status in the
+    Overview's team rows, "New requests" and due dates on iPhone. On computers
+    and iPads the floating Quick Add repeats the "+" already in the header.
+    Boss's sidebar also cuts its own labels short ("Petty Cas…", "Day-off in
+    Lie", "Sick Leav").
+  - Change: one Quick Add per screen (the header "+" on computers and iPads;
+    the floating one on phones, whose header has none); Team Chat per decision
+    1 below; sidebar rows let a summary drop under its title instead of
+    cutting the title.
+  - Test: at 1440x900, 810x1080, 390x664 and 390x844 no fixed element covers
+    text or a control in the first view (checked rectangle by rectangle); no
+    sidebar label is cut off at 1440 with icons loaded.
+
+- [ ] **40. Task cards lead with the task**
+  - Files: `index.html` (the task card), `assets/workspace-ui.css`,
+    `tests/ui-layout.test.mjs` and the existing task card tests
+  - Today each card opens with up to three rows of controls (status icon and
+    menu, "Move to…" and a red dot, five icon buttons); the title is the fourth
+    line; inside a status column the status shows four times. The red dot means
+    "close to deadline", which the red due pill on the same card already says
+    in words.
+  - Change: the title is each card's first line, with one line of facts under
+    it (due, priority, event); status shown once, as one compact menu; the done
+    tick stays visible, and the other actions (calendar, duplicate, edit,
+    delete, and "Move to…" for Boss) sit in one quiet row at the foot; the red
+    dot goes; no coloured rail on cards inside a status column. Every action
+    works exactly as today, drag and drop included.
+  - Test: the title is the first line of every card; status appears once;
+    every action is still reachable by mouse, touch and keyboard; at 1440x900
+    the first row of task titles is visible on a person tab.
+
+- [ ] **41. Gold back to the brand; red only for trouble**
+  - Files: `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
+  - The direction keeps gold for the brand mark and one primary action; today
+    it also colours the payday bar, the lunch dot, a countdown pill, the "due
+    today" tile and the ADMIN badge. Red marks "7 days to School Open Day" on
+    person tabs, while the Overview shows the same countdown in gold.
+  - Change: the payday bar and lunch dot in navy tones; the ADMIN badge as a
+    quiet outline; countdowns on the status scale (amber when close, red only
+    when overdue), the same on every tab; "due today" in the amber ink already
+    used for "due soon".
+  - Test: a rendered scan lists where gold appears (expected: the logo, the
+    header rule and one main action); contrast stays AA.
+
+- [ ] **42. Quiet details**
+  - Files: `assets/workspace-ui.css`, `index.html` where a label is drawn,
+    `tests/ui-layout.test.mjs`
+  - Stacked headings share two or three left edges (on Dew's tab they start at
+    nine different positions today); the chip beside the product name that
+    repeats the selected tab goes, since the tab bar now says it; the palette
+    icon repeated on the role line goes; the Event Hub stops being a wide card
+    around one small tile; an iPhone on its side gets a slimmer sticky header
+    (it takes 150 of 342px today).
+  - Test: screenshots at 1440, 810 and 390, and an iPhone on its side.
+
+- [ ] **43. Final check and a second independent review**
+  - The step 35 routine: suite, contrast in both themes, iPhone widths,
+    evidence, then one scored independent review.
+
+## Decisions needed from Boss (plan 4)
+
+1. **Team Chat:** recommended, the chat button moves into the header on
+   computers and iPads (next to the bell), so nothing floats over the work
+   there; on iPhone it stays a round button above the dock. Alternative: keep
+   it floating everywhere and accept that it covers some content until you
+   scroll.
+2. **The five Overview tiles:** recommended, remove them, since their numbers
+   already head the work list. Alternative: keep their counts as one slim line.
+3. **The line under the product name** ("Marketing & Communications
+   Department"): the review suggests removing it; recommended, keep it as part
+   of the brand lockup.
+4. **Dark mode:** the review noticed Dew is drawn in gold in dark mode, the
+   same as Overview. That predates this work, and changing it means touching
+   dark mode, which is outside the scope you set. Recommended: leave it.
