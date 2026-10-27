@@ -21,7 +21,8 @@ test('the Overview shell puts every card in its column and folds the rest away',
   const side=shell.slice(shell.indexOf('ov-col-side'),shell.indexOf('id="ov-more"'));
   const more=shell.slice(shell.indexOf('id="ov-more"'));
   assert.ok(order(['ov-dl-card','ov-cal-card'],main));
-  assert.ok(order(['team-card','ov-cd-card','ov-wm-card'],side));
+  assert.ok(order(['ov-cd-card','ov-wm-card'],side));
+  assert.doesNotMatch(side,/team-card/,'Team today left the side column for the strip above the work');
   const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),barAt=shell.indexOf('class="ov-topbar"');
   assert.ok(topAt>0&&annAt>topAt&&barAt>annAt,'announcements sit in the top slot before the greeting');
   assert.doesNotMatch(side,/id="ov-ann-card"/);
@@ -46,14 +47,14 @@ test('announcements stay open without a fold button while other cards remain col
     return {id,buttons,classList:{remove:name=>classes.delete(name),add:name=>classes.add(name),contains:name=>classes.has(name)},
       querySelector:selector=>selector===':scope>.ov-card-head'?head:null};
   }
-  const announcements=card('ov-ann-card'),other=card('team-card');
+  const announcements=card('ov-ann-card'),other=card('ov-cd-card');
   const document={
     getElementById:id=>id==='panel-overview'?{querySelectorAll:()=>[announcements,other]}:null,
     createElement:()=>({attributes:{},setAttribute(name,value){this.attributes[name]=value;}})
   };
   const localStorage={getItem:key=>{
     assert.equal(key,'uxp_collapsed');
-    return JSON.stringify({'ov-ann-card':1,'team-card':1});
+    return JSON.stringify({'ov-ann-card':1,'ov-cd-card':1});
   }};
   const context=vm.createContext({document,localStorage});
   vm.runInContext(slice("  var COLKEY='uxp_collapsed';",'  function decorate(){')+
@@ -87,14 +88,14 @@ function placer(cards){
 }
 
 test('layout moves only the cards that are out of place',()=>{
-  const [team,cd,rc,ann]=['team-card','ov-cd-card','ov-rc-card','ov-ann-card'].map(id=>new Card(id));
-  const side=new Column();side.add(rc,team,cd,ann);
-  const place=placer([team,cd,rc,ann]);
-  place(side,['team-card','ov-cd-card','ov-rc-card','ov-ann-card']);
-  assert.deepEqual(side.kids.map(c=>c.id),['team-card','ov-cd-card','ov-rc-card','ov-ann-card']);
-  assert.equal(side.moves,2,'only team and countdown move; the Request Centre and announcements stay');
+  const [wm,cd,rc,ann]=['ov-wm-card','ov-cd-card','ov-rc-card','ov-ann-card'].map(id=>new Card(id));
+  const side=new Column();side.add(rc,wm,cd,ann);
+  const place=placer([wm,cd,rc,ann]);
+  place(side,['ov-wm-card','ov-cd-card','ov-rc-card','ov-ann-card']);
+  assert.deepEqual(side.kids.map(c=>c.id),['ov-wm-card','ov-cd-card','ov-rc-card','ov-ann-card']);
+  assert.equal(side.moves,2,'only the watermark and countdown cards move; the Request Centre and announcements stay');
   side.moves=0;
-  place(side,['team-card','ov-cd-card','ov-rc-card','ov-ann-card']);
+  place(side,['ov-wm-card','ov-cd-card','ov-rc-card','ov-ann-card']);
   assert.equal(side.moves,0,'an ordered column is left alone');
 });
 
@@ -264,29 +265,11 @@ test('event chips have room for their names, and phones keep two columns',()=>{
   assert.match(source,/@media\(max-width:480px\)\{\.ev-grid\{grid-template-columns:repeat\(2,1fr\);\}\}/,'the phone grid is unchanged');
 });
 
-/* ===== Step 29: quiet the triage tiles, and let zero be quiet ===== */
-const step29=stepBlock(29);
-const tileFn=slice('    function tile(icon,n,label,cls,sub,subCls,action,aria){','\n    var meetSub=');
-
-test('a tile at zero is marked to read quietly, and the tile keeps working',()=>{
-  const context=vm.createContext({esc:s=>String(s)});
-  vm.runInContext(tileFn,context);
-  const zero=context.tile('ti-x',0,'Overdue','ov-s-red','All clear','ov-sub-up','overdue','0 overdue tasks. Show them.');
-  const four=context.tile('ti-x',4,'Overdue','ov-s-red','Oldest is 1d overdue','ov-sub-bad','overdue','4 overdue tasks. Show them.');
-  assert.match(zero,/class="ov-stat ov-s-red is-zero"/,'0 overdue reads quietly: it is good news');
-  assert.match(four,/class="ov-stat ov-s-red"/,'4 overdue keeps its red');
-  for(const html of [zero,four]){
-    assert.match(html,/role="button" tabindex="0" data-action="overdue"/,'still a focusable button with its action');
-  }
-  assert.match(zero,/aria-label="0 overdue tasks\. Show them\."/,'screen-reader text is unchanged');
-});
-
-test('colour stays only where it means something, and a zero overrides it',()=>{
-  assert.match(step29,/:is\(\.ov-s-navy,\.ov-s-blue,\.ov-s-purple\)::before\{background:transparent;\}/,'neutral tiles lose their bars');
-  assert.match(step29,/\.ov-s-gold:not\(\.is-zero\) \.ov-stat-num\{color:#8a5b00;\}/,'due today reads in amber ink');
-  assert.match(step29,/\.ov-stat\.is-zero::before\{background:transparent;\}/);
-  assert.match(step29,/\.ov-stat\.is-zero \.ov-stat-num\{color:var\(--muted\);\}/);
-  assert.doesNotMatch(step29,/\.ov-s-red[^{]*\{/,'overdue keeps its red bar and number whenever it is not zero');
+/* ===== Step 29 (the triage tiles) was undone by Step 37: the tiles are gone. ===== */
+test('the triage tiles and their styles are gone',()=>{
+  assert.doesNotMatch(source,/function tile\(icon,n,label/);
+  assert.doesNotMatch(css26,/\/\* Step 29:/);
+  assert.doesNotMatch(source+css26,/\.ov-stat\b|ov-s-(?:red|gold|navy|blue|purple|green)\b/);
 });
 
 /* ===== Step 30: one status and member palette with the Team Board ===== */
@@ -348,15 +331,14 @@ test('kanban counts are written in ink, and body text is at least 13px',()=>{
   for(const [app] of PAIRS){
     assert.ok(contrast(hex(step30,'st-'+app+'-ink'),'#ffffff')>=4.5,app+' count on white');
   }
-  assert.match(step31,/#team-card \.team-note\{font-size:13px;\}/,'the Overview team note is no longer 11.5px');
 });
 
 /* ===== Step 32: flatten the nested cards ===== */
 const step32=stepBlock(32);
 
 test('boxes inside a card become rows separated by hairlines',()=>{
-  const rows=step32.match(/html:not\(\.dark\) #team-card \.team-row,\s*html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) #ov-cd-card \.ov-cdn\{([^}]*)\}/);
-  assert.ok(rows,'Team today, Upcoming Deadlines, Event Board and countdown rows share one rule');
+  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) #ov-cd-card \.ov-cdn\{([^}]*)\}/);
+  assert.ok(rows,'Upcoming Deadlines, Event Board and countdown rows share one rule');
   for(const want of [/border:0!important/,/border-radius:0!important/,/box-shadow:none!important/,/border-top:1px solid var\(--border\)!important/])
     assert.match(rows[1],want);
   assert.match(step32,/\.ov-cdn:first-of-type\{border-top-color:transparent!important;\}/,'no hairline above the first row');
@@ -504,4 +486,80 @@ test('without the sign-in service, or on the Request Centre page, the cover lift
   assert.equal(rc.coverUp(), false);
   rc.signIn(null);
   assert.equal(rc.gateShown(), false, 'the Request Centre never shows the sign-in form');
+});
+
+/* ===== Step 37: the Overview's first screen puts the work first ===== */
+const step37=stepBlock(37);
+const rule=(css,sel)=>{const i=css.indexOf(sel+'{');assert.ok(i>=0,sel+' has a rule');return css.slice(i+sel.length+1,css.indexOf('}',i));};
+const media=(css,q)=>{const i=css.indexOf('@media('+q+'){');assert.ok(i>=0,q+' block exists');
+  let depth=0,j=css.indexOf('{',i);for(;j<css.length;j++){if(css[j]==='{')depth++;else if(css[j]==='}'&&--depth===0)break;}return css.slice(i,j+1);};
+
+test('the Overview opens on the work: one announcement line, the greeting and search, Team today, then the work list',()=>{
+  const at=['id="ov-ann-card"','class="ov-topbar"','id="ov-team"','class="ov-grid"','id="ov-dl-card"'].map(s=>shell.indexOf(s));
+  at.forEach((n,i)=>assert.ok(n>0&&(i===0||n>at[i-1]),'out of order at '+i));
+  assert.doesNotMatch(shell,/ov-stats|ov-stat\b/,'the five number tiles are gone');
+  const render=slice('  function renderOverview(){','\n  }\n');
+  assert.match(render,/renderTeam\(\);/);
+  assert.doesNotMatch(source,/function renderStats\(/);
+  const context=vm.createContext({});
+  vm.runInContext(slice('  var LAYOUT={','  };')+'  };',context);
+  assert.deepEqual(Array.from(context.LAYOUT.side),['ov-rc-card','ov-cd-card','ov-wm-card']);
+});
+
+test('the announcement line holds one item on one row, and its text opens the rest',()=>{
+  assert.match(rule(step37,'#ov-ann-card:not(.ov-ann-all)'),/display:grid;grid-template-columns:auto minmax\(0,1fr\) auto;/);
+  const text=rule(step37,'html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text');
+  for(const want of [/white-space:nowrap/,/overflow:hidden/,/text-overflow:ellipsis/,/min-width:0/])assert.match(text,want);
+  const open=rule(step37,'#ov-ann-card .ov-ann-open');
+  assert.match(open,/background:none/);assert.match(open,/text-align:left/);assert.match(open,/cursor:pointer/);
+  assert.doesNotMatch(open,/font:inherit|color:inherit/,'it keeps the announcement type size and colour');
+  assert.match(step37,/#ov-ann-card \.ov-ann-open:focus-visible\{outline:2px solid var\(--focus-ink\)/);
+  assert.match(shell,/<div class="ov-ann-list" id="ov-ann-list" tabindex="-1"><\/div>/,'focus can move to the opened list');
+});
+
+test('Team today is a strip of four people on a computer, two per row on an iPad and a phone',()=>{
+  assert.match(rule(step37,'.ov-team-list'),/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(media(step37,'max-width:1100px'),/\.ov-team-list\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\);\}/);
+  const cell=rule(step37,'.tm');
+  assert.match(cell,/grid-template-areas:"mono name open" "mono st st" "mono lv lv"/);
+  assert.match(cell,/cursor:pointer/);
+  assert.match(step37,/\.tm:focus-visible\{outline:2px solid var\(--focus-ink\)/,'each person is a visible keyboard stop');
+  assert.match(rule(step37,'.tm-lv'),/font-size:13px;color:var\(--muted\)/,'sick days and lieu read quietly');
+});
+
+test('on a phone each person is one short line and the work list starts on the first screen',()=>{
+  const phone=media(step37,'max-width:600px');
+  assert.match(phone,/\.tm\{display:flex;align-items:flex-start;/,'the initial, then the name and flags as one line of text');
+  assert.match(phone,/\.tm-top,\.tm-st\{display:inline;\}/);
+  assert.doesNotMatch(phone,/\.tm-st\{[^}]*overflow:hidden/,'flags wrap under the name on a narrow phone, never cut off');
+  assert.match(phone,/\.tm-open,\.tm-w,\.tm-lv\{display:none;\}/,'counts with icons; the words stay in the label');
+  assert.match(phone,/\.ov-team-sum-w,\.nx-l\{display:none;\}/,'"21 open" and "14:00 Weekly sync" keep the heading to one line');
+  assert.match(phone,/\.ov-team-head:has\(\.nx-btn\) \.ov-team-done\{display:none;\}/,'a next meeting takes the room of the done count');
+  assert.match(phone,/\.ov-team-next\{flex:1 1 0;\}/,'and only the room left beside the title');
+  assert.match(phone,/#ov-top,#ov-team\{margin-bottom:12px;\}/);
+  assert.match(phone,/\.tm-s\{display:inline;\}/,'a flag without a count keeps a short word');
+  assert.match(phone,/#panel-overview \.ov-hello\{display:none;\}/,'the greeting gives way to the work');
+  assert.match(phone,/\.ov-team-note\{display:none!important;\}/,'only the calendar setup note gives way');
+  assert.doesNotMatch(phone,/\.ov-mini-btn[^{]*\{[^}]*display:none/,'refreshing availability stays on a phone');
+  assert.doesNotMatch(phone,/\.ov-team-next[^{]*\{[^}]*display:none/,'so does the next meeting');
+  assert.match(phone,/html #panel-overview #ov-ann-card:not\(\.ov-ann-all\) \.ov-ann-foot\{display:none;\}/,'the line keeps its text and New; tapping the text shows the rest');
+  assert.match(step37,/#panel-overview \.ov-dl-filters\{overflow-x:auto;scrollbar-width:none;\}/,'the four filters stay on one line and scroll');
+  assert.match(step37,/#panel-overview \.ov-dl-filters \.ov-fpill\{flex:0 0 auto;white-space:nowrap;/);
+});
+
+test('what needs attention is written in the shared status inks, which read at AA',()=>{
+  const inks={over:rule(step37,'.tm-over').match(/#[0-9a-f]{6}/i)[0]};
+  for(const [kind,token] of [['wait','waiting'],['hold','hold'],['out','pending'],['meet','progress']]){
+    assert.match(rule(step37,'.tm-'+kind),new RegExp('color:var\\(--st-'+token+'-ink,'),kind+' uses the shared ink');
+    inks[kind]=hex(step30,'st-'+token+'-ink');
+  }
+  for(const [kind,ink] of Object.entries(inks)){
+    assert.ok(contrast(ink,'#ffffff')>=4.5,kind+' on white: '+contrast(ink,'#ffffff').toFixed(2));
+  }
+  assert.match(step37,/\.tm-clear,\.tm-soon\{font-weight:600;color:var\(--muted\);\}/,'nothing wrong reads quietly');
+  /* The person colours carry a white initial. */
+  const members=step37.match(/:root\{--member-boss:(#\w{6});--member-dew:(#\w{6});--member-o:(#\w{6});--member-junior:(#\w{6});\}/);
+  assert.ok(members,'default person colours are set');
+  for(const c of members.slice(1))assert.ok(contrast(c.toLowerCase(),'#ffffff')>=4.5,c+' behind a white initial');
+  assert.match(source,/css\+=':root\{--member-'\+w\+':'\+ink\+';\}';/,'a saved tab colour carries into Team today');
 });

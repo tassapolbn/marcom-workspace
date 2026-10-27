@@ -135,22 +135,23 @@ test('drawer wraps Tab in both directions using only visible enabled controls',(
   assert.equal(h.document.activeElement,h.first,'escaped focus returns to the drawer');
 });
 
-test('Team today counts shared cards once while retaining per-person rows and bars',()=>{
-  const nodes=Object.fromEntries(['team-list','team-sum','team-note'].map(id=>[id,{innerHTML:'',addEventListener(){}}]));
+test('Team today counts shared cards once in the total while each person counts their share',()=>{
+  const nodes=Object.fromEntries(['team-list','team-sum','team-note','ov-team-next'].map(id=>[id,{innerHTML:'',addEventListener(){}}]));
   const context=vm.createContext({window:{},document:{getElementById:id=>nodes[id]},MORDER:['boss','dew'],
     eventTasks:[{status:'pending',assignees:['boss','dew']},{status:'done',assignees:['boss','dew']}],
     ownTasksOf:w=>w==='boss'?[{status:'pending'}]:[],taskAssignees:t=>t.assignees,taskCanonicalWs:t=>t.assignees[0],
-    isActive:t=>t.status!=='done'&&t.status!=='canceled',statusOf:()=>({c:'ov-st-ok',l:'Available'}),
-    sOf:()=>[],lOf:()=>[],esc:String,nm:w=>w,roleOf:()=>'',iconOf:()=>'',
+    isActive:t=>t.status!=='done'&&t.status!=='canceled',dU:()=>null,tdy:()=>'2026-10-26',tsToDate:()=>null,
+    sOf:()=>[],lOf:()=>[],esc:String,nm:w=>w,
     MarcomUI:{setHTML:(el,html)=>{el.innerHTML=html;}}});
   vm.runInContext(slice('function tasksOf(w){','/* Every write goes through here'),context);
   vm.runInContext('function tReal(w){return tasksOf(w);} function tOf(w){return ovTasksOf(w);}',context);
-  vm.runInContext(slice('  function renderTeam(){','  window.ovRenderTeam=renderTeam;'),context);
+  vm.runInContext(slice('  function todayCounts(items,dayFn){','  window.ovRenderTeam=renderTeam;'),context);
   context.renderTeam();
-  assert.match(nodes['team-sum'].innerHTML,/2 open tasks/);
-  const rows=nodes['team-list'].innerHTML.split('class="team-row"').slice(1);
-  assert.match(rows[0],/<b>2<\/b> open/);assert.match(rows[1],/<b>1<\/b> open/);
-  assert.match(rows[0],/width:100%/);assert.match(rows[1],/width:50%/);
+  assert.match(nodes['team-sum'].innerHTML,/ 2 open<span class="ov-team-sum-w"> tasks<\/span>$/);
+  const cells=nodes['team-list'].innerHTML.split('class="tm"').slice(1);
+  assert.equal(cells.length,2);
+  assert.match(cells[0],/<span class="tm-open">2 open<\/span>/);
+  assert.match(cells[1],/<span class="tm-open">1 open<\/span>/);
 });
 
 test('ovAnnCompose unfolds through the card button before opening the composer',()=>{

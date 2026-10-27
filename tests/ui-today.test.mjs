@@ -10,7 +10,7 @@ function slice(start,end){
   return source.slice(a,b);
 }
 const context=vm.createContext({window:{}});
-vm.runInContext(slice('  function todayCounts(items,dayFn){','  function renderStats(){')+'\nthis.todayCounts=todayCounts;',context);
+vm.runInContext(slice('  function todayCounts(items,dayFn){','  /* ---------- availability ---------- */')+'\nthis.todayCounts=todayCounts;',context);
 vm.runInContext(slice("  var ovDl='all'",'  window.ovDlFilter=')+'\nthis.dlGroups=dlGroups;',context);
 const shellStart=source.indexOf("var SHELL=''");
 const shell=source.slice(shellStart,source.indexOf('  function buildShell(){',shellStart));
@@ -54,5 +54,7 @@ test('the Overview shell shows each today number once',()=>{
   assert.doesNotMatch(shell,/id="ov-focus"/);
   assert.doesNotMatch(shell,/id="uxp-today"/);
   assert.match(shell,/id="ov-dl-filters"/);
-  assert.match(shell,/id="ov-stats"/);
+  /* Step 37: the number tiles are gone; their counts head the work list. */
+  assert.doesNotMatch(shell,/id="ov-stats"|ov-stat/);
+  assert.match(shell,/id="ov-team"/);
 });

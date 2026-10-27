@@ -318,64 +318,8 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #modal .role-closed .role-body{display:none;}
 @media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}
 
-/* One team snapshot for the Overview. */
-#team-card .team-list{display:flex;flex-direction:column;gap:6px;}
-#team-card .team-row{
-  display:grid;grid-template-columns:36px minmax(0,1fr) auto;
-  grid-template-areas:"av who st" "av load load" "av meta meta";
-  column-gap:10px;row-gap:4px;padding:10px;border-radius:12px;
-  border:1px solid var(--border);cursor:pointer;transition:background 150ms;
-}
-#team-card .team-row:hover,#team-card .team-row:focus-visible{background:var(--gray-light);}
-#team-card .team-row:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
-#team-card .team-av{
-  grid-area:av;width:36px;height:36px;border-radius:50%;background:var(--navy-light);
-  color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:19px;
-}
-#team-card .team-who{grid-area:who;min-width:0;overflow-wrap:anywhere;}
-#team-card .team-name{font-size:13.5px;font-weight:700;}
-#team-card .team-role,#team-card .team-meta{font-size:11.5px;color:var(--muted);}
-#team-card .team-meta{grid-area:meta;}
-#team-card .team-st{
-  grid-area:st;align-self:start;max-width:160px;border-radius:99px;font-size:11px;
-  font-weight:700;padding:3px 9px;color:var(--muted);background:var(--gray-light);
-  text-align:center;overflow-wrap:anywhere;
-}
-#team-card .team-st.free{color:var(--st-done,var(--green));background:var(--green-light);}
-#team-card .team-st.busy{color:var(--danger);background:var(--danger-light);}
-#team-card .team-st.soon{color:var(--amber);background:var(--amber-light);}
-#team-card .team-st.away{color:var(--muted);background:var(--gray-light);}
-#team-card .team-load{grid-area:load;display:flex;gap:8px;align-items:center;font-size:12px;min-width:0;}
-#team-card .team-bar{flex:1;min-width:16px;height:6px;border-radius:99px;background:var(--gray-light);overflow:hidden;}
-#team-card .team-fill{height:100%;border-radius:inherit;}
-#team-card .team-fill.low{background:var(--st-done,var(--green));}
-#team-card .team-fill.med{background:var(--amber);}
-#team-card .team-fill.high{background:var(--danger);}
-#team-card .team-lvl{font-size:10.5px;font-weight:700;}
-#team-card .team-lvl.low{color:var(--st-done,var(--green));}
-#team-card .team-lvl.med{color:var(--amber);}
-#team-card .team-lvl.high{color:var(--danger);}
-#team-card .team-sum{color:var(--muted);font-weight:600;font-size:11.5px;}
-#team-card .team-note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
-#team-card .ov-card-title{flex-wrap:wrap;}
-html.dark #team-card .team-av{color:#8fb4dc;}
-html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
-@media(max-width:400px){#team-card .team-st{max-width:120px;}}
-@media(prefers-reduced-motion:reduce){#team-card .team-row{transition:none;}}
 
-/* Today tiles (one set of numbers) and the Upcoming Deadlines filter. */
-#panel-overview .ov-stats{grid-template-columns:repeat(5,minmax(0,1fr));}
-@media(max-width:1100px){#panel-overview .ov-stats{grid-template-columns:repeat(3,minmax(0,1fr));}}
-@media(max-width:700px){#panel-overview .ov-stats{grid-template-columns:repeat(2,minmax(0,1fr));}#panel-overview .ov-stats>.ov-stat:last-child:nth-child(odd){grid-column:1 / -1;}}
-@media(max-width:340px){#panel-overview .ov-stats{grid-template-columns:minmax(0,1fr);}}
-#panel-overview .ov-stat[role=button]{cursor:pointer;transition:transform 160ms ease,box-shadow 160ms ease;}
-@media(hover:hover){
-  #panel-overview .ov-stat[role=button]:hover{
-    transform:translateY(-2px);
-    box-shadow:0 2px 4px rgba(16,24,40,.05),0 12px 26px -12px rgba(16,24,40,.25);
-  }
-}
-#panel-overview .ov-stat[role=button]:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
+/* The Upcoming Deadlines filter. */
 #panel-overview #ov-dl-card .ov-card-head{flex-wrap:wrap;gap:8px;}
 #panel-overview .ov-dl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
 #panel-overview .ov-dl-more{
@@ -387,10 +331,6 @@ html.dark #team-card .team-row:focus-visible{outline-color:#8fb4dc;}
 html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-more:focus-visible{color:#9bd6ff;}
 #ov-dl-title:focus{outline:none;}
 #ov-dl-title:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
-@media(prefers-reduced-motion:reduce){
-  #panel-overview .ov-stat[role=button]{transition:none;}
-  #panel-overview .ov-stat[role=button]:hover{transform:none;}
-}
 
 /* Overview layout: a folded "Resources & more" section for less-used cards. */
 #panel-overview .ov-more{margin:8px 0 24px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
@@ -581,7 +521,7 @@ html.dark{
 /* 1. Page and cards */
 html:not(.dark) body:not(.request-mode),
 html:not(.dark) body:is(.theme-overview,.theme-boss,.theme-dew,.theme-o,.theme-junior):not(.request-mode){background:var(--canvas)!important;}
-.ov-card,.widget,.stat-box,#panel-overview .ov-stat,.member-head{
+.ov-card,.widget,.stat-box,.member-head{
   border-radius:var(--r-lg)!important;border:1px solid var(--card-border)!important;
   box-shadow:var(--card-shadow)!important;
   transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
@@ -635,7 +575,7 @@ html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textare
 .sub-nav .sub-tab{transition:background var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease;}
 
 /* 4. Numbers line up */
-.ov-stat-num,.stat-num,.team-load b,.ov-cdn-n,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
+.stat-num,.ov-cdn-n,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
 
 @media(prefers-reduced-motion:reduce){
   .ov-card,.widget,.stat-box,.btn,.form-input,.form-select,.form-textarea,.tab-nav .tab-btn,.sub-nav .sub-tab,.fpill,.ov-fpill{transition:none!important;}
@@ -707,7 +647,7 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #evb-card .ov-card-title>span{flex-basis:100%;}
   #evb-card>.ov-card-head>.uxp-col-btn{order:1;}
   #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
-  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.ov-agenda-eyebrow,.dzsel-tag,.ov-act-t,.ov-res-go,.team-lvl,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
+  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.ov-agenda-eyebrow,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
 }
 
 /* Step 23: dark mode readability */
@@ -808,17 +748,6 @@ html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title i{color:var
    Phones keep their two columns. */
 @media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));}}
 
-/* Step 29: quiet the triage tiles, and let zero be quiet */
-/* Colour only where it means something: overdue red, due today amber, the rest
-   neutral. A tile at 0 reads quietly, so "4 overdue" is plainly louder than
-   "0 meetings today". Light mode, per the agreed scope. */
-html:not(.dark) #panel-overview :is(.ov-s-navy,.ov-s-blue,.ov-s-purple)::before{background:transparent;}
-html:not(.dark) #panel-overview :is(.ov-s-navy,.ov-s-blue,.ov-s-purple) .ov-stat-ic{background:var(--surface-3);color:var(--muted);}
-html:not(.dark) #panel-overview .ov-s-gold:not(.is-zero) .ov-stat-num{color:#8a5b00;}
-html:not(.dark) #panel-overview .ov-stat.is-zero::before{background:transparent;}
-html:not(.dark) #panel-overview .ov-stat.is-zero .ov-stat-num{color:var(--muted);}
-html:not(.dark) #panel-overview .ov-stat.is-zero .ov-stat-ic{background:var(--surface-3);color:var(--muted);}
-
 /* Step 30: one status palette with the Team Board */
 /* The Team Board's status scale in its three tiers: an accent for rails, icons
    and fills, a darker ink for text, and the pale tints its fills mix down to.
@@ -847,23 +776,19 @@ html:not(.dark) .task-card:is(.tc-done,.tc-canceled){opacity:1;background-color:
    Pending (4.4:1) and Waiting (3.8:1); counts use the ink like the names. An
    older rule forces the accent with !important, so this needs it too. */
 html:not(.dark) .kb-col[data-status] .kb-col-count{color:var(--c-ink,var(--c))!important;}
-/* Body text is at least 13px. Size is structure, not colour, so both themes. */
-#team-card .team-note{font-size:13px;}
 
 /* Step 32: flatten the nested cards */
 /* Boxes inside a box become rows inside the card, separated by hairlines. What
    carries meaning stays: a chip's urgency rule, a pinned announcement's gold, a
    Director request's amber. Light mode. */
-html:not(.dark) #team-card .team-row,
 html:not(.dark) #ov-dl-card .ov-dl,
 html:not(.dark) #evb-card .evb-g,
 html:not(.dark) #ov-cd-card .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
-html:not(.dark) #team-card .team-row:first-of-type,
 html:not(.dark) #ov-dl-card .ov-dl:first-of-type,
 html:not(.dark) #evb-card .evb-g:first-of-type,
 html:not(.dark) #ov-cd-card .ov-cdn:first-of-type{border-top-color:transparent!important;}
 /* Rows still answer the pointer, without a box around them. */
-html:not(.dark) :is(#team-card .team-row,#ov-dl-card .ov-dl):hover{background:var(--surface-3);}
+html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);}
 /* The day agenda is a section of the calendar card, not a card within it. */
 html:not(.dark) #ov-cal-card .ov-cal-detail{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;border-top:1px solid var(--border)!important;}
 /* Announcements sit side by side as plain blocks; a pinned one keeps its gold. */
@@ -987,4 +912,153 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
     box-shadow:0 0 0 2px var(--dock-bg);}
   /* A blurred header would hold the dock inside itself instead of the screen. */
   html.dark .app-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(180deg,#0b111c,#090d16);}
+}
+
+/* Step 37: the Overview's first screen puts the work first */
+/* The five number tiles are gone: their numbers already head the work list. The
+   announcements stay first (Boss, 24 Oct) as one slim line, Team today is a
+   strip of people showing only what needs attention, then the work list. */
+#panel-overview .ov-hello{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:10px;row-gap:2px;}
+#panel-overview .ov-topbar{margin-bottom:12px;}
+
+/* Announcements: the pinned or newest one on a single line; "All N" opens the rest. */
+#ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:8px 10px 8px 16px;}
+#ov-ann-card:not(.ov-ann-all)>.ov-card-head{display:contents;}
+#ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{grid-column:1;grid-row:1;margin:0;white-space:nowrap;}
+#ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-ann-new{grid-column:3;grid-row:1;margin:0;}
+#ov-ann-card:not(.ov-ann-all)>.ov-ann-compose{grid-column:1/-1;grid-row:2;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all)>.ov-ann-list{grid-column:2;grid-row:1;min-width:0;display:flex;align-items:center;gap:12px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-item{flex:1 1 auto;min-width:0;display:flex;flex-direction:row;align-items:center;gap:10px;margin:0;
+  padding:2px 0!important;background:transparent!important;border:0!important;border-radius:0;box-shadow:none!important;transform:none;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-pinbadge{flex:0 0 auto;margin:0;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text{flex:1 1 auto;min-width:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text br{display:none;}
+/* The line's text opens the full list; it reads as text until pointed at. */
+#ov-ann-card .ov-ann-open{display:block;width:100%;padding:0;border:0;background:none;font-family:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+#ov-ann-card .ov-ann-open:hover{text-decoration:underline;text-decoration-color:var(--border-strong,#c3ccd7);text-underline-offset:3px;}
+#ov-ann-card .ov-ann-open:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:4px;}
+#ov-ann-list:focus{outline:none;}
+#ov-ann-list:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:8px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-foot{flex:0 0 auto;margin:0;padding:0;border:0;display:flex;align-items:center;gap:8px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-more-link{flex:0 0 auto;margin:0;white-space:nowrap;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-align:left;}
+
+/* Team today: one cell per person, showing only what needs attention, written
+   out in the shared status colours with their icons (never colour alone). Plain
+   text runs, not pills, so a busy person still fits one line. The person
+   colours follow saved custom tab colours. */
+:root{--member-boss:#003057;--member-dew:#A65614;--member-o:#C2410C;--member-junior:#14532D;}
+#ov-team{margin:0 0 var(--sp-4,16px);padding:8px 10px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg,16px);box-shadow:var(--shadow);}
+.ov-team-head{display:flex;align-items:center;gap:10px;padding:2px 6px 4px;}
+.ov-team-title{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;}
+.ov-team-title i{font-size:18px;color:var(--navy);}
+.ov-team-sum{font-size:13px;font-weight:600;color:var(--muted);}
+.ov-team-next{display:block;flex:0 1 auto;min-width:0;margin-left:auto;font-size:13px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ov-team-next i{font-size:15px;vertical-align:-2px;}
+.ov-team-next .nx-btn{display:block;max-width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;}
+.ov-team-next .nx-btn:hover{text-decoration:underline;text-underline-offset:3px;}
+.ov-team-next .nx-btn:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:4px;}
+.ov-team-next:empty{display:none;}
+.ov-team-next:empty+.ov-mini-btn{margin-left:auto;}
+.ov-team-head .ov-mini-btn{flex:0 0 auto;}
+.ov-team-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
+.ov-team-note{padding:4px 6px 2px;font-size:13px;color:var(--muted);}
+.tm{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"mono name open" "mono st st" "mono lv lv";
+  align-items:center;align-content:start;column-gap:10px;row-gap:2px;min-width:0;padding:6px 8px;border:0;border-radius:12px;background:transparent;
+  color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .14s ease;}
+.tm+.tm::before{content:'';position:absolute;left:-1px;top:10px;bottom:10px;width:1px;background:var(--border);}
+.tm:hover{background:var(--surface-3,#f3f5f8);}
+.tm:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px;}
+.tm-mono{grid-area:mono;align-self:start;margin-top:1px;width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;line-height:1;color:#fff;background:var(--tm-c,var(--navy));}
+.tm[data-member="boss"]{--tm-c:var(--member-boss);}
+.tm[data-member="dew"]{--tm-c:var(--member-dew);}
+.tm[data-member="o"]{--tm-c:var(--member-o);}
+.tm[data-member="junior"]{--tm-c:var(--member-junior);}
+.tm-body{display:contents;}
+.tm-top{display:contents;}
+.tm-name{grid-area:name;min-width:0;font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tm-open{grid-area:open;font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
+.tm-st{grid-area:st;display:flex;flex-wrap:wrap;column-gap:10px;row-gap:0;min-width:0;}
+.tm-x{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;line-height:1.5;white-space:nowrap;}
+.tm-x i{font-size:14px;}
+.tm-n{font-variant-numeric:tabular-nums;}
+.tm-s{display:none;}
+.tm-over{color:#b91c1c;}
+.tm-wait{color:var(--st-waiting-ink,#7d5406);}
+.tm-hold{color:var(--st-hold-ink,#584079);}
+.tm-out{color:var(--st-pending-ink,#4a5866);}
+.tm-meet{color:var(--st-progress-ink,#0b4f7d);}
+.tm-clear,.tm-soon{font-weight:600;color:var(--muted);}
+/* Sick days and the lieu balance, kept from the old Leave card: quiet, one line. */
+.tm-lv{grid-area:lv;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+html.dark .ov-team-title i{color:#8fb4dc;}
+html.dark .tm:hover{background:rgba(255,255,255,.05);}
+html.dark .tm-over{color:#fca5a5;}
+html.dark .tm-wait{color:#fcd34d;}
+html.dark .tm-hold{color:#c4b5fd;}
+html.dark .tm-out{color:#cbd5e1;}
+html.dark .tm-meet{color:#93c5fd;}
+@media(prefers-reduced-motion:reduce){.tm{transition:none;}}
+/* Two people per row below 1100px, with hairlines between them. */
+@media(max-width:1100px){
+  .ov-team-list{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .tm:nth-child(odd)::before{display:none;}
+  .tm:nth-child(n+3)::after{content:'';position:absolute;top:-1px;left:10px;right:10px;height:1px;background:var(--border);}
+}
+/* A phone: two people per row, each showing the icon and count of what needs
+   attention (the words stay in the label and tooltip; "Out" stays a word), so
+   the work list still starts on the first screen. The greeting and the calendar
+   setup note give way (Settings still connects a calendar); search, refresh and
+   a next meeting stay; the deadline filters share the title line. */
+@media(max-width:600px){
+  #ov-team{padding:4px 6px;}
+  .ov-team-head{padding:2px 4px;}
+  /* One heading line: the total, the next meeting's time and title as far as it
+     fits, and refresh. */
+  .ov-team-head{gap:8px;}
+  .ov-team-title{flex:0 1 auto;min-width:0;flex-wrap:wrap;white-space:normal;}
+  .ov-team-next{flex:1 1 0;}
+  .ov-team-sum,.ov-team-done{white-space:nowrap;}
+  .ov-team-sum-w,.nx-l{display:none;}
+  /* A next meeting needs the room more than the week's done count. */
+  .ov-team-head:has(.nx-btn) .ov-team-done{display:none;}
+  /* Refresh keeps a 36px target without making the heading taller. */
+  .ov-team-head .ov-mini-btn{margin:-6px 0 -6px auto;}
+  .ov-team-next+.ov-mini-btn{margin-left:0;}
+  .ov-team-note{display:none!important;}
+  /* Each person reads like a line of text: the name, then the flags, which wrap
+     under the name instead of being cut off when a narrow phone runs out of room. */
+  .tm{display:flex;align-items:flex-start;column-gap:7px;padding:5px 2px;line-height:22px;}
+  .tm-mono{flex:0 0 22px;width:22px;height:22px;margin:0;font-size:11.5px;}
+  .tm-body{display:block;flex:1 1 auto;min-width:0;}
+  .tm-top,.tm-st{display:inline;}
+  .tm-name{display:inline;margin-right:6px;white-space:normal;}
+  .tm-x{vertical-align:top;margin-right:6px;gap:2px;line-height:22px;}
+  .tm-open,.tm-w,.tm-lv{display:none;}
+  .tm-s{display:inline;}
+  .tm:nth-child(n+3)::after{left:6px;right:6px;}
+  #panel-overview .ov-hello{display:none;}
+  /* A 12px rhythm on a phone, so the first deadline clears the dock even at lunch. */
+  #ov-top,#ov-team{margin-bottom:12px;}
+  #panel-overview #ov-dl-card{padding-top:12px;}
+  #panel-overview #ov-dl-card>.ov-card-head{margin-bottom:8px;}
+  #panel-overview #ov-dl-card .ov-card-head{flex-wrap:nowrap;}
+  #ov-dl-title{font-size:0!important;gap:0;}
+  #ov-dl-title i{font-size:18px!important;}
+  #panel-overview .ov-dl-filters{flex-wrap:nowrap;margin-left:4px;}
+  /* On a phone the announcement line keeps its icon, the text and its two buttons. */
+  #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:6px 6px 6px 12px;}
+  #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{font-size:0!important;gap:0;}
+  #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title i{font-size:18px!important;}
+  html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-foot{display:none;}
+}
+@media(max-width:600px){
+  #panel-overview .ov-dl-filters{overflow-x:auto;scrollbar-width:none;}
+  #panel-overview .ov-dl-filters::-webkit-scrollbar{display:none;}
+  #panel-overview .ov-dl-filters .ov-fpill{flex:0 0 auto;white-space:nowrap;padding-left:11px;padding-right:11px;}
 }

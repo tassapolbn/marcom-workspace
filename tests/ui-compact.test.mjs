@@ -53,19 +53,50 @@ test('switching a Resources tab shows exactly one panel and remembers it',()=>{
   assert.equal(nodes.focused,'links');
 });
 
-test('the announcement list shows the newest three and offers Show all',()=>{
-  const list={innerHTML:''};
-  const items=Array.from({length:5},(_,i)=>({id:'a'+i,text:'Note '+i,author:'Boss',createdAt:new Date(2026,9,20+i).toISOString(),pinned:i===1}));
-  const context=vm.createContext({window:{},document:{getElementById:id=>id==='ov-ann-list'?list:null},
+function announcements(items){
+  const list={innerHTML:''},card={on:new Set(),classList:{toggle(n,on){on?card.on.add(n):card.on.delete(n);},remove(n){card.on.delete(n);}}};
+  const context=vm.createContext({window:{},document:{getElementById:id=>id==='ov-ann-list'?list:id==='ov-ann-card'?card:null},
     annItems:items,buildAuthorOptions(){},esc:s=>String(s)});
   vm.runInContext(slice('  var ovAnnAll=false;','  function saveAnn(items){')+'\nthis.renderAnnouncements=renderAnnouncements;',context);
   context.renderAnnouncements();
-  assert.equal((list.innerHTML.match(/class="ov-ann-item/g)||[]).length,3);
-  assert.match(list.innerHTML,/Show all 5 announcements/);
+  return {list,card,toggle:()=>context.window.ovAnnShowAll()};
+}
+const count=html=>(html.match(/class="ov-ann-item/g)||[]).length;
+
+test('the Overview shows the pinned or newest announcement on one line; its text and All N open the full list',()=>{
+  const items=Array.from({length:5},(_,i)=>({id:'a'+i,text:'Note '+i,author:'Boss',createdAt:new Date(2026,9,20+i).toISOString(),pinned:i===1}));
+  const {list,card,toggle}=announcements(items);
+  assert.equal(count(list.innerHTML),1);
+  assert.match(list.innerHTML,/class="ov-ann-item pinned"/,'the pinned one comes first');
+  assert.match(list.innerHTML,/<button type="button" class="ov-ann-text ov-ann-open" onclick="ovAnnShowAll\(\)" aria-expanded="false"[^>]*>Note 1<\/button>/);
+  assert.match(list.innerHTML,/aria-label="Show all 5 announcements">All 5<\/button>/);
+  assert.equal(card.on.has('ov-ann-all'),false);
+  toggle();
+  assert.equal(count(list.innerHTML),5);
+  assert.equal(card.on.has('ov-ann-all'),true);
   assert.ok(list.innerHTML.indexOf('Note 1')<list.innerHTML.indexOf('Note 4'),'pinned first, then newest');
-  context.window.ovAnnShowAll();
-  assert.equal((list.innerHTML.match(/class="ov-ann-item/g)||[]).length,5);
-  assert.match(list.innerHTML,/Show fewer/);
+  assert.doesNotMatch(list.innerHTML,/ov-ann-open/,'the full list shows plain text');
+  assert.match(list.innerHTML,/aria-label="Show fewer announcements">Show fewer<\/button>/);
+  assert.equal((list.innerHTML.match(/ovDeleteAnn\(/g)||[]).length,5,'every announcement keeps its delete button');
+  toggle();
+  assert.equal(count(list.innerHTML),1);
+});
+
+test('a single announcement still opens in full, so its whole text, pin and delete stay reachable on a phone',()=>{
+  const {list,toggle}=announcements([{id:'a0',text:'Only one\nsecond line',author:'Dew',createdAt:new Date(2026,9,20).toISOString()}]);
+  assert.equal(count(list.innerHTML),1);
+  assert.doesNotMatch(list.innerHTML,/All 1/,'no count when there is nothing more');
+  assert.match(list.innerHTML,/class="ov-ann-text ov-ann-open"/);
+  toggle();
+  assert.match(list.innerHTML,/<div class="ov-ann-text">Only one<br>second line<\/div>/);
+  assert.match(list.innerHTML,/ovTogglePin\('a0'\)/);
+  assert.match(list.innerHTML,/aria-label="Show the announcement on one line">Show fewer<\/button>/);
+});
+
+test('with no announcements the list says how to add one and leaves the full view',()=>{
+  const {list,card}=announcements([]);
+  assert.match(list.innerHTML,/No announcements yet/);
+  assert.equal(card.on.has('ov-ann-all'),false);
 });
 
 test('posting an announcement closes the composer',()=>{

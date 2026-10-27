@@ -801,7 +801,7 @@ colour stays as it is.
     Four new tests, including the real sign-in script run against a fake page,
     Firebase and timers; suite 281/281.
 
-- [ ] **37. Redo the Overview's first screen: the work first**
+- [x] **37. Redo the Overview's first screen: the work first**
   - Files: `index.html` (the Overview layout and its team rows),
     `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
   - The review's main point: the Overview reads as a generic dashboard (a
@@ -829,6 +829,34 @@ colour stays as it is.
     largest shape in a 480px thumbnail; no number appears twice on the first
     screen; a person with overdue or waiting work, or out sick, is flagged in
     their row.
+  - Done (27 Oct): the five tiles are gone. Under the payday line the
+    Overview reads: one announcement line, the greeting and search, Team today,
+    then the work list beside Requests and the countdown. Team today has one
+    cell per person: their open count, then only what needs attention, written
+    with an icon in the shared status inks (overdue, waiting, on hold, out sick
+    or on leave, in a meeting or about to start one when a calendar is
+    connected), or a quiet "Clear". A quiet third line keeps each person's sick
+    days and lieu balance from the old Leave card. The heading keeps what the
+    tiles said that the work list does not: the work done this week, and the
+    next meeting today, which opens Google Calendar as the Meetings tile did.
+    The workload bar and level are gone, as planned.
+    Tapping a person opens their tab. On a phone each person is one short line
+    (icon and count), flags wrap under the name instead of being cut off, the
+    greeting and the calendar setup note give way, and refresh and the next
+    meeting stay. The announcement line's text opens the full list with the
+    whole text, author, date, pin and delete ("All N" when there are more),
+    so nothing is out of reach on a phone. Measured in the preview at 11:30,
+    with the lunch line showing: the first work row starts at 542px at
+    1440x900 (621 before), 619px at 1024x768, and 537px at 390x664, ending at
+    587 above the dock (592); the work list is the largest shape; no number
+    appears twice; no sideways scroll at 320 to 1440. Contrast: zero failures
+    on all five tabs, light and dark. Tests: 291/291 (Team today, the
+    announcement line and the new layout covered; the tile tests retired).
+  - One difference from the written plan, for Boss to confirm: the
+    announcements stay first, as one slim line (48px on a computer, 50px on a
+    phone), because Boss decided on 24 Oct that they are "the first thing
+    people see". The work still starts on the first screen at every size.
+    Moving them below the work is a one-line change if Boss prefers.
 
 - [ ] **38. iPhone person tabs: your work above the dock**
   - Files: `assets/workspace-ui.css`, `index.html` (the zero chips),

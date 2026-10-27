@@ -4623,19 +4623,6 @@ html.dark #panel-overview .ov-ann-aslabel{color:#8fb4dc;}
 #panel-overview .ov-ann-act.del:hover{color:var(--danger);background:var(--danger-light);}
 
 /* stats */
-#panel-overview .ov-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:16px;}
-#panel-overview .ov-stat{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);padding:15px 13px;position:relative;overflow:hidden;transition:var(--dm-trans),transform .15s;}
-#panel-overview .ov-stat:hover{transform:translateY(-2px);}
-#panel-overview .ov-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-#panel-overview .ov-stat-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:9px;}
-#panel-overview .ov-stat-num{font-size:26px;font-weight:800;line-height:1;letter-spacing:-1px;}
-#panel-overview .ov-stat-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;}
-#panel-overview .ov-s-navy::before{background:var(--navy);}#panel-overview .ov-s-navy .ov-stat-ic{background:var(--navy-light);color:var(--navy);}
-#panel-overview .ov-s-gold::before{background:var(--gold);}#panel-overview .ov-s-gold .ov-stat-ic{background:var(--gold-light);color:var(--gold2);}
-#panel-overview .ov-s-red::before{background:var(--danger);}#panel-overview .ov-s-red .ov-stat-ic{background:var(--danger-light);color:var(--danger);}#panel-overview .ov-s-red .ov-stat-num{color:var(--danger);}
-#panel-overview .ov-s-green::before{background:var(--green);}#panel-overview .ov-s-green .ov-stat-ic{background:var(--green-light);color:var(--green);}
-#panel-overview .ov-s-blue::before{background:var(--blue);}#panel-overview .ov-s-blue .ov-stat-ic{background:var(--blue-light);color:var(--blue);}
-html.dark #panel-overview .ov-s-navy .ov-stat-ic{color:#8fb4dc;}
 
 /* availability */
 #panel-overview .ov-st-ok{background:var(--green-light);color:#15803d;}
@@ -4645,7 +4632,7 @@ html.dark #panel-overview .ov-st-ok{color:#5fcf85;}
 
 /* grid */
 #panel-overview .ov-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
-@media(max-width:880px){#panel-overview .ov-grid{grid-template-columns:1fr;}#panel-overview .ov-stats{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:880px){#panel-overview .ov-grid{grid-template-columns:1fr;}}
 @media(max-width:520px){#panel-overview .ov-topbar{flex-direction:column;align-items:stretch;}#panel-overview .ov-search-box{max-width:none;}#panel-overview .ov-res{grid-template-columns:1fr;}}
 
 /* master calendar */
@@ -4792,9 +4779,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function pad2(n){ return String(n).padStart(2,'0'); }
 
   /* ---------- shell ---------- */
-  /* Layout: announcements at the top; today tiles; main column (deadlines, Event Board, calendar); side
-     column (team, countdown, Request Centre, watermark when urgent);
-     and a folded "Resources & more" section for everything used less often.
+  /* Layout: announcements at the top as one line; the greeting and search; Team
+     today; main column (deadlines, Event Board, calendar); side column (Request
+     Centre, countdown, watermark when urgent); and a folded "Resources & more"
+     section for everything used less often.
      ovLayout() keeps cards that other scripts add in these slots. */
   var SHELL=''
    +'<div class="ov-top" id="ov-top">'
@@ -4808,7 +4796,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +          '<button class="btn btn-navy btn-sm" onclick="ovAddAnnouncement()"><i class="ti ti-send"></i> Post</button>'
    +        '</div>'
    +      '</div>'
-   +      '<div class="ov-ann-list" id="ov-ann-list"></div>'
+   +      '<div class="ov-ann-list" id="ov-ann-list" tabindex="-1"></div>'
    +    '</div>'
    +'</div>'
    +'<div class="ov-topbar">'
@@ -4816,7 +4804,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
    +'</div>'
    +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
-   +'<div class="ov-stats" id="ov-stats" role="group" aria-label="Today at a glance"></div>'
+   +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
+   +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
+   +  '<div class="ov-team-list" id="team-list"></div>'
+   +  '<div class="ov-team-note" id="team-note" hidden></div>'
+   +'</section>'
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
    +    '<div class="ov-card" id="ov-dl-card"><div class="ov-card-head"><div class="ov-card-title" id="ov-dl-title" tabindex="-1"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div><div class="ov-dl-filters" id="ov-dl-filters" role="group" aria-label="Filter deadlines"></div></div><div id="ov-deadlines"></div></div>'
@@ -4828,7 +4820,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '</div>'
    +  '</div>'
    +  '<div class="ov-col-side">'
-   +    '<div class="ov-card" id="team-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users"></i> Team today <span class="team-sum" id="team-sum"></span></div><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div><div class="team-list" id="team-list"></div><div class="team-note" id="team-note"></div></div>'
    +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
    +  '</div>'
@@ -4856,7 +4847,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   var LAYOUT={
     top:['ov-ann-card'],
     main:['ov-dl-card','evb-card','ov-cal-card'],
-    side:['team-card','ov-cd-card','ov-rc-card','ov-wm-card'],
+    side:['ov-rc-card','ov-cd-card','ov-wm-card'],
     more:['ov-resx-card','ov-menu-card','ov-act-card','sscal-card']
   };
   /* Moves only the cards that are out of place, so a card someone is typing in
@@ -4981,8 +4972,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     return !!document.getElementById('panel-overview');
   }
 
-  /* ---------- stats ---------- */
-  /* Pure counts for the "today" tiles. items are tasks with status and dueDate;
+  /* ---------- counts ---------- */
+  /* Pure counts for a list of tasks. items are tasks with status and dueDate;
      dayFn(dateStr) returns days until that date (negative when overdue). A task
      due today is never also counted in the next 7 days. */
   function todayCounts(items,dayFn){
@@ -4999,67 +4990,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     });
     return out;
   }
-  function renderStats(){
-    var el=document.getElementById('ov-stats'); if(!el)return;
-    var all=[],doneWk=0,now=new Date(),wkAgo=new Date(now.getTime()-7*86400000);
-    MORDER.forEach(function(w){
-      tOf(w).forEach(function(x){
-        all.push(x);
-        if(x.status==='done'){ var dd=tsToDate(x.doneAt); if(dd&&dd>=wkAgo)doneWk++; }
-      });
-    });
-    var c=todayCounts(all,dU);
-    /* meetings later today from connected calendars (deduped) */
-    var seen={},meetToday=0,nextMeet=null;
-    MORDER.forEach(function(w){
-      var gd=(typeof gcalData!=='undefined')?gcalData[w]:null;
-      if(gd&&gd.list)gd.list.forEach(function(m){
-        if(m.allDay||!m.start)return; var st=new Date(m.start); if(!(st>now))return;
-        if(st.toDateString()!==now.toDateString())return;
-        var k=(m.title||'')+'|'+m.start; if(seen[k])return; seen[k]=1;
-        meetToday++;
-        if(!nextMeet||st<nextMeet.st)nextMeet={st:st,title:m.title||'Meeting'};
-      });
-    });
-    var rc=window.__rcCounts||{}, unread=rc.unread||0, waiting=rc.waiting||0;
-    function many(n,one,more){ return n+' '+(n===1?one:more); }
-    function tile(icon,n,label,cls,sub,subCls,action,aria){
-      /* is-zero is presentational only: a count of 0 reads quietly. */
-      return '<div class="ov-stat '+cls+(n?'':' is-zero')+'" role="button" tabindex="0" data-action="'+action+'" aria-label="'+esc(aria)+'">'
-        +'<div class="ov-stat-top"><div class="ov-stat-ic"><i class="ti '+icon+'"></i></div><div class="ov-stat-main"><div class="ov-stat-num">'+n+'</div><div class="ov-stat-lbl">'+label+'</div></div></div>'
-        +'<div class="ov-stat-subs"><span class="ov-sub'+(subCls?' '+subCls:'')+'">'+sub+'</span></div></div>';
-    }
-    var meetSub=nextMeet
-      ?'Next: '+esc((nextMeet.title||'').slice(0,26))+' &middot; '+nextMeet.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})
-      :'No meetings today';
-    MarcomUI.setHTML(el,
-      tile('ti-alert-triangle',c.overdue,'Overdue','ov-s-red',c.overdue?'Oldest is '+c.oldest+'d overdue':'All clear',c.overdue?'ov-sub-bad':'ov-sub-up','overdue',many(c.overdue,'overdue task','overdue tasks')+'. Show them.')
-      +tile('ti-calendar-due',c.dueToday,'Due today','ov-s-gold',doneWk?many(doneWk,'task','tasks')+' done this week':'Stay on schedule',doneWk?'ov-sub-up':'','today',many(c.dueToday,'task','tasks')+' due today. Show them.')
-      +tile('ti-calendar-week',c.week,'Next 7 days','ov-s-navy',c.open+' open in total','','week',many(c.week,'task','tasks')+' due in the next 7 days. Show them.')
-      +tile('ti-inbox',unread,'New requests','ov-s-blue',waiting?waiting+' waiting for approval':'Nothing waiting',waiting?'ov-sub-bad':'','requests',many(unread,'new request','new requests')+'. Go to the Request Centre.')
-      +tile('ti-calendar-time',meetToday,'Meetings today','ov-s-purple',meetSub,'','meetings',many(meetToday,'meeting','meetings')+' today. Open the calendar.'));
-    if(!el.__statKeys){
-      el.__statKeys=true;
-      var act=function(t){
-        var a=t.getAttribute('data-action');
-        if(a==='overdue'||a==='today'||a==='week'){ if(window.ovDlFilter)window.ovDlFilter(a,true); return; }
-        if(a==='requests'){
-          var rcCard=document.getElementById('ov-rc-card');
-          if(rcCard){ try{ rcCard.scrollIntoView({behavior:motionBehavior(),block:'start'}); }catch(e){ rcCard.scrollIntoView(); } }
-          return;
-        }
-        if(a==='meetings'&&typeof openMeetingCal==='function')openMeetingCal();
-      };
-      el.addEventListener('click',function(e){ var t=e.target.closest('.ov-stat[data-action]'); if(t&&el.contains(t))act(t); });
-      el.addEventListener('keydown',function(e){
-        if(e.key!=='Enter'&&e.key!==' ')return;
-        var t=e.target.closest('.ov-stat[data-action]'); if(!t||!el.contains(t))return;
-        e.preventDefault(); act(t);
-      });
-      window.addEventListener('uxp-rccounts',function(){ try{ renderStats(); }catch(e){} });
-    }
-  }
-
   /* ---------- availability ---------- */
   function statusOf(w){
     var t=tdy();
@@ -5067,50 +4997,83 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(lOf(w).some(function(r){ return r.type==='used'&&r.date===t; }))return {l:'On Leave',c:'ov-st-leave',i:'ti-beach'};
     return {l:'Available',c:'ov-st-ok',i:'ti-circle-check'};
   }
+  /* Team today: one cell per person showing only what needs attention, in the
+     shared status colours. Someone with nothing wrong reads "Clear". Each person
+     counts their own share of a shared task; the team total counts it once. */
+  /* One exception: its icon, then the count and word; a phone shows the icon and
+     count only (or a short word when there is no count). */
+  function teamChip(kind,icon,text,n,short){
+    var tail=n?'<span class="tm-n">'+n+'</span><span class="tm-w">'+esc(text.slice(String(n).length))+'</span>'
+              :'<span class="tm-w">'+esc(text)+'</span><span class="tm-s">'+esc(short||text)+'</span>';
+    return '<span class="tm-x tm-'+kind+'" title="'+esc(text)+'"><i class="ti '+icon+'" aria-hidden="true"></i>'+tail+'</span>';
+  }
+  function scIcon(s,fallback){ try{ return (SC[s]&&SC[s].i)||fallback; }catch(e){ return fallback; } }
+  /* Sick days this year and the lieu balance, kept from the old Leave card. The
+     lieu script converts earned hours into days; fall back to plain days. */
+  function leaveLine(w){
+    var bal;
+    if(typeof window.LIEU_balanceText==='function'){ try{ bal=window.LIEU_balanceText(w); }catch(e){} }
+    if(bal===undefined){
+      var earned=0,used=0;
+      lOf(w).forEach(function(r){ if(r.type==='earned')earned+=(r.days||0); else used+=(r.days||0); });
+      bal=earned-used; bal=(Number.isInteger(bal)?bal:bal.toFixed(1))+' days';
+    }
+    return 'Sick '+sOf(w).length+' \u00b7 Lieu '+bal;
+  }
+  function nextMeeting(now){
+    var seen={},next=null;
+    MORDER.forEach(function(w){
+      var gd=(typeof gcalData!=='undefined')?gcalData[w]:null;
+      if(gd&&gd.list)gd.list.forEach(function(m){
+        if(m.allDay||!m.start)return; var st=new Date(m.start); if(!(st>now))return;
+        if(st.toDateString()!==now.toDateString())return;
+        var k=(m.title||'')+'|'+m.start; if(seen[k])return; seen[k]=1;
+        if(!next||st<next.st)next={st:st,title:m.title||'Meeting'};
+      });
+    });
+    return next;
+  }
   function renderTeam(){
     var el=document.getElementById('team-list'); if(!el)return;
-    var counts=MORDER.map(function(w){ return {w:w,n:tReal(w).filter(isActive).length}; });
-    var max=1,total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },0);
-    counts.forEach(function(c){ max=Math.max(max,c.n); });
-    MarcomUI.setHTML(el,counts.map(function(c){
-      var w=c.w,lvl=c.n<=5?'low':(c.n<=12?'med':'high');
-      var lbl=c.n<=5?'Low':(c.n<=12?'Medium':'High');
-      var pct=Math.max(6,Math.round(c.n/max*100));
-      var leave=statusOf(w),st=typeof window.avlState==='function'?window.avlState(w):null;
-      if(leave.c!=='ov-st-ok'||!st||st.txt==='Calendar not connected'){
-        st={cls:leave.c==='ov-st-ok'?'free':'away',txt:leave.l};
-      }
-      var sick=sOf(w).length,bal;
-      /* The lieu script converts earned hours into days; fall back to plain days. */
-      if(typeof window.LIEU_balanceText==='function'){ try{ bal=window.LIEU_balanceText(w); }catch(e){} }
-      if(bal===undefined){
-        var earned=0,used=0;
-        lOf(w).forEach(function(r){ if(r.type==='earned')earned+=(r.days||0); else used+=(r.days||0); });
-        bal=earned-used; bal=(Number.isInteger(bal)?bal:bal.toFixed(1))+' days';
-      }
-      return '<div class="team-row" onclick="ovGoto(\''+w+'\')" role="button" tabindex="0" data-member="'+esc(w)+'">'
-        +'<div class="team-av"><i class="ti '+esc(iconOf(w))+'"></i></div>'
-        +'<div class="team-who"><div class="team-name">'+esc(nm(w))+'</div><div class="team-role">'+esc(roleOf(w))+'</div></div>'
-        +'<span class="team-st '+esc(st.cls)+'">'+esc(st.txt)+'</span>'
-        +'<div class="team-load"><b>'+c.n+'</b> open <span class="team-lvl '+lvl+'">'+lbl+'</span><div class="team-bar"><div class="team-fill '+lvl+'" style="width:'+pct+'%"></div></div></div>'
-        +'<div class="team-meta">Sick <b>'+sick+'</b> \u00b7 Lieu <b>'+esc(String(bal))+'</b></div></div>';
+    var total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },0);
+    /* Work finished in the last 7 days, kept from the old "Due today" tile. */
+    var doneWk=0,wkAgo=new Date(Date.now()-7*86400000);
+    MORDER.forEach(function(w){ tOf(w).forEach(function(x){ if(x.status!=='done')return; var dd=tsToDate(x.doneAt); if(dd&&dd>=wkAgo)doneWk++; }); });
+    MarcomUI.setHTML(el,MORDER.map(function(w){
+      var mine=tReal(w).filter(isActive),c=todayCounts(mine,dU);
+      var wait=mine.filter(function(t){ return t.status==='waiting'; }).length;
+      var hold=mine.filter(function(t){ return t.status==='on-hold'; }).length;
+      var away=statusOf(w),cal=(away.c==='ov-st-ok'&&typeof window.avlState==='function')?window.avlState(w):null;
+      var bits=[],words=[];
+      function add(kind,icon,text,n,short){ bits.push(teamChip(kind,icon,text,n,short)); words.push(text); }
+      if(away.c!=='ov-st-ok')add('out',away.i,away.c==='ov-st-sick'?'Out sick':'On leave',0,'Out');
+      else if(cal&&cal.cls==='away')add('out','ti-beach','On leave',0,'Out');
+      if(c.overdue)add('over','ti-alert-triangle',c.overdue+' overdue',c.overdue);
+      if(wait)add('wait',scIcon('waiting','ti-clock-pause'),wait+' waiting',wait);
+      if(hold)add('hold',scIcon('on-hold','ti-player-pause'),hold+' on hold',hold);
+      if(cal&&cal.cls==='busy')add('meet','ti-calendar-time',cal.txt,0,'Busy');
+      if(cal&&cal.cls==='soon')add('soon','ti-calendar-time',cal.txt,0,'Soon');
+      if(!bits.length){ bits.push('<span class="tm-x tm-clear"><i class="ti ti-check" aria-hidden="true"></i>Clear</span>'); words.push('clear'); }
+      var name=nm(w),initial=(Array.from(String(name).trim())[0]||'').toLocaleUpperCase(),leave=leaveLine(w);
+      return '<button type="button" class="tm" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+leave.replace(' \u00b7 Lieu',', lieu')+'. Open '+name+'’s tab.')+'">'
+        +'<span class="tm-mono" aria-hidden="true">'+esc(initial)+'</span>'
+        +'<span class="tm-body"><span class="tm-top"><span class="tm-name">'+esc(name)+'</span><span class="tm-open">'+mine.length+' open</span></span>'
+        +'<span class="tm-st">'+bits.join('')+'</span>'
+        +'<span class="tm-lv">'+esc(leave)+'</span></span></button>';
     }).join(''));
-    MarcomUI.setHTML(document.getElementById('team-sum'),'\u00b7 '+total+' open tasks');
+    MarcomUI.setHTML(document.getElementById('team-sum'),' · '+total+' open<span class="ov-team-sum-w"> tasks</span>'
+      +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':''));
+    var nx=nextMeeting(new Date()),nxEl=document.getElementById('ov-team-next');
+    /* "Next meeting: 14:00 Title", which opens Google Calendar as the old
+       Meetings tile did; a phone keeps the time and as much title as fits. */
+    if(nxEl)MarcomUI.setHTML(nxEl,nx?'<button type="button" class="nx-btn" onclick="openMeetingCal()" title="Open Google Calendar">'
+      +'<i class="ti ti-calendar-time" aria-hidden="true"></i> <span class="nx-l">Next meeting: </span>'
+      +nx.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' '+esc((nx.title||'').slice(0,60))+'</button>':'');
     var missing=typeof window.avlMissing==='function'?window.avlMissing():[];
     var note=document.getElementById('team-note');
     if(note){
       MarcomUI.setHTML(note,missing.length?'Calendar not connected: '+esc(missing.join(', '))+'. Each person connects it in Settings.':'');
       note.hidden=!missing.length;
-    }
-    if(!el.__teamKeys){
-      el.__teamKeys=true;
-      el.addEventListener('keydown',function(e){
-        if(e.key!=='Enter'&&e.key!==' ')return;
-        var row=e.target.closest('.team-row');
-        if(!row||!el.contains(row))return;
-        e.preventDefault();
-        window.ovGoto(row.getAttribute('data-member'));
-      });
     }
   }
   window.ovRenderTeam=renderTeam;
@@ -5316,25 +5279,42 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function annAuthorName(){ var c=window.__cur; if(!c)return 'Team'; if(c.role==='admin')return (nm('boss')||'Boss'); if(c.workspace)return (nm(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
   function buildAuthorOptions(){ var s=document.getElementById('ov-ann-asname'); if(s)s.textContent=annAuthorName(); }
   try{ window.addEventListener('authchanged',function(){ try{buildAuthorOptions();}catch(e){} }); }catch(e){}
+  /* The Overview shows the pinned or newest announcement on one line. Its text
+     opens the full list (whole text, author, date, pin and delete), as does
+     "All N" when there are more; "Show fewer" folds it back. */
   var ovAnnAll=false;
-  window.ovAnnShowAll=function(){ ovAnnAll=!ovAnnAll; renderAnnouncements(); };
+  window.ovAnnShowAll=function(){
+    var list=document.getElementById('ov-ann-list');
+    var had=!!(list&&document.activeElement&&list.contains(document.activeElement));
+    ovAnnAll=!ovAnnAll; renderAnnouncements();
+    /* Keyboard focus stays with the announcements instead of falling to the page. */
+    if(had&&list){
+      var to=ovAnnAll?list:list.querySelector('.ov-ann-open');
+      if(to){ try{ to.focus({preventScroll:true}); }catch(e){ try{ to.focus(); }catch(e2){} } }
+    }
+  };
   function renderAnnouncements(){
     try{buildAuthorOptions();}catch(e){}
     var el=document.getElementById('ov-ann-list'); if(!el)return;
     var items=(annItems||[]).slice();
     items.sort(function(a,b){ var pa=a.pinned?1:0,pb=b.pinned?1:0; if(pa!==pb)return pb-pa; return (b.createdAt||'').localeCompare(a.createdAt||''); });
-    if(!items.length){ el.innerHTML='<div class="ov-empty-sm">No announcements yet. Use New to share one with the team.</div>'; return; }
+    var annCard=document.getElementById('ov-ann-card');
+    if(!items.length){ ovAnnAll=false; if(annCard)annCard.classList.remove('ov-ann-all'); el.innerHTML='<div class="ov-empty-sm">No announcements yet. Use New to share one with the team.</div>'; return; }
     var annTotal=items.length;
-    el.innerHTML=(ovAnnAll?items:items.slice(0,3)).map(function(a){
+    if(annCard)annCard.classList.toggle('ov-ann-all',!!ovAnnAll);
+    el.innerHTML=(ovAnnAll?items:items.slice(0,1)).map(function(a){
       var dt=a.createdAt?new Date(a.createdAt):null;
       var when=(dt&&!isNaN(dt.getTime()))?dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+      var text=esc(a.text).replace(/\n/g,'<br>');
       return '<div class="ov-ann-item'+(a.pinned?' pinned':'')+'">'
         +(a.pinned?'<div class="ov-ann-pinbadge"><i class="ti ti-pin-filled"></i> Pinned</div>':'')
-        +'<div class="ov-ann-text">'+esc(a.text).replace(/\n/g,'<br>')+'</div>'
+        +(ovAnnAll?'<div class="ov-ann-text">'+text+'</div>'
+          :'<button type="button" class="ov-ann-text ov-ann-open" onclick="ovAnnShowAll()" aria-expanded="false" title="Show the whole announcement">'+text+'</button>')
         +'<div class="ov-ann-foot"><span class="ov-ann-meta">'+esc(a.author||'Team')+(when?' · '+when:'')+'</span>'
         +'<span class="ov-ann-acts"><button class="ov-ann-act" onclick="ovTogglePin(\''+a.id+'\')" title="Pin / Unpin"><i class="ti ti-pin"></i></button><button class="ov-ann-act del" onclick="ovDeleteAnn(\''+a.id+'\')" title="Delete"><i class="ti ti-trash"></i></button></span></div>'
         +'</div>';
-    }).join('')+(annTotal>3?'<button type="button" class="ov-more-link" onclick="ovAnnShowAll()">'+(ovAnnAll?'Show fewer':'Show all '+annTotal+' announcements')+'</button>':'');
+    }).join('')+(ovAnnAll?'<button type="button" class="ov-more-link" onclick="ovAnnShowAll()" aria-label="'+(annTotal>1?'Show fewer announcements':'Show the announcement on one line')+'">Show fewer</button>'
+      :(annTotal>1?'<button type="button" class="ov-more-link" onclick="ovAnnShowAll()" aria-label="Show all '+annTotal+' announcements">All '+annTotal+'</button>':''));
   }
   function saveAnn(items){ var d=db(); if(d)d.collection('dept_settings').doc('announcements').set({items:items},{merge:true}).catch(function(e){ console.error(e); }); }
 
@@ -5362,7 +5342,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(!document.getElementById('panel-overview'))return;
     var sub=document.getElementById('ov-datesub');
     if(sub){ var n=new Date(),dateLabel=DOW[n.getDay()]+', '+n.getDate()+' '+MON[n.getMonth()]+' '+n.getFullYear(); if(sub.textContent!==dateLabel)sub.textContent=dateLabel; }
-    renderStats(); renderTeam(); calFilters(); renderCal(); renderDeadlines();
+    renderTeam(); calFilters(); renderCal(); renderDeadlines();
     renderCountdown(); renderActivity(); renderWM(); renderRes(); ovLayout();
     try{ if(window.ovDaily)window.ovDaily(); }catch(e){}
   }
@@ -7616,11 +7596,6 @@ html.dark .stat-box.sb-navy .stat-ic{color:#8fb4dc;}
 html.dark .stat-box.stat-accent .stat-ic{color:var(--accent-ondark,#8fb4dc);}
 
 /* Overview KPI cards: bigger numbers, tighter rhythm */
-#panel-overview .ov-stats{gap:12px;}
-#panel-overview .ov-stat{padding:16px 15px;}
-#panel-overview .ov-stat-ic{width:38px;height:38px;border-radius:11px;font-size:19px;margin-bottom:10px;}
-#panel-overview .ov-stat-num{font-size:30px;letter-spacing:-1.2px;}
-#panel-overview .ov-stat-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:6px;}
 
 /* ---- 4) TASK BOARD (KANBAN) — keep columns wide, improve cards ------- */
 .kanban-board{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;padding:2px 0 18px;}
@@ -7661,7 +7636,6 @@ html.dark .stat-box.stat-accent .stat-ic{color:var(--accent-ondark,#8fb4dc);}
   .two-col,#panel-overview .ov-grid{grid-template-columns:1fr;}
 }
 @media(max-width:880px){
-  #panel-overview .ov-stats{grid-template-columns:repeat(3,1fr);}
 }
 @media(max-width:760px){
   .salary-strip{flex-wrap:wrap;gap:10px 16px;justify-content:flex-start;margin:2px 12px 12px;padding:14px 16px;}
@@ -7669,7 +7643,6 @@ html.dark .stat-box.stat-accent .stat-ic{color:var(--accent-ondark,#8fb4dc);}
   .sal-cell{flex:1 1 42%;}
   .sal-cell-prog{flex:1 1 100%;max-width:none;}
   #sal-badge{margin-left:0;padding-left:0;}
-  #panel-overview .ov-stats{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:520px){
   .stats-row{grid-template-columns:1fr;}
@@ -8158,31 +8131,13 @@ html.dark .mb-event{color:#5ad4c6;}
 .side-col .widget:nth-child(4){animation-delay:.14s;}
 .side-col .widget:nth-child(5){animation-delay:.18s;}
 .side-col .widget:nth-child(6){animation-delay:.22s;}
-#panel-overview .ov-stat{animation:fadeUp .4s ease backwards;}
-#panel-overview .ov-stat:nth-child(2){animation-delay:.05s;}
-#panel-overview .ov-stat:nth-child(3){animation-delay:.10s;}
-#panel-overview .ov-stat:nth-child(4){animation-delay:.15s;}
-#panel-overview .ov-stat:nth-child(5){animation-delay:.20s;}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;animation-delay:0s!important;transition-duration:.001s!important;}
 }
 
 /* ---- 7) DASHBOARD: greeting, today line, rich stats ------------------- */
-#panel-overview .ov-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:12px;margin-bottom:16px;}
-#panel-overview .ov-stat{padding:14px 15px;display:flex;flex-direction:column;}
-#panel-overview .ov-stat-top{display:flex;align-items:center;gap:11px;}
-#panel-overview .ov-stat-ic{margin-bottom:0;flex:0 0 auto;}
-#panel-overview .ov-stat-num{font-size:27px;}
-#panel-overview .ov-stat-lbl{margin-top:3px;}
-#panel-overview .ov-stat-subs{display:flex;flex-direction:column;gap:3px;margin-top:10px;}
-#panel-overview .ov-sub{font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center;font-weight:600;line-height:1.35;}
-#panel-overview .ov-sub i{font-size:12.5px;flex:0 0 auto;}
-#panel-overview .ov-sub-up{color:var(--st-done);}
-#panel-overview .ov-sub-bad{color:var(--st-overdue);}
 #panel-overview .ov-bar{height:5px;border-radius:99px;background:var(--gray-light);margin-top:10px;overflow:hidden;}
 #panel-overview .ov-bar-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);}
-#panel-overview .ov-s-purple::before{background:var(--purple);}
-#panel-overview .ov-s-purple .ov-stat-ic{background:var(--purple-light);color:var(--purple);}
 
 /* ---- 8) DASHBOARD: Today's Focus & Quick Actions ---------------------- */
 .ov-qa{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -12944,7 +12899,7 @@ html:not(.dark) .tcp-pop{background:rgba(255,255,255,.96);}
 @keyframes auPop{from{opacity:0;transform:translateY(14px) scale(.985);}to{opacity:1;transform:none;}}
 .tab-panel.active{animation:auRise .22s var(--ease-out);}
 .modal{animation:auPop .2s var(--ease-out);}
-.widget,.side-col .widget,.task-card,.kb-col-body .task-card,.stat-box,#panel-overview .ov-stat{animation:none;}
+.widget,.side-col .widget,.task-card,.kb-col-body .task-card,.stat-box{animation:none;}
 body,.btn,.fpill,.sub-tab,.task-card,.widget,.kb-col,.member-head,.btn-accent,.stat-box{
   transition:background-color .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease),
              box-shadow .28s var(--ease),transform .18s var(--ease);}
@@ -13382,6 +13337,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
       var onDark =tSel==='auto'?'#ffffff':tSel;          /* sits on the dark tint */
       /* html.dark / html:not(.dark) prefixes match the specificity of the aurora
          and refine layers, and the sheet is placed last so it wins on order. */
+      css+=':root{--member-'+w+':'+ink+';}';
       css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
       /* Custom colour decorates inactive labels only. Selection keeps the same
