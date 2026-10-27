@@ -3018,7 +3018,7 @@ function taskCardHTML(task,who){
   let dueLabel='';
   if(task.dueDate){
     if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue '+fmtDate(task.dueDate)+'</span>';
-    else if(soon)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
+    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-calendar" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
     else dueLabel='<span class="mb mb-date"><i class="ti ti-calendar" style="font-size:11px;"></i> '+fmtDate(task.dueDate)+'</span>';
   }
   const linksHtml=(task.links&&task.links.length)?
@@ -4161,7 +4161,10 @@ function openMeetingCal(){window.open('https://calendar.google.com/','_blank');}
 let evTimelineMode=false,evHubCollapsed=false,eventEditId=null,eventModalWho='boss';
 var evPastOpen={};
 function evCountdown(ev){const dt=new Date(ev.date+'T'+(ev.time||'23:59')+':00');return {ms:dt-new Date(),dt:dt};}
-function evUrgency(ms){if(ms<0)return 'grey';const d=ms/86400000;if(d>30)return 'green';if(d>=14)return 'amber';return 'red';}
+/* One countdown scale on every tab (step 41): amber within a week, calm before
+   that, grey once it has passed. An event is never "overdue", so never red.
+   Whole days, as the label counts them, so "7 days" is amber everywhere. */
+function evUrgency(ms){if(ms<0)return 'grey';return Math.floor(ms/86400000)<=7?'amber':'calm';}
 function evCountLabel(ms){
   if(ms<0)return {num:'Done',lbl:'Completed'};
   const days=Math.floor(ms/86400000);
@@ -5200,7 +5203,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(!arr.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No upcoming events.</div>'); return; }
     MarcomUI.setHTML(el,arr.slice(0,8).map(function(it){
       var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':it.d+' days');
-      var urg=it.d<=3?' urg':(it.d<=7?' soon':'');
+      var urg=it.d<=7?' soon':'';
       return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div class="ov-cdn-n"'+((it.e.color&&/^#[0-9a-fA-F]{6}$/.test(it.e.color))?' style="color:'+it.e.color+';"':'')+'>'+it.d+'</div><div class="ov-cdn-u">days</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
         +'<div class="ov-cdn-tag">'+lbl+'</div>'+evDeleteButtonHTML(it.e,'boss')+'</div>';
@@ -10377,7 +10380,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       +row('ti-palette','rgba(232,133,12,.15)','#e8850c','New design',newD)
       +row('ti-camera','rgba(93,64,55,.16)','#7a5548','New photo',newP)
       +row('ti-hourglass-high','var(--purple-light)','var(--st-hold)','Awaiting approval',await_)
-      +row('ti-calendar-week','var(--gold-light)','var(--gold2)','Due this week',dueWk)
+      +row('ti-calendar-week','var(--amber-light)','var(--st-waiting)','Due this week',dueWk)
       +row('ti-alert-triangle','var(--danger-light)','var(--st-overdue)','Overdue',over,1)
       +'<div class="ov-rc-btns"><button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open</button>'
       +'<button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy Link</button></div>';

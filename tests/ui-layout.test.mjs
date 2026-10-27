@@ -747,3 +747,40 @@ test('inside a status column a card has no coloured rail, and a long name may ta
   assert.match(step40,/\.task-card \.task-foot\{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var\(--border\);\}/);
   assert.match(step40,/\.task-card \.task-meta \.mb:not\(\.mb-event\):not\(\.mb-evt\):not\(\.mb-shared\)\{padding:0;background:none;/,'facts read as text; an event keeps its coloured chip');
 });
+
+/* ===== Step 41: gold back to the brand; red only for trouble ===== */
+const step41=stepBlock(41);
+
+test('an event countdown is amber within a week, calm before that, grey when past, and never red',()=>{
+  const context=vm.createContext({});
+  vm.runInContext(slice('function evUrgency(ms){','\nfunction evCountLabel(')+'\nthis.evUrgency=evUrgency;',context);
+  const day=86400000;
+  assert.equal(context.evUrgency(-1),'grey');
+  assert.equal(context.evUrgency(0.5*day),'amber');
+  assert.equal(context.evUrgency(7.6*day),'amber','"7 days" on the label is amber, as on the Overview');
+  assert.equal(context.evUrgency(8.1*day),'calm');
+  assert.equal(context.evUrgency(40*day),'calm');
+  assert.match(source,/var urg=it\.d<=7\?' soon':'';/,'the Overview countdown uses the same week');
+});
+
+test('a task due today or soon reads amber; only overdue work is red',()=>{
+  assert.match(source,/else if\(soon\)dueLabel='<span class="mb mb-soon">/);
+  assert.match(source,/if\(overdue\)dueLabel='<span class="mb mb-overdue">/);
+  assert.match(step41,/\.mb-soon\{background:var\(--amber-light\);color:var\(--st-waiting-ink,#7d5406\);\}/);
+  assert.match(step41,/\.mh-stat-soon i,\.mh-stat-soon b\{color:var\(--st-waiting-ink,#7d5406\);\}/,'"5 Due Soon" is not red');
+  assert.match(step41,/\.fpill \.pill-dot\{background:var\(--st-waiting,#a97614\);\}/);
+  assert.match(source,/row\('ti-calendar-week','var\(--amber-light\)','var\(--st-waiting\)','Due this week',dueWk\)/);
+  const ink=hex(step30,'st-waiting-ink');
+  assert.ok(contrast(ink,'#fdf0d5')>=4.5,'amber ink on its tint: '+contrast(ink,'#fdf0d5').toFixed(2));
+  assert.ok(contrast(ink,'#ffffff')>=4.5);
+});
+
+test('gold stays with the brand: payday, lunch, ADMIN and the calendar\'s events leave it',()=>{
+  assert.match(step41,/\.uxp-sal-mini>span\{background:var\(--navy,#003057\);\}/);
+  assert.match(step41,/#lunch-banner \.lb-ico\{background:var\(--navy,#003057\);\}/);
+  assert.match(step41,/\.auth-banner-role\{background:transparent;color:rgba\(255,255,255,\.9\);box-shadow:inset 0 0 0 1px rgba\(255,255,255,\.45\);\}/,'ADMIN is a quiet outline');
+  assert.match(step41,/#panel-overview \.ov-cd-ev\{background:var\(--teal,#0d9488\);\}/);
+  assert.match(step41,/#panel-overview \.ov-cdn\.soon \.ov-cdn-tag\{background:var\(--amber-light\);color:var\(--st-waiting-ink,#7d5406\);\}/);
+  assert.match(step41,/\.evc-cd\.u-calm\{background:var\(--navy-light\);color:var\(--navy,#003057\);\}/);
+  assert.doesNotMatch(step41,/var\(--gold|#f0b323|#e6a417/i,'the step itself adds no gold');
+});

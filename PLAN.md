@@ -963,7 +963,7 @@ colour stays as it is.
     The icon buttons gained spoken names ("Duplicate this task" and so on).
     Contrast: zero failures, light and dark, 1440 and 390. Tests: 303/303.
 
-- [ ] **41. Gold back to the brand; red only for trouble**
+- [x] **41. Gold back to the brand; red only for trouble**
   - Files: `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
   - The direction keeps gold for the brand mark and one primary action; today
     it also colours the payday bar, the lunch dot, a countdown pill, the "due
@@ -975,6 +975,23 @@ colour stays as it is.
     used for "due soon".
   - Test: a rendered scan lists where gold appears (expected: the logo, the
     header rule and one main action); contrast stays AA.
+  - Done (27 Oct): the payday bar and the lunch dot are navy, ADMIN is a
+    quiet white outline on the header, the Request Centre's "Due this week"
+    and the master calendar's event dots left gold (amber and the event teal),
+    and countdowns use one scale on every tab: amber within a week, calm navy
+    before that, grey once past (events are never overdue, so never red).
+    "School Open Day, 7 days" now reads amber on both the Overview and the
+    person tabs, counted in whole days as its label is. A task due today or
+    soon reads amber, as do "Due Soon" counts and the filter dot; only overdue
+    work is red. A rendered scan of all five tabs in light mode now finds gold
+    only on the logo, the Overview tab's own colour in the tab bar and the pin
+    of Pinned Notes (pinned things kept their gold in step 32); the header
+    rule is drawn by a pseudo-element the scan does not read. Red remains for
+    overdue work, the notification count, the Canceled status, sick leave
+    and high priority. Dark mode keeps its amber status colour and Dew's gold
+    (decision 4). Contrast: zero failures, light and dark. Tests: 306/306.
+    Small markup touches were needed in `index.html` (the countdown scale,
+    the due-soon class and one Request Centre colour).
 
 - [ ] **42. Quiet details**
   - Files: `assets/workspace-ui.css`, `index.html` where a label is drawn,

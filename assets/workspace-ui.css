@@ -1157,3 +1157,33 @@ html.dark .tm-meet{color:#93c5fd;}
 /* An older layer forces a 5px rail with !important, so this answers in kind. */
 .kb-col .task-card{border-left-width:1px!important;border-left-color:var(--border)!important;}
 html.dark .kb-col .task-card{border-left-color:rgba(255,255,255,.10)!important;}
+
+/* Step 41: gold back to the brand; red only for trouble */
+/* Gold is the brand mark, the header rule and the Overview tab's own colour.
+   Everything else that was gold returns to navy or to the status scale. */
+.uxp-sal-mini>span{background:var(--navy,#003057);}
+html.dark .uxp-sal-mini>span{background:#8fb4dc;}
+#lunch-banner .lb-ico{background:var(--navy,#003057);}
+html.dark #lunch-banner .lb-ico{background:#8fb4dc;}
+/* ADMIN is a quiet outline on the header, not a gold pill. */
+.auth-banner-role{background:transparent;color:rgba(255,255,255,.9);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);}
+/* An event on the master calendar wears the event teal, as event chips do. */
+#panel-overview .ov-cd-ev{background:var(--teal,#0d9488);}
+/* Countdowns use one scale on every tab: amber within a week, calm before that. */
+#panel-overview .ov-cdn.soon .ov-cdn-tag{background:var(--amber-light);color:var(--st-waiting-ink,#7d5406);}
+html.dark #panel-overview .ov-cdn.soon .ov-cdn-tag{color:#fcd34d!important;}
+.evu-calm{color:var(--navy,#003057);}
+.evt-calm{border-top-color:var(--border-strong,#d6dbe4);}
+.evc-cd.u-calm{background:var(--navy-light);color:var(--navy,#003057);}
+html.dark .evu-calm,html.dark .evc-cd.u-calm{color:#8fb4dc;}
+html:not(.dark) .evu-amber{color:var(--st-waiting-ink,#7d5406);}
+html:not(.dark) .evt-amber{border-top-color:var(--st-waiting,#a97614);}
+html.dark .evu-amber{color:#fcd34d;}
+/* Due soon or today is close, not trouble: amber. Only overdue is red. */
+.mb-soon{background:var(--amber-light);color:var(--st-waiting-ink,#7d5406);}
+html.dark .mb-soon{color:#fcd34d;}
+.mh-stat-soon i,.mh-stat-soon b{color:var(--st-waiting-ink,#7d5406);}
+html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
+.fpill .pill-dot{background:var(--st-waiting,#a97614);}
+/* A due date that is not close is just a date. */
+.task-card .task-meta .mb-date{color:var(--muted);}
