@@ -5021,7 +5021,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       lOf(w).forEach(function(r){ if(r.type==='earned')earned+=(r.days||0); else used+=(r.days||0); });
       bal=earned-used; bal=(Number.isInteger(bal)?bal:bal.toFixed(1))+' days';
     }
-    return 'Sick '+sOf(w).length+' \u00b7 Lieu '+bal;
+    /* Only what is above zero is written; a person with neither has no line. */
+    var parts=[],sick=sOf(w).length;
+    if(sick)parts.push('Sick '+sick);
+    if(parseFloat(bal))parts.push('Lieu '+bal);
+    return parts.join(' \u00b7 ');
   }
   function nextMeeting(now){
     var seen={},next=null;
@@ -5058,11 +5062,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       if(cal&&cal.cls==='soon')add('soon','ti-calendar-time',cal.txt,0,'Soon');
       if(!bits.length){ bits.push('<span class="tm-x tm-clear"><i class="ti ti-check" aria-hidden="true"></i>Clear</span>'); words.push('clear'); }
       var name=nm(w),initial=(Array.from(String(name).trim())[0]||'').toLocaleUpperCase(),leave=leaveLine(w);
-      return '<button type="button" class="tm" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+leave.replace(' \u00b7 Lieu',', lieu')+'. Open '+name+'’s tab.')+'">'
+      return '<button type="button" class="tm" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+(leave?leave.replace(' \u00b7 Lieu',', lieu')+'. ':'')+'Open '+name+'’s tab.')+'">'
         +'<span class="tm-mono" aria-hidden="true">'+esc(initial)+'</span>'
         +'<span class="tm-body"><span class="tm-top"><span class="tm-name">'+esc(name)+'</span><span class="tm-open">'+mine.length+' open</span></span>'
         +'<span class="tm-st">'+bits.join('')+'</span>'
-        +'<span class="tm-lv">'+esc(leave)+'</span></span></button>';
+        +(leave?'<span class="tm-lv">'+esc(leave)+'</span>':'')+'</span></button>';
     }).join(''));
     MarcomUI.setHTML(document.getElementById('team-sum'),' · '+total+' open<span class="ov-team-sum-w"> tasks</span>'
       +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':''));
@@ -5138,7 +5142,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     dd.ev.forEach(function(o){ rows.push(row('ov-cd-ev',o.e.name||'Event','Team event'+(o.e.time?' · '+o.e.time:''))); });
     dd.sick.forEach(function(o){ rows.push(row('ov-cd-sick',nm(o.w)+' on sick leave','')); });
     dd.leave.forEach(function(o){ rows.push(row('ov-cd-leave',nm(o.w)+' on leave',o.r.event||'')); });
-    MarcomUI.setHTML(el,'<div class="ov-agenda-eyebrow">DAY AGENDA</div><div class="ov-cal-detail-title">'+fdt(ovSel)+'</div><div class="ov-agenda-count">'+rows.length+' scheduled item'+(rows.length===1?'':'s')+'</div><div class="ov-agenda-items">'+(rows.length?rows.join(''):'<div class="ov-agenda-empty"><i class="ti ti-calendar-check" aria-hidden="true"></i><strong>A clear day</strong><span>No deadlines, events or leave for this selection. Choose another date to see what’s planned.</span></div>')+'</div>');
+    MarcomUI.setHTML(el,'<div class="ov-cal-detail-title">'+fdt(ovSel)+'</div><div class="ov-agenda-count">'+rows.length+' scheduled item'+(rows.length===1?'':'s')+'</div><div class="ov-agenda-items">'+(rows.length?rows.join(''):'<div class="ov-agenda-empty"><i class="ti ti-calendar-check" aria-hidden="true"></i><strong>A clear day</strong><span>No deadlines, events or leave for this selection. Choose another date to see what’s planned.</span></div>')+'</div>');
   }
 
   /* ---------- deadlines ---------- */
@@ -11822,7 +11826,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var c=document.getElementById('evb-card');
     if(!c){
       c=document.createElement('div'); c.className='ov-card'; c.id='evb-card';
-      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users-group"></i> Event Board <span style="font-weight:600;color:var(--muted);font-size:11.5px;">· shared by the whole team</span></div>'
+      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users-group"></i> Event Board</div>'
         +'<select class="evb-sel" id="evb-filter" aria-label="Filter by event" onchange="evbFilter(this.value)" style="margin-left:auto;"></select>'
         +'<label class="evb-done-toggle"><input type="checkbox" id="evb-show-done"'+(evbShowDone?' checked':'')+'> Show completed (<span id="evb-done-count">0</span>)</label></div>'
         +'<div class="evb-groups" id="evb-body"></div>';

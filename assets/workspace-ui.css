@@ -109,7 +109,6 @@ html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
   margin:0;padding:20px;border:1px solid var(--border);border-radius:16px;
   background:var(--gray-light);min-width:0;
 }
-#panel-overview .ov-agenda-eyebrow{font-size:10px;letter-spacing:1px;font-weight:700;color:var(--muted);margin-bottom:8px;}
 #panel-overview .ov-cal-detail-title{font-size:18px;letter-spacing:0;text-transform:none;color:var(--text);margin-bottom:4px;}
 #panel-overview .ov-agenda-count{font-size:12px;color:var(--muted);margin-bottom:16px;}
 #panel-overview .ov-agenda-items{max-height:260px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
@@ -647,7 +646,7 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #evb-card .ov-card-title>span{flex-basis:100%;}
   #evb-card>.ov-card-head>.uxp-col-btn{order:1;}
   #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
-  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.ov-agenda-eyebrow,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
+  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
 }
 
 /* Step 23: dark mode readability */
@@ -1098,13 +1097,15 @@ html.dark .tm-meet{color:#93c5fd;}
   /* Dates and counts never break in the middle. */
   .uxp-sal-toggle{flex-wrap:wrap;white-space:nowrap;row-gap:0;}
   .mh-stat,.myday-chip{white-space:nowrap;}
-  /* The sub-tabs stay one line and scroll; Widgets stays at the end in view. */
+  /* The sub-tabs stay one line and scroll, Widgets last. A fade rides the
+     right edge while more tabs wait beyond it, and the last tab peeks out
+     under it, so the row reads as one that scrolls; nothing covers a tab. */
   .tab-panel .sub-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .tab-panel .sub-nav::-webkit-scrollbar{display:none;}
-  .tab-panel .sub-nav .sub-tab{flex:0 0 auto;}
-  .tab-panel .sub-nav .uxp-drawer-btn{position:sticky;right:-5px;z-index:1;flex:0 0 auto;margin-right:-5px;padding-left:4px;
-    border-radius:0 10px 10px 0;background:#F5F7FA;box-shadow:-10px 0 10px -6px #F5F7FA;}
-  html.dark .tab-panel .sub-nav .uxp-drawer-btn{background:#0f1520;box-shadow:-10px 0 10px -6px #0f1520;}
+  .tab-panel .sub-nav .sub-tab,.tab-panel .sub-nav .uxp-drawer-btn{flex:0 0 auto;}
+  .tab-panel .sub-nav::after{content:'';position:sticky;right:-5px;flex:0 0 32px;align-self:stretch;margin:-5px -5px -5px 0;
+    pointer-events:none;background:linear-gradient(90deg,rgba(245,247,250,0),#F5F7FA 75%);}
+  html.dark .tab-panel .sub-nav::after{background:linear-gradient(90deg,rgba(15,21,32,0),#0f1520 75%);}
 }
 /* The first iPhone SE and other 320px screens: the counters and today's chips
    drop their icons and some padding so each stays on one line. */
@@ -1222,3 +1223,30 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
   .tab-nav .tab-btn{min-height:36px;padding-top:6px;padding-bottom:6px;}
   html{scroll-padding-top:110px;}
 }
+
+/* Step 43: the final check's fixes */
+/* iPhone: Team Chat opens as a sheet with even margins, below the header. */
+@media(max-width:600px){
+  .chat-panel{left:12px;right:12px;width:auto;max-width:none;top:var(--tc-top,118px);height:auto;max-height:none;}
+  /* The two round buttons match, one above the other. */
+  .chat-fab{width:52px;height:52px;font-size:21px;}
+  /* Task card menus are full touch targets. */
+  .task-card .tcard-sel,.task-card .tcard-move{min-height:40px;}
+}
+/* An announcement's edit, pin and delete read at 3:1 at least. */
+#panel-overview .ov-ann-act{color:var(--muted);}
+/* An empty search box has nothing to clear. */
+#panel-overview .ov-search-input:placeholder-shown~.ov-search-clear{visibility:hidden;}
+/* One event chip: a task that belongs to an event wears the event teal, never
+   the violet of On hold. */
+.mb-evt{background:var(--teal-light);color:#0b6e69;}
+html.dark .mb-evt{background:rgba(13,148,136,.2);color:#5ad4c6;}
+/* The header casts its shadow only once something scrolls under it. */
+body:not(.hdr-scrolled) .app-header{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;}
+/* Opened details show the whole description. */
+.tc-details.open .task-desc{display:block;-webkit-line-clamp:unset;line-clamp:unset;max-height:none;overflow:visible;}
+/* The person header no longer carries a clock; the colour button stays. */
+.member-head .member-head-extra .mh-dt{display:none;}
+.member-head .member-head-extra{border-left:0;padding-left:0;}
+/* A person with no sick days and no lieu balance has no leave line. */
+.tm-lv:empty{display:none;}

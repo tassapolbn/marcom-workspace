@@ -1018,9 +1018,71 @@ colour stays as it is.
     there, ADMIN and sign out stay. Screenshots at 1440, 810, 390 and on its
     side in `.oil-ui`. Contrast unchanged, zero failures. Tests: 310/310.
 
-- [ ] **43. Final check and a second independent review**
+- [x] **43. Final check and a second independent review**
   - The step 35 routine: suite, contrast in both themes, iPhone widths,
     evidence, then one scored independent review.
+  - Done (27 Oct): suite 312/312; zero contrast failures on all five tabs,
+    light and dark, at 1440 and 390; the dock passes at 320, 375, 390, 393,
+    430 and 440 wide in both themes with a home-bar inset (five slots of at
+    least 56x52, 24px clear of the bottom, no sideways scroll, nothing fixed
+    over it); arrow keys, Reduce Motion, resizing across the phone width and
+    the two-tab member dock passed three runs in a row. Evidence in
+    `.oil-ui/workspace-redesign/evidence43/`, with the icons showing.
+  - Second independent review, scored: **7/10** (round 1 was 6/10). It keeps
+    the iPhone monogram dock, the sliding pill and Team today, and asks for no
+    block to be redone. Fixed at once, as defects: on iPhone the sticky
+    Widgets button covered "Notes" and nothing showed the sub-tabs scroll (it
+    is now the last item, and a fade at the right edge with the next tab
+    peeking out signposts the row); Team Chat on iPhone opened 2px from the
+    left edge and over the header (now an even sheet below the header); the
+    two round buttons differed in size; task card menus were 32px tall on
+    iPhone (now 40); announcement edit, pin and delete read at 1.55:1 (now
+    above 3:1); an empty search showed its clear button; a task in an event
+    wore violet, the On hold colour (now the event teal); the header cast a
+    shadow before anything scrolled under it; opened Details still cut the
+    description short. Deleted as the review suggested: "Sick 0 · Lieu 0
+    Hours" (only non-zero values are written now), "· shared by the whole
+    team", "DAY AGENDA" and the clock in each person header. Its larger
+    proposals change decisions or how things work, so they are follow-up
+    plan 5 below, for Boss to approve.
+
+# Follow-up plan 5 (27 Oct 2026): what the second review found, for Boss to approve
+
+Same scope: UX and UI only, light mode first. Nothing here is built until Boss
+approves. Each item names what the review measured.
+
+1. **The iPhone first screen spends its height on chrome.** At Safari's real
+   size (390x664) the header, payday line, announcement and search come
+   before the work: the first task row starts at about y=500 and two rows fit
+   above the dock. Proposal: a header that shrinks to one compact row after a
+   scroll; the payday line inside the header's menu on iPhone; one search on
+   computers (the header "Search ⌘K" and the Overview search box overlap,
+   or are labelled for what each finds). Announcements stay first.
+2. **Person colours read like status colours.** O's orange-red sits next to
+   overdue red, Eye's green next to Done, Dew's brown next to Waiting, and
+   person colour fills the largest shapes (the Add Task bar, tinted person
+   headers, the Event Hub). Proposal: person colour marks people at small
+   sizes (monograms, names, the tab label) and never fills large areas; the
+   Add Task bar and the headers turn neutral. The tab colours themselves stay.
+3. **Task cards show every control at rest.** Proposal: at rest a card shows
+   the task, its due state and a few quiet details in a fixed order; the
+   action row appears on hover or keyboard focus on computers and on a tap of
+   the card's "more" on iPhone; inside a status column the status menu folds
+   into that row. Nothing is removed.
+4. **The Overview is eight equal cards** and the right column ends early,
+   leaving an empty strip. Proposal: the trouble list as the one heavy block;
+   Request Centre as one line when everything is zero; Event Countdown folded
+   into the Event Board, which already lists the same event.
+5. **Team today gives every count equal weight.** Proposal: zeros fade, the
+   owner of each deadline row shows as their monogram, so "who needs Boss
+   today" reads in three seconds.
+6. **Tab motion.** Round 1 asked for a softer spring; round 2 finds it too
+   subtle to feel playful. Proposal: a visible overshoot and settle on the
+   pill, with Reduce Motion unchanged. A taste call for Boss.
+7. **The department line on iPhone** has been hidden since before the
+   redesign; showing it adds about 14px to the header. Boss's call.
+
+Next review: shoot the iPhone evidence at 390x664 as well as 390x844.
 
 ## Decisions needed from Boss (plan 4)
 

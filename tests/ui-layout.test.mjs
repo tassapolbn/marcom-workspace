@@ -620,8 +620,11 @@ test('on a phone each today row puts its date under the name, clear of the round
 test('the sub-tabs stay on one line and scroll, and Widgets never looks like a selected tab',()=>{
   const phone=media(step38,'max-width:600px');
   assert.match(phone,/\.tab-panel \.sub-nav\{flex-wrap:nowrap;overflow-x:auto;/);
-  assert.match(phone,/\.tab-panel \.sub-nav \.sub-tab\{flex:0 0 auto;\}/);
-  assert.match(phone,/\.tab-panel \.sub-nav \.uxp-drawer-btn\{position:sticky;right:-5px;/,'Widgets stays in view at the end of the row');
+  assert.match(phone,/\.tab-panel \.sub-nav \.sub-tab,\.tab-panel \.sub-nav \.uxp-drawer-btn\{flex:0 0 auto;\}/);
+  /* Step 43: nothing sticks over a tab; a fade at the right edge says the row scrolls. */
+  assert.doesNotMatch(phone,/uxp-drawer-btn\{[^}]*position:sticky/,'Widgets never covers Notes or Requests');
+  assert.match(phone,/\.tab-panel \.sub-nav::after\{content:'';position:sticky;right:-5px;flex:0 0 32px;[^}]*pointer-events:none;/,
+    'the edge fade never takes a tap');
   const tablet=media(step38,'max-width:980px');
   const btn=rule(tablet,'.sub-nav .uxp-drawer-btn');
   assert.match(btn,/order:99/,'it ends the row');
@@ -814,4 +817,25 @@ test('a phone on its side gets a two-row header instead of three',()=>{
   assert.match(land,/\.app-header \.app-tagline\{display:none;\}/);
   assert.match(land,/\.app-header \.auth-banner-em\{display:none;\}/,'the signed-in name gives way; ADMIN and sign out stay');
   assert.match(land,/\.tab-nav \.tab-btn\{min-height:36px;/);
+});
+
+/* ===== Step 43: the final check's fixes ===== */
+const step43=stepBlock(43);
+
+test('on iPhone Team Chat opens as an even sheet below the header, and the two round buttons match',()=>{
+  const phone=media(step43,'max-width:600px');
+  assert.match(phone,/\.chat-panel\{left:12px;right:12px;width:auto;max-width:none;top:var\(--tc-top,118px\);/);
+  assert.match(phone,/\.chat-fab\{width:52px;height:52px;/,'the same size as the "+" above it');
+  assert.match(phone,/\.task-card \.tcard-sel,\.task-card \.tcard-move\{min-height:40px;\}/);
+});
+
+test('small fixes from the second review',()=>{
+  assert.match(step43,/#panel-overview \.ov-ann-act\{color:var\(--muted\);\}/,'announcement actions are visible');
+  assert.match(step43,/\.ov-search-input:placeholder-shown~\.ov-search-clear\{visibility:hidden;\}/);
+  assert.match(step43,/\.mb-evt\{background:var\(--teal-light\);color:#0b6e69;\}/,'one event chip colour');
+  assert.ok(contrast('#0b6e69','#d6f5f0')>=4.5);
+  assert.match(step43,/body:not\(\.hdr-scrolled\) \.app-header\{box-shadow:inset 0 1px 0 rgba\(255,255,255,\.06\)!important;\}/);
+  assert.match(step43,/\.tc-details\.open \.task-desc\{display:block;-webkit-line-clamp:unset;/,'opened details show the whole text');
+  assert.match(step43,/\.member-head \.member-head-extra \.mh-dt\{display:none;\}/);
+  assert.doesNotMatch(source,/DAY AGENDA|shared by the whole team/);
 });

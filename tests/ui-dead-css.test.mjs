@@ -21,7 +21,9 @@ const removed=[
   'team-card','team-row','team-av','team-who','team-name','team-role','team-st','team-load','team-lvl',
   'team-bar','team-fill','team-meta',
   // Step 40: the status chip and the "close to deadline" dot on task cards.
-  'tcard-sicon','dl-dot'
+  'tcard-sicon','dl-dot',
+  // Step 43: the "DAY AGENDA" label above the selected day.
+  'ov-agenda-eyebrow'
 ];
 // These names still occur in markup or JavaScript, including legacy renderers.
 const retained=[

@@ -116,11 +116,12 @@ test('names are escaped, each cell opens that person, and sick days and the lieu
   assert.match(c[0],/<span class="tm-mono" aria-hidden="true">&lt;<\/span>/,'the monogram is the first letter of the shown name');
   assert.match(c[0],/<span class="tm-lv">Sick 2 · Lieu 1 Day 4 Hours<\/span>/);
   assert.match(label(c[0]),/Sick 2, lieu 1 Day 4 Hours\. Open &lt;b&gt;Boss&lt;\/b&gt;’s tab\.$/);
-  assert.match(c[1],/<span class="tm-lv">Sick 0 · Lieu 0 Hours<\/span>/);
+  assert.doesNotMatch(c[1],/tm-lv/,'no sick days and no lieu balance: no leave line');
+  assert.doesNotMatch(label(c[1]),/Sick|lieu/);
   /* Without the hours script the balance falls back to days. */
   nodes=team({lieu:{dew:[{type:'earned',days:2},{type:'used',days:0.5,date:'2026-01-05'}]}});
   c=cells(nodes['team-list'].innerHTML);
-  assert.match(c[1],/<span class="tm-lv">Sick 0 · Lieu 1\.5 days<\/span>/);
+  assert.match(c[1],/<span class="tm-lv">Lieu 1\.5 days<\/span>/,'only what is above zero is written');
 });
 
 test('the next meeting today shows in the heading once, even when two people share it',()=>{
