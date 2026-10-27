@@ -402,3 +402,106 @@ test('everything that floats lifts by the same amount, and rests where it always
   for(const [sel,at] of [['.chat-fab',22],['.quickadd-fab',88],['.chat-panel',22],['#uxp-toasts',22]])
     assert.equal(px(sel,'bottom'),at,sel+' rests at '+at+'px with no dock');
 });
+
+/* ===== Step 36: opening the app shows one calm screen ===== */
+test('the start-up cover is the first thing drawn, styled from the head', () => {
+  const head = source.slice(0, source.indexOf('</head>'));
+  assert.match(head, /<style id="boot-cover-style">[\s\S]*\.boot-cover\{position:fixed;inset:0;z-index:10000;/, 'its styles apply from the first paint');
+  assert.match(head, /\.boot-cover\.done\{opacity:0;visibility:hidden;pointer-events:none;\}/);
+  assert.match(head, /@media\(prefers-reduced-motion:reduce\)\{\.boot-cover\{transition:none;\}/);
+  const body = source.slice(source.indexOf('<body>'));
+  assert.ok(body.startsWith('<body>\n<div class="boot-cover" id="boot-cover" role="status">'), 'the cover is the first element in the page');
+  assert.ok(body.indexOf('boot-cover') < body.indexOf('class="app-header"'));
+  assert.match(body, /Opening your workspace/);
+  assert.match(body, /\(request\|rc\)\(=\|&\|\$\)\/\.test\(location\.search\+location\.hash\)\)\{var c=document\.getElementById\('boot-cover'\);if\(c\)c\.parentNode\.removeChild\(c\);/,
+    'the staff Request Centre page never shows it');
+});
+
+/* The real sign-in script, run against a fake page, a fake Firebase and fake timers. */
+function signInRun({ sdk = true, rcMode = false } = {}) {
+  const registry = [], timers = [];
+  let authCallback = null;
+  function element(tag) {
+    const classes = new Set(), attrs = {};
+    const e = {
+      tag, id: '', className: '', innerHTML: '', parentNode: null, children: [],
+      classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c) },
+      setAttribute(k, v) { attrs[k] = String(v); }, getAttribute(k) { return attrs[k]; },
+      appendChild(c) { c.parentNode = e; e.children.push(c); return c; },
+      insertBefore(c) { return e.appendChild(c); },
+      removeChild(c) { e.children = e.children.filter(x => x !== c); c.parentNode = null; return c; },
+      querySelector() { return null; },
+    };
+    registry.push(e);
+    return e;
+  }
+  const body = element('body');
+  const cover = element('div'); cover.id = 'boot-cover'; body.appendChild(cover);
+  const document = {
+    body, readyState: 'complete',
+    createElement: element,
+    getElementById: id => registry.find(e => e.id === id && (e === body || e.parentNode)) || null,
+    querySelector: () => null, querySelectorAll: () => [], addEventListener() {},
+  };
+  const firebase = !sdk ? undefined : {
+    auth: () => ({ onAuthStateChanged(fn) { authCallback = fn; }, setPersistence: () => Promise.resolve(), signOut: () => Promise.resolve() }),
+    firestore: () => ({ collection: () => ({ doc: () => ({ get: () => Promise.resolve({ exists: true, data: () => ({ role: 'admin' }) }) }) }) }),
+  };
+  const sandbox = {
+    document, firebase, console: { warn() {}, error() {} },
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {},
+    Event: function (type) { this.type = type; }, dispatchEvent() {}, addEventListener() {},
+    __rcMode: rcMode,
+  };
+  sandbox.window = sandbox;
+  const start = source.indexOf('(function(){\n  if(window.__authInit)return;');
+  const endMark = "  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();\n})();";
+  const end = source.indexOf(endMark, start);
+  assert.ok(start > 0 && end > start, 'the sign-in script is in the page');
+  vm.runInContext(source.slice(start, end + endMark.length), vm.createContext(sandbox));
+  const gate = () => document.getElementById('auth-gate');
+  return {
+    sandbox, body, cover,
+    coverUp: () => !cover.classList.contains('done'),
+    gateShown: () => !!(gate() && gate().classList.contains('show')),
+    signIn: user => authCallback(user),
+    runTimersUpTo: ms => timers.filter(t => t.ms <= ms).forEach(t => t.fn()),
+  };
+}
+
+test('a signed-in person goes from the cover straight to the workspace, never past the sign-in form', async () => {
+  const run = signInRun();
+  assert.ok(run.coverUp(), 'the cover stays up while the session is checked');
+  assert.equal(run.gateShown(), false, 'and the sign-in form is not shown behind it');
+  assert.ok(run.body.classList.contains('auth-locked'), 'the page cannot scroll meanwhile');
+  run.signIn({ email: 'boss@example.test' });
+  assert.ok(run.coverUp(), 'still covered while the access list is read');
+  await new Promise(r => setImmediate(r));
+  assert.equal(run.coverUp(), false, 'the workspace is set, so the cover lifts');
+  assert.equal(run.gateShown(), false);
+  assert.equal(run.body.classList.contains('auth-locked'), false);
+  assert.equal(run.sandbox.__cur.email, 'boss@example.test');
+});
+
+test('a signed-out person gets the sign-in form; a stalled check falls back to it after 8 seconds', () => {
+  const out = signInRun();
+  out.signIn(null);
+  assert.ok(out.gateShown());
+  assert.equal(out.coverUp(), false, 'the form replaces the cover');
+
+  const stalled = signInRun();
+  stalled.runTimersUpTo(7999);
+  assert.ok(stalled.coverUp(), 'nothing gives way before 8 seconds');
+  stalled.runTimersUpTo(8000);
+  assert.ok(stalled.gateShown(), 'after 8 seconds the form appears, as it used to at once');
+  assert.equal(stalled.coverUp(), false, 'so the cover can never trap anyone');
+});
+
+test('without the sign-in service, or on the Request Centre page, the cover lifts at once', () => {
+  const noSdk = signInRun({ sdk: false });
+  assert.equal(noSdk.coverUp(), false);
+  const rc = signInRun({ rcMode: true });
+  assert.equal(rc.coverUp(), false);
+  rc.signIn(null);
+  assert.equal(rc.gateShown(), false, 'the Request Centre never shows the sign-in form');
+});

@@ -81,7 +81,9 @@ function fixtureBootstrap() {
     action: 'deadline', actionLabel: 'Needs to be done by', sentence: 'Needs to be done by 20 Sept 2026',
     value: '2026-09-20', note: 'Before the parent evening, please.', from: 'Khun Miki',
     owners: ['boss'], source: 'team-board', createdAtIso: new Date().toISOString(), createdAt: Timestamp.now() });
-  docs.set('acl/preview@example.test', { role: 'admin', workspace: null, disabled: false });
+  /* ?role=designer|media|junior signs in as that member instead of the admin. */
+  const previewRole = ['designer', 'media', 'junior'].includes(new URLSearchParams(location.search).get('role')) ? new URLSearchParams(location.search).get('role') : 'admin';
+  docs.set('acl/preview@example.test', { role: previewRole, workspace: null, disabled: false });
   docs.set('dept_settings/team', { names: { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' } });
   docs.set('boss_settings/theme', { color: '#4B8FD0', textColor: 'auto' });
   docs.set('school_events/open-day', { title: 'School Open Day', name: 'School Open Day', date: date(7), category: 'School Event', color: '#4B8FD0', notes: 'Synthetic visual QA event' });
@@ -136,7 +138,11 @@ function fixtureBootstrap() {
   firestore.Timestamp = Timestamp;
   firestore.FieldValue = { serverTimestamp: () => Timestamp.now(), delete: () => null, increment: value => value, arrayUnion: (...values) => values, arrayRemove: () => [] };
   const user = { uid: 'local-preview', email: 'preview@example.test', displayName: 'Preview', getIdToken: async () => 'local-preview' };
-  const authState = { currentUser: user, onAuthStateChanged(fn) { const id = setTimeout(() => fn(user), 0); return () => clearTimeout(id); }, setPersistence: async () => {}, signOut: async () => {}, signInWithPopup: async () => ({ user }), signInWithEmailAndPassword: async () => ({ user }) };
+  /* ?auth=out starts signed out; ?authDelay=<ms> slows the session check. */
+  const fixtureParams = new URLSearchParams(location.search);
+  const authUser = fixtureParams.get('auth') === 'out' ? null : user;
+  const authDelay = Math.max(0, Number(fixtureParams.get('authDelay')) || 0);
+  const authState = { currentUser: authUser, onAuthStateChanged(fn) { const id = setTimeout(() => fn(authUser), authDelay); return () => clearTimeout(id); }, setPersistence: async () => {}, signOut: async () => {}, signInWithPopup: async () => ({ user }), signInWithEmailAndPassword: async () => ({ user }) };
   const auth = () => authState;
   auth.Auth = { Persistence: { LOCAL: 'LOCAL', SESSION: 'SESSION' } };
   auth.GoogleAuthProvider = class { setCustomParameters() {} };
@@ -151,8 +157,9 @@ function fixtureBootstrap() {
   if (params.get('theme') === 'light') localStorage.setItem('bb_dark', '0');
   window.addEventListener('DOMContentLoaded', () => setTimeout(() => {
     if (params.get('theme') === 'dark') document.documentElement.classList.add('dark');
-    const tab = params.get('tab') || 'boss';
-    if (typeof window.switchTab === 'function') window.switchTab(tab);
+    /* Only an explicit ?tab= moves the preview; otherwise the app opens where it really would. */
+    const tab = params.get('tab');
+    if (tab && typeof window.switchTab === 'function') window.switchTab(tab);
     window.dispatchEvent(new Event('preview-ready'));
   }, 600));
   window.previewReport = function() {

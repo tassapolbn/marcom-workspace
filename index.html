@@ -15,6 +15,24 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#003057">
+<style id="boot-cover-style">
+/* Step 36: one calm screen while the workspace opens. It covers the page as the
+   HTML first draws it, and the sign-in check behind it, until the person is
+   signed in and their first tab is set (see liftCover in the sign-in script). */
+.boot-cover{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:#003057;color:#fff;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
+  transition:opacity .25s ease,visibility 0s linear .25s;}
+.boot-cover.done{opacity:0;visibility:hidden;pointer-events:none;}
+.boot-cover-mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#f6c64a,#f0b323);box-shadow:0 12px 30px -12px rgba(240,179,35,.65);}
+.boot-cover-mark svg{width:28px;height:28px;fill:none;stroke:#003057;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.boot-cover-name{margin-top:4px;font-size:17px;font-weight:800;letter-spacing:-.01em;}
+.boot-cover-sub{font-size:13px;color:rgba(255,255,255,.74);}
+.boot-cover-bar{width:72px;height:3px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;}
+.boot-cover-bar::after{content:'';display:block;width:40%;height:100%;border-radius:inherit;background:rgba(255,255,255,.75);animation:boot-cover-slide 1.1s ease-in-out infinite;}
+@keyframes boot-cover-slide{from{transform:translateX(-100%);}to{transform:translateX(250%);}}
+@media(prefers-reduced-motion:reduce){.boot-cover{transition:none;}.boot-cover-bar::after{animation:none;transform:translateX(75%);}}
+</style>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
@@ -828,6 +846,14 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
 </style>
 </head>
 <body>
+<div class="boot-cover" id="boot-cover" role="status">
+  <div class="boot-cover-mark" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 12v.01"/><path d="M3 13a20 20 0 0 0 18 0"/></svg></div>
+  <div class="boot-cover-name">HeadStart Marcom Workspace</div>
+  <div class="boot-cover-sub">Opening your workspace</div>
+  <div class="boot-cover-bar" aria-hidden="true"></div>
+</div>
+<script>/* The Request Centre page for staff has no sign-in, so it never shows the workspace cover. */
+(function(){if(/[?&#](request|rc)(=|&|$)/.test(location.search+location.hash)){var c=document.getElementById('boot-cover');if(c)c.parentNode.removeChild(c);}})();</script>
 
 <div class="app-header">
  <div class="header-inner">
@@ -5766,9 +5792,13 @@ body.auth-locked{overflow:hidden;}
     document.body.appendChild(g);
     var p=el('auth-pass'); if(p)p.addEventListener('keydown',function(e){ if(e.key==='Enter')authLogin(); });
   }
-  function showGate(mode){ if(window.__rcMode)return; buildGate(); var g=el('auth-gate'); if(g)g.classList.add('show'); document.body.classList.add('auth-locked');
+  /* Step 36: lift the start-up cover once, when the screen behind it is settled:
+     the workspace after sign-in, or the sign-in form for someone signed out. */
+  function liftCover(){ var c=el('boot-cover'); if(!c||c.classList.contains('done'))return; c.classList.add('done'); c.setAttribute('aria-hidden','true'); setTimeout(function(){ if(c.parentNode)c.parentNode.removeChild(c); },400); }
+  window.uxpLiftCover=liftCover;
+  function showGate(mode){ if(window.__rcMode){ liftCover(); return; } buildGate(); var g=el('auth-gate'); if(g)g.classList.add('show'); document.body.classList.add('auth-locked'); liftCover();
     if(mode==='noaccess'){ var f=el('auth-form'); if(f)f.innerHTML='<div class="auth-msg show err" style="margin:0 0 14px;">This account is not authorised for the workspace yet. Please ask your administrator to add your email under Settings.</div><button type="button" class="auth-btn" onclick="authSignOut()"><i class="ti ti-logout"></i> Sign out</button>'; } }
-  function hideGate(){ var g=el('auth-gate'); if(g)g.classList.remove('show'); document.body.classList.remove('auth-locked'); }
+  function hideGate(){ var g=el('auth-gate'); if(g)g.classList.remove('show'); document.body.classList.remove('auth-locked'); liftCover(); }
   function msg(t,err){ var m=el('auth-msg'); if(!m)return; m.textContent=t||''; m.className='auth-msg'+(t?' show':'')+(err?' err':''); }
   function authErr(e){ var c=(e&&e.code)||''; 
     if(/wrong-password|invalid-cred|invalid-login/.test(c))return 'Incorrect email or password.';
@@ -5847,8 +5877,12 @@ body.auth-locked{overflow:hidden;}
 
   function boot(){
     var a=A();
-    if(!a){ console.warn('[auth] Firebase Auth SDK not loaded; sign-in disabled (data still protected by rules).'); return; }
-    showGate();
+    if(!a){ console.warn('[auth] Firebase Auth SDK not loaded; sign-in disabled (data still protected by rules).'); liftCover(); return; }
+    /* The session check runs behind the start-up cover: a signed-in person never
+       sees the sign-in form flash past. If the check stalls, the form appears
+       after 8 seconds, as it used to straight away. */
+    if(window.__rcMode)liftCover(); else document.body.classList.add('auth-locked');
+    setTimeout(function(){ if(!window.__cur)showGate(); liftCover(); },8000);
     a.onAuthStateChanged(function(user){
       if(!user){ cur=null; try{window.__cur=null; window.dispatchEvent(new Event('authchanged'));}catch(e){} showGate(); return; }
       var f=FS(), email=(user.email||'').toLowerCase();

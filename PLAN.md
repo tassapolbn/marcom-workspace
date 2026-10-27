@@ -754,14 +754,19 @@ ahead on the defaults stated at the time; Boss can still overrule either.
    iPhone too; option 3 is a single travelling underline. Choosing 1 or 3 means
    step 34 is rewritten to match before any code.
 
-# Follow-up plan 4 (27 Oct 2026): what the independent review found, awaiting Boss's approval
+# Follow-up plan 4 (27 Oct 2026): what the independent review found, approved by Boss
 
 Scope stays the same: UX and UI only, light mode first, dark mode checked for
 no regression. The review scored the redesign 6/10, named one block to redo
 and four issues. The steps follow its ranking, most impact first. Nothing here
 is built until Boss approves.
 
-- [ ] **36. Opening the app shows one calm screen**
+Approved by Boss on 27 Oct, with the recommended answer to every decision
+below: Team Chat moves into the header on computers and iPads; the five
+Overview tiles go; the line under the product name stays; dark mode's Dew
+colour stays as it is.
+
+- [x] **36. Opening the app shows one calm screen**
   - Files: `index.html` (a cover at the top of the page, and where sign-in
     starts), `assets/workspace-ui.css`, `tests/ui-layout.test.mjs`
   - Today every open passes through three screens: the page as written in the
@@ -780,6 +785,21 @@ is built until Boss approves.
     redesigned workspace appear, the selected tab never changes after the
     cover lifts, and no sign-in screen shows for a signed-in person; a
     signed-out person still gets the sign-in form.
+  - Done (27 Oct): the cover (navy, the gold briefcase mark the sign-in screen
+    already uses, "Opening your workspace", a slim progress line) is the first
+    element in the page, with its styles in the head so it applies from the
+    first paint. The session check now runs behind it; the gate's two states
+    both lift it, so it fades once, onto either the workspace or the sign-in
+    form. Recorded frame by frame in the preview, with an instant, a 0.6s and a
+    1.2s session check: Boss on desktop and iPhone and Dew on iPhone see only
+    the cover and then Overview, with no tab change afterwards and no sign-in
+    form; a signed-out person sees the cover, then the form; a check stalled
+    for 9.5s shows the form at 8s and the workspace once the check completes;
+    the staff Request Centre page never shows the cover. The preview gained
+    `?auth=out`, `?authDelay=` and `?role=` to test this, and no longer forces
+    the Boss tab when no `?tab=` is given (the real app has no such switch).
+    Four new tests, including the real sign-in script run against a fake page,
+    Firebase and timers; suite 281/281.
 
 - [ ] **37. Redo the Overview's first screen: the work first**
   - Files: `index.html` (the Overview layout and its team rows),
