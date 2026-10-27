@@ -1099,3 +1099,93 @@ Next review: shoot the iPhone evidence at 390x664 as well as 390x844.
 4. **Dark mode:** the review noticed Dew is drawn in gold in dark mode, the
    same as Overview. That predates this work, and changing it means touching
    dark mode, which is outside the scope you set. Recommended: leave it.
+
+# Bug fixes before plan 5 (28 Oct 2026): two iPhone reports from Boss
+
+Boss reported two bugs on the live site after the merge, both on iPhone in
+light mode. Both are reproduced in the preview with data like the team's.
+Nothing here is built until Boss approves.
+
+## What the checks found
+
+1. **Event Hub: the event names are missing.** An event can carry a fill
+   colour and a text colour, and the team gives its events white or cream
+   text on a coloured tile. Step 32 made the chips see-through in light mode
+   so they read as flat rows, but each event kept its text colour, so white
+   text now sits on white (1.00:1; cream reads 1.10:1). It affects the Event
+   Hub on all four person tabs, at every screen size, in light mode only; dark
+   mode still shows the tiles. Caused by the redesign (step 32).
+2. **The same pattern on task cards.** A task linked to a coloured event shows
+   a label in that event's colours. Step 31 darkened the label's text so the
+   default teal label reads well, but it also overrides the event's own text
+   colour, so a label on a pink event reads dark teal on pink (1.32:1). Caused
+   by the redesign (step 31).
+3. **Revisions "+" and "−" do nothing on a shared card.** The buttons save
+   the new count to Dew's own task list, but a card shared by Boss and Dew is
+   kept in the shared list, so the live database refuses the save and nothing
+   says so. Dew's own cards work. This is older than the redesign (the code
+   dates from 19 Aug) and the redesign did not touch it. The colour that stays
+   after a tap is the button's hover colour, which an iPhone keeps after a
+   tap. Every other control on a card already saves to the right list.
+4. **Older, found while checking:** in the Event Hub's Timeline view and in
+   the Overview's Event Countdown, an event's name or number is written in the
+   event's own colour on white. Five of the ten colours in the event colour
+   picker (teal, green, amber, orange and coral) read between 2.2:1 and 3.7:1
+   there, below the 4.5:1 standard.
+
+The earlier checks missed items 1, 2 and 4 because the preview's sample data
+had a single event with a colour but no text colour, and no task linked to it.
+
+## Steps
+
+- [ ] **44. Event names readable again in the Event Hub and on task cards**
+  - Files: `index.html` (a chip and a task card label say when they carry the
+    event's own colours), `assets/workspace-ui.css` (the step 32 and step 31
+    rules leave those alone), `tests/ui-preview.mjs`, tests.
+  - Change (decision 1, recommended A): a chip whose event has a chosen text
+    colour keeps the team's coloured tile, as before the redesign and as in
+    dark mode; a chip with only a colour stays a flat row with the colour as
+    its top line. A task card label on a coloured event shows the event's own
+    colours again; other labels keep the darker teal from step 31.
+  - Test: the preview's sample data gains coloured events like the team's
+    (white, cream and dark text) and a task linked to one, so every later check
+    sees them. With them, a rendered scan of all five tabs at 390x844 and
+    1440x900 in light mode finds no unreadable text, dark mode is unchanged,
+    and screenshots of the Event Hub at 390 and 1440 match the approved look.
+
+- [ ] **45. Revisions "+" and "−" save on every card**
+  - Files: `index.html` (the buttons save through the same helper as the
+    status menu, which picks the right list and records who edited, and show
+    the usual message if a save fails), `assets/workspace-ui.css` (the filled
+    colour only under a mouse pointer; on iPhone a short press colour that does
+    not stay, and buttons large enough to tap), tests.
+  - Test: a new test runs the real Revisions code against a stand-in database:
+    a shared card is saved to the shared list with the editor recorded, Dew's
+    own card to Dew's list, and "−" at zero saves nothing. In the preview on an
+    iPhone-size screen, "+" raises the count on a shared card and on Dew's own
+    card, nothing new appears in Dew's list, and no colour stays after the tap.
+
+- [ ] **46. Event colours readable as text (older issue, recommended)**
+  - Files: `index.html` (Timeline names and Overview countdown numbers),
+    `assets/workspace-ui.css`, tests.
+  - Change: in light mode, when an event's colour is too light to read on
+    white, its name or number is written in a darker shade of the same colour;
+    the dots keep the exact colour; dark mode unchanged.
+  - Test: the rendered scan with the five light colours finds no failure in
+    the Timeline view or the Overview in light mode.
+
+Then: the suite, the rendered checks above, a new pull request from `main`,
+and, if Boss agrees, merge, deploy and confirm the live deploy.
+
+Not changed: the colours the team picks. A few pairs read below the standard
+even on their own tile (white text on green, teal, amber, orange or coral);
+the event form already previews the pair while choosing.
+
+## Decisions needed from Boss (bug fixes)
+
+1. **Event Hub look:** A, bring back the coloured tiles with their white or
+   cream text (recommended); or B, keep every event a flat row with its colour
+   as a top line and the text in the normal colours.
+2. **Step 46:** recommended, include it (small, and in the same feature).
+3. **Going live:** recommended, merge and deploy once every check passes; or
+   stop at the preview so Boss can try it on an iPhone first.
