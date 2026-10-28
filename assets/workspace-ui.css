@@ -1393,3 +1393,10 @@ html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}
 /* A sick day tints the whole date, so the legend shows a tinted square, not a dot
    that could be read as a deadline due soon. */
 .cal-leg-sick{width:10px;height:10px;border-radius:3px;background:var(--sick-light);box-shadow:inset 0 0 0 1px var(--sick);}
+
+/* Step 59: readable event tiles; no content text under 13px */
+/* A tile's date is drawn at full strength in the event's text colour (it was 78%
+   opacity), at the 11px the phone layout already used. The event names, the
+   day summary rows and the director request lines were 12.5px. */
+.ev-chip-date{font-size:11px;}
+.ev-chip-name,.dirq-s,.dirq-note,.myday-row{font-size:13px;}

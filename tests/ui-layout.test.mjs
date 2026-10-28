@@ -1212,3 +1212,13 @@ test('every Deadlines legend tells a deadline, one due soon and a sick day apart
   assert.match(source,/const dc=info\.urgent\?'cd-urgent':/,'red dots still mean due soon or overdue');
   assert.match(step58,/\.cal-leg-sick\{width:10px;height:10px;border-radius:3px;background:var\(--sick-light\);box-shadow:inset 0 0 0 1px var\(--sick\);\}/,'the same tint a sick day gets');
 });
+
+/* ===== Step 59: readable event tiles; no content text under 13px ===== */
+const step59=stepBlock(59);
+
+test('tile dates at full strength and 11px; event names, day rows and director lines at 13px',()=>{
+  assert.match(step59,/\.ev-chip-date\{font-size:11px;\}/);
+  assert.match(step59,/\.ev-chip-name,\.dirq-s,\.dirq-note,\.myday-row\{font-size:13px;\}/);
+  assert.doesNotMatch(source,/opacity:\.78/,'no faded tile date');
+  assert.doesNotMatch(source,/linear-gradient\(180deg,'\+clr\+','\+evTint\(clr,0\.86\)/,'no fading tile');
+});

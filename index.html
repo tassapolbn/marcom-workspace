@@ -3018,7 +3018,7 @@ function taskCardHTML(task,who){
   const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-flag-3-filled" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
   let _evClr='',_evTc='';try{if(task.eventId){const _ev=eventsOf(who).find(e=>e.id===task.eventId);if(_ev&&evOkClr(_ev.color)){_evClr=_ev.color;if(evOkClr(_ev.textColor))_evTc=_ev.textColor;}}}catch(e){}
   let _evStyle='';
-  if(_evClr)_evStyle=_evTc?(' style="background:'+_evClr+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
+  if(_evClr)_evStyle=_evTc?(' style="background:'+evFill(_evClr,_evTc)+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
   let evBadge='';
   if(isEventTask(task)){
     const _evLbl=(task.eventLabel||task.eventName||'').trim();
@@ -4227,11 +4227,13 @@ function evHubHTML(evs,who){
       var cd=evCountdown(ev),u=evUrgency(cd.ms);
       var clr=evOkClr(ev.color)?ev.color:'',tc=(clr&&evOkClr(ev.textColor))?ev.textColor:'';
       var chipStyle='';
-      if(clr)chipStyle=tc?('border-top-color:'+clr+';background:linear-gradient(180deg,'+clr+','+evTint(clr,0.86)+');'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
+      /* Step 59: a filled tile is the event's colour edge to edge; the fade it had
+         towards the bottom dropped its lower text below 4.5:1. */
+      if(clr)chipStyle=tc?('border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
       /* ev-chip-filled: the event has its own text colour, so it is a coloured
          tile in every theme; its text is chosen for that fill (step 44). */
       html+='<div class="ev-chip evt-'+u+(tc?' ev-chip-filled':'')+(isPast?' ev-chip-past':'')+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
-        +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';opacity:.78;"':'')+'>'+evChipDate(ev)+'</div>'
+        +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';"':'')+'>'+evChipDate(ev)+'</div>'
         +'<div class="ev-chip-name"'+(tc?' style="color:'+tc+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
         +'<div class="ev-chip-cd evu-'+u+'"'+(tc?' style="color:'+tc+';"':'')+'>'+evShort(cd.ms)+'</div>'
         +evDeleteButtonHTML(ev,who)+'</div>';
@@ -4320,6 +4322,23 @@ function evInkDark(hex){
   for(var i=1;i<50;i++){var v=rgb.map(function(x){return Math.round(x+(255-x)*i/50);});if(reads(v))return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
   return '#ffffff';
 }
+/* A fill under the event's own text colour (step 59): the colour itself when the
+   pair reads at 4.5:1, otherwise the nearest shade of it that does (darker under
+   light text, lighter under dark text), so the text colour the team chose stays. */
+function evFill(fill,text){
+  if(!evOkClr(fill)||!evOkClr(text))return fill||'';
+  function rgb(h){return [1,3,5].map(function(i){return parseInt(h.slice(i,i+2),16);});}
+  function lum(v){var l=v.map(function(x){x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});return 0.2126*l[0]+0.7152*l[1]+0.0722*l[2];}
+  function ratio(a,b){var x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
+  var f=rgb(fill),t=rgb(text);
+  if(ratio(f,t)>=4.5)return fill;
+  var darker=lum(t)>lum(f);
+  for(var i=1;i<=50;i++){
+    var v=f.map(function(x){return Math.round(darker?x*(50-i)/50:x+(255-x)*i/50);});
+    if(ratio(v,t)>=4.5)return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+  }
+  return darker?'#000000':'#ffffff';
+}
 /* Class and style for text drawn in an event's colour. A colour too light for
    white gets ev-ink, which swaps in the darker shade in light mode only; a
    colour too dark for the dark card gets ev-ink-d, its lighter shade in dark
@@ -4364,7 +4383,7 @@ function updateEvPreview(){
   const t=((document.getElementById('ev-tcolor')||{}).value||'');
   if(!c&&!t){el.style.display='none';el.innerHTML='';return;}
   const base=c||'#1f3a5f';
-  const bg=t?base:evTint(base,0.14);
+  const bg=t?evFill(base,t):evTint(base,0.14); /* as the tiles will draw it (step 59) */
   const tx=t||base;
   const nm=((document.getElementById('ev-name')||{}).value||'').trim()||'Event name';
   el.style.display='flex';
@@ -8854,7 +8873,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
         var _ec=(ev.color&&/^#[0-9a-fA-F]{6}$/.test(ev.color))?ev.color:'';
         var _et=(_ec&&ev.textColor&&/^#[0-9a-fA-F]{6}$/.test(ev.textColor))?ev.textColor:'';
         var _eds='';
-        if(_ec)_eds=_et?(' style="--edc:'+_ec+';background:'+_ec+';color:'+_et+';border-style:solid;"'):(' style="--edc:'+_ec+';background:'+evTint(_ec,0.1)+';"');
+        if(_ec)_eds=_et?(' style="--edc:'+_ec+';background:'+evFill(_ec,_et)+';color:'+_et+';border-style:solid;"'):(' style="--edc:'+_ec+';background:'+evTint(_ec,0.1)+';"');
         h+='<div class="ews-tl-eventday"'+_eds+'><i class="ti ti-confetti"></i> EVENT DAY · '+esc(evDateLabel(ev))+'</div>';
         return;
       }

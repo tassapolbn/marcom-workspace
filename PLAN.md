@@ -1685,12 +1685,27 @@ their colour (step 49 kept these marks on purpose).
     left as it is: the navy deadline dot is faint on the dark card. Tests:
     343/343 (three new).
 
-- [ ] **59. Readable event tiles; no text under 13px**
+- [x] **59. Readable event tiles; no text under 13px**
   - Files: `assets/workspace-ui.css`, tests; the contrast scan learns to
     sample gradients.
   - Change: the tiles keep each event's own colours but stop fading; their
     dates read at 4.5:1 or better; the four 12.5px texts become 13px.
   - Test: pixel-sampled contrast on every tile at 1440 and 390, both themes.
+  - Done (28 Oct): a filled tile is now its event's colour edge to edge, and
+    its date is drawn at full strength at 11px (it was 9.5px at 78%). One
+    thing the fade had hidden: some colour pairs the team chose never reached
+    4.5:1 even at the top of a tile, for example white on the light blue of
+    Open House (3.0:1). Where that happens, the tile, the task card's event
+    label, the event form's preview and the Run-up Timeline's event-day bar
+    now use the nearest shade of the same colour that reads (darker under
+    light text, lighter under dark text); the text colour the team chose
+    stays, and a pair that already reads is untouched. The event names, the
+    day summary rows and the director request lines are 13px. The contrast
+    scan now checks every colour of a gradient instead of skipping it: run
+    on the old tiles it finds what the review found (dates at 3.45:1, pink
+    names at 3.83:1); on the new ones, zero failures on every tab in both
+    themes, at 1440 and 390, in list and Timeline views. Tests: 345/345 (two
+    new; one step 44 test follows the solid tile).
 
 - [ ] **60. After you add or open a task, you see it (decision 3)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
