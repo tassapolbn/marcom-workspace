@@ -1130,7 +1130,7 @@ test('each deadline opens with its owner\'s initial in their colour; screen read
   vm.runInContext(slice("  var ovDl='all', ovDlOpen={};",'  /* ---------- event countdown ---------- */'),context);
   context.renderDeadlines();
   const html=nodes['ov-deadlines'].innerHTML;
-  assert.match(html,/<div class="ov-dl" onclick="ovShowTask\('boss','b1'\)"><span class="ov-dl-who" data-member="boss" title="Boss" aria-hidden="true">B<\/span><div class="ov-dl-main">/,'the row opens its task (step 60)');
+  assert.match(html,/<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey\(event\)" onclick="ovShowTask\('boss','b1'\)"><span class="ov-dl-who" data-member="boss" title="Boss" aria-hidden="true">B<\/span><div class="ov-dl-main">/,'the row opens its task (step 60), by keyboard too (step 65)');
   assert.match(html,/<div class="ov-dl-sub"><span class="ov-dl-wn">Boss &middot; <\/span>on 2026-10-28<\/div>/,'the name stays in the text for screen readers');
   assert.match(html,/data-member="dew" title="&lt;b&gt;dew&lt;\/b&gt;" aria-hidden="true">&lt;<\/span>/,'names are escaped; the initial is the first letter shown');
   assert.doesNotMatch(html,/<b>dew<\/b>/);
@@ -1518,9 +1518,126 @@ test('one greeting: My day on your own tab is "Today"',()=>{
 test('an empty status column is its header and its 0, with a drop area only while a card is dragged over it',()=>{
   const html=kanban=>kanban;
   assert.doesNotMatch(source,/No tasks<\/div>/);
-  assert.match(source,/var body=cards\.map\(function\(t\)\{return taskCardHTML\(t,who\);\}\)\.join\(''\);/);
+  assert.match(source,/var body=cards\.map\(function\(t\)\{var h=taskCardHTML\(t,who\),L=tcLingerRec\(t,who\);/);
+  assert.doesNotMatch(slice('function kanbanHTML(','function renderList('),/kb-empty|>No tasks</);
   assert.match(step64,/\.kb-col-body:empty\{min-height:0;padding:0!important;\}/);
   assert.match(step64,/\.kb-col\.kb-over>\.kb-col-body:empty\{min-height:56px;\}/);
   assert.match(source,/<div class="kb-col" data-status="'\+S\+'" ondragover="taskColOver\(event\)"/,'the whole column still takes a drop');
   void html;
+});
+
+/* ===== Step 65: polish ===== */
+const step65=stepBlock(65);
+
+test('iPhone: Upcoming Deadlines keeps its title, and its four filters get a row of their own',()=>{
+  const phone=media(step65,'max-width:600px');
+  assert.match(phone,/#panel-overview #ov-dl-card \.ov-card-head\{flex-wrap:wrap;row-gap:10px;\}/);
+  assert.match(phone,/#panel-overview #ov-dl-card \.ov-dl-filters\{order:3;flex:1 1 100%;margin-left:0;\}/,'under the title and its fold button, so "7 days" is not cut off');
+  assert.doesNotMatch(css26,/#ov-dl-title\{font-size:0/,'the title is no longer shrunk to its icon');
+});
+
+test('deadline rows are buttons: Tab reaches them and Enter or Space opens the task',()=>{
+  assert.match(source,/<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey\(event\)" onclick="ovShowTask\(/);
+  const c=vm.createContext({window:{}});
+  vm.runInContext(slice('  window.ovRowKey=function(e){','\n')+'\n',c);
+  let clicks=0,prevented=0;
+  const ev=key=>({key,preventDefault:()=>prevented++,currentTarget:{click:()=>clicks++}});
+  c.window.ovRowKey(ev('Enter'));c.window.ovRowKey(ev(' '));c.window.ovRowKey(ev('Tab'));c.window.ovRowKey(ev('a'));
+  assert.equal(clicks,2,'Enter and Space open it');
+  assert.equal(prevented,2,'and Space does not scroll the page');
+  assert.match(step65,/#panel-overview \.ov-dl:focus-visible\{outline:2px solid var\(--focus-ink\);outline-offset:2px;border-radius:8px!important;\}/);
+});
+
+test('one set of left edges: every card title after the same chip, and flat rows starting at the card edge',()=>{
+  assert.match(step65,/\.ov-team-title>i\.ti:first-child\{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/,'Team today wears the chip the other titles wear');
+  assert.match(css26,/\.ov-card-title>i\.ti:first-child,\.widget-title>i\.ti:first-of-type\{\s*display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/);
+  assert.match(step65,/html:not\(\.dark\) #ov-dl-card \.ov-dl,\nhtml:not\(\.dark\) #panel-overview \.ov-countdown \.ov-cdn,\nhtml:not\(\.dark\) #evb-card \.evb-row\{padding-left:0;padding-right:0;\}/);
+  assert.match(step65,/box-shadow:-11px 0 0 var\(--surface-3\),11px 0 0 var\(--surface-3\)!important;/,'the hover tint reaches into the card padding');
+  assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g-h\{width:calc\(100% \+ 24px\);margin-left:-12px;margin-right:-12px;\}/);
+  assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g\{overflow:visible;\}/,'the fold animation still clips while it runs (ui-motion sets it inline)');
+  assert.match(readFileSync(new URL('../assets/ui-motion.js',import.meta.url),'utf8'),/animate\.style\.overflow = 'hidden';/);
+});
+
+test("a widget's name keeps its place when it unfolds; the Overview columns end together",()=>{
+  assert.match(step65,/\.widget-title>\.wmove\{order:2;margin:0 0 0 8px;\}/,'the reorder arrows follow the name');
+  assert.match(source,/titleEl\.insertAdjacentHTML\('afterbegin',\s*'<span class="wmove">'/,'they are still the first element, moved by order only');
+  const desk=media(step65,'min-width:981px');
+  assert.match(desk,/#panel-overview \.ov-grid\{align-items:stretch;\}/);
+  assert.match(desk,/#panel-overview :is\(\.ov-col-main,\.ov-col-side\)>\.ov-card:last-child\{flex-grow:1;\}/);
+});
+
+test('"⋯" never sits alone on a row: beside Details, or in the corner of the facts',()=>{
+  const withDetails=card(sample);
+  assert.match(withDetails,/<div class="tc-bar"><button type="button" class="tc-more"[^]*?<\/button><button type="button" class="tc-acts-btn"/,'Details and "⋯" share the bar');
+  assert.doesNotMatch(withDetails.slice(withDetails.indexOf('<div class="task-meta">'),withDetails.indexOf('tc-open-hint')),/tc-acts-btn/);
+  const bare=card({...sample,description:'',links:[]});
+  assert.doesNotMatch(bare,/class="tc-bar"/,'no footer row without details');
+  const meta=bare.slice(bare.indexOf('<div class="task-meta">'),bare.indexOf('<i class="ti ti-arrow-up-right tc-open-hint"'));
+  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div><div class="role-x">/,'it ends the facts line');
+  assert.equal((bare.match(/tc-acts-btn/g)||[]).length,1);
+  assert.match(step65,/\.task-card \.task-meta:has\(>\.tc-acts-btn\)\{position:relative;padding-right:40px;\}/,'the facts keep room for it');
+  assert.match(step65,/\.task-card \.task-meta>\.tc-acts-btn\{position:absolute;right:-4px;bottom:-3px;margin:0;\}/);
+  assert.match(step65,/@media\(max-width:600px\)\{\n  \.task-card \.task-meta:has\(>\.tc-acts-btn\)\{padding-right:44px;\}/,'more room for the 40px target on a phone');
+});
+
+test('the Director request is one quote and one action',()=>{
+  assert.match(step65,/html:not\(\.dark\) \.task-card \.dirq,html\.dark \.task-card \.dirq\{margin-top:10px;padding:0 0 0 12px;border:0!important;\s*border-left:3px solid #d98324!important;border-radius:0!important;background:none!important;box-shadow:none!important;\}/);
+  assert.match(step65,/\.dirq-h\{font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var\(--muted\);\}/,'a quiet label, not an amber banner');
+  assert.match(step65,/\.dirq-i\{margin-top:4px;padding-top:0;border-top:0;\}/,'no dashed rule');
+  assert.match(step65,/\.dirq-ok\{margin-top:4px;min-height:32px;padding:0;border:0;border-radius:6px;background:none;color:var\(--navy\);font-size:13px;\}/,'one quiet action');
+  assert.doesNotMatch(source+css26,/\.dirq-n(?![\w-])|class="dirq-n"/,'no count badge');
+  assert.ok(contrast('#003057','#ffffff')>=4.5&&contrast('#8fb4dc','#262b36')>=4.5);
+});
+
+test('deadline priorities at 13px beside a 13px date; Low is as quiet as Medium',()=>{
+  assert.match(step65,/#panel-overview #ov-dl-card \.ov-dl-sub\{font-size:13px;\}/);
+  assert.match(step65,/#panel-overview \.ov-pri\{font-size:13px!important;font-weight:600;padding:0;background:none!important;\}/);
+  assert.match(step65,/#panel-overview \.ov-pri\.low\{color:#636e7e!important;\}/);
+  assert.ok(contrast('#636e7e','#ffffff')>=4.5);
+});
+
+test('a round focus ring in the search field; one calendar style on every tab',()=>{
+  assert.match(step65,/#cmdk-input\{border-radius:8px;\}/);
+  assert.match(step65,/#cmdk-input:focus-visible\{outline:2px solid var\(--focus-ink\);outline-offset:4px;\}/);
+  assert.match(step65,/#panel-overview \.ov-cal-grid \.cal-day\{background:transparent;\}/,'no grey tile per day on the Overview');
+  assert.match(step65,/html\.dark \.cal-day\.today\{color:#fff;\}/);
+  assert.doesNotMatch(source,/body\.theme-dew \.cal-day\.today|body\.theme-dew \.cd-normal/,'today and deadline dots are navy on every tab, as the legends say');
+  assert.doesNotMatch(css26,/\.cal-day\.today\{color:var\(--accent-on/);
+});
+
+test('a task ticked done stays in its column for a moment, at its height, then moves',()=>{
+  const timers=[];let redraws=[];
+  const card={getBoundingClientRect:()=>({height:168})};
+  const c=vm.createContext({window:{},setTimeout:(fn,ms)=>timers.push({fn,ms}),evRedrawCards:w=>redraws.push(w),
+    document:{querySelector:sel=>/#panel-boss \.kb-col \.task-card\[data-id="t1"\]/.test(sel)?card:null}});
+  c.window.CSS=c.CSS={escape:s=>s};
+  vm.runInContext(slice('window.__tcLinger={};','function kbFilterPass(').replace(/window\.tcToggleActs[\s\S]*$/,'')+'\nthis.tcLinger=tcLinger;this.tcLingerFrom=tcLingerFrom;this.tcLingerRec=tcLingerRec;',c);
+  const t={id:'t1',status:'done'};
+  c.tcLinger('boss','t1','pending');
+  assert.equal(c.tcLingerFrom(t,'boss'),'pending','shown in its old column');
+  assert.equal(c.tcLingerRec(t,'boss').h,168,'at the height it had');
+  assert.equal(c.tcLingerFrom(t,'dew'),'','only on the board where it was ticked');
+  assert.equal(timers[0].ms,1400);
+  c.tcLinger('boss','t1','done');
+  assert.equal(c.tcLingerFrom(t,'boss'),'pending','a quick undo keeps it where it is shown');
+  timers[0].fn();assert.deepEqual(redraws,[],'the first timer no longer owns it');
+  timers[1].fn();assert.deepEqual(redraws,['boss'],'then the board redraws');
+  assert.equal(c.tcLingerFrom(t,'boss'),'','and the card goes to its column');
+  assert.match(source,/  tcLinger\(who,id,t\.status\|\|'pending'\);\n  rf\.doc\(id\)\.update/,'the tick starts it');
+  const kb=slice('function kanbanHTML(','function renderList(');
+  assert.match(kb,/tasks\.filter\(function\(t\)\{return \(tcLingerFrom\(t,who\)\|\|t\.status\|\|'pending'\)===S;\}\)/);
+  assert.match(kb,/filter\(function\(t\)\{return !!tcLingerFrom\(t,who\)\|\|kbFilterPass\(t,filter\);\}\)/,'a filter does not drop it mid-moment');
+  assert.match(source,/function act\(w\)\{try\{return \(tasksOf\(w\)\|\|\[\]\)\.filter\(function\(t\)\{return \(t\.status!=='done'&&t\.status!=='canceled'\)\|\|\(typeof tcLingerFrom==='function'&&!!tcLingerFrom\(t,w\)\);\}\);/,'"Today" above the board waits too');
+});
+
+test('the app opens on the navy cover: the font and icon style sheets no longer hold back the first paint',()=>{
+  const head=source.slice(0,source.indexOf('<body>'));
+  for(const url of ['fonts.googleapis.com/css2?family=Plus+Jakarta+Sans','fonts.googleapis.com/css2?family=Sarabun','tabler-icons.min.css']){
+    const tags=head.match(new RegExp('<link[^>]*'+url.replace(/[.?+]/g,'\\$&')+'[^>]*>','g'));
+    assert.equal(tags.length,2,url+': loaded once, with a fallback for no script');
+    assert.match(tags[0],/media="print" onload="this\.media='all'"/,url+' does not block the first paint');
+  }
+  assert.match(head,/<noscript><link href="https:\/\/fonts\.googleapis\.com/);
+  assert.match(head,/html:not\(\.booted\)\{background:#003057;\}/,'until the cover lifts, the page itself is navy');
+  assert.match(source,/function liftCover\(\)\{ var c=el\('boot-cover'\); if\(!c\|\|c\.classList\.contains\('done'\)\)return; try\{document\.documentElement\.classList\.add\('booted'\);\}catch\(e\)\{\}/);
 });

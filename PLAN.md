@@ -1832,7 +1832,7 @@ their colour (step 49 kept these marks on purpose).
       scans: zero failures in both themes, Timeline included. iPhone widths
       320 to 440 pass. Tests: 367/367 (seven new).
 
-- [ ] **65. Polish (items 9 and 11)**
+- [x] **65. Polish (items 9 and 11)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: the iPhone deadlines title and full filter row; deadline rows
     reachable by keyboard; one set of left edges; a widget's name keeps its
@@ -1841,6 +1841,46 @@ their colour (step 49 kept these marks on purpose).
     round focus ring; one calendar style; a finished task lingers a moment so
     nothing jumps under the thumb; the app opens without the white flash.
   - Test: measured edges and column ends; a recording of marking a task done.
+  - Done (28 Oct):
+    - iPhone deadlines: the title is back, with its fold button beside it,
+      and the four filters have a row of their own (all fit from 320px). The
+      first deadline row on a 390x664 screen moves from 389 to 439px.
+    - Deadline rows are buttons in the tab order: Enter or Space opens the
+      task, with a focus ring.
+    - Left edges: every Overview card title starts at the same point (Team
+      today now has the same icon chip: 79 to 93px). In light mode, deadline
+      rows, Coming up rows and Event Board groups and rows start at the
+      card's edge, like their labels (11 to 23px in before); their hover
+      tint reaches into the card's padding instead.
+    - A widget's name stays put when it unfolds (it moved 54px before); the
+      reorder arrows now follow the name.
+    - The Overview columns end together from 1100 to 1920px wide (24px
+      apart before).
+    - Card footers: a card with details ends in one bar, Details and "⋯",
+      one height (30px on computers, 40px on iPhone). A card without details
+      has no footer row; its "⋯" sits in the corner of its facts.
+    - Director request: one amber rule as the quote, a quiet label, the
+      request, the note, who and when, and one "Mark as handled". The tint,
+      badge, banner and dashed rule are gone; it is 144px tall (183 before),
+      117 on iPhone (149).
+    - Priority on deadline rows is 13px text beside a 13px date (10px pills
+      before); Low is no longer blue.
+    - The search field's focus ring is rounded, like the field.
+    - One calendar style: plain day numbers on the Overview too (no grey
+      tiles), today navy on every tab, and deadline dots navy everywhere, as
+      the legend says. On Dew's, O's and Eye's tabs both were in the
+      person's colour.
+    - A finished task lingers: once ticked, it stays where it is for 1.4
+      seconds, at its height, and "Today" above it waits too; then it moves.
+      Recorded at 390 and 1440: nothing under the thumb moves during that
+      moment. A quick second tick (undo) leaves it where it is.
+    - Opening: the font and icon style sheets no longer hold back the first
+      paint, and the page is navy until the cover lifts. With those style
+      sheets slow (1.5s), the first paint came at 1676ms (white until then);
+      it is now 112ms (navy), and the app is ready at 579ms instead of
+      2113ms. With fast style sheets both open alike.
+    - Checks: contrast scans zero failures in both themes, Timeline
+      included; iPhone widths and the tab bar pass. Tests: 376/376 (ten new).
 
 - [ ] **66. Final check and a fourth independent review**
 

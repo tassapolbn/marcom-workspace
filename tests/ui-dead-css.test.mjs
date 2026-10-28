@@ -32,7 +32,9 @@ const removed=[
   // Step 64: the payday panel's second bar and badges, the Team today calendar
   // note (now in Settings), and the dashed "No tasks" box.
   'sal-cell-prog','sal-divider-prog','sal-bar','sal-bar-fill','sal-pct','sal-cycle','sb-soon','sb-reg',
-  'ov-team-note','team-note','kb-empty'
+  'ov-team-note','team-note','kb-empty',
+  // Step 65: the Director request's count badge.
+  'dirq-n'
 ];
 // These names still occur in markup or JavaScript, including legacy renderers.
 const retained=[

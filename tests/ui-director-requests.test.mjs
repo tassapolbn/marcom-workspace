@@ -102,8 +102,8 @@ test('two requests on one card are listed together and counted', () => {
   const { context, state } = harness();
   deliver(state, [note(), note({ sentence: 'Needs discussion on this task' })]);
   const card = context.taskCardHTML({ id: 't1', topic: 'Newsletter' }, 'boss');
-  assert.match(card, /Director requests/);
-  assert.match(card, /class="dirq-n">2</);
+  assert.match(card, /<i class="ti ti-user-star"><\/i> 2 Director requests<\/div>/, 'the label counts them (step 65: no badge)');
+  assert.doesNotMatch(card, /dirq-n/);
   assert.match(card, /Needs discussion on this task/);
 });
 

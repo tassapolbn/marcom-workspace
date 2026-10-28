@@ -23,6 +23,8 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
   background:#003057;color:#fff;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
   transition:opacity .25s ease,visibility 0s linear .25s;}
 .boot-cover.done{opacity:0;visibility:hidden;pointer-events:none;}
+/* Step 65: until the cover lifts, the page itself is navy, so nothing white shows first. */
+html:not(.booted){background:#003057;}
 .boot-cover-mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
   background:linear-gradient(135deg,#f6c64a,#f0b323);box-shadow:0 12px 30px -12px rgba(240,179,35,.65);}
 .boot-cover-mark svg{width:28px;height:28px;fill:none;stroke:#003057;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
@@ -33,9 +35,12 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
 @keyframes boot-cover-slide{from{transform:translateX(-100%);}to{transform:translateX(250%);}}
 @media(prefers-reduced-motion:reduce){.boot-cover{transition:none;}.boot-cover-bar::after{animation:none;transform:translateX(75%);}}
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<!-- Step 65: the fonts and icons load beside the page instead of before its first
+     paint, so the app opens on the navy cover, not on a blank white page. -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"></noscript>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -3019,9 +3024,25 @@ function toggleTaskDone(who,id){
   if(!t)return;
   const newStatus=(t.status==='done')?'pending':'done';
   const rf=taskRef(t,who); if(!rf)return;
+  tcLinger(who,id,t.status||'pending');
   rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()))
     .catch(function(e){dbSaveFailed(e,newStatus==='done'?'the completed task':'the reopened task');});
 }
+/* Step 65: a task ticked done (or reopened) stays in its column for a moment,
+   ticked, so the next card does not jump under the thumb; then it moves. */
+window.__tcLinger={};
+var TC_LINGER_MS=1400;
+function tcLinger(who,id,from){
+  /* A second tick inside the moment (an undo) keeps the card where it is shown.
+     The card also keeps its height, so nothing under it moves until it leaves. */
+  var k=who+'_'+id,prev=window.__tcLinger[k],el=null;
+  try{el=document.querySelector('#panel-'+who+' .kb-col .task-card[data-id="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');}catch(e){}
+  var rec={from:prev?prev.from:from,h:prev?prev.h:(el?Math.round(el.getBoundingClientRect().height):0)};
+  window.__tcLinger[k]=rec;
+  setTimeout(function(){ if(window.__tcLinger[k]===rec){ delete window.__tcLinger[k]; evRedrawCards(who); } },TC_LINGER_MS);
+}
+function tcLingerRec(t,who){return (window.__tcLinger&&window.__tcLinger[who+'_'+t.id])||null;}
+function tcLingerFrom(t,who){var L=tcLingerRec(t,who);return L?L.from:'';}
 const KB_STATUS_ORDER=['pending','in-progress','waiting','on-hold','done','canceled'];
 var _taskDrag={who:null,id:null};
 function taskDragStart(e,who,id){_taskDrag={who:who,id:id};try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}var c=e.currentTarget;if(c&&c.classList)c.classList.add('kb-dragging');}
@@ -3161,6 +3182,7 @@ function taskCardHTML(task,who){
      row at the foot. Every control and handler is the one the card always had. */
   const doneLbl=status==='done'?'Mark as not done':'Mark as done';
   const actsOpen=!!(window.__tcActs&&window.__tcActs[who+'_'+task.id]);
+  const actsBtn='<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>';
   return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
       +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
@@ -3168,14 +3190,15 @@ function taskCardHTML(task,who){
     +'</div>'
     +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
+      +(detHtml?'':actsBtn) /* Step 65: without details, "⋯" ends the facts line instead of a row of its own */
     +'</div>'+roleHtml
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
     /* Step 50: at rest one bar, Details on the left and "⋯" on the right; "⋯"
        opens the action row under it. A click on the card still opens the task. */
-    +'<div class="tc-bar">'
-      +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>':'')
-      +'<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>'
-    +'</div>'
+    +(detHtml?'<div class="tc-bar">'
+      +'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>'
+      +actsBtn
+    +'</div>':'')
     +'<div class="task-foot">'+statusSelectHTML(who,task).replace('class="tcard-sel"','class="tcard-sel tc-row-sel"')+moveSelectHTML(who,task)
       +'<span class="task-acts">'
         +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
@@ -3190,10 +3213,11 @@ function taskCardHTML(task,who){
 function kanbanHTML(tasks,who,filter){
   return '<div class="kanban-board">'+KB_STATUS_ORDER.map(function(S){
     var sc=SC[S];var col=scColors(S);
-    var cards=tasks.filter(function(t){return (t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return kbFilterPass(t,filter);});
+    var cards=tasks.filter(function(t){return (tcLingerFrom(t,who)||t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return !!tcLingerFrom(t,who)||kbFilterPass(t,filter);});
     cards.sort(function(a,b){return dueSortValue(a)-dueSortValue(b);});
     var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span></div>';
-    var body=cards.map(function(t){return taskCardHTML(t,who);}).join(''); /* empty: the header's 0 says it (step 64) */
+    var body=cards.map(function(t){var h=taskCardHTML(t,who),L=tcLingerRec(t,who);
+      return (L&&L.h)?h.replace('<div class="task-card ','<div style="min-height:'+L.h+'px" class="task-card '):h;}).join(''); /* empty: the header's 0 says it (step 64) */
     return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
   }).join('')+'</div>';
 }
@@ -5375,7 +5399,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       /* Step 52: the owner as their initial in their colour, as in Team today and the
          tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
       var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
-      return '<div class="ov-dl" onclick="ovShowTask(\''+it.w+'\',\''+esc(it.t.id)+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      return '<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey(event)" onclick="ovShowTask(\''+it.w+'\',\''+esc(it.t.id)+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;
@@ -5549,6 +5573,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.ovGoto=function(w){ try{ switchTab(w); }catch(e){} try{ window.scrollTo({top:0,behavior:motionBehavior()}); }catch(e){} };
   /* Step 60: a deadline row opens its person's tab at that task, marked. */
   window.ovShowTask=function(w,id){ try{ showTask(w,id); }catch(e){ window.ovGoto(w); } };
+  /* Step 65: Enter or Space opens a deadline row, as a click does. */
+  window.ovRowKey=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.currentTarget.click(); } };
   window.ovCalPrev=function(){ ovCalM--; if(ovCalM<0){ ovCalM=11; ovCalY--; } renderCal(); };
   window.ovCalNext=function(){ ovCalM++; if(ovCalM>11){ ovCalM=0; ovCalY++; } renderCal(); };
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };
@@ -5686,10 +5712,6 @@ body.theme-dew .evhub-head,body.theme-o .evhub-head,body.theme-junior .evhub-hea
 body.theme-dew .evhub-btn:hover,body.theme-o .evhub-btn:hover,body.theme-junior .evhub-btn:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
 body.theme-dew .sub-tab.act,body.theme-o .sub-tab.act,body.theme-junior .sub-tab.act{color:var(--accent-ink);}
 body.theme-dew .widget:not(.lieu-widget):not(.sick-widget):not(.gcal-widget):not(.upcoming-widget):not(.wx-widget):not(.menu-widget):not(.clockoff-widget) .widget-title i,body.theme-o .widget:not(.lieu-widget):not(.sick-widget):not(.gcal-widget):not(.upcoming-widget):not(.wx-widget):not(.menu-widget):not(.clockoff-widget) .widget-title i,body.theme-junior .widget:not(.lieu-widget):not(.sick-widget):not(.gcal-widget):not(.upcoming-widget):not(.wx-widget):not(.menu-widget):not(.clockoff-widget) .widget-title i{color:var(--accent);}
-body.theme-dew .cal-day.today,body.theme-o .cal-day.today,body.theme-junior .cal-day.today{background:var(--accent-ink);color:#fff;}
-body.theme-dew .cal-day.today .cal-day-dot,body.theme-o .cal-day.today .cal-day-dot,body.theme-junior .cal-day.today .cal-day-dot{background:#fff;}
-body.theme-dew .cal-day.sel,body.theme-o .cal-day.sel,body.theme-junior .cal-day.sel{outline-color:var(--accent-ink);}
-body.theme-dew .cd-normal,body.theme-o .cd-normal,body.theme-junior .cd-normal{background:var(--accent);}
 body.theme-dew .meet-card:not(.none),body.theme-o .meet-card:not(.none),body.theme-junior .meet-card:not(.none){background:linear-gradient(135deg,var(--accent-ink),var(--accent-ink));}
 body.theme-dew .fpill.act-accent,body.theme-o .fpill.act-accent,body.theme-junior .fpill.act-accent{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
 body.theme-junior .stat-box.stat-accent .stat-num{color:var(--accent) !important;}
@@ -5972,7 +5994,7 @@ body.auth-locked{overflow:hidden;}
   }
   /* Step 36: lift the start-up cover once, when the screen behind it is settled:
      the workspace after sign-in, or the sign-in form for someone signed out. */
-  function liftCover(){ var c=el('boot-cover'); if(!c||c.classList.contains('done'))return; c.classList.add('done'); c.setAttribute('aria-hidden','true'); setTimeout(function(){ if(c.parentNode)c.parentNode.removeChild(c); },400); }
+  function liftCover(){ var c=el('boot-cover'); if(!c||c.classList.contains('done'))return; try{document.documentElement.classList.add('booted');}catch(e){} c.classList.add('done'); c.setAttribute('aria-hidden','true'); setTimeout(function(){ if(c.parentNode)c.parentNode.removeChild(c); },400); }
   window.uxpLiftCover=liftCover;
   function showGate(mode){ if(window.__rcMode){ liftCover(); return; } buildGate(); var g=el('auth-gate'); if(g)g.classList.add('show'); document.body.classList.add('auth-locked'); liftCover();
     if(mode==='noaccess'){ var f=el('auth-form'); if(f)f.innerHTML='<div class="auth-msg show err" style="margin:0 0 14px;">This account is not authorised for the workspace yet. Please ask your administrator to add your email under Settings.</div><button type="button" class="auth-btn" onclick="authSignOut()"><i class="ti ti-logout"></i> Sign out</button>'; } }
@@ -7172,7 +7194,6 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
 html.dark .dirq{background:#3b2b14;border-color:#7d5c26;}
 .dirq-h{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#8a4b12;}
 html.dark .dirq-h{color:#f0b95f;}
-.dirq-n{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#d98324;color:#fff;font-size:10px;font-weight:800;}
 .dirq-i{margin-top:8px;padding-top:8px;border-top:1px dashed #edd9bb;}
 .dirq-i:first-of-type{padding-top:0;border-top:0;}
 html.dark .dirq-i{border-top-color:#6d5124;}
@@ -7243,8 +7264,7 @@ html.dark .dirq-ok{color:#f0b95f;}
         +'<i class="ti ti-check"></i> Mark as handled</button></div>';
     }).join('');
     return '<div class="dirq" onclick="event.stopPropagation()"><div class="dirq-h">'
-      +'<i class="ti ti-user-star"></i> Director request'+(list.length>1?'s':'')
-      +'<span class="dirq-n">'+list.length+'</span></div>'+rows+'</div>';
+      +'<i class="ti ti-user-star"></i> '+(list.length>1?list.length+' Director requests':'Director request')+'</div>'+rows+'</div>';
   }
   /* The card markup is built as a string and swapped in wholesale, so the panel
      is added to that string rather than to the DOM: a redraw keeps it, and the
@@ -8515,9 +8535,6 @@ html.dark .kb-col{background:rgba(255,255,255,.02);}
 
 /* ---- 13) CALENDAR: keep 'today' readable on hover and select ---------- */
 .cal-day.today:not(.empty):hover{background:var(--navy2);color:#fff;}
-body.theme-dew .cal-day.today:not(.empty):hover,
-body.theme-o .cal-day.today:not(.empty):hover,
-body.theme-junior .cal-day.today:not(.empty):hover{background:var(--accent-ink,var(--navy2));color:#fff;filter:brightness(1.1);}
 .cal-day.coral-today:not(.empty):hover{background:var(--coral2)!important;color:#fff;}
 .cal-day.sick-day.today:not(.empty):hover{background:var(--sick);color:#fff;}
 .cal-day.today.sel{outline-color:var(--gold);}
@@ -11618,7 +11635,9 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
   function tmr(){var n=new Date();n.setDate(n.getDate()+1);return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
   function members(){try{return MEMBER_ORDER.slice();}catch(e){return ['boss','dew','o','junior'];}}
   function nm(w){try{return memberName(w)||tabLabel(w);}catch(e){return w;}}
-  function act(w){try{return (tasksOf(w)||[]).filter(function(t){return t.status!=='done'&&t.status!=='canceled';});}catch(e){return [];}}
+  /* Step 65: a task ticked a moment ago stays listed until its card moves, so
+     this card does not shrink under the thumb either. */
+  function act(w){try{return (tasksOf(w)||[]).filter(function(t){return (t.status!=='done'&&t.status!=='canceled')||(typeof tcLingerFrom==='function'&&!!tcLingerFrom(t,w));});}catch(e){return [];}}
   function evs(w){try{return eventsOf(w)||[];}catch(e){return [];}}
   function fdt(d){try{return fmtDate(d);}catch(e){return d||'';}}
   function isOwn(w){var c=window.__cur||{};return c.workspace===w||(c.role==='admin'&&w==='boss');}
