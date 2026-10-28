@@ -1498,7 +1498,7 @@ the header, on its own line when it does not fit) and step 57.
 These run before step 55, so the final check and the third review cover
 them, and they ship with plan 5.
 
-- [ ] **56. Sidebar widget headers: the name first, nothing covers it**
+- [x] **56. Sidebar widget headers: the name first, nothing covers it**
   - Files: `assets/workspace-ui.css` (the step 39 header rules make way for a
     step 56 block), tests.
   - Change: every sidebar header reads the same way on every screen: the drag
@@ -1513,6 +1513,19 @@ them, and they ship with plan 5.
     needs; the summary starts under the name's first letter; the month arrows,
     Reset Year, Add and refresh still work, and tapping them does not fold
     the widget; before and after screenshots, including Boss's case.
+  - Done (28 Oct): every sidebar header now reads the same way on every
+    screen: the drag handle (computers), the name, then its buttons on the
+    right. The Deadlines month switcher and the Calendar's Month and Upcoming
+    switch sit on their own line under the name, on the right; the Calendar's
+    refresh stays beside the name. A folded widget's summary starts exactly
+    under the name's first letter (it sat 8px to the right before). On the
+    narrowest phones (320px) a long folded name wraps instead of being cut,
+    and a button that does not fit beside its name moves under it. Checked on
+    all four person tabs, open and folded, at eleven sizes from 320 to 1440:
+    no button before a name, no overlap, nothing outside a header. The month
+    arrows, the Month and Upcoming switch and Add still work without folding
+    the widget, and a tap on a header's free space still folds it. Tests:
+    335/335 (two new; the step 39 header test moved here).
 
 - [ ] **57. Event colours readable as text in dark mode too (older issue,
   recommended)**

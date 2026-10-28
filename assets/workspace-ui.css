@@ -1125,14 +1125,7 @@ html.dark .tm-meet{color:#93c5fd;}
   body.tc-in-header .chat-panel{top:var(--tc-top,96px);bottom:auto;max-height:calc(100vh - var(--tc-top,96px) - 16px);}
 }
 @media(max-width:600px){#hdr-add{display:none;}}
-/* Sidebar widgets: the title keeps its whole name and the summary sits under
-   it; the drag handle and the buttons span both lines. */
-.side-col .widget-head{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-columns:auto;align-items:center;column-gap:10px;row-gap:0;}
-.side-col .widget-head>*{grid-row:1/3;}
-.side-col .widget-head>.widget-title{grid-column:2;grid-row:1;}
-/* 52px: the fold arrow and the icon tile, so the summary lines up with the name. */
-.side-col .widget-head>.widget-sum{grid-column:2;grid-row:2;justify-self:start;max-width:calc(100% - 52px);margin:-1px 0 0 52px;}
-.side-col .widget-head>.widget-sum:empty{display:none;}
+/* Sidebar widget headers: see step 56. */
 
 /* Step 40: task cards lead with the task */
 /* The name comes first, with the done tick beside it; a column card allows a
@@ -1360,3 +1353,22 @@ html:not(.dark) #evb-soon .ov-countdown .ov-cdn{border-top:0!important;}
 #panel-overview .ov-dl-who[data-member="junior"]{--tm-c:var(--member-junior);}
 /* The written name is for screen readers only; the initial says it at a glance. */
 #panel-overview .ov-dl-wn{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+/* Step 56: sidebar widget headers, the name first */
+/* One row reads: the drag handle (computers), the name, then the widget's own
+   buttons on the right. A button that does not fit beside the name, such as the
+   month switcher, moves to its own line under it, still on the right, so it
+   never covers the name. A folded widget's summary takes the last line and
+   starts under the name's first letter. (Step 39's grid had no set place for
+   the buttons: below 981px they took the hidden drag handle's place.) */
+.side-col .widget-head{--wh-name-x:52px;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;column-gap:10px;row-gap:6px;}
+/* 52px: the fold arrow and the icon tile. From 981px the drag handle (21px)
+   and its gap come first; it hides below that width (see .uxp-wh-drag). */
+@media(min-width:981px){.side-col .widget-head{--wh-name-x:83px;}}
+.side-col .widget-head>.widget-title{flex:1 1 auto;}
+/* The narrowest phones: a long folded name wraps to a second line rather than being cut. */
+.side-col .widget.collapsed>.widget-head>.widget-title{white-space:normal;}
+/* The Calendar's Month and Upcoming switch comes after its refresh button, so a
+   small button stays beside the name and only the wide switch moves down. */
+.side-col .widget-head>.uxp-cal-seg{order:1;}
+.side-col .widget-head>.widget-sum{order:2;flex:0 0 auto;width:calc(100% - var(--wh-name-x));max-width:none;margin:-5px 0 0 var(--wh-name-x);padding:0;text-align:left;}

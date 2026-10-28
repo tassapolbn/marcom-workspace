@@ -697,12 +697,7 @@ test('opened from the header, the chat panel drops down under it',()=>{
   assert.match(source,/if\(\(window\.innerHeight\|\|0\)-top<360\)top=8;/,'on a phone held sideways it opens over the header instead');
 });
 
-test('sidebar widgets keep their whole name, with the summary under it',()=>{
-  assert.match(step39,/\.side-col \.widget-head\{display:grid;grid-template-columns:auto minmax\(0,1fr\);/);
-  assert.match(step39,/\.side-col \.widget-head>\.widget-title\{grid-column:2;grid-row:1;\}/);
-  assert.match(step39,/\.side-col \.widget-head>\.widget-sum\{grid-column:2;grid-row:2;justify-self:start;max-width:calc\(100% - 52px\);margin:-1px 0 0 52px;\}/);
-  assert.match(step39,/\.side-col \.widget-head>\*\{grid-row:1\/3;\}/,'the handle and the buttons span both lines');
-});
+/* Sidebar widget headers moved on to step 56 (whole names, summary under the name). */
 
 /* ===== Step 40: task cards lead with the task ===== */
 const step40=stepBlock(40);
@@ -1151,4 +1146,27 @@ test('white initials read on every person colour, the defaults and any saved tab
      which is lighter still, reads on it at least as well. */
   assert.match(source,/var ink=readable\(c,'#EFF3F9',4\.5\);/);
   assert.match(source,/css\+=':root\{--member-'\+w\+':'\+ink\+';\}';/);
+});
+
+/* ===== Step 56: sidebar widget headers, the name first ===== */
+const step56=stepBlock(56);
+
+test('sidebar headers: the name first, buttons on the right, and a button that does not fit moves under it',()=>{
+  assert.doesNotMatch(css26,/\.side-col \.widget-head\{display:grid/,'step 39\'s grid, which let buttons take the hidden handle\'s place, is gone');
+  assert.doesNotMatch(css26,/\.side-col \.widget-head>\*\{grid-row/);
+  assert.match(step56,/\.side-col \.widget-head\{--wh-name-x:52px;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;column-gap:10px;row-gap:6px;\}/,
+    'one row that wraps; a wrapped button stays on the right');
+  assert.match(step56,/\.side-col \.widget-head>\.widget-title\{flex:1 1 auto;\}/,'the name is measured at its full width before anything wraps');
+  assert.match(css26,/\.widget-head>\.widget-title\{min-width:0;flex:1 1 auto;\}/);
+  assert.match(step56,/\.side-col \.widget-head>\.uxp-cal-seg\{order:1;\}/,'the refresh stays beside the name; only the wide switch moves down');
+  assert.match(step56,/\.side-col \.widget\.collapsed>\.widget-head>\.widget-title\{white-space:normal;\}/,'a long folded name wraps on the narrowest phones instead of being cut');
+});
+
+test('a folded widget\'s summary sits on the last line, under the name\'s first letter',()=>{
+  assert.match(step56,/\.side-col \.widget-head>\.widget-sum\{order:2;flex:0 0 auto;width:calc\(100% - var\(--wh-name-x\)\);max-width:none;margin:-5px 0 0 var\(--wh-name-x\);padding:0;text-align:left;\}/);
+  /* 52px is the fold arrow and the icon tile; from 981px the drag handle and its gap add 31px.
+     The handle hides below exactly that width, so the two rules must move together. */
+  assert.match(media(step56,'min-width:981px'),/\.side-col \.widget-head\{--wh-name-x:83px;\}/);
+  assert.match(source,/@media\(max-width:980px\)\{\.uxp-wh-drag\{display:none;\}\}/);
+  assert.match(source,/\.uxp-wh-drag\{[^}]*padding:4px 6px 4px 0;font-size:15px;/,'the handle is 21px wide (15px icon and 6px padding)');
 });
