@@ -605,9 +605,6 @@ body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
 /* Step 21: light mode readability */
 html:not(.dark) .fpill.act-navy{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
 html:not(.dark) .btn-teal{background:linear-gradient(135deg,#0f766e,#115e59)!important;color:#fff!important;}
-html:not(.dark) #panel-boss .btn-accent{background:#366a9c!important;background-image:none!important;border-color:#366a9c!important;color:#fff!important;}
-html:not(.dark) #panel-dew .btn-accent{background:#a25816!important;background-image:none!important;border-color:#a25816!important;color:#fff!important;}
-html:not(.dark) #panel-o .btn-accent{background:#b73d0b!important;background-image:none!important;border-color:#b73d0b!important;color:#fff!important;}
 html:not(.dark) .dirq-n{background:#b45309;}
 html:not(.dark) .kb-col .kb-col-count{background:#fff!important;}
 html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member-role i,.mh-greet){color:#366a9c!important;}
@@ -1302,3 +1299,14 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
   /* The Overview's greeting gives way on a phone and its search box is gone. */
   #panel-overview .ov-topbar{display:none;}
 }
+
+/* Step 49: person colours as small marks only */
+/* Light mode: a person's colour marks them at small sizes (their initial, their
+   name, the tab label and the tab bar) and fills no large area, so it never reads
+   as a status. The name bar and the Event Hub bar are plain; primary buttons and
+   the selected filter are the same navy on every tab. */
+html:not(.dark) .member-head{background:var(--surface)!important;background-image:none!important;}
+html:not(.dark) .evhub-head{background:transparent!important;background-image:none!important;}
+html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent{background:var(--navy,#003057)!important;background-image:none!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
+html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:hover{background:#00264a!important;border-color:#00264a!important;}
+html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}

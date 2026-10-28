@@ -1007,3 +1007,17 @@ test('one search on every screen: the header button on iPhone, no box on the Ove
   assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)" aria-label="Search">/);
   assert.match(source,/placeholder="Search tasks, events, notes or links"/);
 });
+
+/* ===== Step 49: person colours as small marks only ===== */
+const step49=stepBlock(49);
+
+test('in light mode a person colour fills no large area: plain name and Event Hub bars, navy buttons',()=>{
+  assert.match(step49,/html:not\(\.dark\) \.member-head\{background:var\(--surface\)!important;background-image:none!important;\}/);
+  assert.match(step49,/html:not\(\.dark\) \.evhub-head\{background:transparent!important;background-image:none!important;\}/);
+  assert.match(step49,/html:not\(\.dark\) :is\(#panel-boss,#panel-dew,#panel-o,#panel-junior\) \.btn-accent\{background:var\(--navy,#003057\)!important;[^}]*color:#fff!important;\}/,
+    'Add Task and the other primary buttons are the same navy on every tab');
+  assert.match(step49,/html:not\(\.dark\) \.tab-panel \.fpill\.act-accent\{background:var\(--navy,#003057\)!important;/,'so is the selected filter');
+  assert.doesNotMatch(css26,/html:not\(\.dark\) #panel-(boss|dew|o) \.btn-accent\{background:#(366a9c|a25816|b73d0b)/,'no person-coloured button left in light mode');
+  assert.ok(contrast('#ffffff','#003057')>=4.5&&contrast('#ffffff','#00264a')>=4.5,'white reads on the navy and its hover');
+  assert.doesNotMatch(step49,/html\.dark/,'dark mode keeps its colours');
+});

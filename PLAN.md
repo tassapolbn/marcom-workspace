@@ -1316,7 +1316,7 @@ twice: in the header and in the "⋯" menu.
     "Search tasks, events, notes or links". Tests: 326/326 (three new; the
     step 28, step 43 and calendar tests follow the removed box).
 
-- [ ] **49. Person colours as small marks only**
+- [x] **49. Person colours as small marks only**
   - Files: `assets/workspace-ui.css` (`index.html` only where a colour is set
     inline), tests.
   - Change, light mode: a person's colour stays on their initial, their
@@ -1326,6 +1326,18 @@ twice: in the header and in the "⋯" menu.
     edge. Status colours then carry their meaning alone. Dark mode unchanged.
   - Test: a rendered scan of the four person tabs finds no area larger than
     2,000px² filled with a person colour or its tint; contrast stays clean.
+  - Done (28 Oct): in light mode the name bar and the Event Hub bar are plain
+    (no tint), and every primary button on a person tab (Add Task, Add Event,
+    Add Link, Add Note, the templates' New) and the selected filter are the
+    Overview's navy, with a darker navy on hover. A person's colour now marks
+    only their initial, their name and titles, their tab label and the tab
+    bar, so the status colours are the only colour coding on the page. The
+    three readability rules that darkened the old person-coloured buttons
+    (from 24 Oct) went with them. A rendered scan of the four person tabs at
+    1440x900 and 390x844 finds no area over 2,000px² in a person's colour or
+    its tint (status and event colours aside); contrast: zero failures on all
+    five tabs. Dark mode unchanged. Tests: 324/324 (one new; three contrast
+    entries for the removed buttons went).
 
 - [ ] **50. Task cards are calm at rest**
   - Files: `index.html` (the card's action row and a "⋯" button),

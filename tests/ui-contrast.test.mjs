@@ -44,9 +44,7 @@ test('every Step 21 selector is restricted to light mode', () => {
 const pairs = [
   ['.fpill.act-navy', '#ffffff', '#003057'],
   ['.btn-teal', '#ffffff', '#0f766e'],
-  ['#panel-boss .btn-accent', '#ffffff', '#366a9c'],
-  ['#panel-dew .btn-accent', '#ffffff', '#a25816'],
-  ['#panel-o .btn-accent', '#ffffff', '#b73d0b'],
+  // The person tabs' buttons left their person colour for navy in step 49.
   ['.dirq-n', '#ffffff', '#b45309'],
   ['#panel-boss :is(', '#366a9c', '#e9f2f9'],
   ['#panel-dew :is(', '#a25816', '#fbefe4'],
