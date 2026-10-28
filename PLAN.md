@@ -1455,3 +1455,78 @@ twice: in the header and in the "⋯" menu.
    space goes to the work; or show it at the top of the page.
 4. **Going live:** recommended, merge and deploy once every check passes; or
    stop at the preview first.
+
+# Fixes found during plan 5 (28 Oct 2026): for Boss to approve
+
+Boss sent a screenshot on 28 Oct: on a computer, the Deadlines calendar in a
+person tab's sidebar has its name covered by the "<" month button. It is
+reproduced in the preview, and the check across every sidebar widget found
+more of the same.
+
+## What the checks found
+
+1. **Sidebar widget headers on computers (Boss's screenshot).** Step 39 (live
+   since 27 Oct) made each sidebar widget header a two-line grid, so a folded
+   widget's summary sits under its name. In that grid the name gets whatever
+   width the buttons leave. Two headers have wide controls: Deadlines (the
+   month switcher) and Calendar (the Month and Upcoming switch, with refresh).
+   There the name has 50 to 70px less room than it needs, so the month
+   switcher covers "Deadlines" and the Month and Upcoming switch hides
+   "Calendar" completely. All four person tabs, whenever the widget is open.
+   Caused by the redesign (step 39).
+2. **The same headers on iPhone and iPad, in the Widgets panel.** Below 981px
+   wide the drag handle is hidden, and the grid then puts the first button in
+   the handle's place, in front of the name: Add (Day-off in Lieu), Reset Year
+   (Sick Leave), refresh (Phuket Weather, Calendar, Asset Library), + and
+   settings (Petty Cash), Add (Recurring Templates), and the month switcher
+   (Deadlines), which pushes "Deadlines" past the edge. Every person tab, open
+   or folded. Caused by step 39, whose checks looked at computers with the
+   widgets folded, which is why this was missed.
+3. **Older, found while checking: event colours as text in dark mode.** Step
+   46 made an event's own colour readable as text in light mode only. In dark
+   mode the days-left number in "Coming up" and the event name in the Event
+   Hub's Timeline view still use the raw colour on the dark card, and five of
+   the ten colours in the event colour picker read below 4.5:1 there (navy
+   1.5:1, purple 3.1:1, blue 3.4:1, grey 3.7:1, pink 3.8:1). Older than plan
+   5; dark mode only.
+
+## Steps
+
+These run before step 55, so the final check and the third review cover
+them, and they ship with plan 5.
+
+- [ ] **56. Sidebar widget headers: the name first, nothing covers it**
+  - Files: `assets/workspace-ui.css` (the step 39 header rules make way for a
+    step 56 block), tests.
+  - Change: every sidebar header reads the same way on every screen: the drag
+    handle (computers), the name, then its buttons on the right. When a button
+    does not fit beside the name, such as the month switcher, it moves to its
+    own line under the name, still on the right, so it never covers the name.
+    A folded widget's summary stays under its name, lined up with its first
+    letter.
+  - Test: on all four person tabs, open and folded, at 320, 390 and 430 wide
+    (Widgets panel), 768, 1024 and 1440: no button before the name, nothing
+    overlaps, nothing outside the header, the name always has the room it
+    needs; the summary starts under the name's first letter; the month arrows,
+    Reset Year, Add and refresh still work, and tapping them does not fold
+    the widget; before and after screenshots, including Boss's case.
+
+- [ ] **57. Event colours readable as text in dark mode too (older issue,
+  recommended)**
+  - Files: `index.html` (the event text colour helper from step 46),
+    `assets/workspace-ui.css`, tests.
+  - Change: as step 46 did for light mode, an event colour too dark for the
+    dark card is shown in the nearest lighter shade of the same colour that
+    reads at 4.5:1, for the days-left number and the Timeline name only. The
+    event keeps its colour everywhere else, and light mode is unchanged.
+  - Test: all ten picker colours, and a custom very dark one, read at 4.5:1
+    or better on the dark card and still on white; the dark-mode contrast scan
+    shows zero failures on the Overview and the Event Hub.
+
+## Decisions needed from Boss (fixes found during plan 5)
+
+1. **Step 56:** recommended, approve it as written; or also move the
+   Deadlines month switcher inside the calendar, above the days, which needs a
+   change to how that widget is built on every tab.
+2. **Step 57:** recommended, include it (small, the same helper as step 46);
+   or leave dark mode as it is for now.
