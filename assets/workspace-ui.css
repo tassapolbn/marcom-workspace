@@ -1372,3 +1372,9 @@ html:not(.dark) #evb-soon .ov-countdown .ov-cdn{border-top:0!important;}
    small button stays beside the name and only the wide switch moves down. */
 .side-col .widget-head>.uxp-cal-seg{order:1;}
 .side-col .widget-head>.widget-sum{order:2;flex:0 0 auto;width:calc(100% - var(--wh-name-x));max-width:none;margin:-5px 0 0 var(--wh-name-x);padding:0;text-align:left;}
+
+/* Step 57: event colours readable as text in dark mode too */
+/* The days-left number and the Timeline name of an event whose colour is too
+   dark for the dark card use a lighter shade of it (evInkDark); the event's
+   colour itself stays as chosen everywhere else. */
+html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}

@@ -1527,7 +1527,7 @@ them, and they ship with plan 5.
     the widget, and a tap on a header's free space still folds it. Tests:
     335/335 (two new; the step 39 header test moved here).
 
-- [ ] **57. Event colours readable as text in dark mode too (older issue,
+- [x] **57. Event colours readable as text in dark mode too (older issue,
   recommended)**
   - Files: `index.html` (the event text colour helper from step 46),
     `assets/workspace-ui.css`, tests.
@@ -1538,6 +1538,16 @@ them, and they ship with plan 5.
   - Test: all ten picker colours, and a custom very dark one, read at 4.5:1
     or better on the dark card and still on white; the dark-mode contrast scan
     shows zero failures on the Overview and the Event Hub.
+  - Done (28 Oct): in dark mode an event colour too dark for the card now
+    shows its days-left number ("Coming up") and its Timeline name in a
+    lighter shade of the same colour: navy becomes slate blue, purple a
+    lighter purple, the team's dark gold a muted gold. The shade is measured
+    against the card's hover tint, so it reads at 4.5:1 or better at rest and
+    on hover; the event's dot and every other use keep the colour as chosen.
+    Light mode is unchanged. Contrast scans on every tab, list and Timeline
+    views, at 1440 and 390 wide: zero failures in both themes (dark mode had
+    25 failing texts on the Overview and three person tabs before). Tests:
+    337/337 (two new; three step 46 tests now also expect the dark shade).
 
 ## Decisions needed from Boss (fixes found during plan 5)
 

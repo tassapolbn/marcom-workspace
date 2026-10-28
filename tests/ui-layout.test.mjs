@@ -902,7 +902,7 @@ const step46=stepBlock(46);
 
 test('in light mode only, an event colour too light for text shows its darker shade',()=>{
   assert.match(step46,/html:not\(\.dark\) \.ev-ink\{color:var\(--evc-ink\)!important;\}/);
-  assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink/,'dark mode keeps the colour as chosen');
+  assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink(?![\w-])/,'the darker shade is for light mode only');
   assert.doesNotMatch(source,/class="ov-cdn-n"'\+\(\(it\.e\.color/,'the countdown number goes through evTextAttrs');
 });
 
@@ -1169,4 +1169,13 @@ test('a folded widget\'s summary sits on the last line, under the name\'s first 
   assert.match(media(step56,'min-width:981px'),/\.side-col \.widget-head\{--wh-name-x:83px;\}/);
   assert.match(source,/@media\(max-width:980px\)\{\.uxp-wh-drag\{display:none;\}\}/);
   assert.match(source,/\.uxp-wh-drag\{[^}]*padding:4px 6px 4px 0;font-size:15px;/,'the handle is 21px wide (15px icon and 6px padding)');
+});
+
+/* ===== Step 57: event colours readable as text in dark mode too ===== */
+const step57=stepBlock(57);
+
+test('in dark mode only, an event colour too dark for the card shows its lighter shade',()=>{
+  assert.match(step57,/html\.dark \.ev-ink-d\{color:var\(--evc-ink-d\)!important;\}/);
+  assert.doesNotMatch(css26,/html:not\(\.dark\)[^{]*\.ev-ink-d/,'light mode keeps step 46\'s shade');
+  assert.match(source,/var ink=evInk\(hex\),inkD=evInkDark\(hex\),c=cls,st='color:'\+hex\+';';/,'both shades come from one helper call per text');
 });
