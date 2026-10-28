@@ -5095,9 +5095,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       if(hold)add('hold',scIcon('on-hold','ti-player-pause'),hold+' on hold',hold);
       if(cal&&cal.cls==='busy')add('meet','ti-calendar-time',cal.txt,0,'Busy');
       if(cal&&cal.cls==='soon')add('soon','ti-calendar-time',cal.txt,0,'Soon');
-      if(!bits.length){ bits.push('<span class="tm-x tm-clear"><i class="ti ti-check" aria-hidden="true"></i>Clear</span>'); words.push('clear'); }
+      var calm=!bits.length;
+      if(calm){ bits.push('<span class="tm-x tm-clear"><i class="ti ti-check" aria-hidden="true"></i>Clear</span>'); words.push('clear'); }
       var name=nm(w),initial=(Array.from(String(name).trim())[0]||'').toLocaleUpperCase(),leave=leaveLine(w);
-      return '<button type="button" class="tm" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+(leave?leave.replace(' \u00b7 Lieu',', lieu')+'. ':'')+'Open '+name+'’s tab.')+'">'
+      return '<button type="button" class="tm'+(calm?' tm-calm':'')+'" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+(leave?leave.replace(' \u00b7 Lieu',', lieu')+'. ':'')+'Open '+name+'’s tab.')+'">'
         +'<span class="tm-mono" aria-hidden="true">'+esc(initial)+'</span>'
         +'<span class="tm-body"><span class="tm-top"><span class="tm-name">'+esc(name)+'</span><span class="tm-open">'+mine.length+' open</span></span>'
         +'<span class="tm-st">'+bits.join('')+'</span>'
@@ -5218,7 +5219,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     }).join(''));
     function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
     function row(it){
-      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub">'+esc(nm(it.w))+' &middot; '+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      /* Step 52: the owner as their initial in their colour, as in Team today and the
+         tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
+      var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
+      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;

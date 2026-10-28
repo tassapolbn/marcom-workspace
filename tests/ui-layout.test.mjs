@@ -1109,3 +1109,46 @@ test('the Request Centre is one quiet line when nothing is new or due',()=>{
   assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
   assert.match(step51,/#ov-rc-card\.rc-quiet \.ov-rc-none\{grid-column:1 \/ -1;/);
 });
+
+/* ===== Step 52: Team today, what needs Boss reads first ===== */
+const step52=stepBlock(52);
+
+test('Team today: overdue reads strongest, waiting next, on hold and Clear quietest; a calm name fades',()=>{
+  assert.match(css26,/\.tm-x\{display:inline-flex;[^}]*font-weight:700;/,'waiting keeps the base weight');
+  assert.match(step52,/\.tm-x\.tm-over\{font-weight:800;\}/);
+  assert.match(step52,/\.tm-x\.tm-hold\{font-weight:500;\}/);
+  assert.match(step52,/\.tm-x\.tm-clear\{font-weight:500;\}/,'the two-class selector outweighs .tm-clear{font-weight:600}');
+  assert.match(step52,/\.tm\.tm-calm \.tm-name\{color:var\(--muted\);font-weight:600;\}/);
+  assert.match(source,/class="tm'\+\(calm\?' tm-calm':''\)\+'"/);
+});
+
+test('each deadline opens with its owner\'s initial in their colour; screen readers still hear the name',()=>{
+  const nodes={'ov-deadlines':{innerHTML:''},'ov-dl-filters':{innerHTML:''}};
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const tasks={boss:[{status:'pending',dueDate:'2026-10-28',topic:'Brochure'}],dew:[{status:'pending',dueDate:'2026-10-29',topic:'Banner',priority:'high'}]};
+  const context=vm.createContext({window:{},document:{getElementById:id=>nodes[id]||null},MORDER:['boss','dew'],
+    tOf:w=>tasks[w]||[],isActive:()=>true,dU:d=>d==='2026-10-28'?0:1,nm:w=>({boss:'Boss',dew:'<b>dew</b>'})[w],esc,
+    topicOf:t=>t.topic,fdt:d=>'on '+d,MarcomUI:{setHTML:(el,h)=>{el.innerHTML=h;}}});
+  vm.runInContext(slice("  var ovDl='all', ovDlOpen={};",'  /* ---------- event countdown ---------- */'),context);
+  context.renderDeadlines();
+  const html=nodes['ov-deadlines'].innerHTML;
+  assert.match(html,/<div class="ov-dl" onclick="ovGoto\('boss'\)"><span class="ov-dl-who" data-member="boss" title="Boss" aria-hidden="true">B<\/span><div class="ov-dl-main">/);
+  assert.match(html,/<div class="ov-dl-sub"><span class="ov-dl-wn">Boss &middot; <\/span>on 2026-10-28<\/div>/,'the name stays in the text for screen readers');
+  assert.match(html,/data-member="dew" title="&lt;b&gt;dew&lt;\/b&gt;" aria-hidden="true">&lt;<\/span>/,'names are escaped; the initial is the first letter shown');
+  assert.doesNotMatch(html,/<b>dew<\/b>/);
+  assert.match(step52,/#panel-overview \.ov-dl \.ov-dl-who\{flex:0 0 auto;width:24px;height:24px;border-radius:50%;[^}]*color:#fff;background:var\(--tm-c,var\(--navy,#003057\)\);\}/);
+  for(const w of ['boss','dew','o','junior'])
+    assert.match(step52,new RegExp('#panel-overview \\.ov-dl-who\\[data-member="'+w+'"\\]\\{--tm-c:var\\(--member-'+w+'\\);\\}'));
+  assert.match(step52,/#panel-overview \.ov-dl-wn\{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect\(0 0 0 0\);white-space:nowrap;border:0;\}/);
+});
+
+test('white initials read on every person colour, the defaults and any saved tab colour',()=>{
+  for(const w of ['boss','dew','o','junior']){
+    const c=hex(css26,'member-'+w);
+    assert.ok(contrast('#ffffff',c)>=4.5,w+': white on '+c+' is '+contrast('#ffffff',c).toFixed(2));
+  }
+  /* A saved colour becomes an ink that reads at 4.5:1 on #EFF3F9, so white,
+     which is lighter still, reads on it at least as well. */
+  assert.match(source,/var ink=readable\(c,'#EFF3F9',4\.5\);/);
+  assert.match(source,/css\+=':root\{--member-'\+w\+':'\+ink\+';\}';/);
+});

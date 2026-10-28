@@ -1344,3 +1344,19 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
 #panel-overview .ov-wide:empty{display:none;}
 #evb-soon .ov-countdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));column-gap:28px;}
 html:not(.dark) #evb-soon .ov-countdown .ov-cdn{border-top:0!important;}
+
+/* Step 52: Team today, what needs Boss reads first */
+/* Overdue reads strongest, waiting next, on hold quietest; a person with nothing
+   waiting fades back beside a quiet "Clear". */
+.tm-x.tm-over{font-weight:800;}
+.tm-x.tm-hold{font-weight:500;}
+.tm-x.tm-clear{font-weight:500;}
+.tm.tm-calm .tm-name{color:var(--muted);font-weight:600;}
+/* Each deadline row opens with its owner's initial in their colour. */
+#panel-overview .ov-dl .ov-dl-who{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;line-height:1;color:#fff;background:var(--tm-c,var(--navy,#003057));}
+#panel-overview .ov-dl-who[data-member="boss"]{--tm-c:var(--member-boss);}
+#panel-overview .ov-dl-who[data-member="dew"]{--tm-c:var(--member-dew);}
+#panel-overview .ov-dl-who[data-member="o"]{--tm-c:var(--member-o);}
+#panel-overview .ov-dl-who[data-member="junior"]{--tm-c:var(--member-junior);}
+/* The written name is for screen readers only; the initial says it at a glance. */
+#panel-overview .ov-dl-wn{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}

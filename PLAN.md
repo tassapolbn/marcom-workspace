@@ -1403,7 +1403,7 @@ twice: in the header and in the "⋯" menu.
     columns. Contrast: zero failures. Tests: 330/330 (three new; four layout
     tests follow the new arrangement).
 
-- [ ] **52. Team today: what needs Boss reads first**
+- [x] **52. Team today: what needs Boss reads first**
   - Files: `index.html` (Team today and the deadline rows),
     `assets/workspace-ui.css`, tests.
   - Change: in Team today, overdue reads strongest, waiting next and on hold
@@ -1412,6 +1412,18 @@ twice: in the header and in the "⋯" menu.
     as in the tab bar, instead of the name written out; the date stays.
   - Test: rendered weights (overdue bold red, on hold regular); every
     initial has a spoken name; contrast clean; the Team today tests updated.
+  - Done (28 Oct): In Team today, overdue reads strongest (extra bold, red),
+    waiting stays bold and on hold drops to medium weight; a person with
+    nothing to flag fades back, their name in grey beside a quiet "Clear".
+    Each row in Upcoming Deadlines opens with its owner's initial in their
+    colour; the written name stays for screen readers only, so the row reads
+    initial, topic, date and priority. White on every person colour reads at
+    5:1 or better, and a saved tab colour is always darkened until it does.
+    One small difference: on hold is medium (500) rather than regular, so it
+    stays crisp at 13px. Contrast on the Overview: zero failures in light
+    mode; in dark mode one older finding that is not from this step (an
+    event's days-left number in a very dark event colour, raised with Boss).
+    Tests: 334/334 (four new; the Team today tests follow the new class).
 
 - [ ] **53. Tab motion (decision 2)**
   - Files: `assets/workspace-ui.css` (the pill's spring), tests.

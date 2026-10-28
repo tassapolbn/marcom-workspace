@@ -71,7 +71,7 @@ test('key live Overview, widget, team and event styles remain',()=>{
   }
   // Team today (Step 37): the live section and its cells keep their styles.
   assert.match(outsideStyles,/class="ov-team" id="ov-team"/);
-  assert.match(outsideStyles,/class="tm"/);
+  assert.match(outsideStyles,/class="tm(?:"|'\+)/);
   for(const name of ['ov-team','ov-team-list','tm','tm-mono','tm-st','tm-x','tm-lv']){
     assert.match(selectors(stylesheet),selectorName(name),name+' lost its CSS selector');
   }

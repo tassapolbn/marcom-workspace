@@ -39,7 +39,8 @@ function team({tasks={},board,sick={},lieu={},calendar={},missing=[],names={},li
   return nodes;
 }
 function open(n,extra){return Array.from({length:n},()=>({status:'pending',...extra}));}
-function cells(html){return html.split('<button type="button" class="tm"').slice(1);}
+/* A person with nothing to flag also carries tm-calm (Step 52). */
+function cells(html){return html.split(/<button type="button" class="tm(?: tm-calm)?"/).slice(1);}
 function label(cell){return /aria-label="([^"]*)"/.exec(cell)[1];}
 
 test('Team today has one cell per person with their own open count; the total counts a shared task once',()=>{
@@ -96,6 +97,18 @@ test('someone with nothing to flag reads Clear; a meeting now or soon shows quie
   assert.doesNotMatch(c[1],/tm-clear/);
   assert.match(c[2],/class="tm-x tm-soon" title="Free now · next in 10 min"/);
   assert.match(c[3],/class="tm-x tm-out"[^>]*><i class="ti ti-beach"/,'leave known only to the calendar script still shows');
+});
+
+test('Step 52: a person with nothing to flag fades back; anyone with a flag keeps full weight',()=>{
+  const nodes=team({tasks:{boss:open(1),dew:[{status:'waiting'}],o:open(1),junior:open(1)},
+    sick:{junior:[{date:TODAY}]},calendar:{o:{cls:'soon',txt:'Free now · next in 10 min'}}});
+  const html=nodes['team-list'].innerHTML;
+  assert.match(html,/<button type="button" class="tm tm-calm" data-member="boss"/,'only "Clear": calm');
+  assert.match(html,/<button type="button" class="tm" data-member="dew"/,'waiting work: full weight');
+  assert.match(html,/<button type="button" class="tm" data-member="o"/,'a meeting soon is worth knowing, so no fade');
+  assert.match(html,/<button type="button" class="tm" data-member="junior"/,'out sick: full weight');
+  assert.equal((html.match(/tm-calm/g)||[]).length,1);
+  assert.match(label(cells(html)[0]),/^BOSS: clear\. 1 open\./,'the spoken summary is unchanged');
 });
 
 test('the not-connected note lists only members without a calendar and hides when all are connected',()=>{
