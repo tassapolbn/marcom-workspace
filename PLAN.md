@@ -1733,11 +1733,20 @@ their colour (step 49 kept these marks on purpose).
     end to end at 390x844 and 1440x900. Tests: 350/350 (five new; the search
     and deadline row tests follow the new behaviour).
 
-- [ ] **61. iPhone: the round buttons never cover a control (decision 2)**
+- [x] **61. iPhone: the round buttons never cover a control (decision 2)**
   - Files: `assets/workspace-ui.css`, `index.html`, tests.
   - Test: the reviewer's check (every 40px of scroll at 390x664 and 390x844
     on the Overview, Boss and Dew) finds no control under a round button
     while scrolling.
+  - Done (28 Oct): on iPhone the round "+" and Team Chat buttons slide down
+    out of sight as soon as the page scrolls down, and come back as soon as
+    it scrolls up, near the top of the page, or while Team Chat is open;
+    from the moment they start to leave, a tap goes through to the card
+    underneath. With Reduce Motion they simply fade. iPads and computers are
+    unchanged. The reviewer's own check, rerun: covered positions went from
+    21 to 46 per page to 0 on Dew and 1 on the Overview and Boss, that one
+    being the very top of the page, where the buttons stay as decided.
+    Tests: 352/352 (two new).
 
 - [ ] **62. Person tabs open on the person's work (decision 4)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.

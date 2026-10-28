@@ -1302,3 +1302,29 @@ test('the shown card is marked for a moment; on iPhone and iPad the page holds s
   assert.match(media(step60,'max-width:980px'),/html:has\(\.modal-overlay\.open\),html:has\(\.modal-overlay\.open\) body\{overflow:hidden;\}/);
   assert.match(step60,/\.m-for\[hidden\]\{display:none;\}/);
 });
+
+/* ===== Step 61: iPhone, the round buttons never cover a control ===== */
+const step61=stepBlock(61);
+
+test('on iPhone the round buttons slide away while scrolling down and return on the way up',()=>{
+  const cls=new Set();let handler=null,chat=null,phone=true;
+  const win={scrollY:0,matchMedia:()=>({get matches(){return phone;},addEventListener(){}}),addEventListener:(t,f)=>{if(t==='scroll')handler=f;}};
+  const c=vm.createContext({window:win,document:{body:{classList:{toggle:(k,on)=>on?cls.add(k):cls.delete(k)}},querySelector:s=>s==='.chat-panel.open'?chat:null}});
+  vm.runInContext(slice('/* Step 61: on iPhone the round','function uiToast(msg,opts){'),c);
+  const to=y=>{win.scrollY=y;handler();};
+  to(10);assert.equal(cls.has('fab-away'),false,'near the top they stay');
+  to(60);assert.equal(cls.has('fab-away'),true,'scrolling down: away');
+  to(400);to(398);assert.equal(cls.has('fab-away'),true,'a 2px wobble changes nothing');
+  to(380);assert.equal(cls.has('fab-away'),false,'scrolling up: back');
+  to(600);assert.equal(cls.has('fab-away'),true);
+  chat={};to(900);assert.equal(cls.has('fab-away'),false,'never while Team Chat is open');
+  chat=null;to(1200);assert.equal(cls.has('fab-away'),true);
+  phone=false;to(1500);assert.equal(cls.has('fab-away'),false,'iPad and computers keep them as they are');
+});
+
+test('the slide uses the page\'s motion and becomes a plain fade with Reduce Motion',()=>{
+  const phone=media(step61,'max-width:600px');
+  assert.match(phone,/body\.fab-away \.quickadd-fab,body\.fab-away \.chat-fab\{transform:translateY\(calc\(100% \+ var\(--float-lift\) \+ 48px\)\);opacity:0;visibility:hidden;pointer-events:none;/,
+    'out of sight and out of the way of a tap at once');
+  assert.match(step61,/@media\(max-width:600px\) and \(prefers-reduced-motion:reduce\)\{[^@]*body\.fab-away \.quickadd-fab,body\.fab-away \.chat-fab\{transform:none;\}/);
+});

@@ -2517,6 +2517,22 @@ function uiPrompt(o){
     setTimeout(function(){inp.focus();try{inp.select();}catch(e){}},30);
   });
 }
+/* Step 61: on iPhone the round "+" and Team Chat buttons slide away while the
+   page scrolls down, so they never sit on a card's controls as you read, and
+   come back as soon as it scrolls up, near the top, or while Team Chat is open
+   (Boss, 28 Oct: both stay round buttons). */
+(function(){
+  var mq=window.matchMedia?window.matchMedia('(max-width:600px)'):null,last=window.scrollY||0,run=0;
+  function away(on){ if(document.body)document.body.classList.toggle('fab-away',!!on); }
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY||0,d=y-last; last=y;
+    if(!mq||!mq.matches||y<=24||document.querySelector('.chat-panel.open')){ run=0; away(false); return; }
+    if((d>0&&run<0)||(d<0&&run>0))run=0;
+    run+=d;
+    if(run>6)away(true); else if(run<-6)away(false);
+  },{passive:true});
+  if(mq&&mq.addEventListener)mq.addEventListener('change',function(){ away(false); });
+})();
 function uiToast(msg,opts){
   opts=opts||{};
   var host=document.getElementById('uxp-toasts');
