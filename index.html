@@ -862,7 +862,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <span class="hdr-context" id="hdr-context" style="display:none;"></span>
     </div>
     <div class="header-right">
-      <button class="cmdk-trigger" onclick="openCmdk()" title="Search and commands (Ctrl K)"><i class="ti ti-search"></i><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="cmdk-trigger" onclick="openCmdk()" title="Search and commands (Ctrl K)" aria-label="Search"><i class="ti ti-search"></i><span>Search</span><kbd>⌘K</kbd></button>
       <button class="dm-toggle" id="hdr-add" onclick="uxpQuickAdd()" title="New task" aria-label="New task"><i class="ti ti-plus"></i></button>
       <button class="dm-toggle" id="uxp-bell" onclick="uxpBellToggle()" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" style="position:relative;"><i class="ti ti-bell"></i><span class="uxp-bell-badge" id="uxp-bell-badge" style="display:none;">0</span></button>
       <button class="dm-toggle" id="dm-btn" onclick="toggleDark()" title="Toggle dark mode"><i class="ti ti-moon" id="dm-icon"></i></button>
@@ -1430,7 +1430,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   <div class="cmdk-box">
     <div class="cmdk-search">
       <i class="ti ti-search"></i>
-      <input id="cmdk-input" placeholder="Search tasks or type a command..." oninput="renderCmdk()" autocomplete="off" />
+      <input id="cmdk-input" placeholder="Search tasks, events, notes or links" oninput="renderCmdk()" autocomplete="off" />
       <span class="cmdk-esc">ESC</span>
     </div>
     <div class="cmdk-results" id="cmdk-results"></div>
@@ -2931,12 +2931,22 @@ function taskColDrop(e,who,status){e.preventDefault();var c=e.currentTarget;if(c
 function taskCardClick(e,who,id){ if(e.target&&e.target.closest&&e.target.closest('button,select,a,input,label,.tcard-sel'))return; openEdit(who,id); }
 window.__tcOpen={};
 window.tcToggleDetails=function(btn,key){
-  var det=btn.nextElementSibling;
+  var card=btn.closest?btn.closest('.task-card'):null;
+  var det=card?card.querySelector('.tc-details'):btn.nextElementSibling;
   var open=!(det&&det.classList.contains('open'));
   if(det)det.classList.toggle('open',open);
   btn.classList.toggle('open',open);
   btn.setAttribute('aria-expanded',open?'true':'false');
   window.__tcOpen[key]=open;
+};
+/* Step 50: "⋯" shows or hides a card's action row, and the choice survives a redraw. */
+window.__tcActs={};
+window.tcToggleActs=function(btn,key){
+  var card=btn.closest?btn.closest('.task-card'):null; if(!card)return;
+  var open=!card.classList.contains('acts-open');
+  card.classList.toggle('acts-open',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  window.__tcActs[key]=open;
 };
 function kbFilterPass(t,filter){
   if(filter==='soon')return isSoon(t);
@@ -3032,7 +3042,8 @@ function taskCardHTML(task,who){
      role's own controls and the details. The other actions wait in a quiet
      row at the foot. Every control and handler is the one the card always had. */
   const doneLbl=status==='done'?'Mark as not done':'Mark as done';
-  return '<div class="task-card tc-'+status+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
+  const actsOpen=!!(window.__tcActs&&window.__tcActs[who+'_'+task.id]);
+  return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
       +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
       +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+doneLbl+'" aria-label="'+doneLbl+'"><i class="ti ti-check"></i></button>'
@@ -3040,9 +3051,14 @@ function taskCardHTML(task,who){
     +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
     +'</div>'+roleHtml
-    +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button><div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
-    +'<div class="task-foot">'+moveSelectHTML(who,task)
+    /* Step 50: at rest one bar, Details on the left and "⋯" on the right; "⋯"
+       opens the action row under it. A click on the card still opens the task. */
+    +'<div class="tc-bar">'
+      +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>':'')
+      +'<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>'
+    +'</div>'
+    +'<div class="task-foot">'+statusSelectHTML(who,task).replace('class="tcard-sel"','class="tcard-sel tc-row-sel"')+moveSelectHTML(who,task)
       +'<span class="task-acts">'
         +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
         +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate" aria-label="Duplicate this task"><i class="ti ti-copy"></i></button>'
@@ -3050,6 +3066,7 @@ function taskCardHTML(task,who){
         +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete" aria-label="Delete this task"><i class="ti ti-trash"></i></button>'
       +'</span>'
     +'</div>'
+    +(detHtml?'<div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
     +'</div>';
 }
 function kanbanHTML(tasks,who,filter){
@@ -4017,16 +4034,18 @@ function openCmdk(){
 }
 function closeCmdk(){document.getElementById('cmdk-overlay').classList.remove('open');}
 function cmdkActions(q){
-  const acts=[
-    {icon:'ti-plus',cls:'',title:'New task in Boss',sub:'Create a task',run:()=>{closeCmdk();openAdd('boss');}},
-    {icon:'ti-plus',cls:'best',title:'New task in Best',sub:'Create a task',run:()=>{closeCmdk();openAdd('best');}},
-    {icon:'ti-user',cls:'',title:'Go to Boss tab',sub:'Marcom manager',run:()=>{closeCmdk();switchTab('boss');}},
-    {icon:'ti-palette',cls:'',title:'Go to Dew tab',sub:'Graphic Designer',run:()=>{closeCmdk();switchTab('dew');}},
-    {icon:'ti-camera',cls:'',title:'Go to O tab',sub:'Photographer & Video Editor',run:()=>{closeCmdk();switchTab('o');}},
-    {icon:'ti-user-plus',cls:'',title:'Go to Junior tab',sub:'Junior Events Coordinator',run:()=>{closeCmdk();switchTab('junior');}},
-    {icon:'ti-moon',cls:'',title:'Toggle dark mode',sub:'Appearance',run:()=>{closeCmdk();toggleDark();}},
-    {icon:'ti-settings',cls:'',title:'Team settings',sub:'Edit member names',run:()=>{closeCmdk();openSettings();}}
-  ];
+  /* One "New task" (the board you are on), one "Go to" per tab you can see, then
+     the two settings (step 48). Names and roles come from Settings, never fixed. */
+  const acts=[{icon:'ti-plus',cls:'',title:'New task',sub:'On the board you are on',run:()=>{closeCmdk();if(window.uxpQuickAdd)uxpQuickAdd();else openAdd('boss');}}];
+  document.querySelectorAll('.tab-nav .tab-btn').forEach(b=>{
+    if(!b.id||getComputedStyle(b).display==='none')return;
+    const w=b.id.replace(/^tab-/,''),name=((b.querySelector('.tab-name')||b).textContent||w).trim();
+    const ic=(((b.querySelector('i.ti')||{}).className||'').match(/ti-[a-z0-9-]+/)||['ti-layout-grid'])[0];
+    const role=w==='overview'?'The whole team':((window.marcomRoleOf&&window.marcomRoleOf(w))||'');
+    acts.push({icon:ic,cls:'',title:'Go to '+name,sub:role,run:()=>{closeCmdk();switchTab(w);}});
+  });
+  acts.push({icon:'ti-moon',cls:'',title:'Toggle dark mode',sub:'Appearance',run:()=>{closeCmdk();toggleDark();}});
+  acts.push({icon:'ti-settings',cls:'',title:'Settings',sub:'Names, colours and lunch',run:()=>{closeCmdk();openSettings();}});
   return q?acts.filter(a=>a.title.toLowerCase().includes(q)):acts;
 }
 function cmdkRow(idx,icon,cls,title,sub,tag){
@@ -4043,23 +4062,20 @@ function renderCmdk(){
     html+='<div class="cmdk-section">Actions</div>';
     acts.forEach(a=>{const i=cmdkItems.length;cmdkItems.push(a);html+=cmdkRow(i,a.icon,a.cls,a.title,a.sub,'');});
   }
-  if(q){
-    const matches=[];
-    [['boss',bossTasks],['best',bestTasks]].forEach(pair=>{
-      pair[1].forEach(t=>{
-        const hay=((t.topic||t.title||'')+' '+(t.description||'')).toLowerCase();
-        if(hay.includes(q))matches.push({who:pair[0],t:t});
+  if(q.length>=2&&window.marcomFind){
+    /* Everything the workspace holds, grouped (step 48). A task opens in its editor;
+       an event, note or link opens the tab it belongs to. */
+    const found=window.marcomFind(q),kinds=[['task','Tasks',12],['event','Events',6],['note','Notes',6],['link','Links',6]];
+    kinds.forEach(k=>{
+      const rows=found.filter(r=>r.kind===k[0]);
+      if(!rows.length)return;
+      html+='<div class="cmdk-section">'+k[1]+' ('+rows.length+')</div>';
+      rows.slice(0,k[2]).forEach(r=>{
+        const i=cmdkItems.length;
+        cmdkItems.push({run:r.kind==='task'?()=>{closeCmdk();switchTab(r.w);setTimeout(()=>openEdit(r.w,r.id),70);}:()=>{closeCmdk();if(window.ovGoto)ovGoto(r.w);else switchTab(r.w);}});
+        html+=cmdkRow(i,r.ic,'',escHtml(r.label),escHtml(r.sub),'');
       });
     });
-    if(matches.length){
-      html+='<div class="cmdk-section">Tasks ('+matches.length+')</div>';
-      matches.slice(0,12).forEach(mt=>{
-        const i=cmdkItems.length;const who=mt.who,t=mt.t;
-        cmdkItems.push({run:()=>{closeCmdk();switchTab(who);setTimeout(()=>openEdit(who,t.id),70);}});
-        const sub=(who==='boss'?'Boss':'Best')+(t.dueDate?' \u00b7 due '+t.dueDate:'')+(t.status?' \u00b7 '+t.status.replace('-',' '):'');
-        html+=cmdkRow(i,'ti-checkbox',who==='best'?'best':'',escHtml(t.topic||t.title||'(untitled)'),sub,who==='boss'?'Boss':'Best');
-      });
-    }
   }
   if(!cmdkItems.length)html='<div class="cmdk-empty">No matches found. Try another search.</div>';
   document.getElementById('cmdk-results').innerHTML=html;
@@ -4280,12 +4296,30 @@ function evInk(hex){
   for(var i=49;i>0;i--){var v=rgb.map(function(x){return Math.round(x*i/50);});if(reads(v))return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
   return '#000000';
 }
+/* Dark mode (step 57): the colour itself when it reads at 4.5:1 on the dark
+   card, otherwise the darkest lighter shade of the same colour that does.
+   Measured against the card's hover tint (#242831; #161a24 at rest), so it
+   reads on both. */
+function evInkDark(hex){
+  if(!evOkClr(hex))return '';
+  var rgb=[1,3,5].map(function(i){return parseInt(hex.slice(i,i+2),16);});
+  function lum(v){var l=v.map(function(x){x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});return 0.2126*l[0]+0.7152*l[1]+0.0722*l[2];}
+  var card=lum([36,40,49]);
+  function reads(v){return (lum(v)+0.05)/(card+0.05)>=4.5;}
+  if(reads(rgb))return hex;
+  for(var i=1;i<50;i++){var v=rgb.map(function(x){return Math.round(x+(255-x)*i/50);});if(reads(v))return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
+  return '#ffffff';
+}
 /* Class and style for text drawn in an event's colour. A colour too light for
-   white gets ev-ink, which swaps in the darker shade in light mode only. */
+   white gets ev-ink, which swaps in the darker shade in light mode only; a
+   colour too dark for the dark card gets ev-ink-d, its lighter shade in dark
+   mode only. */
 function evTextAttrs(cls,hex){
   if(!evOkClr(hex))return ' class="'+cls+'"';
-  var ink=evInk(hex);
-  return ink===hex?' class="'+cls+'" style="color:'+hex+';"':' class="'+cls+' ev-ink" style="color:'+hex+';--evc-ink:'+ink+';"';
+  var ink=evInk(hex),inkD=evInkDark(hex),c=cls,st='color:'+hex+';';
+  if(ink!==hex){c+=' ev-ink';st+='--evc-ink:'+ink+';';}
+  if(inkD!==hex){c+=' ev-ink-d';st+='--evc-ink-d:'+inkD+';';}
+  return ' class="'+c+'" style="'+st+'"';
 }
 const EV_TEXT_COLORS=['#ffffff','#16202e','#fdf3da'];
 function renderEvColorRow(sel){
@@ -4591,22 +4625,6 @@ html.dark body.theme-overview{background:linear-gradient(170deg,#0c1422 0%,#0e15
 #panel-overview .ov-topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
 #panel-overview .ov-hello-title{font-size:20px;font-weight:800;letter-spacing:-0.4px;}
 #panel-overview .ov-hello-sub{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
-#panel-overview .ov-search-box{position:relative;flex:1;min-width:240px;max-width:460px;display:flex;align-items:center;}
-#panel-overview .ov-search-box>i{position:absolute;left:14px;color:var(--muted);font-size:17px;}
-#panel-overview .ov-search-input{width:100%;border:1.5px solid var(--border);border-radius:99px;padding:11px 38px 11px 40px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:all .15s;}
-#panel-overview .ov-search-input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,95,.12);}
-#panel-overview .ov-search-clear{position:absolute;right:8px;background:var(--gray-light);border:none;width:26px;height:26px;border-radius:50%;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;}
-#panel-overview .ov-search-clear:hover{background:var(--danger-light);color:var(--danger);}
-#panel-overview .ov-search-results{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:8px;margin-bottom:16px;max-height:380px;overflow-y:auto;}
-#panel-overview .ov-sr-head{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;}
-#panel-overview .ov-sr{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background .12s;}
-#panel-overview .ov-sr:hover{background:var(--gray-light);}
-#panel-overview .ov-sr-ic{width:32px;height:32px;border-radius:9px;background:var(--navy-light);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-html.dark #panel-overview .ov-sr-ic{color:#8fb4dc;}
-#panel-overview .ov-sr-b{flex:1;min-width:0;}
-#panel-overview .ov-sr-label{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#panel-overview .ov-sr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-#panel-overview .ov-sr-arrow{color:var(--gray-mid);font-size:16px;}
 
 #panel-overview .ov-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);padding:15px 16px;margin-bottom:16px;transition:var(--dm-trans);}
 #panel-overview .ov-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px;}
@@ -4655,7 +4673,7 @@ html.dark #panel-overview .ov-st-ok{color:#5fcf85;}
 /* grid */
 #panel-overview .ov-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
 @media(max-width:880px){#panel-overview .ov-grid{grid-template-columns:1fr;}}
-@media(max-width:520px){#panel-overview .ov-topbar{flex-direction:column;align-items:stretch;}#panel-overview .ov-search-box{max-width:none;}#panel-overview .ov-res{grid-template-columns:1fr;}}
+@media(max-width:520px){#panel-overview .ov-topbar{flex-direction:column;align-items:stretch;}#panel-overview .ov-res{grid-template-columns:1fr;}}
 
 /* master calendar */
 #panel-overview .ov-cal-nav{display:flex;align-items:center;gap:6px;}
@@ -4823,9 +4841,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'</div>'
    +'<div class="ov-topbar">'
    +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
-   +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
    +'</div>'
-   +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
    +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
    +  '<div class="ov-team-list" id="team-list"></div>'
@@ -4834,6 +4850,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
    +    '<div class="ov-card" id="ov-dl-card"><div class="ov-card-head"><div class="ov-card-title" id="ov-dl-title" tabindex="-1"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div><div class="ov-dl-filters" id="ov-dl-filters" role="group" aria-label="Filter deadlines"></div></div><div id="ov-deadlines"></div></div>'
+   +  '</div>'
+   +  '<div class="ov-col-side">'
+   +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
+   +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card ov-calendar-card" id="ov-cal-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button type="button" class="ov-fpill" onclick="ovCalToday()">Today</button><button class="cal-arrow" aria-label="Previous month" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title" aria-live="polite"></span><button class="cal-arrow" aria-label="Next month" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
    +      '<div class="ov-cal-filters" id="ov-cal-filters"></div>'
    +      '<div class="ov-cal-layout"><div class="ov-cal-month"><div class="cal-grid ov-cal-grid" id="ov-cal-grid" role="group" aria-label="Choose a calendar date"></div>'
@@ -4841,11 +4861,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +      '</div><div class="ov-cal-detail" id="ov-cal-detail" role="region" aria-label="Selected day agenda" aria-live="polite"></div></div>'
    +    '</div>'
    +  '</div>'
-   +  '<div class="ov-col-side">'
-   +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
-   +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
-   +  '</div>'
    +'</div>'
+   +'<div class="ov-wide" id="ov-wide"></div>'
    +'<section class="ov-more ov-more-closed" id="ov-more" aria-label="Resources and more">'
    +  '<button type="button" class="ov-more-toggle" id="ov-more-toggle" aria-expanded="false" aria-controls="ov-more-body" onclick="ovMoreToggle()"><i class="ti ti-layout-grid-add"></i><span class="ov-more-title">Resources &amp; more</span><span class="ov-more-sum">Links, brand guidelines, assets, lunch menu, staff calendar, team activity</span><i class="ti ti-chevron-down ov-more-chev"></i></button>'
    +  '<div class="ov-more-body" id="ov-more-body">'
@@ -4865,11 +4882,25 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '</div>'
    +'</section>';
 
+  /* Step 51: the countdown list becomes the Event Board's "Coming up" section. Its
+     own card hides only after the move, so if the board never loads it stays. */
+  function ovAdoptCountdown(){
+    var list=document.getElementById('ov-countdown'),soon=document.getElementById('evb-soon'),wrap=document.getElementById('ov-cd-card');
+    if(!list||!soon)return;
+    if(list.parentNode!==soon)soon.appendChild(list);
+    if(wrap)wrap.hidden=true;
+  }
+  window.ovAdoptCountdown=ovAdoptCountdown;
+  /* Turning an iPad, or resizing across 980px, moves the Event Board with the columns. */
+  try{ var ovColMq=window.matchMedia('(max-width:980px)'); if(ovColMq.addEventListener)ovColMq.addEventListener('change',function(){ovLayout();}); else if(ovColMq.addListener)ovColMq.addListener(function(){ovLayout();}); }catch(e){}
   /* ---------- layout: one order for every card, wherever a script added it ---------- */
   var LAYOUT={
     top:['ov-ann-card'],
-    main:['ov-dl-card','evb-card','ov-cal-card'],
-    side:['ov-rc-card','ov-cd-card','ov-wm-card'],
+    main:['ov-dl-card','evb-card'],
+    side:['ov-rc-card','ov-wm-card','ov-cd-card','ov-cal-card'],
+    /* Two columns (wider than 980px): the Event Board runs full width under them.
+       One column: it follows the deadlines (step 51). */
+    wide:['evb-card'],
     more:['ov-resx-card','ov-menu-card','ov-act-card','sscal-card']
   };
   /* Moves only the cards that are out of place, so a card someone is typing in
@@ -4886,10 +4917,13 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
   function ovLayout(){
     var panel=document.getElementById('panel-overview'); if(!panel)return;
+    ovAdoptCountdown();
     var mw=document.getElementById('ov-menu-card')||document.querySelector('#panel-overview .menu-widget, #panel-boss .menu-widget');
     if(mw&&!mw.id)mw.id='ov-menu-card';
     ovPlace(document.getElementById('ov-top'),LAYOUT.top);
-    ovPlace(panel.querySelector('.ov-col-main'),LAYOUT.main);
+    var oneCol=!!(window.matchMedia&&window.matchMedia('(max-width:980px)').matches);
+    ovPlace(panel.querySelector('.ov-col-main'),oneCol?LAYOUT.main:LAYOUT.main.filter(function(id){return LAYOUT.wide.indexOf(id)<0;}));
+    if(!oneCol)ovPlace(document.getElementById('ov-wide'),LAYOUT.wide);
     ovPlace(panel.querySelector('.ov-col-side'),LAYOUT.side);
     ovPlace(document.getElementById('ov-more-body'),LAYOUT.more);
     ovPlace(document.getElementById('ov-resx-brand'),['ov-brand-card']);
@@ -5079,9 +5113,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       if(hold)add('hold',scIcon('on-hold','ti-player-pause'),hold+' on hold',hold);
       if(cal&&cal.cls==='busy')add('meet','ti-calendar-time',cal.txt,0,'Busy');
       if(cal&&cal.cls==='soon')add('soon','ti-calendar-time',cal.txt,0,'Soon');
-      if(!bits.length){ bits.push('<span class="tm-x tm-clear"><i class="ti ti-check" aria-hidden="true"></i>Clear</span>'); words.push('clear'); }
+      var calm=!bits.length;
+      if(calm){ bits.push('<span class="tm-x tm-clear"><i class="ti ti-check" aria-hidden="true"></i>Clear</span>'); words.push('clear'); }
       var name=nm(w),initial=(Array.from(String(name).trim())[0]||'').toLocaleUpperCase(),leave=leaveLine(w);
-      return '<button type="button" class="tm" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+(leave?leave.replace(' \u00b7 Lieu',', lieu')+'. ':'')+'Open '+name+'’s tab.')+'">'
+      return '<button type="button" class="tm'+(calm?' tm-calm':'')+'" data-member="'+esc(w)+'" onclick="ovGoto(\''+esc(w)+'\')" aria-label="'+esc(name+': '+words.join(', ')+'. '+mine.length+' open. '+(leave?leave.replace(' \u00b7 Lieu',', lieu')+'. ':'')+'Open '+name+'’s tab.')+'">'
         +'<span class="tm-mono" aria-hidden="true">'+esc(initial)+'</span>'
         +'<span class="tm-body"><span class="tm-top"><span class="tm-name">'+esc(name)+'</span><span class="tm-open">'+mine.length+' open</span></span>'
         +'<span class="tm-st">'+bits.join('')+'</span>'
@@ -5202,7 +5237,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     }).join(''));
     function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
     function row(it){
-      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub">'+esc(nm(it.w))+' &middot; '+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      /* Step 52: the owner as their initial in their colour, as in Team today and the
+         tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
+      var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
+      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;
@@ -5345,22 +5383,18 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function saveAnn(items){ var d=db(); if(d)d.collection('dept_settings').doc('announcements').set({items:items},{merge:true}).catch(function(e){ console.error(e); }); }
 
   /* ---------- global search ---------- */
-  function doSearch(q){
-    var box=document.getElementById('ov-search-results'); if(!box)return;
+  /* One search for the whole workspace (step 48): every person's tasks and shared
+     cards, events, notes and links. The header search lists what it finds. */
+  function marcomFind(q){
     q=(q||'').trim().toLowerCase();
-    if(q.length<2){ box.style.display='none'; box.innerHTML=''; return; }
-    var res=[];
+    var res=[]; if(q.length<2)return res;
     MORDER.forEach(function(w){
-      tOf(w).forEach(function(t){ if((topicOf(t)+' '+(t.description||'')+' '+(t.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Task',ic:'ti-clipboard-list',label:topicOf(t),sub:nm(w)}); });
-      eOf(w).forEach(function(e){ if(((e.name||'')+' '+(e.notes||'')+' '+(e.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Event',ic:'ti-confetti',label:e.name||'Event',sub:'Team event'+(e.date?' · '+fdt(e.date):'')}); });
-      nOf(w).forEach(function(n){ if(((n.title||'')+' '+(n.content||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Note',ic:'ti-notes',label:n.title||'Untitled note',sub:nm(w)}); });
-      lkOf(w).forEach(function(l){ if(((l.title||'')+' '+(l.url||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Link',ic:'ti-link',label:l.title||l.url||'Link',sub:nm(w)}); });
+      tOf(w).forEach(function(t){ if((topicOf(t)+' '+(t.description||'')+' '+(t.category||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'task',w:w,id:t.id,ic:'ti-clipboard-list',label:topicOf(t),sub:nm(w)}); });
+      eOf(w).forEach(function(e){ if(((e.name||'')+' '+(e.notes||'')+' '+(e.category||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'event',w:w,id:e.id,ic:'ti-confetti',label:e.name||'Event',sub:'Team event'+(e.date?' · '+fdt(e.date):'')}); });
+      nOf(w).forEach(function(n){ if(((n.title||'')+' '+(n.content||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'note',w:w,id:n.id,ic:'ti-notes',label:n.title||'Untitled note',sub:nm(w)}); });
+      lkOf(w).forEach(function(l){ if(((l.title||'')+' '+(l.url||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'link',w:w,id:l.id,ic:'ti-link',label:l.title||l.url||'Link',sub:nm(w)}); });
     });
-    if(!res.length){ box.style.display='block'; box.innerHTML='<div class="ov-empty-sm">No matches found.</div>'; return; }
-    box.style.display='block';
-    box.innerHTML='<div class="ov-sr-head">'+res.length+' result'+(res.length>1?'s':'')+'</div>'+res.slice(0,25).map(function(r){
-      return '<div class="ov-sr" onclick="ovGoto(\''+r.w+'\')"><div class="ov-sr-ic"><i class="ti '+r.ic+'"></i></div><div class="ov-sr-b"><div class="ov-sr-label">'+esc(r.label)+'</div><div class="ov-sr-sub">'+r.type+' · '+esc(r.sub)+'</div></div><i class="ti ti-arrow-right ov-sr-arrow"></i></div>';
-    }).join('');
+    return res;
   }
 
   /* ---------- master render ---------- */
@@ -5382,8 +5416,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };
   window.ovPickDay=function(ds){ ovSel=ds; renderCal(); };
   window.ovCalToday=function(){var now=new Date();ovCalY=now.getFullYear();ovCalM=now.getMonth();ovSel=tdy();renderCal();};
-  window.ovSearch=function(v){ doSearch(v); };
-  window.ovClearSearch=function(){ var i=document.getElementById('ov-search'); if(i)i.value=''; var b=document.getElementById('ov-search-results'); if(b){ b.style.display='none'; b.innerHTML=''; } };
+  window.marcomFind=marcomFind;
+  window.marcomRoleOf=roleOf;
   window.ovAddAnnouncement=function(){
     var ta=document.getElementById('ov-ann-text'); if(!ta)return; var txt=ta.value.trim(); if(!txt)return;
     var pin=document.getElementById('ov-ann-pinnew');
@@ -10403,6 +10437,16 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     function row(ic,bg,cl,lbl,n,warn){
       return '<div class="ov-rc-row"><span class="ov-rc-ic" style="background:'+bg+';color:'+cl+';"><i class="ti '+ic+'"></i></span><span class="ov-rc-lbl">'+lbl+'</span><span class="ov-rc-num"'+(warn&&n?' style="color:var(--st-overdue);"':'')+'>'+n+'</span></div>';
     }
+    /* Step 51: nothing new or due reads as one quiet line, not a grid of zeros. */
+    var quiet=!(newD||newP||await_||dueWk||over);
+    card.classList.toggle('rc-quiet',quiet);
+    if(quiet){
+      card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
+        +'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines</span>'
+        +'<button class="btn btn-ghost btn-sm" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy Link</button></div>';
+      return;
+    }
     card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
       +row('ti-palette','rgba(232,133,12,.15)','#e8850c','New design',newD)
       +row('ti-camera','rgba(93,64,55,.16)','#7a5548','New photo',newP)
@@ -10716,7 +10760,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
 .uxp-nt-empty{padding:22px 16px;text-align:center;color:var(--muted);font-size:12.5px;}
 .uxp-nt-empty i{font-size:22px;display:block;margin-bottom:6px;opacity:.6;}
 /* readability: raise frequently read text to 12.5px minimum */
-.task-desc,.rq-dl-item,.rc-note,.trq-text,.tc-b,.ov-sr-label,.uxp-msg{font-size:12.5px!important;}
+.task-desc,.rq-dl-item,.rc-note,.trq-text,.tc-b,.uxp-msg{font-size:12.5px!important;}
 .form-label{font-size:12.5px;}
 .task-topic{font-size:13.5px;}
 /* mobile touch targets and spacing */
@@ -10816,6 +10860,7 @@ button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,te
     var open=forceClose===true?false:!p.classList.contains('open');
     p.classList.toggle('open',open);
     if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+    if(open&&window.uxpReanchor)window.uxpReanchor();
   };
   document.addEventListener('mousedown',function(e){
     var p=document.getElementById('uxp-bell-panel');
@@ -11191,6 +11236,12 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       try{localStorage.setItem('uxp_sal',v?'1':'0');}catch(e){}
       /* The fold animates before the class changes, so paint the state being set. */
       paint(v);
+      /* From the pinned iPhone header (step 47) the details open at the top of
+         the page, so go there to show them. */
+      if(!v&&b.parentNode&&b.parentNode.classList.contains('header-right')&&(window.scrollY||0)>0){
+        var still=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        try{window.scrollTo({top:0,behavior:still?'auto':'smooth'});}catch(e){window.scrollTo(0,0);}
+      }
     };
     bar.appendChild(b);
     /* Adopt the lunch notice if it was built first: one line, not two bands. */
@@ -11204,7 +11255,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');
       b.innerHTML=c
-        ?'<i class="ti ti-cash-banknote"></i> Payday <b>'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> &middot; '+esc(days)+' days left'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
+        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
         :'<i class="ti ti-chevron-up"></i> Hide salary period';
     }
     /* The payday strip starts as one compact line; Show salary period opens it. */
@@ -11213,13 +11264,38 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     setInterval(paint,60000);
   }
 
+  /* iPhone (step 47): the payday line moves into the header's second row, where
+     ADMIN was, so the work starts higher; wider screens keep it under the header. */
+  var salMq=null;
+  function placeSal(){
+    var t=document.getElementById('uxp-sal-toggle'),host=document.querySelector('.header-right'),bar=document.querySelector('.uxp-sal-bar');
+    if(!t||!host||!bar)return;
+    if(salMq&&salMq.matches){ if(t.parentNode!==host)host.insertBefore(t,host.firstChild); }
+    else if(t.parentNode!==bar)bar.insertBefore(t,bar.firstChild);
+  }
+  function watchSal(){
+    if(salMq||!window.matchMedia)return;
+    salMq=window.matchMedia('(max-width:600px)');
+    if(salMq.addEventListener)salMq.addEventListener('change',placeSal); else if(salMq.addListener)salMq.addListener(placeSal);
+  }
+
   /* condensed header after scrolling, rAF-throttled */
   var tick=false;
+  /* An open "⋯" menu or bell panel opens just under its button and stays there
+     while the iPhone header scrolls (step 47), never over the header's own row. */
+  function reanchor(){
+    [['uxp-more-panel','hdr-more'],['uxp-bell-panel','uxp-bell']].forEach(function(pair){
+      var p=document.getElementById(pair[0]),btn=document.getElementById(pair[1]);
+      if(p&&btn&&p.classList.contains('open'))p.style.top=Math.round(btn.getBoundingClientRect().bottom+8)+'px';
+    });
+  }
+  window.uxpReanchor=reanchor;
   function onScroll(){
     if(tick)return; tick=true;
     requestAnimationFrame(function(){
       tick=false;
       document.body.classList.toggle('hdr-scrolled',(window.scrollY||0)>10);
+      reanchor();
     });
   }
   window.addEventListener('scroll',onScroll,{passive:true});
@@ -11248,7 +11324,9 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     }
     var admin=(window.__cur||{}).role==='admin';
     var syncTxt=(document.getElementById('sync-text')||{}).textContent||'';
+    var me=window.__cur||{},rl={admin:'Admin',designer:'Designer',media:'Media',junior:'Junior'}[me.role]||me.role||'';
     p.innerHTML=''
+      +(me.email?'<div class="uxp-mi-who"><i class="ti ti-user-circle"></i><span class="uxp-mi-name">'+esc(String(me.email).split('@')[0])+'</span>'+(rl?'<span class="uxp-mi-role">'+esc(rl)+'</span>':'')+'</div>':'')
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search (Ctrl K)</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpQuickAdd()"><i class="ti ti-plus"></i> New task</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-'+(document.documentElement.classList.contains('dark')?'sun':'moon')+'"></i> Dark mode: '+(document.documentElement.classList.contains('dark')?'on':'off')+'</button>'
@@ -11263,6 +11341,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     var open=forceClose===true?false:!p.classList.contains('open');
     p.classList.toggle('open',open);
     if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+    if(open)reanchor();
   };
   document.addEventListener('mousedown',function(e){
     var p=document.getElementById('uxp-more-panel');
@@ -11283,6 +11362,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
   }
   function boot(){
     dockSalary();
+    watchSal(); placeSal();
     onScroll();
     if(typeof window.switchTab==='function'){
       var _st=window.switchTab;
@@ -11849,11 +11929,16 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var c=document.getElementById('evb-card');
     if(!c){
       c=document.createElement('div'); c.className='ov-card'; c.id='evb-card';
-      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users-group"></i> Event Board</div>'
-        +'<select class="evb-sel" id="evb-filter" aria-label="Filter by event" onchange="evbFilter(this.value)" style="margin-left:auto;"></select>'
-        +'<label class="evb-done-toggle"><input type="checkbox" id="evb-show-done"'+(evbShowDone?' checked':'')+'> Show completed (<span id="evb-done-count">0</span>)</label></div>'
+      /* One card for events (step 51): the next events with their days left, then
+         the shared tasks by event, with the filter that applies to them. */
+      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Board</div></div>'
+        +'<div class="evb-soon" id="evb-soon"><div class="evb-sec-h">Coming up</div></div>'
+        +'<div class="evb-sec-h evb-tasks-h"><span>Shared tasks</span>'
+        +'<select class="evb-sel" id="evb-filter" aria-label="Filter shared tasks by event" onchange="evbFilter(this.value)"></select>'
+        +'<label class="evb-done-toggle"><input type="checkbox" id="evb-show-done"'+(evbShowDone?' checked':'')+'> <span>Show completed (<span id="evb-done-count">0</span>)</span></label></div>'
         +'<div class="evb-groups" id="evb-body"></div>';
       main.insertBefore(c,main.firstChild);
+      if(window.ovAdoptCountdown)window.ovAdoptCountdown();
       c.querySelector('#evb-show-done').addEventListener('change',function(){
         evbShowDone=this.checked;
         try{localStorage.setItem('evb_show_done',String(evbShowDone));}catch(e){}

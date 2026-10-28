@@ -1230,3 +1230,355 @@ the event form already previews the pair while choosing.
 2. **Step 46:** recommended, include it (small, and in the same feature).
 3. **Going live:** recommended, merge and deploy once every check passes; or
    stop at the preview so Boss can try it on an iPhone first.
+
+# Follow-up plan 5, step by step (28 Oct 2026): for Boss to approve
+
+Boss asked on 28 Oct to continue plan 5. Its seven proposals (above) become
+the steps below. Same scope: UX and UI only, light mode first, dark mode
+checked for no regression, iPhone first. Every step is checked with the
+team-like sample data (coloured events, shared cards, long names).
+
+Approved by Boss on 28 Oct: every step; the livelier spring (step 53); the
+department line stays hidden on iPhone, so step 54 needs nothing built; merge
+and deploy once every check passes.
+
+Baseline (28 Oct, 390x664, the visible size of Safari on an iPhone 13 or 14):
+on the Overview the header (110px), the payday line, the announcement, the
+search box and Team today come first; the first task row starts at about
+y=500 and two rows fit above the tab bar. Screenshots in
+`.oil-ui/workspace-redesign/plan5-baseline/`.
+
+Found while studying: the header search (Search, Ctrl K) finds only Boss's
+tasks and those of a "Best" list that no tab shows, and it still offers
+"New task in Best" and "Go to Junior tab". The Overview's search box finds
+every person's tasks, events, notes and links. On iPhone, Sign out appears
+twice: in the header and in the "⋯" menu.
+
+## Steps
+
+- [x] **47. iPhone: the header gives its height back to the work**
+  - Files: `index.html` (the header on phones), `assets/workspace-ui.css`,
+    tests.
+  - Change, on iPhone only: the payday line moves into the header's second
+    row, where the ADMIN label and the sign-out button sit today ("Payday ·
+    2 days"; the lunch notice shows there at lunchtime; a tap still opens the
+    full payday details). ADMIN moves to the top of the "⋯" menu, which
+    already has Sign out. After a scroll the header shrinks to one row (logo,
+    search, bell, "⋯") and grows back at the top; with Reduce Motion it
+    changes without movement.
+  - Test: at 390x664 and 320x568 payday reads in the header and the line
+    under it is gone; the Overview's first task row starts at least 40px
+    higher; after a scroll the header is one row of about 56px; nothing
+    overlaps or scrolls sideways from 320 to 440; a tap on payday still
+    shows its details; the lunch notice still appears at lunchtime.
+  - Done (28 Oct): on iPhone payday now sits in the header's second row
+    ("Payday · 2 days", or "2 days" on the smallest iPhones), where ADMIN and
+    the sign-out button were. The "⋯" menu now starts with who is signed in
+    and their role, and already had Sign out. The line under the header
+    appears only for the lunch notice, at lunchtime. The logo row scrolls away
+    with the page and the 50px row with payday, the bell and "⋯" stays pinned,
+    so nothing jumps (the 5px padding change on scroll is gone on phones); in
+    the Home Screen app a band in the header's colour keeps the status bar
+    covered. A tap on payday from the pinned row scrolls up to show the
+    details. The "⋯" menu and the bell panel now open 8px under their button
+    and follow it as the header moves; at the top of the page they used to
+    open over the header's own row, covering the "⋯" button. Measured at
+    390x664: the Overview's first deadline row starts at 443px (491 before)
+    and Dew's tab moves up by 48px; computers are unchanged. Checked at
+    lunchtime and in dark mode; iPhone widths 320 to 440 pass in both themes.
+    Tests: 323/323 (three new). One difference from the written plan: the
+    pinned row keeps payday instead of the logo, so the header never changes
+    height under your finger.
+
+- [x] **48. One search that finds everything**
+  - Files: `index.html` (the search palette and the Overview's search box),
+    `assets/workspace-ui.css`, tests.
+  - Change: the header search finds everything the Overview's box finds
+    (every person's tasks and shared cards, events, notes and links) and its
+    actions name today's tabs, from Settings (the "Best" entries go). The
+    Overview's search box goes, so there is one search on every screen. On
+    iPhone the header gains a search button beside the bell.
+  - Test: words from a Dew task, an O note, an event and a link are each
+    found and open the right place; Ctrl K and "/" still open the search;
+    on iPhone the Overview's first task row moves up by the box's height.
+  - Done (28 Oct): the header search now finds what the Overview's box found:
+    every person's tasks and shared cards, the team's events, notes and links,
+    grouped as Tasks, Events, Notes and Links. A task opens in its editor; an
+    event, note or link opens the tab it belongs to. Its actions come from the
+    tabs you can see, with names and roles from Settings: New task (on the
+    board you are on), Go to each tab, dark mode and Settings. The "Best"
+    entries and "Go to Junior tab" are gone, and a member is offered only
+    their own tabs. The Overview's search box and its results went, with
+    their styles. On iPhone a search button the size of the bell sits beside
+    it, and the Overview's empty top bar is hidden. Measured at 390x664: the
+    first deadline row now starts at 389px (491 before plan 5, 443 after
+    step 47), so a third row fits above the tab bar. The search field reads
+    "Search tasks, events, notes or links". Tests: 326/326 (three new; the
+    step 28, step 43 and calendar tests follow the removed box).
+
+- [x] **49. Person colours as small marks only**
+  - Files: `assets/workspace-ui.css` (`index.html` only where a colour is set
+    inline), tests.
+  - Change, light mode: a person's colour stays on their initial, their
+    name, their tab label and the tab bar, and leaves the large areas. The
+    "Add Task" bar becomes the same navy button on every tab; the person
+    header and the Event Hub bar lose their tinted band and thick coloured
+    edge. Status colours then carry their meaning alone. Dark mode unchanged.
+  - Test: a rendered scan of the four person tabs finds no area larger than
+    2,000px² filled with a person colour or its tint; contrast stays clean.
+  - Done (28 Oct): in light mode the name bar and the Event Hub bar are plain
+    (no tint), and every primary button on a person tab (Add Task, Add Event,
+    Add Link, Add Note, the templates' New) and the selected filter are the
+    Overview's navy, with a darker navy on hover. A person's colour now marks
+    only their initial, their name and titles, their tab label and the tab
+    bar, so the status colours are the only colour coding on the page. The
+    three readability rules that darkened the old person-coloured buttons
+    (from 24 Oct) went with them. A rendered scan of the four person tabs at
+    1440x900 and 390x844 finds no area over 2,000px² in a person's colour or
+    its tint (status and event colours aside); contrast: zero failures on all
+    five tabs. Dark mode unchanged. Tests: 324/324 (one new; three contrast
+    entries for the removed buttons went).
+
+- [x] **50. Task cards are calm at rest**
+  - Files: `index.html` (the card's action row and a "⋯" button),
+    `assets/workspace-ui.css`, tests.
+  - Change: at rest a card shows its name and tick, one line of facts, and
+    Details. The action row (Move to…, calendar, duplicate, edit, delete)
+    appears while the pointer is over the card or the keyboard is inside it
+    on computers; on iPhone a "⋯" button on the card shows or hides it.
+    Inside a status column the status menu joins that row, since the column
+    already says the status. Nothing is removed; every action works as today.
+  - Test: every action reachable by mouse, by touch (one extra tap) and by
+    keyboard (Tab reaches the row and shows it); drag and drop between
+    columns unchanged; spoken names unchanged; at 1440x900 more task names
+    fit on the first screen of a person tab.
+  - Done (28 Oct): at rest a card is its name and tick, the facts, the role's
+    controls and one bar: Details on the left, "⋯" on the right. "⋯" opens the
+    action row under it (Move to… for Boss, calendar, duplicate, edit,
+    delete) and closes it again; an open row stays open through a live
+    refresh. Inside a status column the status menu sits in that row; elsewhere
+    it stays on the facts line. A click on the card still opens the task, so
+    editing is one click as before. One difference from the written plan:
+    "⋯" opens the row on computers too, instead of a mouse hover, because a
+    row appearing under the pointer would make every card below it jump as
+    you move down a column. Checked by mouse at 1440 and by touch on an
+    iPhone 13 screen: every action calls what it did before, Details opens
+    its own panel, and a dragged card still lands in the Waiting column. By
+    keyboard the order is tick, design status, Details, "⋯", then the row.
+    Cards are about 73px shorter (Dew's first card 269px to 196px; Dew's
+    board 226px shorter). At 1440x900 the count of task names fully on the
+    first screen stays at four per tab, since the board starts low on the page
+    and its first row was already in view; the gain shows once you scroll.
+    Contrast: zero failures. Tests: 327/327 (three new).
+
+- [x] **51. The Overview: one heavy block, columns that end together**
+  - Files: `index.html` (the Overview layout, Request Centre, Event
+    Countdown, Event Board), `assets/workspace-ui.css`, tests.
+  - Change: Upcoming Deadlines stays the one large block. The Request Centre
+    is one line ("No new requests", with Open and Copy Link) when every count
+    is zero, and its full grid when anything is waiting. The Event Countdown
+    becomes the first section of the Event Board ("Coming up", every upcoming
+    event with its days left, delete kept), so events and their shared tasks
+    are one card. The Master Calendar moves to the right column under the
+    Request Centre, so the two columns end together on computers.
+  - Test: at 1440x900 and 1024x768 the two columns end within 120px of each
+    other; every upcoming event, with or without tasks, still shows its days
+    left; no event appears twice; on iPhone the order is Team today,
+    deadlines, events, requests, calendar.
+  - Done (28 Oct): Upcoming Deadlines is the one large block on the left. The
+    Request Centre reads "No new requests or deadlines", with Open and Copy
+    Link, when every count is zero; its full grid returns as soon as anything
+    arrives. The Master Calendar sits under it on the right. The Event
+    Countdown became the Event Board's "Coming up": every upcoming event with
+    its days left and delete button, then the shared tasks with their filter
+    (an event that has shared tasks also heads them there; the separate
+    countdown card is gone). Its old card hides only once the list has moved,
+    so if the board ever failed to load the countdown would stay put. One
+    difference from the written plan: with two columns the Event Board runs
+    full width under them ("Coming up" four across), because in the left
+    column it left that column 470px longer than the right. The columns now
+    end within 102px of each other at 1440x900 and 1024x768. In one column
+    (iPhone, iPad upright) the order is Team today, deadlines, events,
+    requests, calendar, as planned; turning an iPad moves the board with the
+    columns. Contrast: zero failures. Tests: 330/330 (three new; four layout
+    tests follow the new arrangement).
+
+- [x] **52. Team today: what needs Boss reads first**
+  - Files: `index.html` (Team today and the deadline rows),
+    `assets/workspace-ui.css`, tests.
+  - Change: in Team today, overdue reads strongest, waiting next and on hold
+    quietest, and a person with nothing waiting fades back ("Clear"). Each
+    row in Upcoming Deadlines starts with its owner's initial in their colour,
+    as in the tab bar, instead of the name written out; the date stays.
+  - Test: rendered weights (overdue bold red, on hold regular); every
+    initial has a spoken name; contrast clean; the Team today tests updated.
+  - Done (28 Oct): In Team today, overdue reads strongest (extra bold, red),
+    waiting stays bold and on hold drops to medium weight; a person with
+    nothing to flag fades back, their name in grey beside a quiet "Clear".
+    Each row in Upcoming Deadlines opens with its owner's initial in their
+    colour; the written name stays for screen readers only, so the row reads
+    initial, topic, date and priority. White on every person colour reads at
+    5:1 or better, and a saved tab colour is always darkened until it does.
+    One small difference: on hold is medium (500) rather than regular, so it
+    stays crisp at 13px. Contrast on the Overview: zero failures in light
+    mode; in dark mode one older finding that is not from this step (an
+    event's days-left number in a very dark event colour, raised with Boss).
+    Tests: 334/334 (four new; the Team today tests follow the new class).
+
+- [x] **53. Tab motion (decision 2)**
+  - Files: `assets/workspace-ui.css` (the pill's spring), tests.
+  - Change if chosen: the pill overshoots by about 4% and settles, in the
+    same 0.34s; Reduce Motion unchanged.
+  - Test: a frame recording of a move; the tab bar checks pass three runs in
+    a row.
+  - Done (28 Oct): the pill now overshoots by 4% and settles, in the same
+    0.33s it already took (the plan said 0.34s by mistake); a browser without
+    the newer curve gets one overshoot of about 4% too. One addition to the
+    plan: at either end of the bar a 4% overshoot would push the pill out of
+    the bar and cut it off, so there it squashes against the edge for a
+    moment instead, by about as much as it would have overshot, and springs
+    back; between tabs nothing is held back. That needed two measurements in
+    the tab script (`assets/ui-tabs.js`): where the row of tabs starts and
+    ends. Reduce Motion is unchanged: no glide, no slide. Recorded frame by
+    frame on a computer and an iPhone: a 4.0% overshoot on every move between
+    tabs, the pill never leaves the row, and it settles exactly on the tab.
+    The tab bar checks (arrow keys, Reduce Motion, resizing, the two-tab
+    dock, iPhone widths 320 to 440) passed three runs in a row. Tests:
+    340/340 (three new).
+
+- [x] **54. The department line on iPhone (decision 3)**
+  - If shown: under the product name at the top of the page, gone once the
+    header shrinks (step 47). If kept hidden: nothing to build.
+  - Done (28 Oct): Boss chose to keep it hidden on iPhone, so the space goes
+    to the work; computers and iPads still show it. Nothing to build.
+
+- [ ] **55. Final check and a third independent review**
+  - The suite, contrast in both themes, iPhone widths 320 to 440, evidence
+    at 390x664, 390x844 and 1440x900 with the team-like data, one scored
+    independent review, and one walk through the main tasks (add a task,
+    change its status, find something) by a reviewer who has not seen the
+    work.
+  - Status (28 Oct): every automated check passes: the suite 340/340;
+    contrast scans with zero failures in both themes, at 1440 and 390 wide,
+    with the Event Hub in list and Timeline views; iPhone widths 320 to 440
+    in both themes; the tab bar checks three runs in a row. Evidence at
+    390x664, 390x844 and 1440x900 is in
+    `.oil-ui/workspace-redesign/evidence55/` (not committed). On 390x664 the
+    first deadline row starts at 389px with three rows above the dock; on
+    computers the Overview columns end within 25px. Boss asked to deploy
+    before the usage limit, so plan 5 was merged and deployed while the
+    independent review and the walkthrough were still running; their
+    findings follow as a separate fix.
+
+## Decisions needed from Boss (plan 5)
+
+1. **The plan:** recommended, approve steps 47 to 55 as written; or approve
+   them without step 50, keeping every card's buttons visible.
+2. **Tab motion:** recommended, the livelier spring, closer to Boss's first
+   wish for a more playful tab bar; or keep the current gentle one.
+3. **The department line on iPhone:** recommended, keep it hidden so the
+   space goes to the work; or show it at the top of the page.
+4. **Going live:** recommended, merge and deploy once every check passes; or
+   stop at the preview first.
+
+# Fixes found during plan 5 (28 Oct 2026): for Boss to approve
+
+Boss sent a screenshot on 28 Oct: on a computer, the Deadlines calendar in a
+person tab's sidebar has its name covered by the "<" month button. It is
+reproduced in the preview, and the check across every sidebar widget found
+more of the same.
+
+Approved by Boss on 28 Oct: step 56 as written (the month switcher stays in
+the header, on its own line when it does not fit) and step 57.
+
+## What the checks found
+
+1. **Sidebar widget headers on computers (Boss's screenshot).** Step 39 (live
+   since 27 Oct) made each sidebar widget header a two-line grid, so a folded
+   widget's summary sits under its name. In that grid the name gets whatever
+   width the buttons leave. Two headers have wide controls: Deadlines (the
+   month switcher) and Calendar (the Month and Upcoming switch, with refresh).
+   There the name has 50 to 70px less room than it needs, so the month
+   switcher covers "Deadlines" and the Month and Upcoming switch hides
+   "Calendar" completely. All four person tabs, whenever the widget is open.
+   Caused by the redesign (step 39).
+2. **The same headers on iPhone and iPad, in the Widgets panel.** Below 981px
+   wide the drag handle is hidden, and the grid then puts the first button in
+   the handle's place, in front of the name: Add (Day-off in Lieu), Reset Year
+   (Sick Leave), refresh (Phuket Weather, Calendar, Asset Library), + and
+   settings (Petty Cash), Add (Recurring Templates), and the month switcher
+   (Deadlines), which pushes "Deadlines" past the edge. Every person tab, open
+   or folded. Caused by step 39, whose checks looked at computers with the
+   widgets folded, which is why this was missed.
+3. **Older, found while checking: event colours as text in dark mode.** Step
+   46 made an event's own colour readable as text in light mode only. In dark
+   mode the days-left number in "Coming up" and the event name in the Event
+   Hub's Timeline view still use the raw colour on the dark card, and five of
+   the ten colours in the event colour picker read below 4.5:1 there (navy
+   1.5:1, purple 3.1:1, blue 3.4:1, grey 3.7:1, pink 3.8:1). Older than plan
+   5; dark mode only.
+
+## Steps
+
+These run before step 55, so the final check and the third review cover
+them, and they ship with plan 5.
+
+- [x] **56. Sidebar widget headers: the name first, nothing covers it**
+  - Files: `assets/workspace-ui.css` (the step 39 header rules make way for a
+    step 56 block), tests.
+  - Change: every sidebar header reads the same way on every screen: the drag
+    handle (computers), the name, then its buttons on the right. When a button
+    does not fit beside the name, such as the month switcher, it moves to its
+    own line under the name, still on the right, so it never covers the name.
+    A folded widget's summary stays under its name, lined up with its first
+    letter.
+  - Test: on all four person tabs, open and folded, at 320, 390 and 430 wide
+    (Widgets panel), 768, 1024 and 1440: no button before the name, nothing
+    overlaps, nothing outside the header, the name always has the room it
+    needs; the summary starts under the name's first letter; the month arrows,
+    Reset Year, Add and refresh still work, and tapping them does not fold
+    the widget; before and after screenshots, including Boss's case.
+  - Done (28 Oct): every sidebar header now reads the same way on every
+    screen: the drag handle (computers), the name, then its buttons on the
+    right. The Deadlines month switcher and the Calendar's Month and Upcoming
+    switch sit on their own line under the name, on the right; the Calendar's
+    refresh stays beside the name. A folded widget's summary starts exactly
+    under the name's first letter (it sat 8px to the right before). On the
+    narrowest phones (320px) a long folded name wraps instead of being cut,
+    and a button that does not fit beside its name moves under it. Checked on
+    all four person tabs, open and folded, at eleven sizes from 320 to 1440:
+    no button before a name, no overlap, nothing outside a header. The month
+    arrows, the Month and Upcoming switch and Add still work without folding
+    the widget, and a tap on a header's free space still folds it. Tests:
+    335/335 (two new; the step 39 header test moved here).
+
+- [x] **57. Event colours readable as text in dark mode too (older issue,
+  recommended)**
+  - Files: `index.html` (the event text colour helper from step 46),
+    `assets/workspace-ui.css`, tests.
+  - Change: as step 46 did for light mode, an event colour too dark for the
+    dark card is shown in the nearest lighter shade of the same colour that
+    reads at 4.5:1, for the days-left number and the Timeline name only. The
+    event keeps its colour everywhere else, and light mode is unchanged.
+  - Test: all ten picker colours, and a custom very dark one, read at 4.5:1
+    or better on the dark card and still on white; the dark-mode contrast scan
+    shows zero failures on the Overview and the Event Hub.
+  - Done (28 Oct): in dark mode an event colour too dark for the card now
+    shows its days-left number ("Coming up") and its Timeline name in a
+    lighter shade of the same colour: navy becomes slate blue, purple a
+    lighter purple, the team's dark gold a muted gold. The shade is measured
+    against the card's hover tint, so it reads at 4.5:1 or better at rest and
+    on hover; the event's dot and every other use keep the colour as chosen.
+    Light mode is unchanged. Contrast scans on every tab, list and Timeline
+    views, at 1440 and 390 wide: zero failures in both themes (at 1440 wide,
+    dark mode had 28 failing texts on the Overview and three person tabs
+    before). Tests:
+    337/337 (two new; three step 46 tests now also expect the dark shade).
+
+## Decisions needed from Boss (fixes found during plan 5)
+
+1. **Step 56:** recommended, approve it as written; or also move the
+   Deadlines month switcher inside the calendar, above the days, which needs a
+   change to how that widget is built on every tab.
+2. **Step 57:** recommended, include it (small, the same helper as step 46);
+   or leave dark mode as it is for now.

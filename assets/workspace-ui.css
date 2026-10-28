@@ -605,9 +605,6 @@ body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
 /* Step 21: light mode readability */
 html:not(.dark) .fpill.act-navy{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
 html:not(.dark) .btn-teal{background:linear-gradient(135deg,#0f766e,#115e59)!important;color:#fff!important;}
-html:not(.dark) #panel-boss .btn-accent{background:#366a9c!important;background-image:none!important;border-color:#366a9c!important;color:#fff!important;}
-html:not(.dark) #panel-dew .btn-accent{background:#a25816!important;background-image:none!important;border-color:#a25816!important;color:#fff!important;}
-html:not(.dark) #panel-o .btn-accent{background:#b73d0b!important;background-image:none!important;border-color:#b73d0b!important;color:#fff!important;}
 html:not(.dark) .dirq-n{background:#b45309;}
 html:not(.dark) .kb-col .kb-col-count{background:#fff!important;}
 html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member-role i,.mh-greet){color:#366a9c!important;}
@@ -633,9 +630,9 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
 }
 /* Phones: finger-sized buttons and no text under 11px. */
 @media(max-width:640px){
-  #panel-overview :is(.ov-fpill,.ov-mini-btn,.cal-arrow,.ov-search-clear,.ov-ann-act,.menu-week-toggle,.ov-dl-more,.ov-more-link),
+  #panel-overview :is(.ov-fpill,.ov-mini-btn,.cal-arrow,.ov-ann-act,.menu-week-toggle,.ov-dl-more,.ov-more-link),
   .tab-panel :is(.filter-tabs .fpill,.mh-stat,.evhub-btn,.uxp-drawer-btn){min-height:36px;}
-  #panel-overview :is(.ov-mini-btn,.cal-arrow,.ov-search-clear,.ov-ann-act),.tab-panel .evhub-btn.icon-only{min-width:36px;justify-content:center;}
+  #panel-overview :is(.ov-mini-btn,.cal-arrow,.ov-ann-act),.tab-panel .evhub-btn.icon-only{min-width:36px;justify-content:center;}
   .ov-cdn>.ev-chip-del,.ev-tl-item>.ev-chip-del{width:36px;height:36px;}
   .ev-chip>.ev-chip-del{width:32px;height:32px;top:4px;right:4px;}
   .ev-chip-date,.ev-chip-name{padding-right:34px;}
@@ -729,7 +726,6 @@ html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba
 html:not(.dark){--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);--shadow-hover:0 2px 4px rgba(16,24,40,.05),0 10px 22px -8px rgba(16,24,40,.14);}
 /* Raised on purpose: hover still deepens as cards lift, and search results float. */
 html:not(.dark) :is(.task-card,.evc-card,.rq-card):hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
-html:not(.dark) #panel-overview .ov-search-results{box-shadow:var(--shadow-lg);}
 /* One card radius: task cards were 14px and the Resources fold 18px. */
 .task-card,#panel-overview .ov-more{border-radius:var(--r-lg,16px)!important;}
 /* Decorative side rails go. Rails that carry meaning stay: task status, a pinned
@@ -782,10 +778,10 @@ html:not(.dark) .kb-col[data-status] .kb-col-count{color:var(--c-ink,var(--c))!i
    Director request's amber. Light mode. */
 html:not(.dark) #ov-dl-card .ov-dl,
 html:not(.dark) #evb-card .evb-g,
-html:not(.dark) #ov-cd-card .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
+html:not(.dark) .ov-countdown .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
 html:not(.dark) #ov-dl-card .ov-dl:first-of-type,
 html:not(.dark) #evb-card .evb-g:first-of-type,
-html:not(.dark) #ov-cd-card .ov-cdn:first-of-type{border-top-color:transparent!important;}
+html:not(.dark) .ov-countdown .ov-cdn:first-of-type{border-top-color:transparent!important;}
 /* Rows still answer the pointer, without a box around them. */
 html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);}
 /* The day agenda is a section of the calendar card, not a card within it. */
@@ -853,10 +849,8 @@ html.dark body.theme-overview .tab-nav{--tab-disc:#f0b323;}
 html:not(.dark) .tab-nav.has-ind .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active,
 html.dark .tab-nav.has-ind .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o,#tab-junior).a-active{background:transparent!important;}
 html:not(.dark) .tab-nav.has-ind .tab-btn.a-active:focus-visible{outline-color:var(--tab-ink);}
-/* The glide: a third of a second on a spring that settles with about 1% overshoot,
-   a crisp stop that never pushes the pill into the end of the bar. */
-.tab-nav.has-ind{transition-property:--ind-x,--ind-w;transition-duration:.33s;transition-timing-function:cubic-bezier(.25,1.05,.45,1);
-  transition-timing-function:linear(0,0.034,0.117,0.224,0.341,0.457,0.564,0.659,0.74,0.808,0.863,0.906,0.939,0.964,0.982,0.994,1.002,1.007,1.01,1.011,1.011,1.01,1.009,1.008,1.007,1.005,1.004,1.003,1);}
+/* The glide: a third of a second on a spring (its curve is in step 53). */
+.tab-nav.has-ind{transition-property:--ind-x,--ind-w;transition-duration:.33s;}
 .tab-nav.ind-snap,.tab-nav.ind-snap .tab-ink,.tab-nav.ind-snap .tab-ink .tab-mono{transition:none!important;}
 /* The new view enters from the side you moved towards, in the same beat as the
    pill. It starts partly visible, so the page is never blank between views;
@@ -1129,14 +1123,7 @@ html.dark .tm-meet{color:#93c5fd;}
   body.tc-in-header .chat-panel{top:var(--tc-top,96px);bottom:auto;max-height:calc(100vh - var(--tc-top,96px) - 16px);}
 }
 @media(max-width:600px){#hdr-add{display:none;}}
-/* Sidebar widgets: the title keeps its whole name and the summary sits under
-   it; the drag handle and the buttons span both lines. */
-.side-col .widget-head{display:grid;grid-template-columns:auto minmax(0,1fr);grid-auto-columns:auto;align-items:center;column-gap:10px;row-gap:0;}
-.side-col .widget-head>*{grid-row:1/3;}
-.side-col .widget-head>.widget-title{grid-column:2;grid-row:1;}
-/* 52px: the fold arrow and the icon tile, so the summary lines up with the name. */
-.side-col .widget-head>.widget-sum{grid-column:2;grid-row:2;justify-self:start;max-width:calc(100% - 52px);margin:-1px 0 0 52px;}
-.side-col .widget-head>.widget-sum:empty{display:none;}
+/* Sidebar widget headers: see step 56. */
 
 /* Step 40: task cards lead with the task */
 /* The name comes first, with the done tick beside it; a column card allows a
@@ -1235,8 +1222,6 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
 }
 /* An announcement's edit, pin and delete read at 3:1 at least. */
 #panel-overview .ov-ann-act{color:var(--muted);}
-/* An empty search box has nothing to clear. */
-#panel-overview .ov-search-input:placeholder-shown~.ov-search-clear{visibility:hidden;}
 /* One event chip: a task that belongs to an event wears the event teal, never
    the violet of On hold. */
 .mb-evt{background:var(--teal-light);color:#0b6e69;}
@@ -1270,3 +1255,136 @@ html:not(.dark) .evhub .ev-chip.ev-chip-filled{border:0;border-radius:12px;}
    Timeline, a number in the Overview countdown) shows a darker shade of itself.
    Dots, tiles and dark mode keep the colour as chosen. */
 html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
+
+/* Step 47: iPhone, the header gives its height back to the work */
+.uxp-mi-who{display:none;}
+@media(max-width:600px){
+  /* One height, scrolled or not, so the pinned row never jumps. */
+  body.hdr-scrolled .header-top{padding:12px 14px 8px;}
+  /* The logo row scrolls away with the page; the row with payday, the bell and
+     "⋯" stays pinned. In the Home Screen app a band in the header's colour keeps
+     the status bar covered (zero tall in Safari). */
+  .app-header{top:-60px;}
+  .app-header::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:inherit;z-index:2;pointer-events:none;}
+  /* Payday sits where ADMIN was; ADMIN and Sign out are in the "⋯" menu. */
+  #auth-banner{display:none;}
+  .header-right .uxp-sal-toggle{margin:0 auto 0 -6px;min-height:42px;padding:6px 8px;border-radius:12px;font-size:13px;color:rgba(255,255,255,.82);flex-wrap:nowrap;white-space:nowrap;}
+  .header-right .uxp-sal-toggle b{color:#fff;}
+  .header-right .uxp-sal-toggle:hover,.header-right .uxp-sal-toggle:focus-visible{background:rgba(255,255,255,.1);color:#fff;}
+  .header-right .uxp-sal-toggle :is(.uxp-sal-date,.uxp-sal-left,.uxp-sal-mini){display:none;}
+  /* Under the header only the lunch notice remains, at lunchtime. */
+  .salary-dock:not(:has(#lunch-banner.show)) .uxp-sal-bar{display:none;}
+  .uxp-mi-who{display:flex;align-items:center;gap:8px;padding:10px 12px 9px;margin-bottom:4px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);}
+  .uxp-mi-who i{font-size:18px;color:var(--muted);}
+  .uxp-mi-who .uxp-mi-role{margin-left:auto;padding:2px 8px;border:1px solid var(--border-strong,#d6dbe4);border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--text);}
+}
+/* The smallest iPhones: the banknote and "2 days". */
+@media(max-width:360px){.header-right .uxp-sal-toggle :is(.uxp-sal-word,.uxp-sal-sep){display:none;}}
+
+/* Step 48: one search that finds everything */
+@media(max-width:600px){
+  /* The header search is one tap away on every tab, beside the bell. */
+  .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
+  html.dark .header-right .cmdk-trigger{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.85);}
+  .header-right .cmdk-trigger i{font-size:16px;}
+  /* The Overview's greeting gives way on a phone and its search box is gone. */
+  #panel-overview .ov-topbar{display:none;}
+}
+
+/* Step 49: person colours as small marks only */
+/* Light mode: a person's colour marks them at small sizes (their initial, their
+   name, the tab label and the tab bar) and fills no large area, so it never reads
+   as a status. The name bar and the Event Hub bar are plain; primary buttons and
+   the selected filter are the same navy on every tab. */
+html:not(.dark) .member-head{background:var(--surface)!important;background-image:none!important;}
+html:not(.dark) .evhub-head{background:transparent!important;background-image:none!important;}
+html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent{background:var(--navy,#003057)!important;background-image:none!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
+html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:hover{background:#00264a!important;border-color:#00264a!important;}
+html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
+
+/* Step 50: task cards are calm at rest */
+/* At rest a card is its name and tick, one line of facts, and one bar: Details
+   on the left, "⋯" on the right. "⋯" opens the action row under it, the same way
+   with a mouse, a finger or the keyboard; a click on the card still opens it. A
+   row that appeared on hover would make the cards below jump under the pointer. */
+.task-card .tc-bar{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px;}
+.task-card .tc-bar .tc-more{margin:0;}
+.task-card .tc-acts-btn{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
+.task-card .tc-acts-btn:hover,.task-card .tc-acts-btn:focus-visible,.task-card.acts-open .tc-acts-btn{background:var(--surface-3,rgba(16,24,40,.06));color:var(--text);}
+.task-card:not(.acts-open) .task-foot{display:none;}
+/* The status menu sits on the facts line, except in a status column: the column
+   names the status, so the menu waits in the action row. */
+.task-card .task-foot .tc-row-sel{display:none;}
+.kb-col .task-card .task-meta .tcard-sel{display:none;}
+.kb-col .task-card .task-foot .tc-row-sel{display:inline-flex;}
+@media(max-width:600px){.task-card .tc-acts-btn{width:40px;height:40px;}}
+
+/* Step 51: the Overview, one heavy block and columns that end together */
+/* The Event Board holds the next events ("Coming up") above the shared tasks,
+   whose filter now sits with them. */
+#evb-card .evb-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+#evb-card .evb-soon{margin-bottom:16px;}
+#evb-card .evb-tasks-h .evb-sel{margin-left:auto;}
+#evb-card .evb-tasks-h :is(.evb-sel,.evb-done-toggle){text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;}
+/* Nothing new or due: one quiet line instead of a grid of zeros. */
+#ov-rc-card.rc-quiet .ov-rc-none{grid-column:1 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;}
+#ov-rc-card.rc-quiet .ov-rc-none-t{flex:1 1 100%;font-size:13px;color:var(--muted);}
+@media(max-width:600px){#evb-card .evb-tasks-h .evb-sel{margin-left:0;}}
+/* The band under the two columns, and "Coming up" as a grid when it has room. */
+#panel-overview .ov-wide{margin-top:var(--sp-5,20px);}
+#panel-overview .ov-wide:empty{display:none;}
+#evb-soon .ov-countdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));column-gap:28px;}
+html:not(.dark) #evb-soon .ov-countdown .ov-cdn{border-top:0!important;}
+
+/* Step 52: Team today, what needs Boss reads first */
+/* Overdue reads strongest, waiting next, on hold quietest; a person with nothing
+   waiting fades back beside a quiet "Clear". */
+.tm-x.tm-over{font-weight:800;}
+.tm-x.tm-hold{font-weight:500;}
+.tm-x.tm-clear{font-weight:500;}
+.tm.tm-calm .tm-name{color:var(--muted);font-weight:600;}
+/* Each deadline row opens with its owner's initial in their colour. */
+#panel-overview .ov-dl .ov-dl-who{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;line-height:1;color:#fff;background:var(--tm-c,var(--navy,#003057));}
+#panel-overview .ov-dl-who[data-member="boss"]{--tm-c:var(--member-boss);}
+#panel-overview .ov-dl-who[data-member="dew"]{--tm-c:var(--member-dew);}
+#panel-overview .ov-dl-who[data-member="o"]{--tm-c:var(--member-o);}
+#panel-overview .ov-dl-who[data-member="junior"]{--tm-c:var(--member-junior);}
+/* The written name is for screen readers only; the initial says it at a glance. */
+#panel-overview .ov-dl-wn{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+/* Step 56: sidebar widget headers, the name first */
+/* One row reads: the drag handle (computers), the name, then the widget's own
+   buttons on the right. A button that does not fit beside the name, such as the
+   month switcher, moves to its own line under it, still on the right, so it
+   never covers the name. A folded widget's summary takes the last line and
+   starts under the name's first letter. (Step 39's grid had no set place for
+   the buttons: below 981px they took the hidden drag handle's place.) */
+.side-col .widget-head{--wh-name-x:52px;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;column-gap:10px;row-gap:6px;}
+/* 52px: the fold arrow and the icon tile. From 981px the drag handle (21px)
+   and its gap come first; it hides below that width (see .uxp-wh-drag). */
+@media(min-width:981px){.side-col .widget-head{--wh-name-x:83px;}}
+.side-col .widget-head>.widget-title{flex:1 1 auto;}
+/* The narrowest phones: a long folded name wraps to a second line rather than being cut. */
+.side-col .widget.collapsed>.widget-head>.widget-title{white-space:normal;}
+/* The Calendar's Month and Upcoming switch comes after its refresh button, so a
+   small button stays beside the name and only the wide switch moves down. */
+.side-col .widget-head>.uxp-cal-seg{order:1;}
+.side-col .widget-head>.widget-sum{order:2;flex:0 0 auto;width:calc(100% - var(--wh-name-x));max-width:none;margin:-5px 0 0 var(--wh-name-x);padding:0;text-align:left;}
+
+/* Step 57: event colours readable as text in dark mode too */
+/* The days-left number and the Timeline name of an event whose colour is too
+   dark for the dark card use a lighter shade of it (evInkDark); the event's
+   colour itself stays as chosen everywhere else. */
+html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}
+
+/* Step 53: a livelier tab spring */
+/* The pill overshoots by about 4% and settles, in the same third of a second
+   (Boss's choice, 28 Oct); a browser without linear() gets one overshoot of
+   about the same size. At either end of the row of tabs the pill squashes
+   against the edge instead of sliding out of the bar: its edges are held
+   between the first tab's left and the last tab's right (--ind-min and
+   --ind-max, from assets/ui-tabs.js). Between tabs nothing is held back. */
+.tab-nav.has-ind{transition-timing-function:cubic-bezier(.32,1.35,.62,1);
+  transition-timing-function:linear(0,0.035,0.12,0.234,0.36,0.486,0.603,0.707,0.795,0.868,0.925,0.968,0.999,1.019,1.032,1.038,1.04,1.039,1.035,1.031,1.026,1.021,1.016,1.012,1.008,1.005,1.003,1.001,1,0.999,0.999,0.998,1);}
+.tab-nav.has-ind .tab-ind{--ind-a:max(var(--ind-min,-100000px),var(--ind-x));--ind-b:min(var(--ind-max,100000px),calc(var(--ind-x) + var(--ind-w)));
+  width:calc(var(--ind-b) - var(--ind-a));transform:translateX(var(--ind-a));}

@@ -20,8 +20,9 @@ test('the Overview shell puts every card in its column and folds the rest away',
   const main=shell.slice(shell.indexOf('ov-col-main'),shell.indexOf('ov-col-side'));
   const side=shell.slice(shell.indexOf('ov-col-side'),shell.indexOf('id="ov-more"'));
   const more=shell.slice(shell.indexOf('id="ov-more"'));
-  assert.ok(order(['ov-dl-card','ov-cal-card'],main));
-  assert.ok(order(['ov-cd-card','ov-wm-card'],side));
+  assert.ok(order(['ov-dl-card'],main));
+  assert.doesNotMatch(main,/id="ov-cal-card"/,'the Master Calendar moved to the side column (step 51)');
+  assert.ok(order(['ov-wm-card','ov-cd-card','ov-cal-card'],side));
   assert.doesNotMatch(side,/team-card/,'Team today left the side column for the strip above the work');
   const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),barAt=shell.indexOf('class="ov-topbar"');
   assert.ok(topAt>0&&annAt>topAt&&barAt>annAt,'announcements sit in the top slot before the greeting');
@@ -241,7 +242,7 @@ test('in light mode every card shares one calm shadow, and raised things keep th
   assert.doesNotMatch(tokens[1],/12px 30px/,'the floating card shadow is gone');
   assert.equal(tokens[1],'0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)','cards use the calm design-refresh shadow');
   assert.match(step28,/:is\(\.task-card,\.evc-card,\.rq-card\):hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'hover still deepens as a card lifts');
-  assert.match(step28,/\.ov-search-results\{box-shadow:var\(--shadow-lg\);\}/,'search results still float above the page');
+  /* The Overview's search results floated above the page here; that box went in step 48. */
 });
 
 test('cards share one radius, decorative rails go and meaningful rails stay',()=>{
@@ -337,7 +338,8 @@ test('kanban counts are written in ink, and body text is at least 13px',()=>{
 const step32=stepBlock(32);
 
 test('boxes inside a card become rows separated by hairlines',()=>{
-  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) #ov-cd-card \.ov-cdn\{([^}]*)\}/);
+  /* The countdown rows follow their list wherever it sits (step 51: inside the Event Board). */
+  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) \.ov-countdown \.ov-cdn\{([^}]*)\}/);
   assert.ok(rows,'Upcoming Deadlines, Event Board and countdown rows share one rule');
   for(const want of [/border:0!important/,/border-radius:0!important/,/box-shadow:none!important/,/border-top:1px solid var\(--border\)!important/])
     assert.match(rows[1],want);
@@ -504,7 +506,8 @@ test('the Overview opens on the work: one announcement line, the greeting and se
   assert.doesNotMatch(source,/function renderStats\(/);
   const context=vm.createContext({});
   vm.runInContext(slice('  var LAYOUT={','  };')+'  };',context);
-  assert.deepEqual(Array.from(context.LAYOUT.side),['ov-rc-card','ov-cd-card','ov-wm-card']);
+  assert.deepEqual(Array.from(context.LAYOUT.side),['ov-rc-card','ov-wm-card','ov-cd-card','ov-cal-card'],'step 51: the calendar joins the side column');
+  assert.deepEqual(Array.from(context.LAYOUT.main),['ov-dl-card','evb-card']);
 });
 
 test('the announcement line holds one item on one row, and its text opens the rest',()=>{
@@ -694,18 +697,13 @@ test('opened from the header, the chat panel drops down under it',()=>{
   assert.match(source,/if\(\(window\.innerHeight\|\|0\)-top<360\)top=8;/,'on a phone held sideways it opens over the header instead');
 });
 
-test('sidebar widgets keep their whole name, with the summary under it',()=>{
-  assert.match(step39,/\.side-col \.widget-head\{display:grid;grid-template-columns:auto minmax\(0,1fr\);/);
-  assert.match(step39,/\.side-col \.widget-head>\.widget-title\{grid-column:2;grid-row:1;\}/);
-  assert.match(step39,/\.side-col \.widget-head>\.widget-sum\{grid-column:2;grid-row:2;justify-self:start;max-width:calc\(100% - 52px\);margin:-1px 0 0 52px;\}/);
-  assert.match(step39,/\.side-col \.widget-head>\*\{grid-row:1\/3;\}/,'the handle and the buttons span both lines');
-});
+/* Sidebar widget headers moved on to step 56 (whole names, summary under the name). */
 
 /* ===== Step 40: task cards lead with the task ===== */
 const step40=stepBlock(40);
-function card(task,{who='dew',admin=true,soon=false}={}){
+function card(task,{who='dew',admin=true,soon=false,acts=false}={}){
   const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const context=vm.createContext({window:{__cur:admin?{role:'admin'}:{role:'designer',workspace:who}},
+  const context=vm.createContext({window:{__cur:admin?{role:'admin'}:{role:'designer',workspace:who},__tcActs:acts?{[who+'_'+task.id]:true}:{}},
     SC:{pending:{l:'Pending',i:'ti-circle'},waiting:{l:'Waiting',i:'ti-clock'},done:{l:'Done',i:'ti-check'}},
     DZ_STATUSES:['Brief Received'],MEMBER_ORDER:['boss','dew','o','junior'],
     daysUntil:()=>-1,isSoon:()=>soon,eventsOf:()=>[],evOkClr:()=>false,evTint:()=>'',isEventTask:()=>false,taskAssignees:()=>[],
@@ -832,7 +830,7 @@ test('on iPhone Team Chat opens as an even sheet below the header, and the two r
 
 test('small fixes from the second review',()=>{
   assert.match(step43,/#panel-overview \.ov-ann-act\{color:var\(--muted\);\}/,'announcement actions are visible');
-  assert.match(step43,/\.ov-search-input:placeholder-shown~\.ov-search-clear\{visibility:hidden;\}/);
+  /* The Overview's search box (and its clear button) went in step 48: one search in the header. */
   assert.match(step43,/\.mb-evt\{background:var\(--teal-light\);color:#0b6e69;\}/,'one event chip colour');
   assert.ok(contrast('#0b6e69','#d6f5f0')>=4.5);
   assert.match(step43,/body:not\(\.hdr-scrolled\) \.app-header\{box-shadow:inset 0 1px 0 rgba\(255,255,255,\.06\)!important;\}/);
@@ -904,7 +902,280 @@ const step46=stepBlock(46);
 
 test('in light mode only, an event colour too light for text shows its darker shade',()=>{
   assert.match(step46,/html:not\(\.dark\) \.ev-ink\{color:var\(--evc-ink\)!important;\}/);
-  assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink/,'dark mode keeps the colour as chosen');
+  assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink(?![\w-])/,'the darker shade is for light mode only');
   assert.doesNotMatch(source,/class="ov-cdn-n"'\+\(\(it\.e\.color/,'the countdown number goes through evTextAttrs');
 });
 
+
+/* ===== Step 47: iPhone, the header gives its height back to the work ===== */
+const step47=stepBlock(47);
+
+test('on iPhone the logo row scrolls away and the payday row stays pinned, with nothing jumping',()=>{
+  const phone=media(step47,'max-width:600px');
+  assert.match(phone,/body\.hdr-scrolled \.header-top\{padding:12px 14px 8px;\}/,'one header height, scrolled or not');
+  assert.match(phone,/\.app-header\{top:-60px;\}/,'the first 60px (the logo row) scroll away; the second row stays');
+  assert.match(phone,/\.app-header::before\{content:'';position:fixed;top:0;left:0;right:0;height:env\(safe-area-inset-top,0px\);background:inherit;/,
+    'in the Home Screen app the status bar stays covered in the header colour');
+  assert.match(phone,/#auth-banner\{display:none;\}/,'ADMIN leaves the header; Sign out is in the menu');
+  assert.match(phone,/\.header-right \.uxp-sal-toggle :is\(\.uxp-sal-date,\.uxp-sal-left,\.uxp-sal-mini\)\{display:none;\}/,'"Payday · 2 days"');
+  assert.match(phone,/\.salary-dock:not\(:has\(#lunch-banner\.show\)\) \.uxp-sal-bar\{display:none;\}/,'the line under the header only for lunch');
+  assert.match(phone,/\.uxp-mi-who\{display:flex;/);
+  assert.match(step47,/^\.uxp-mi-who\{display:none;\}/m,'the menu names the account only on phones');
+  assert.match(media(step47,'max-width:360px'),/\.header-right \.uxp-sal-toggle :is\(\.uxp-sal-word,\.uxp-sal-sep\)\{display:none;\}/,'"2 days" on the smallest iPhones');
+});
+
+test('the payday line moves into the header on phones and back under it on wider screens',()=>{
+  const mk=cls=>({className:cls,children:[],parentNode:null,
+    insertBefore(el,ref){if(el.parentNode)el.parentNode.children.splice(el.parentNode.children.indexOf(el),1);
+      const i=ref?this.children.indexOf(ref):-1;this.children.splice(i<0?this.children.length:i,0,el);el.parentNode=this;},
+    get firstChild(){return this.children[0]||null;}});
+  const host=mk('header-right'),bar=mk('uxp-sal-bar'),toggle=mk('uxp-sal-toggle'),bell=mk('dm-toggle'),lunch=mk('');
+  host.insertBefore(bell,null);bar.insertBefore(toggle,null);bar.insertBefore(lunch,null);
+  const listeners=[],mq={matches:true,addEventListener:(t,f)=>listeners.push(f)};
+  const document={getElementById:id=>id==='uxp-sal-toggle'?toggle:null,querySelector:s=>({'.header-right':host,'.uxp-sal-bar':bar})[s]||null};
+  const c=vm.createContext({document,window:{matchMedia:()=>mq}});
+  vm.runInContext(slice('  var salMq=null;','  /* condensed header after scrolling')+'\nthis.placeSal=placeSal;this.watchSal=watchSal;',c);
+  c.watchSal();c.placeSal();
+  assert.equal(toggle.parentNode,host);assert.equal(host.children[0],toggle,'first in the row, where ADMIN was');
+  mq.matches=false;listeners.forEach(f=>f());
+  assert.equal(toggle.parentNode,bar);assert.equal(bar.children[0],toggle,'back before the lunch notice');
+  assert.match(source,/watchSal\(\); placeSal\(\);/,'placed as soon as the line exists');
+  assert.match(source,/<span class="uxp-sal-word">Payday<\/span> <b class="uxp-sal-date">/,'the same words, in pieces a phone can shorten');
+  assert.match(source,/' days<span class="uxp-sal-left"> left<\/span><\/span>'/);
+  assert.match(source,/if\(!v&&b\.parentNode&&b\.parentNode\.classList\.contains\('header-right'\)&&\(window\.scrollY\|\|0\)>0\)/,'opening it from the pinned row scrolls up to show the details');
+  assert.match(source,/'<div class="uxp-mi-who"><i class="ti ti-user-circle"><\/i><span class="uxp-mi-name">'/,'the menu says who is signed in');
+});
+
+test('the "⋯" menu and the bell panel open under their own button',()=>{
+  const style={},panel={classList:{contains:n=>n==='open'},style},btn={getBoundingClientRect:()=>({bottom:45})};
+  const c=vm.createContext({document:{getElementById:id=>({'uxp-more-panel':panel,'hdr-more':btn})[id]||null}});
+  vm.runInContext(slice('  function reanchor(){','  window.uxpReanchor=reanchor;'),c);
+  c.reanchor();
+  assert.equal(style.top,'53px','8px under the button, never over the header row');
+  assert.match(source,/document\.body\.classList\.toggle\('hdr-scrolled',\(window\.scrollY\|\|0\)>10\);\n      reanchor\(\);/,'and stays under it while the header scrolls');
+  assert.match(source,/if\(open\)reanchor\(\);/);
+  assert.match(source,/if\(open&&window\.uxpReanchor\)window\.uxpReanchor\(\);/);
+});
+
+/* ===== Step 48: one search that finds everything ===== */
+const step48=stepBlock(48);
+
+test('the finder covers every person: tasks and shared cards, events, notes and links',()=>{
+  const c=vm.createContext({MORDER:['boss','dew'],topicOf:t=>t.topic,nm:w=>({boss:'Boss',dew:'Dew'})[w],fdt:d=>d,
+    tOf:w=>w==='dew'?[{id:'d1',topic:'Poster for Open Day'},{id:'d2',topic:'Banner',description:'open day welcome'}]:[{id:'b1',topic:'Budget'}],
+    eOf:w=>w==='boss'?[{id:'e1',name:'School Open Day',date:'2026-11-04'}]:[],
+    nOf:w=>w==='dew'?[{id:'n1',title:'Ideas',content:'Open day photo wall'}]:[],
+    lkOf:w=>w==='boss'?[{id:'l1',title:'Open day brief',url:'#'}]:[]});
+  vm.runInContext(slice('  function marcomFind(q){','  /* ---------- master render'),c);
+  const found=JSON.parse(JSON.stringify(c.marcomFind('open day')));
+  assert.deepEqual(found.map(r=>r.kind+':'+r.w+':'+r.id),['event:boss:e1','link:boss:l1','task:dew:d1','task:dew:d2','note:dew:n1'],'person by person, in tab order');
+  assert.equal(found[0].sub,'Team event · 2026-11-04');
+  assert.deepEqual(JSON.parse(JSON.stringify(c.marcomFind('o'))),[],'two letters at least');
+});
+
+test('the header search lists the tabs you can see, by today\'s names, and what the finder finds',()=>{
+  const tab=(id,name,icon,hidden)=>({id,hidden,querySelector:s=>s==='.tab-name'?{textContent:name}:(s==='i.ti'?{className:'ti '+icon}:null)});
+  const tabs=[tab('tab-overview','Overview','ti-layout-grid'),tab('tab-boss','Boss','ti-user'),tab('tab-dew','Dew','ti-palette'),tab('tab-o','O','ti-camera',true),tab('tab-junior','Eye','ti-user-plus')];
+  const out={innerHTML:''},input={value:''},calls=[];
+  const c=vm.createContext({
+    document:{querySelectorAll:s=>s==='.tab-nav .tab-btn'?tabs:[],getElementById:id=>({'cmdk-input':input,'cmdk-results':out})[id]},
+    getComputedStyle:b=>({display:b.hidden?'none':'flex'}),escHtml:x=>String(x),
+    closeCmdk:()=>calls.push('close'),switchTab:w=>calls.push('tab:'+w),openEdit:(w,id)=>calls.push('edit:'+w+':'+id),ovGoto:w=>calls.push('goto:'+w),
+    setTimeout:f=>f(),highlightCmdk:()=>{},cmdkItems:[],cmdkSel:0});
+  c.window=c;c.marcomRoleOf=w=>({boss:'Marcom manager',dew:'Graphic Designer',junior:'Junior Events Coordinator'})[w];
+  c.marcomFind=q=>[{kind:'task',w:'dew',id:'t9',ic:'ti-clipboard-list',label:'Poster',sub:'Dew'},{kind:'note',w:'boss',id:'n2',ic:'ti-notes',label:'Ideas',sub:'Boss'}];
+  vm.runInContext('let cmdkItems=[],cmdkSel=0;'+slice('function cmdkActions(q){','function setCmdkSel(')+'\nthis.run=i=>cmdkItems[i].run();',c);
+  const titles=JSON.parse(JSON.stringify(c.cmdkActions('').map(a=>a.title)));
+  assert.deepEqual(titles,['New task','Go to Overview','Go to Boss','Go to Dew','Go to Eye','Toggle dark mode','Settings'],'a tab you cannot see is not offered');
+  assert.equal(c.cmdkActions('').find(a=>a.title==='Go to Dew').sub,'Graphic Designer','roles from Settings');
+  assert.doesNotMatch(slice('function cmdkActions(q){','function setCmdkSel('),/Best|best|Junior tab|bossTasks/,'nothing left of the old fixed list');
+  input.value='poster';c.renderCmdk();
+  assert.match(out.innerHTML,/<div class="cmdk-section">Tasks \(1\)<\/div>/);
+  assert.match(out.innerHTML,/<div class="cmdk-section">Notes \(1\)<\/div>/);
+  const n=(out.innerHTML.match(/class="cmdk-item"/g)||[]).length;
+  c.run(n-2);c.run(n-1);
+  assert.deepEqual(calls,['close','tab:dew','edit:dew:t9','close','goto:boss'],'a task opens in its editor; a note opens its tab');
+});
+
+test('one search on every screen: the header button on iPhone, no box on the Overview',()=>{
+  const phone=media(step48,'max-width:600px');
+  assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;[^}]*width:42px;height:42px;/,'the same size as the bell');
+  assert.match(phone,/#panel-overview \.ov-topbar\{display:none;\}/,'nothing left of the Overview\'s top bar on a phone');
+  assert.doesNotMatch(source,/ov-search|doSearch|ovClearSearch/,'the Overview\'s own search is gone');
+  assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)" aria-label="Search">/);
+  assert.match(source,/placeholder="Search tasks, events, notes or links"/);
+});
+
+/* ===== Step 49: person colours as small marks only ===== */
+const step49=stepBlock(49);
+
+test('in light mode a person colour fills no large area: plain name and Event Hub bars, navy buttons',()=>{
+  assert.match(step49,/html:not\(\.dark\) \.member-head\{background:var\(--surface\)!important;background-image:none!important;\}/);
+  assert.match(step49,/html:not\(\.dark\) \.evhub-head\{background:transparent!important;background-image:none!important;\}/);
+  assert.match(step49,/html:not\(\.dark\) :is\(#panel-boss,#panel-dew,#panel-o,#panel-junior\) \.btn-accent\{background:var\(--navy,#003057\)!important;[^}]*color:#fff!important;\}/,
+    'Add Task and the other primary buttons are the same navy on every tab');
+  assert.match(step49,/html:not\(\.dark\) \.tab-panel \.fpill\.act-accent\{background:var\(--navy,#003057\)!important;/,'so is the selected filter');
+  assert.doesNotMatch(css26,/html:not\(\.dark\) #panel-(boss|dew|o) \.btn-accent\{background:#(366a9c|a25816|b73d0b)/,'no person-coloured button left in light mode');
+  assert.ok(contrast('#ffffff','#003057')>=4.5&&contrast('#ffffff','#00264a')>=4.5,'white reads on the navy and its hover');
+  assert.doesNotMatch(step49,/html\.dark/,'dark mode keeps its colours');
+});
+
+/* ===== Step 50: task cards are calm at rest ===== */
+const step50=stepBlock(50);
+
+test('at rest a card ends in one bar, Details and "⋯"; the action row and the details follow it',()=>{
+  const html=card(sample);
+  const bar=html.slice(html.indexOf('<div class="tc-bar">'),html.indexOf('<div class="task-foot">'));
+  assert.match(bar,/^<div class="tc-bar"><button type="button" class="tc-more" aria-expanded="false" onclick="event\.stopPropagation\(\);tcToggleDetails\(this,'dew_t1'\)">/,'Details on the left');
+  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" on the right');
+  const foot=html.slice(html.indexOf('<div class="task-foot">'),html.indexOf('<div class="tc-details'));
+  assert.match(foot,/^<div class="task-foot"><select class="tcard-sel tc-row-sel" title="Task status"/,'the row can carry the status menu for a status column');
+  for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
+  assert.ok(html.indexOf('tc-open-hint')<html.indexOf('tc-bar'),'a Director request lands above the bar');
+  assert.ok(html.indexOf('task-foot')<html.indexOf('tc-details'),'the action row opens right under "⋯", before the details');
+  assert.match(html,/^<div class="task-card tc-pending" draggable="true"/,'closed at rest');
+  const open=card(sample,{acts:true});
+  assert.match(open,/^<div class="task-card tc-pending acts-open" draggable="true"/,'a row left open stays open after a redraw');
+  assert.match(open,/class="tc-acts-btn" aria-expanded="true"/);
+  assert.doesNotMatch(card({...sample,description:'',links:[]}),/class="tc-more"/,'no Details button without details; "⋯" stays');
+});
+
+test('"⋯" opens and closes the row and remembers it; Details finds its own panel',()=>{
+  const classes=new Set(),attrs={},panel={classList:{contains:n=>false,toggle(){}}};
+  const cardEl={classList:{contains:n=>classes.has(n),toggle:(n,on)=>on?classes.add(n):classes.delete(n)},querySelector:s=>s==='.tc-details'?panel:null};
+  const btn={closest:s=>s==='.task-card'?cardEl:null,setAttribute:(k,v)=>{attrs[k]=v;},classList:{toggle(){}},nextElementSibling:null};
+  const c=vm.createContext({window:{}});c.window=c;
+  vm.runInContext(slice('window.__tcOpen={};','function kbFilterPass('),c);
+  c.tcToggleActs(btn,'dew_t1');
+  assert.ok(classes.has('acts-open'));assert.equal(attrs['aria-expanded'],'true');assert.equal(c.__tcActs.dew_t1,true);
+  c.tcToggleActs(btn,'dew_t1');
+  assert.ok(!classes.has('acts-open'));assert.equal(attrs['aria-expanded'],'false');assert.equal(c.__tcActs.dew_t1,false);
+  let opened=null;panel.classList={contains:()=>false,toggle:(n,on)=>{opened=on;}};
+  c.tcToggleDetails(btn,'dew_t1');
+  assert.equal(opened,true,'the panel is found through the card, now that Details sits in the bar');
+});
+
+test('the row stays hidden until "⋯"; in a status column the status menu waits in it',()=>{
+  assert.match(step50,/\.task-card:not\(\.acts-open\) \.task-foot\{display:none;\}/);
+  assert.match(step50,/\.task-card \.task-foot \.tc-row-sel\{display:none;\}/);
+  assert.match(step50,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
+  assert.match(step50,/\.kb-col \.task-card \.task-foot \.tc-row-sel\{display:inline-flex;\}/);
+  assert.match(media(step50,'max-width:600px'),/\.task-card \.tc-acts-btn\{width:40px;height:40px;\}/,'a full touch target on iPhone');
+  assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:auto;/,'"⋯" at the right end of the bar');
+});
+
+
+/* ===== Step 51: the Overview, one heavy block and columns that end together ===== */
+const step51=stepBlock(51);
+
+test('the countdown list becomes the Event Board\'s "Coming up", and its old card hides only after the move',()=>{
+  const wrap={hidden:false,kids:[]},soon={kids:[],appendChild(el){el.parentNode=this;this.kids.push(el);}},list={parentNode:wrap};
+  const ids={'ov-countdown':list,'ov-cd-card':wrap};
+  const c=vm.createContext({document:{getElementById:id=>ids[id]||null},window:{}});
+  vm.runInContext(slice('  function ovAdoptCountdown(){','  window.ovAdoptCountdown=ovAdoptCountdown;'),c);
+  c.ovAdoptCountdown();
+  assert.equal(list.parentNode,wrap,'no board yet: the list stays in its own card');
+  assert.equal(wrap.hidden,false,'and that card stays visible, so no event is ever out of sight');
+  ids['evb-soon']=soon;c.ovAdoptCountdown();
+  assert.equal(list.parentNode,soon);assert.equal(wrap.hidden,true);
+  c.ovAdoptCountdown();assert.equal(soon.kids.length,1,'moved once');
+  assert.match(source,/main\.insertBefore\(c,main\.firstChild\);\n      if\(window\.ovAdoptCountdown\)window\.ovAdoptCountdown\(\);/,'the board adopts it as soon as it exists');
+  assert.match(source,/'<div class="evb-soon" id="evb-soon"><div class="evb-sec-h">Coming up<\/div><\/div>'/);
+  assert.match(source,/'<div class="evb-sec-h evb-tasks-h"><span>Shared tasks<\/span>'\n\s*\+'<select class="evb-sel" id="evb-filter" aria-label="Filter shared tasks by event"/,'the filter sits with the tasks it filters');
+});
+
+test('with two columns the Event Board runs full width under them; in one column it follows the deadlines',()=>{
+  const context=vm.createContext({});
+  vm.runInContext(slice('  var LAYOUT={','  };')+'  };',context);
+  assert.deepEqual(Array.from(context.LAYOUT.wide),['evb-card']);
+  const layout=slice('  function ovLayout(){','\n  }\n');
+  assert.match(layout,/var oneCol=!!\(window\.matchMedia&&window\.matchMedia\('\(max-width:980px\)'\)\.matches\);/,'the same 980px where the grid becomes one column');
+  assert.match(layout,/ovPlace\(panel\.querySelector\('\.ov-col-main'\),oneCol\?LAYOUT\.main:LAYOUT\.main\.filter\(/);
+  assert.match(layout,/if\(!oneCol\)ovPlace\(document\.getElementById\('ov-wide'\),LAYOUT\.wide\);/);
+  assert.match(source,/ovColMq\.addEventListener\('change',function\(\)\{ovLayout\(\);\}\)/,'turning an iPad moves it with the columns');
+  assert.ok(shell.indexOf('id="ov-wide"')>shell.indexOf('class="ov-col-side"'),'the band comes after both columns');
+  assert.match(step51,/#evb-soon \.ov-countdown\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(280px,1fr\)\);/,'"Coming up" is a grid when it has room');
+  assert.match(step51,/#panel-overview \.ov-wide:empty\{display:none;\}/);
+});
+
+test('the Request Centre is one quiet line when nothing is new or due',()=>{
+  assert.match(source,/var quiet=!\(newD\|\|newP\|\|await_\|\|dueWk\|\|over\);\n    card\.classList\.toggle\('rc-quiet',quiet\);/);
+  assert.match(source,/'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines<\/span>'/);
+  assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
+  assert.match(step51,/#ov-rc-card\.rc-quiet \.ov-rc-none\{grid-column:1 \/ -1;/);
+});
+
+/* ===== Step 52: Team today, what needs Boss reads first ===== */
+const step52=stepBlock(52);
+
+test('Team today: overdue reads strongest, waiting next, on hold and Clear quietest; a calm name fades',()=>{
+  assert.match(css26,/\.tm-x\{display:inline-flex;[^}]*font-weight:700;/,'waiting keeps the base weight');
+  assert.match(step52,/\.tm-x\.tm-over\{font-weight:800;\}/);
+  assert.match(step52,/\.tm-x\.tm-hold\{font-weight:500;\}/);
+  assert.match(step52,/\.tm-x\.tm-clear\{font-weight:500;\}/,'the two-class selector outweighs .tm-clear{font-weight:600}');
+  assert.match(step52,/\.tm\.tm-calm \.tm-name\{color:var\(--muted\);font-weight:600;\}/);
+  assert.match(source,/class="tm'\+\(calm\?' tm-calm':''\)\+'"/);
+});
+
+test('each deadline opens with its owner\'s initial in their colour; screen readers still hear the name',()=>{
+  const nodes={'ov-deadlines':{innerHTML:''},'ov-dl-filters':{innerHTML:''}};
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const tasks={boss:[{status:'pending',dueDate:'2026-10-28',topic:'Brochure'}],dew:[{status:'pending',dueDate:'2026-10-29',topic:'Banner',priority:'high'}]};
+  const context=vm.createContext({window:{},document:{getElementById:id=>nodes[id]||null},MORDER:['boss','dew'],
+    tOf:w=>tasks[w]||[],isActive:()=>true,dU:d=>d==='2026-10-28'?0:1,nm:w=>({boss:'Boss',dew:'<b>dew</b>'})[w],esc,
+    topicOf:t=>t.topic,fdt:d=>'on '+d,MarcomUI:{setHTML:(el,h)=>{el.innerHTML=h;}}});
+  vm.runInContext(slice("  var ovDl='all', ovDlOpen={};",'  /* ---------- event countdown ---------- */'),context);
+  context.renderDeadlines();
+  const html=nodes['ov-deadlines'].innerHTML;
+  assert.match(html,/<div class="ov-dl" onclick="ovGoto\('boss'\)"><span class="ov-dl-who" data-member="boss" title="Boss" aria-hidden="true">B<\/span><div class="ov-dl-main">/);
+  assert.match(html,/<div class="ov-dl-sub"><span class="ov-dl-wn">Boss &middot; <\/span>on 2026-10-28<\/div>/,'the name stays in the text for screen readers');
+  assert.match(html,/data-member="dew" title="&lt;b&gt;dew&lt;\/b&gt;" aria-hidden="true">&lt;<\/span>/,'names are escaped; the initial is the first letter shown');
+  assert.doesNotMatch(html,/<b>dew<\/b>/);
+  assert.match(step52,/#panel-overview \.ov-dl \.ov-dl-who\{flex:0 0 auto;width:24px;height:24px;border-radius:50%;[^}]*color:#fff;background:var\(--tm-c,var\(--navy,#003057\)\);\}/);
+  for(const w of ['boss','dew','o','junior'])
+    assert.match(step52,new RegExp('#panel-overview \\.ov-dl-who\\[data-member="'+w+'"\\]\\{--tm-c:var\\(--member-'+w+'\\);\\}'));
+  assert.match(step52,/#panel-overview \.ov-dl-wn\{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect\(0 0 0 0\);white-space:nowrap;border:0;\}/);
+});
+
+test('white initials read on every person colour, the defaults and any saved tab colour',()=>{
+  for(const w of ['boss','dew','o','junior']){
+    const c=hex(css26,'member-'+w);
+    assert.ok(contrast('#ffffff',c)>=4.5,w+': white on '+c+' is '+contrast('#ffffff',c).toFixed(2));
+  }
+  /* A saved colour becomes an ink that reads at 4.5:1 on #EFF3F9, so white,
+     which is lighter still, reads on it at least as well. */
+  assert.match(source,/var ink=readable\(c,'#EFF3F9',4\.5\);/);
+  assert.match(source,/css\+=':root\{--member-'\+w\+':'\+ink\+';\}';/);
+});
+
+/* ===== Step 56: sidebar widget headers, the name first ===== */
+const step56=stepBlock(56);
+
+test('sidebar headers: the name first, buttons on the right, and a button that does not fit moves under it',()=>{
+  assert.doesNotMatch(css26,/\.side-col \.widget-head\{display:grid/,'step 39\'s grid, which let buttons take the hidden handle\'s place, is gone');
+  assert.doesNotMatch(css26,/\.side-col \.widget-head>\*\{grid-row/);
+  assert.match(step56,/\.side-col \.widget-head\{--wh-name-x:52px;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;column-gap:10px;row-gap:6px;\}/,
+    'one row that wraps; a wrapped button stays on the right');
+  assert.match(step56,/\.side-col \.widget-head>\.widget-title\{flex:1 1 auto;\}/,'the name is measured at its full width before anything wraps');
+  assert.match(css26,/\.widget-head>\.widget-title\{min-width:0;flex:1 1 auto;\}/);
+  assert.match(step56,/\.side-col \.widget-head>\.uxp-cal-seg\{order:1;\}/,'the refresh stays beside the name; only the wide switch moves down');
+  assert.match(step56,/\.side-col \.widget\.collapsed>\.widget-head>\.widget-title\{white-space:normal;\}/,'a long folded name wraps on the narrowest phones instead of being cut');
+});
+
+test('a folded widget\'s summary sits on the last line, under the name\'s first letter',()=>{
+  assert.match(step56,/\.side-col \.widget-head>\.widget-sum\{order:2;flex:0 0 auto;width:calc\(100% - var\(--wh-name-x\)\);max-width:none;margin:-5px 0 0 var\(--wh-name-x\);padding:0;text-align:left;\}/);
+  /* 52px is the fold arrow and the icon tile; from 981px the drag handle and its gap add 31px.
+     The handle hides below exactly that width, so the two rules must move together. */
+  assert.match(media(step56,'min-width:981px'),/\.side-col \.widget-head\{--wh-name-x:83px;\}/);
+  assert.match(source,/@media\(max-width:980px\)\{\.uxp-wh-drag\{display:none;\}\}/);
+  assert.match(source,/\.uxp-wh-drag\{[^}]*padding:4px 6px 4px 0;font-size:15px;/,'the handle is 21px wide (15px icon and 6px padding)');
+});
+
+/* ===== Step 57: event colours readable as text in dark mode too ===== */
+const step57=stepBlock(57);
+
+test('in dark mode only, an event colour too dark for the card shows its lighter shade',()=>{
+  assert.match(step57,/html\.dark \.ev-ink-d\{color:var\(--evc-ink-d\)!important;\}/);
+  assert.doesNotMatch(css26,/html:not\(\.dark\)[^{]*\.ev-ink-d/,'light mode keeps step 46\'s shade');
+  assert.match(source,/var ink=evInk\(hex\),inkD=evInkDark\(hex\),c=cls,st='color:'\+hex\+';';/,'both shades come from one helper call per text');
+});

@@ -342,3 +342,40 @@ test('a phone on its side keeps the page, the buttons and the drawer clear of th
   assert.match(step34, /\.chat-fab,\.quickadd-fab,\.chat-panel\{right:calc\(22px \+ env\(safe-area-inset-right,0px\)\);\}/);
   assert.match(step34, /\.tab-panel \.two-col>\.side-col\{padding-right:max\(14px,env\(safe-area-inset-right,0px\)\);padding-bottom:max\(24px,env\(safe-area-inset-bottom,0px\)\);\}/);
 });
+
+/* ---------- Step 53: a livelier spring that never leaves the bar ---------- */
+const step53 = (() => { const a = css.indexOf('/* Step 53:'), b = css.slice(a + 1).search(/\/\* Step \d+:/); return css.slice(a, b < 0 ? undefined : a + 1 + b); })();
+
+test('the script tells the indicator where the row of tabs starts and ends', () => {
+  let { api, nav } = page();
+  api.attach(nav);
+  assert.equal(nav.style.props['--ind-min'], '4px', 'Overview starts 4px from the bar edge');
+  assert.equal(nav.style.props['--ind-max'], '432px', 'Eye ends 432px from it');
+  ({ api, nav } = (() => { const p = page(); p.tabs[4].rect = { left: 0, width: 0, top: 0, height: 0 }; return p; })());
+  api.attach(nav);
+  assert.equal(nav.style.props['--ind-max'], '354px', 'a hidden tab at the end is not counted');
+});
+
+test('the pill overshoots by about 4% and settles in the same third of a second', () => {
+  assert.match(step34, /\.tab-nav\.has-ind\{transition-property:--ind-x,--ind-w;transition-duration:\.33s;\}/);
+  const curve = step53.match(/transition-timing-function:linear\(([^)]*)\);/)[1].split(',').map(Number);
+  assert.equal(curve[0], 0);
+  assert.equal(curve[curve.length - 1], 1, 'it ends exactly on the tab');
+  const peak = Math.max(...curve), at = curve.indexOf(peak);
+  assert.ok(peak >= 1.035 && peak <= 1.045, 'overshoot ' + ((peak - 1) * 100).toFixed(1) + '%');
+  assert.ok(curve.slice(0, at + 1).every((v, i, a) => i === 0 || v >= a[i - 1]), 'a single rise to the peak');
+  assert.ok(Math.abs(curve[curve.length - 2] - 1) <= 0.003, 'and no visible jump at the end');
+  /* Browsers without linear(): one overshoot of about the same size. */
+  const [, y1, , y2] = step53.match(/transition-timing-function:cubic-bezier\(([^)]*)\);/)[1].split(',').map(Number);
+  let top = 0;
+  for (let s = 0; s <= 1; s += 0.001) top = Math.max(top, 3 * (1 - s) ** 2 * s * y1 + 3 * (1 - s) * s * s * y2 + s ** 3);
+  assert.ok(top >= 1.03 && top <= 1.05, 'fallback overshoot ' + ((top - 1) * 100).toFixed(1) + '%');
+  assert.match(step53, /\.tab-nav\.has-ind\{transition-timing-function:cubic-bezier\([^)]*\);\s*transition-timing-function:linear\(/,
+    'linear() comes second, so it wins where supported');
+});
+
+test('at either end of the bar the pill squashes against the edge instead of sliding past it', () => {
+  assert.match(step53, /\.tab-nav\.has-ind \.tab-ind\{--ind-a:max\(var\(--ind-min,-100000px\),var\(--ind-x\)\);--ind-b:min\(var\(--ind-max,100000px\),calc\(var\(--ind-x\) \+ var\(--ind-w\)\)\);\s*width:calc\(var\(--ind-b\) - var\(--ind-a\)\);transform:translateX\(var\(--ind-a\)\);\}/);
+  /* The colour copy needs no limit: it lives inside each tab, and nothing lies beyond the end tabs. */
+  assert.doesNotMatch(step53, /tab-ink/);
+});

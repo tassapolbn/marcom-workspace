@@ -104,7 +104,16 @@
       else nav.classList.remove('ind-snap');
       /* Measured to the sub-pixel, from the edge the indicator is placed against. */
       var r = nav.getBoundingClientRect(), edge = r.left + nav.clientLeft - nav.scrollLeft;
-      tabs().forEach(function(b){ b.style.setProperty('--tab-x', (b.getBoundingClientRect().left - edge) + 'px'); });
+      var all = tabs();
+      all.forEach(function(b){ b.style.setProperty('--tab-x', (b.getBoundingClientRect().left - edge) + 'px'); });
+      /* The two ends of the row of tabs: the spring squashes the indicator
+         against them instead of pushing it out of the bar (Step 53). */
+      var shown = all.filter(function(b){ return b.getBoundingClientRect().width > 0; });
+      if(shown.length){
+        var first = shown[0].getBoundingClientRect(), end = shown[shown.length - 1].getBoundingClientRect();
+        nav.style.setProperty('--ind-min', (first.left - edge) + 'px');
+        nav.style.setProperty('--ind-max', (end.left + end.width - edge) + 'px');
+      }
       var c = cur.getBoundingClientRect();
       nav.style.setProperty('--ind-x', (c.left - edge) + 'px');
       nav.style.setProperty('--ind-w', c.width + 'px');

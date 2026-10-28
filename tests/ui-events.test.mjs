@@ -316,8 +316,32 @@ test('every event colour has a shade that reads on white, and a readable colour 
     }
   }
   assert.equal(c.evTextAttrs('ov-cdn-n', ''), ' class="ov-cdn-n"');
-  assert.equal(c.evTextAttrs('ov-cdn-n', '#1f3a5f'), ' class="ov-cdn-n" style="color:#1f3a5f;"');
+  assert.match(c.evTextAttrs('ov-cdn-n', '#1f3a5f'), /^ class="ov-cdn-n ev-ink-d" style="color:#1f3a5f;--evc-ink-d:#[0-9a-f]{6};"$/,
+    'navy reads on white, so no light-mode shade (its dark-mode shade is step 57)');
   assert.match(c.evTextAttrs('ev-tl-name', '#e6a417'), /^ class="ev-tl-name ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};"$/);
+});
+
+/* Step 57: the same in dark mode, against the dark card (#161a24, #242831 on hover). */
+const ratio = (x, y) => { const a = lum(x), b = lum(y); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
+
+test('every event colour has a shade that reads on the dark card, and a readable colour stays as chosen', () => {
+  const { context: c } = fixture();
+  vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
+  for (const hex of presets.concat(['#000000', '#7a5c1e', '#c8553d', '#ffffff'])) {
+    const ink = c.evInkDark(hex);
+    for (const card of ['#242831', '#161a24'])
+      assert.ok(ratio(ink, card) >= 4.5, hex + ' -> ' + ink + ' reads at ' + ratio(ink, card).toFixed(2) + ' on ' + card);
+    if (ratio(hex, '#242831') >= 4.5) assert.equal(ink, hex, hex + ' already reads, so it is kept');
+    else {
+      const a = hex.slice(1).match(/../g).map(h => parseInt(h, 16)), b = ink.slice(1).match(/../g).map(h => parseInt(h, 16));
+      assert.ok(b.every((v, i) => v >= a[i]), ink + ' is a lighter shade of ' + hex);
+      const i0 = a.indexOf(Math.min(...a)), k = (255 - b[i0]) / (255 - a[i0]);
+      assert.ok(b.every((v, i) => Math.abs((255 - v) - (255 - a[i]) * k) <= 1), ink + ' keeps the hue of ' + hex);
+    }
+  }
+  assert.match(c.evTextAttrs('ev-tl-name', '#e05a3d'), /^ class="ev-tl-name ev-ink ev-ink-d" style="color:#e05a3d;--evc-ink:#[0-9a-f]{6};--evc-ink-d:#[0-9a-f]{6};"$/,
+    'coral needs a darker shade on white and a lighter one on the dark card');
+  assert.doesNotMatch(c.evTextAttrs('ov-cdn-n', '#e6a417'), /ev-ink-d/, 'amber already reads on the dark card');
 });
 
 test('the Timeline names and the Overview countdown numbers use the readable shade', () => {
@@ -328,7 +352,7 @@ test('the Timeline names and the Overview countdown numbers use the readable sha
   const navy = { id: 'n', name: 'Concert', date: '2099-01-02', color: '#1f3a5f' };
   const html = c.evHubHTML([amber, navy], 'boss');
   assert.match(html, /<div class="ev-tl-name ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};">Teacher Day</, 'a light colour gets its darker shade');
-  assert.match(html, /<div class="ev-tl-name" style="color:#1f3a5f;">Concert</, 'a dark colour is unchanged');
+  assert.match(html, /<div class="ev-tl-name ev-ink-d" style="color:#1f3a5f;--evc-ink-d:#[0-9a-f]{6};">Concert</, 'a dark colour keeps its colour in light mode');
   assert.match(html, /class="ev-tl-dot evu-\w+" style="color:#e6a417;"/, 'the dot keeps the colour as chosen');
   let rendered;
   c.MORDER = ['boss']; c.eOf = () => [amber, navy]; c.dU = () => 3; c.fdt = () => 'Soon';
@@ -337,6 +361,6 @@ test('the Timeline names and the Overview countdown numbers use the readable sha
   vm.runInContext(countdown, c);
   c.renderCountdown();
   assert.match(rendered, /<div class="ov-cdn-n ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};">3</);
-  assert.match(rendered, /<div class="ov-cdn-n" style="color:#1f3a5f;">3</);
+  assert.match(rendered, /<div class="ov-cdn-n ev-ink-d" style="color:#1f3a5f;--evc-ink-d:#[0-9a-f]{6};">3</);
 });
 

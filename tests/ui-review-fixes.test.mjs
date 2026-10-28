@@ -148,7 +148,7 @@ test('Team today counts shared cards once in the total while each person counts 
   vm.runInContext(slice('  function todayCounts(items,dayFn){','  window.ovRenderTeam=renderTeam;'),context);
   context.renderTeam();
   assert.match(nodes['team-sum'].innerHTML,/ 2 open<span class="ov-team-sum-w"> tasks<\/span>$/);
-  const cells=nodes['team-list'].innerHTML.split('class="tm"').slice(1);
+  const cells=nodes['team-list'].innerHTML.split(/class="tm(?: tm-calm)?"/).slice(1);
   assert.equal(cells.length,2);
   assert.match(cells[0],/<span class="tm-open">2 open<\/span>/);
   assert.match(cells[1],/<span class="tm-open">1 open<\/span>/);
