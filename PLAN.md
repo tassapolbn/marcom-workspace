@@ -1545,8 +1545,9 @@ them, and they ship with plan 5.
     against the card's hover tint, so it reads at 4.5:1 or better at rest and
     on hover; the event's dot and every other use keep the colour as chosen.
     Light mode is unchanged. Contrast scans on every tab, list and Timeline
-    views, at 1440 and 390 wide: zero failures in both themes (dark mode had
-    25 failing texts on the Overview and three person tabs before). Tests:
+    views, at 1440 and 390 wide: zero failures in both themes (at 1440 wide,
+    dark mode had 28 failing texts on the Overview and three person tabs
+    before). Tests:
     337/337 (two new; three step 46 tests now also expect the dark shade).
 
 ## Decisions needed from Boss (fixes found during plan 5)
