@@ -1458,6 +1458,17 @@ twice: in the header and in the "⋯" menu.
     independent review, and one walk through the main tasks (add a task,
     change its status, find something) by a reviewer who has not seen the
     work.
+  - Status (28 Oct): every automated check passes: the suite 340/340;
+    contrast scans with zero failures in both themes, at 1440 and 390 wide,
+    with the Event Hub in list and Timeline views; iPhone widths 320 to 440
+    in both themes; the tab bar checks three runs in a row. Evidence at
+    390x664, 390x844 and 1440x900 is in
+    `.oil-ui/workspace-redesign/evidence55/` (not committed). On 390x664 the
+    first deadline row starts at 389px with three rows above the dock; on
+    computers the Overview columns end within 25px. Boss asked to deploy
+    before the usage limit, so plan 5 was merged and deployed while the
+    independent review and the walkthrough were still running; their
+    findings follow as a separate fix.
 
 ## Decisions needed from Boss (plan 5)
 
