@@ -1230,3 +1230,132 @@ the event form already previews the pair while choosing.
 2. **Step 46:** recommended, include it (small, and in the same feature).
 3. **Going live:** recommended, merge and deploy once every check passes; or
    stop at the preview so Boss can try it on an iPhone first.
+
+# Follow-up plan 5, step by step (28 Oct 2026): for Boss to approve
+
+Boss asked on 28 Oct to continue plan 5. Its seven proposals (above) become
+the steps below. Same scope: UX and UI only, light mode first, dark mode
+checked for no regression, iPhone first. Nothing here is built until Boss
+approves. Every step is checked with the team-like sample data (coloured
+events, shared cards, long names).
+
+Baseline (28 Oct, 390x664, the visible size of Safari on an iPhone 13 or 14):
+on the Overview the header (110px), the payday line, the announcement, the
+search box and Team today come first; the first task row starts at about
+y=500 and two rows fit above the tab bar. Screenshots in
+`.oil-ui/workspace-redesign/plan5-baseline/`.
+
+Found while studying: the header search (Search, Ctrl K) finds only Boss's
+tasks and those of a "Best" list that no tab shows, and it still offers
+"New task in Best" and "Go to Junior tab". The Overview's search box finds
+every person's tasks, events, notes and links. On iPhone, Sign out appears
+twice: in the header and in the "⋯" menu.
+
+## Steps
+
+- [ ] **47. iPhone: the header gives its height back to the work**
+  - Files: `index.html` (the header on phones), `assets/workspace-ui.css`,
+    tests.
+  - Change, on iPhone only: the payday line moves into the header's second
+    row, where the ADMIN label and the sign-out button sit today ("Payday ·
+    2 days"; the lunch notice shows there at lunchtime; a tap still opens the
+    full payday details). ADMIN moves to the top of the "⋯" menu, which
+    already has Sign out. After a scroll the header shrinks to one row (logo,
+    search, bell, "⋯") and grows back at the top; with Reduce Motion it
+    changes without movement.
+  - Test: at 390x664 and 320x568 payday reads in the header and the line
+    under it is gone; the Overview's first task row starts at least 40px
+    higher; after a scroll the header is one row of about 56px; nothing
+    overlaps or scrolls sideways from 320 to 440; a tap on payday still
+    shows its details; the lunch notice still appears at lunchtime.
+
+- [ ] **48. One search that finds everything**
+  - Files: `index.html` (the search palette and the Overview's search box),
+    `assets/workspace-ui.css`, tests.
+  - Change: the header search finds everything the Overview's box finds
+    (every person's tasks and shared cards, events, notes and links) and its
+    actions name today's tabs, from Settings (the "Best" entries go). The
+    Overview's search box goes, so there is one search on every screen. On
+    iPhone the header gains a search button beside the bell.
+  - Test: words from a Dew task, an O note, an event and a link are each
+    found and open the right place; Ctrl K and "/" still open the search;
+    on iPhone the Overview's first task row moves up by the box's height.
+
+- [ ] **49. Person colours as small marks only**
+  - Files: `assets/workspace-ui.css` (`index.html` only where a colour is set
+    inline), tests.
+  - Change, light mode: a person's colour stays on their initial, their
+    name, their tab label and the tab bar, and leaves the large areas. The
+    "Add Task" bar becomes the same navy button on every tab; the person
+    header and the Event Hub bar lose their tinted band and thick coloured
+    edge. Status colours then carry their meaning alone. Dark mode unchanged.
+  - Test: a rendered scan of the four person tabs finds no area larger than
+    2,000px² filled with a person colour or its tint; contrast stays clean.
+
+- [ ] **50. Task cards are calm at rest**
+  - Files: `index.html` (the card's action row and a "⋯" button),
+    `assets/workspace-ui.css`, tests.
+  - Change: at rest a card shows its name and tick, one line of facts, and
+    Details. The action row (Move to…, calendar, duplicate, edit, delete)
+    appears while the pointer is over the card or the keyboard is inside it
+    on computers; on iPhone a "⋯" button on the card shows or hides it.
+    Inside a status column the status menu joins that row, since the column
+    already says the status. Nothing is removed; every action works as today.
+  - Test: every action reachable by mouse, by touch (one extra tap) and by
+    keyboard (Tab reaches the row and shows it); drag and drop between
+    columns unchanged; spoken names unchanged; at 1440x900 more task names
+    fit on the first screen of a person tab.
+
+- [ ] **51. The Overview: one heavy block, columns that end together**
+  - Files: `index.html` (the Overview layout, Request Centre, Event
+    Countdown, Event Board), `assets/workspace-ui.css`, tests.
+  - Change: Upcoming Deadlines stays the one large block. The Request Centre
+    is one line ("No new requests", with Open and Copy Link) when every count
+    is zero, and its full grid when anything is waiting. The Event Countdown
+    becomes the first section of the Event Board ("Coming up", every upcoming
+    event with its days left, delete kept), so events and their shared tasks
+    are one card. The Master Calendar moves to the right column under the
+    Request Centre, so the two columns end together on computers.
+  - Test: at 1440x900 and 1024x768 the two columns end within 120px of each
+    other; every upcoming event, with or without tasks, still shows its days
+    left; no event appears twice; on iPhone the order is Team today,
+    deadlines, events, requests, calendar.
+
+- [ ] **52. Team today: what needs Boss reads first**
+  - Files: `index.html` (Team today and the deadline rows),
+    `assets/workspace-ui.css`, tests.
+  - Change: in Team today, overdue reads strongest, waiting next and on hold
+    quietest, and a person with nothing waiting fades back ("Clear"). Each
+    row in Upcoming Deadlines starts with its owner's initial in their colour,
+    as in the tab bar, instead of the name written out; the date stays.
+  - Test: rendered weights (overdue bold red, on hold regular); every
+    initial has a spoken name; contrast clean; the Team today tests updated.
+
+- [ ] **53. Tab motion (decision 2)**
+  - Files: `assets/workspace-ui.css` (the pill's spring), tests.
+  - Change if chosen: the pill overshoots by about 4% and settles, in the
+    same 0.34s; Reduce Motion unchanged.
+  - Test: a frame recording of a move; the tab bar checks pass three runs in
+    a row.
+
+- [ ] **54. The department line on iPhone (decision 3)**
+  - If shown: under the product name at the top of the page, gone once the
+    header shrinks (step 47). If kept hidden: nothing to build.
+
+- [ ] **55. Final check and a third independent review**
+  - The suite, contrast in both themes, iPhone widths 320 to 440, evidence
+    at 390x664, 390x844 and 1440x900 with the team-like data, one scored
+    independent review, and one walk through the main tasks (add a task,
+    change its status, find something) by a reviewer who has not seen the
+    work.
+
+## Decisions needed from Boss (plan 5)
+
+1. **The plan:** recommended, approve steps 47 to 55 as written; or approve
+   them without step 50, keeping every card's buttons visible.
+2. **Tab motion:** recommended, the livelier spring, closer to Boss's first
+   wish for a more playful tab bar; or keep the current gentle one.
+3. **The department line on iPhone:** recommended, keep it hidden so the
+   space goes to the work; or show it at the top of the page.
+4. **Going live:** recommended, merge and deploy once every check passes; or
+   stop at the preview first.
