@@ -1270,3 +1270,28 @@ html:not(.dark) .evhub .ev-chip.ev-chip-filled{border:0;border-radius:12px;}
    Timeline, a number in the Overview countdown) shows a darker shade of itself.
    Dots, tiles and dark mode keep the colour as chosen. */
 html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
+
+/* Step 47: iPhone, the header gives its height back to the work */
+.uxp-mi-who{display:none;}
+@media(max-width:600px){
+  /* One height, scrolled or not, so the pinned row never jumps. */
+  body.hdr-scrolled .header-top{padding:12px 14px 8px;}
+  /* The logo row scrolls away with the page; the row with payday, the bell and
+     "⋯" stays pinned. In the Home Screen app a band in the header's colour keeps
+     the status bar covered (zero tall in Safari). */
+  .app-header{top:-60px;}
+  .app-header::before{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:inherit;z-index:2;pointer-events:none;}
+  /* Payday sits where ADMIN was; ADMIN and Sign out are in the "⋯" menu. */
+  #auth-banner{display:none;}
+  .header-right .uxp-sal-toggle{margin:0 auto 0 -6px;min-height:42px;padding:6px 8px;border-radius:12px;font-size:13px;color:rgba(255,255,255,.82);flex-wrap:nowrap;white-space:nowrap;}
+  .header-right .uxp-sal-toggle b{color:#fff;}
+  .header-right .uxp-sal-toggle:hover,.header-right .uxp-sal-toggle:focus-visible{background:rgba(255,255,255,.1);color:#fff;}
+  .header-right .uxp-sal-toggle :is(.uxp-sal-date,.uxp-sal-left,.uxp-sal-mini){display:none;}
+  /* Under the header only the lunch notice remains, at lunchtime. */
+  .salary-dock:not(:has(#lunch-banner.show)) .uxp-sal-bar{display:none;}
+  .uxp-mi-who{display:flex;align-items:center;gap:8px;padding:10px 12px 9px;margin-bottom:4px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text);}
+  .uxp-mi-who i{font-size:18px;color:var(--muted);}
+  .uxp-mi-who .uxp-mi-role{margin-left:auto;padding:2px 8px;border:1px solid var(--border-strong,#d6dbe4);border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--text);}
+}
+/* The smallest iPhones: the banknote and "2 days". */
+@media(max-width:360px){.header-right .uxp-sal-toggle :is(.uxp-sal-word,.uxp-sal-sep){display:none;}}

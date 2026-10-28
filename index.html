@@ -10816,6 +10816,7 @@ button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible,te
     var open=forceClose===true?false:!p.classList.contains('open');
     p.classList.toggle('open',open);
     if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+    if(open&&window.uxpReanchor)window.uxpReanchor();
   };
   document.addEventListener('mousedown',function(e){
     var p=document.getElementById('uxp-bell-panel');
@@ -11191,6 +11192,12 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       try{localStorage.setItem('uxp_sal',v?'1':'0');}catch(e){}
       /* The fold animates before the class changes, so paint the state being set. */
       paint(v);
+      /* From the pinned iPhone header (step 47) the details open at the top of
+         the page, so go there to show them. */
+      if(!v&&b.parentNode&&b.parentNode.classList.contains('header-right')&&(window.scrollY||0)>0){
+        var still=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        try{window.scrollTo({top:0,behavior:still?'auto':'smooth'});}catch(e){window.scrollTo(0,0);}
+      }
     };
     bar.appendChild(b);
     /* Adopt the lunch notice if it was built first: one line, not two bands. */
@@ -11204,7 +11211,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');
       b.innerHTML=c
-        ?'<i class="ti ti-cash-banknote"></i> Payday <b>'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> &middot; '+esc(days)+' days left'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
+        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
         :'<i class="ti ti-chevron-up"></i> Hide salary period';
     }
     /* The payday strip starts as one compact line; Show salary period opens it. */
@@ -11213,13 +11220,38 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     setInterval(paint,60000);
   }
 
+  /* iPhone (step 47): the payday line moves into the header's second row, where
+     ADMIN was, so the work starts higher; wider screens keep it under the header. */
+  var salMq=null;
+  function placeSal(){
+    var t=document.getElementById('uxp-sal-toggle'),host=document.querySelector('.header-right'),bar=document.querySelector('.uxp-sal-bar');
+    if(!t||!host||!bar)return;
+    if(salMq&&salMq.matches){ if(t.parentNode!==host)host.insertBefore(t,host.firstChild); }
+    else if(t.parentNode!==bar)bar.insertBefore(t,bar.firstChild);
+  }
+  function watchSal(){
+    if(salMq||!window.matchMedia)return;
+    salMq=window.matchMedia('(max-width:600px)');
+    if(salMq.addEventListener)salMq.addEventListener('change',placeSal); else if(salMq.addListener)salMq.addListener(placeSal);
+  }
+
   /* condensed header after scrolling, rAF-throttled */
   var tick=false;
+  /* An open "⋯" menu or bell panel opens just under its button and stays there
+     while the iPhone header scrolls (step 47), never over the header's own row. */
+  function reanchor(){
+    [['uxp-more-panel','hdr-more'],['uxp-bell-panel','uxp-bell']].forEach(function(pair){
+      var p=document.getElementById(pair[0]),btn=document.getElementById(pair[1]);
+      if(p&&btn&&p.classList.contains('open'))p.style.top=Math.round(btn.getBoundingClientRect().bottom+8)+'px';
+    });
+  }
+  window.uxpReanchor=reanchor;
   function onScroll(){
     if(tick)return; tick=true;
     requestAnimationFrame(function(){
       tick=false;
       document.body.classList.toggle('hdr-scrolled',(window.scrollY||0)>10);
+      reanchor();
     });
   }
   window.addEventListener('scroll',onScroll,{passive:true});
@@ -11248,7 +11280,9 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     }
     var admin=(window.__cur||{}).role==='admin';
     var syncTxt=(document.getElementById('sync-text')||{}).textContent||'';
+    var me=window.__cur||{},rl={admin:'Admin',designer:'Designer',media:'Media',junior:'Junior'}[me.role]||me.role||'';
     p.innerHTML=''
+      +(me.email?'<div class="uxp-mi-who"><i class="ti ti-user-circle"></i><span class="uxp-mi-name">'+esc(String(me.email).split('@')[0])+'</span>'+(rl?'<span class="uxp-mi-role">'+esc(rl)+'</span>':'')+'</div>':'')
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search (Ctrl K)</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpQuickAdd()"><i class="ti ti-plus"></i> New task</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-'+(document.documentElement.classList.contains('dark')?'sun':'moon')+'"></i> Dark mode: '+(document.documentElement.classList.contains('dark')?'on':'off')+'</button>'
@@ -11263,6 +11297,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     var open=forceClose===true?false:!p.classList.contains('open');
     p.classList.toggle('open',open);
     if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+    if(open)reanchor();
   };
   document.addEventListener('mousedown',function(e){
     var p=document.getElementById('uxp-more-panel');
@@ -11283,6 +11318,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
   }
   function boot(){
     dockSalary();
+    watchSal(); placeSal();
     onScroll();
     if(typeof window.switchTab==='function'){
       var _st=window.switchTab;

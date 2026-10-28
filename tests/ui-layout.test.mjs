@@ -908,3 +908,53 @@ test('in light mode only, an event colour too light for text shows its darker sh
   assert.doesNotMatch(source,/class="ov-cdn-n"'\+\(\(it\.e\.color/,'the countdown number goes through evTextAttrs');
 });
 
+
+/* ===== Step 47: iPhone, the header gives its height back to the work ===== */
+const step47=stepBlock(47);
+
+test('on iPhone the logo row scrolls away and the payday row stays pinned, with nothing jumping',()=>{
+  const phone=media(step47,'max-width:600px');
+  assert.match(phone,/body\.hdr-scrolled \.header-top\{padding:12px 14px 8px;\}/,'one header height, scrolled or not');
+  assert.match(phone,/\.app-header\{top:-60px;\}/,'the first 60px (the logo row) scroll away; the second row stays');
+  assert.match(phone,/\.app-header::before\{content:'';position:fixed;top:0;left:0;right:0;height:env\(safe-area-inset-top,0px\);background:inherit;/,
+    'in the Home Screen app the status bar stays covered in the header colour');
+  assert.match(phone,/#auth-banner\{display:none;\}/,'ADMIN leaves the header; Sign out is in the menu');
+  assert.match(phone,/\.header-right \.uxp-sal-toggle :is\(\.uxp-sal-date,\.uxp-sal-left,\.uxp-sal-mini\)\{display:none;\}/,'"Payday · 2 days"');
+  assert.match(phone,/\.salary-dock:not\(:has\(#lunch-banner\.show\)\) \.uxp-sal-bar\{display:none;\}/,'the line under the header only for lunch');
+  assert.match(phone,/\.uxp-mi-who\{display:flex;/);
+  assert.match(step47,/^\.uxp-mi-who\{display:none;\}/m,'the menu names the account only on phones');
+  assert.match(media(step47,'max-width:360px'),/\.header-right \.uxp-sal-toggle :is\(\.uxp-sal-word,\.uxp-sal-sep\)\{display:none;\}/,'"2 days" on the smallest iPhones');
+});
+
+test('the payday line moves into the header on phones and back under it on wider screens',()=>{
+  const mk=cls=>({className:cls,children:[],parentNode:null,
+    insertBefore(el,ref){if(el.parentNode)el.parentNode.children.splice(el.parentNode.children.indexOf(el),1);
+      const i=ref?this.children.indexOf(ref):-1;this.children.splice(i<0?this.children.length:i,0,el);el.parentNode=this;},
+    get firstChild(){return this.children[0]||null;}});
+  const host=mk('header-right'),bar=mk('uxp-sal-bar'),toggle=mk('uxp-sal-toggle'),bell=mk('dm-toggle'),lunch=mk('');
+  host.insertBefore(bell,null);bar.insertBefore(toggle,null);bar.insertBefore(lunch,null);
+  const listeners=[],mq={matches:true,addEventListener:(t,f)=>listeners.push(f)};
+  const document={getElementById:id=>id==='uxp-sal-toggle'?toggle:null,querySelector:s=>({'.header-right':host,'.uxp-sal-bar':bar})[s]||null};
+  const c=vm.createContext({document,window:{matchMedia:()=>mq}});
+  vm.runInContext(slice('  var salMq=null;','  /* condensed header after scrolling')+'\nthis.placeSal=placeSal;this.watchSal=watchSal;',c);
+  c.watchSal();c.placeSal();
+  assert.equal(toggle.parentNode,host);assert.equal(host.children[0],toggle,'first in the row, where ADMIN was');
+  mq.matches=false;listeners.forEach(f=>f());
+  assert.equal(toggle.parentNode,bar);assert.equal(bar.children[0],toggle,'back before the lunch notice');
+  assert.match(source,/watchSal\(\); placeSal\(\);/,'placed as soon as the line exists');
+  assert.match(source,/<span class="uxp-sal-word">Payday<\/span> <b class="uxp-sal-date">/,'the same words, in pieces a phone can shorten');
+  assert.match(source,/' days<span class="uxp-sal-left"> left<\/span><\/span>'/);
+  assert.match(source,/if\(!v&&b\.parentNode&&b\.parentNode\.classList\.contains\('header-right'\)&&\(window\.scrollY\|\|0\)>0\)/,'opening it from the pinned row scrolls up to show the details');
+  assert.match(source,/'<div class="uxp-mi-who"><i class="ti ti-user-circle"><\/i><span class="uxp-mi-name">'/,'the menu says who is signed in');
+});
+
+test('the "⋯" menu and the bell panel open under their own button',()=>{
+  const style={},panel={classList:{contains:n=>n==='open'},style},btn={getBoundingClientRect:()=>({bottom:45})};
+  const c=vm.createContext({document:{getElementById:id=>({'uxp-more-panel':panel,'hdr-more':btn})[id]||null}});
+  vm.runInContext(slice('  function reanchor(){','  window.uxpReanchor=reanchor;'),c);
+  c.reanchor();
+  assert.equal(style.top,'53px','8px under the button, never over the header row');
+  assert.match(source,/document\.body\.classList\.toggle\('hdr-scrolled',\(window\.scrollY\|\|0\)>10\);\n      reanchor\(\);/,'and stays under it while the header scrolls');
+  assert.match(source,/if\(open\)reanchor\(\);/);
+  assert.match(source,/if\(open&&window\.uxpReanchor\)window\.uxpReanchor\(\);/);
+});

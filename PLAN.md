@@ -1256,7 +1256,7 @@ twice: in the header and in the "⋯" menu.
 
 ## Steps
 
-- [ ] **47. iPhone: the header gives its height back to the work**
+- [x] **47. iPhone: the header gives its height back to the work**
   - Files: `index.html` (the header on phones), `assets/workspace-ui.css`,
     tests.
   - Change, on iPhone only: the payday line moves into the header's second
@@ -1271,6 +1271,24 @@ twice: in the header and in the "⋯" menu.
     higher; after a scroll the header is one row of about 56px; nothing
     overlaps or scrolls sideways from 320 to 440; a tap on payday still
     shows its details; the lunch notice still appears at lunchtime.
+  - Done (28 Oct): on iPhone payday now sits in the header's second row
+    ("Payday · 2 days", or "2 days" on the smallest iPhones), where ADMIN and
+    the sign-out button were. The "⋯" menu now starts with who is signed in
+    and their role, and already had Sign out. The line under the header
+    appears only for the lunch notice, at lunchtime. The logo row scrolls away
+    with the page and the 50px row with payday, the bell and "⋯" stays pinned,
+    so nothing jumps (the 5px padding change on scroll is gone on phones); in
+    the Home Screen app a band in the header's colour keeps the status bar
+    covered. A tap on payday from the pinned row scrolls up to show the
+    details. The "⋯" menu and the bell panel now open 8px under their button
+    and follow it as the header moves; at the top of the page they used to
+    open over the header's own row, covering the "⋯" button. Measured at
+    390x664: the Overview's first deadline row starts at 443px (491 before)
+    and Dew's tab moves up by 48px; computers are unchanged. Checked at
+    lunchtime and in dark mode; iPhone widths 320 to 440 pass in both themes.
+    Tests: 323/323 (three new). One difference from the written plan: the
+    pinned row keeps payday instead of the logo, so the header never changes
+    height under your finger.
 
 - [ ] **48. One search that finds everything**
   - Files: `index.html` (the search palette and the Overview's search box),
