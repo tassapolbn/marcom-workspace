@@ -778,10 +778,10 @@ html:not(.dark) .kb-col[data-status] .kb-col-count{color:var(--c-ink,var(--c))!i
    Director request's amber. Light mode. */
 html:not(.dark) #ov-dl-card .ov-dl,
 html:not(.dark) #evb-card .evb-g,
-html:not(.dark) #ov-cd-card .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
+html:not(.dark) .ov-countdown .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
 html:not(.dark) #ov-dl-card .ov-dl:first-of-type,
 html:not(.dark) #evb-card .evb-g:first-of-type,
-html:not(.dark) #ov-cd-card .ov-cdn:first-of-type{border-top-color:transparent!important;}
+html:not(.dark) .ov-countdown .ov-cdn:first-of-type{border-top-color:transparent!important;}
 /* Rows still answer the pointer, without a box around them. */
 html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);}
 /* The day agenda is a section of the calendar card, not a card within it. */
@@ -1327,3 +1327,20 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
 .kb-col .task-card .task-meta .tcard-sel{display:none;}
 .kb-col .task-card .task-foot .tc-row-sel{display:inline-flex;}
 @media(max-width:600px){.task-card .tc-acts-btn{width:40px;height:40px;}}
+
+/* Step 51: the Overview, one heavy block and columns that end together */
+/* The Event Board holds the next events ("Coming up") above the shared tasks,
+   whose filter now sits with them. */
+#evb-card .evb-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+#evb-card .evb-soon{margin-bottom:16px;}
+#evb-card .evb-tasks-h .evb-sel{margin-left:auto;}
+#evb-card .evb-tasks-h :is(.evb-sel,.evb-done-toggle){text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;}
+/* Nothing new or due: one quiet line instead of a grid of zeros. */
+#ov-rc-card.rc-quiet .ov-rc-none{grid-column:1 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;}
+#ov-rc-card.rc-quiet .ov-rc-none-t{flex:1 1 100%;font-size:13px;color:var(--muted);}
+@media(max-width:600px){#evb-card .evb-tasks-h .evb-sel{margin-left:0;}}
+/* The band under the two columns, and "Coming up" as a grid when it has room. */
+#panel-overview .ov-wide{margin-top:var(--sp-5,20px);}
+#panel-overview .ov-wide:empty{display:none;}
+#evb-soon .ov-countdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));column-gap:28px;}
+html:not(.dark) #evb-soon .ov-countdown .ov-cdn{border-top:0!important;}

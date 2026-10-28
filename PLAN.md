@@ -1371,7 +1371,7 @@ twice: in the header and in the "⋯" menu.
     and its first row was already in view; the gain shows once you scroll.
     Contrast: zero failures. Tests: 327/327 (three new).
 
-- [ ] **51. The Overview: one heavy block, columns that end together**
+- [x] **51. The Overview: one heavy block, columns that end together**
   - Files: `index.html` (the Overview layout, Request Centre, Event
     Countdown, Event Board), `assets/workspace-ui.css`, tests.
   - Change: Upcoming Deadlines stays the one large block. The Request Centre
@@ -1385,6 +1385,23 @@ twice: in the header and in the "⋯" menu.
     other; every upcoming event, with or without tasks, still shows its days
     left; no event appears twice; on iPhone the order is Team today,
     deadlines, events, requests, calendar.
+  - Done (28 Oct): Upcoming Deadlines is the one large block on the left. The
+    Request Centre reads "No new requests or deadlines", with Open and Copy
+    Link, when every count is zero; its full grid returns as soon as anything
+    arrives. The Master Calendar sits under it on the right. The Event
+    Countdown became the Event Board's "Coming up": every upcoming event with
+    its days left and delete button, then the shared tasks with their filter
+    (an event that has shared tasks also heads them there; the separate
+    countdown card is gone). Its old card hides only once the list has moved,
+    so if the board ever failed to load the countdown would stay put. One
+    difference from the written plan: with two columns the Event Board runs
+    full width under them ("Coming up" four across), because in the left
+    column it left that column 470px longer than the right. The columns now
+    end within 102px of each other at 1440x900 and 1024x768. In one column
+    (iPhone, iPad upright) the order is Team today, deadlines, events,
+    requests, calendar, as planned; turning an iPad moves the board with the
+    columns. Contrast: zero failures. Tests: 330/330 (three new; four layout
+    tests follow the new arrangement).
 
 - [ ] **52. Team today: what needs Boss reads first**
   - Files: `index.html` (Team today and the deadline rows),

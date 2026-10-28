@@ -20,8 +20,9 @@ test('the Overview shell puts every card in its column and folds the rest away',
   const main=shell.slice(shell.indexOf('ov-col-main'),shell.indexOf('ov-col-side'));
   const side=shell.slice(shell.indexOf('ov-col-side'),shell.indexOf('id="ov-more"'));
   const more=shell.slice(shell.indexOf('id="ov-more"'));
-  assert.ok(order(['ov-dl-card','ov-cal-card'],main));
-  assert.ok(order(['ov-cd-card','ov-wm-card'],side));
+  assert.ok(order(['ov-dl-card'],main));
+  assert.doesNotMatch(main,/id="ov-cal-card"/,'the Master Calendar moved to the side column (step 51)');
+  assert.ok(order(['ov-wm-card','ov-cd-card','ov-cal-card'],side));
   assert.doesNotMatch(side,/team-card/,'Team today left the side column for the strip above the work');
   const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),barAt=shell.indexOf('class="ov-topbar"');
   assert.ok(topAt>0&&annAt>topAt&&barAt>annAt,'announcements sit in the top slot before the greeting');
@@ -337,7 +338,8 @@ test('kanban counts are written in ink, and body text is at least 13px',()=>{
 const step32=stepBlock(32);
 
 test('boxes inside a card become rows separated by hairlines',()=>{
-  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) #ov-cd-card \.ov-cdn\{([^}]*)\}/);
+  /* The countdown rows follow their list wherever it sits (step 51: inside the Event Board). */
+  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) \.ov-countdown \.ov-cdn\{([^}]*)\}/);
   assert.ok(rows,'Upcoming Deadlines, Event Board and countdown rows share one rule');
   for(const want of [/border:0!important/,/border-radius:0!important/,/box-shadow:none!important/,/border-top:1px solid var\(--border\)!important/])
     assert.match(rows[1],want);
@@ -504,7 +506,8 @@ test('the Overview opens on the work: one announcement line, the greeting and se
   assert.doesNotMatch(source,/function renderStats\(/);
   const context=vm.createContext({});
   vm.runInContext(slice('  var LAYOUT={','  };')+'  };',context);
-  assert.deepEqual(Array.from(context.LAYOUT.side),['ov-rc-card','ov-cd-card','ov-wm-card']);
+  assert.deepEqual(Array.from(context.LAYOUT.side),['ov-rc-card','ov-wm-card','ov-cd-card','ov-cal-card'],'step 51: the calendar joins the side column');
+  assert.deepEqual(Array.from(context.LAYOUT.main),['ov-dl-card','evb-card']);
 });
 
 test('the announcement line holds one item on one row, and its text opens the rest',()=>{
@@ -1066,3 +1069,43 @@ test('the row stays hidden until "⋯"; in a status column the status menu waits
   assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:auto;/,'"⋯" at the right end of the bar');
 });
 
+
+/* ===== Step 51: the Overview, one heavy block and columns that end together ===== */
+const step51=stepBlock(51);
+
+test('the countdown list becomes the Event Board\'s "Coming up", and its old card hides only after the move',()=>{
+  const wrap={hidden:false,kids:[]},soon={kids:[],appendChild(el){el.parentNode=this;this.kids.push(el);}},list={parentNode:wrap};
+  const ids={'ov-countdown':list,'ov-cd-card':wrap};
+  const c=vm.createContext({document:{getElementById:id=>ids[id]||null},window:{}});
+  vm.runInContext(slice('  function ovAdoptCountdown(){','  window.ovAdoptCountdown=ovAdoptCountdown;'),c);
+  c.ovAdoptCountdown();
+  assert.equal(list.parentNode,wrap,'no board yet: the list stays in its own card');
+  assert.equal(wrap.hidden,false,'and that card stays visible, so no event is ever out of sight');
+  ids['evb-soon']=soon;c.ovAdoptCountdown();
+  assert.equal(list.parentNode,soon);assert.equal(wrap.hidden,true);
+  c.ovAdoptCountdown();assert.equal(soon.kids.length,1,'moved once');
+  assert.match(source,/main\.insertBefore\(c,main\.firstChild\);\n      if\(window\.ovAdoptCountdown\)window\.ovAdoptCountdown\(\);/,'the board adopts it as soon as it exists');
+  assert.match(source,/'<div class="evb-soon" id="evb-soon"><div class="evb-sec-h">Coming up<\/div><\/div>'/);
+  assert.match(source,/'<div class="evb-sec-h evb-tasks-h"><span>Shared tasks<\/span>'\n\s*\+'<select class="evb-sel" id="evb-filter" aria-label="Filter shared tasks by event"/,'the filter sits with the tasks it filters');
+});
+
+test('with two columns the Event Board runs full width under them; in one column it follows the deadlines',()=>{
+  const context=vm.createContext({});
+  vm.runInContext(slice('  var LAYOUT={','  };')+'  };',context);
+  assert.deepEqual(Array.from(context.LAYOUT.wide),['evb-card']);
+  const layout=slice('  function ovLayout(){','\n  }\n');
+  assert.match(layout,/var oneCol=!!\(window\.matchMedia&&window\.matchMedia\('\(max-width:980px\)'\)\.matches\);/,'the same 980px where the grid becomes one column');
+  assert.match(layout,/ovPlace\(panel\.querySelector\('\.ov-col-main'\),oneCol\?LAYOUT\.main:LAYOUT\.main\.filter\(/);
+  assert.match(layout,/if\(!oneCol\)ovPlace\(document\.getElementById\('ov-wide'\),LAYOUT\.wide\);/);
+  assert.match(source,/ovColMq\.addEventListener\('change',function\(\)\{ovLayout\(\);\}\)/,'turning an iPad moves it with the columns');
+  assert.ok(shell.indexOf('id="ov-wide"')>shell.indexOf('class="ov-col-side"'),'the band comes after both columns');
+  assert.match(step51,/#evb-soon \.ov-countdown\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(280px,1fr\)\);/,'"Coming up" is a grid when it has room');
+  assert.match(step51,/#panel-overview \.ov-wide:empty\{display:none;\}/);
+});
+
+test('the Request Centre is one quiet line when nothing is new or due',()=>{
+  assert.match(source,/var quiet=!\(newD\|\|newP\|\|await_\|\|dueWk\|\|over\);\n    card\.classList\.toggle\('rc-quiet',quiet\);/);
+  assert.match(source,/'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines<\/span>'/);
+  assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
+  assert.match(step51,/#ov-rc-card\.rc-quiet \.ov-rc-none\{grid-column:1 \/ -1;/);
+});

@@ -4832,6 +4832,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
    +    '<div class="ov-card" id="ov-dl-card"><div class="ov-card-head"><div class="ov-card-title" id="ov-dl-title" tabindex="-1"><i class="ti ti-clock-exclamation"></i> Upcoming Deadlines</div><div class="ov-dl-filters" id="ov-dl-filters" role="group" aria-label="Filter deadlines"></div></div><div id="ov-deadlines"></div></div>'
+   +  '</div>'
+   +  '<div class="ov-col-side">'
+   +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
+   +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
    +    '<div class="ov-card ov-calendar-card" id="ov-cal-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-calendar-month"></i> MARCOM Master Calendar</div><div class="ov-cal-nav"><button type="button" class="ov-fpill" onclick="ovCalToday()">Today</button><button class="cal-arrow" aria-label="Previous month" onclick="ovCalPrev()"><i class="ti ti-chevron-left"></i></button><span id="ov-cal-title" class="ov-cal-title" aria-live="polite"></span><button class="cal-arrow" aria-label="Next month" onclick="ovCalNext()"><i class="ti ti-chevron-right"></i></button></div></div>'
    +      '<div class="ov-cal-filters" id="ov-cal-filters"></div>'
    +      '<div class="ov-cal-layout"><div class="ov-cal-month"><div class="cal-grid ov-cal-grid" id="ov-cal-grid" role="group" aria-label="Choose a calendar date"></div>'
@@ -4839,11 +4843,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +      '</div><div class="ov-cal-detail" id="ov-cal-detail" role="region" aria-label="Selected day agenda" aria-live="polite"></div></div>'
    +    '</div>'
    +  '</div>'
-   +  '<div class="ov-col-side">'
-   +    '<div class="ov-card" id="ov-cd-card"><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Countdown</div></div><div class="ov-countdown" id="ov-countdown"></div></div>'
-   +    '<div class="ov-card" id="ov-wm-card" hidden><div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-eraser"></i> Watermark deletions due</div></div><div id="ov-watermark"></div></div>'
-   +  '</div>'
    +'</div>'
+   +'<div class="ov-wide" id="ov-wide"></div>'
    +'<section class="ov-more ov-more-closed" id="ov-more" aria-label="Resources and more">'
    +  '<button type="button" class="ov-more-toggle" id="ov-more-toggle" aria-expanded="false" aria-controls="ov-more-body" onclick="ovMoreToggle()"><i class="ti ti-layout-grid-add"></i><span class="ov-more-title">Resources &amp; more</span><span class="ov-more-sum">Links, brand guidelines, assets, lunch menu, staff calendar, team activity</span><i class="ti ti-chevron-down ov-more-chev"></i></button>'
    +  '<div class="ov-more-body" id="ov-more-body">'
@@ -4863,11 +4864,25 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +  '</div>'
    +'</section>';
 
+  /* Step 51: the countdown list becomes the Event Board's "Coming up" section. Its
+     own card hides only after the move, so if the board never loads it stays. */
+  function ovAdoptCountdown(){
+    var list=document.getElementById('ov-countdown'),soon=document.getElementById('evb-soon'),wrap=document.getElementById('ov-cd-card');
+    if(!list||!soon)return;
+    if(list.parentNode!==soon)soon.appendChild(list);
+    if(wrap)wrap.hidden=true;
+  }
+  window.ovAdoptCountdown=ovAdoptCountdown;
+  /* Turning an iPad, or resizing across 980px, moves the Event Board with the columns. */
+  try{ var ovColMq=window.matchMedia('(max-width:980px)'); if(ovColMq.addEventListener)ovColMq.addEventListener('change',function(){ovLayout();}); else if(ovColMq.addListener)ovColMq.addListener(function(){ovLayout();}); }catch(e){}
   /* ---------- layout: one order for every card, wherever a script added it ---------- */
   var LAYOUT={
     top:['ov-ann-card'],
-    main:['ov-dl-card','evb-card','ov-cal-card'],
-    side:['ov-rc-card','ov-cd-card','ov-wm-card'],
+    main:['ov-dl-card','evb-card'],
+    side:['ov-rc-card','ov-wm-card','ov-cd-card','ov-cal-card'],
+    /* Two columns (wider than 980px): the Event Board runs full width under them.
+       One column: it follows the deadlines (step 51). */
+    wide:['evb-card'],
     more:['ov-resx-card','ov-menu-card','ov-act-card','sscal-card']
   };
   /* Moves only the cards that are out of place, so a card someone is typing in
@@ -4884,10 +4899,13 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
   function ovLayout(){
     var panel=document.getElementById('panel-overview'); if(!panel)return;
+    ovAdoptCountdown();
     var mw=document.getElementById('ov-menu-card')||document.querySelector('#panel-overview .menu-widget, #panel-boss .menu-widget');
     if(mw&&!mw.id)mw.id='ov-menu-card';
     ovPlace(document.getElementById('ov-top'),LAYOUT.top);
-    ovPlace(panel.querySelector('.ov-col-main'),LAYOUT.main);
+    var oneCol=!!(window.matchMedia&&window.matchMedia('(max-width:980px)').matches);
+    ovPlace(panel.querySelector('.ov-col-main'),oneCol?LAYOUT.main:LAYOUT.main.filter(function(id){return LAYOUT.wide.indexOf(id)<0;}));
+    if(!oneCol)ovPlace(document.getElementById('ov-wide'),LAYOUT.wide);
     ovPlace(panel.querySelector('.ov-col-side'),LAYOUT.side);
     ovPlace(document.getElementById('ov-more-body'),LAYOUT.more);
     ovPlace(document.getElementById('ov-resx-brand'),['ov-brand-card']);
@@ -10397,6 +10415,16 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     function row(ic,bg,cl,lbl,n,warn){
       return '<div class="ov-rc-row"><span class="ov-rc-ic" style="background:'+bg+';color:'+cl+';"><i class="ti '+ic+'"></i></span><span class="ov-rc-lbl">'+lbl+'</span><span class="ov-rc-num"'+(warn&&n?' style="color:var(--st-overdue);"':'')+'>'+n+'</span></div>';
     }
+    /* Step 51: nothing new or due reads as one quiet line, not a grid of zeros. */
+    var quiet=!(newD||newP||await_||dueWk||over);
+    card.classList.toggle('rc-quiet',quiet);
+    if(quiet){
+      card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
+        +'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines</span>'
+        +'<button class="btn btn-ghost btn-sm" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy Link</button></div>';
+      return;
+    }
     card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
       +row('ti-palette','rgba(232,133,12,.15)','#e8850c','New design',newD)
       +row('ti-camera','rgba(93,64,55,.16)','#7a5548','New photo',newP)
@@ -11879,11 +11907,16 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var c=document.getElementById('evb-card');
     if(!c){
       c=document.createElement('div'); c.className='ov-card'; c.id='evb-card';
-      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-users-group"></i> Event Board</div>'
-        +'<select class="evb-sel" id="evb-filter" aria-label="Filter by event" onchange="evbFilter(this.value)" style="margin-left:auto;"></select>'
-        +'<label class="evb-done-toggle"><input type="checkbox" id="evb-show-done"'+(evbShowDone?' checked':'')+'> Show completed (<span id="evb-done-count">0</span>)</label></div>'
+      /* One card for events (step 51): the next events with their days left, then
+         the shared tasks by event, with the filter that applies to them. */
+      c.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-confetti"></i> Event Board</div></div>'
+        +'<div class="evb-soon" id="evb-soon"><div class="evb-sec-h">Coming up</div></div>'
+        +'<div class="evb-sec-h evb-tasks-h"><span>Shared tasks</span>'
+        +'<select class="evb-sel" id="evb-filter" aria-label="Filter shared tasks by event" onchange="evbFilter(this.value)"></select>'
+        +'<label class="evb-done-toggle"><input type="checkbox" id="evb-show-done"'+(evbShowDone?' checked':'')+'> <span>Show completed (<span id="evb-done-count">0</span>)</span></label></div>'
         +'<div class="evb-groups" id="evb-body"></div>';
       main.insertBefore(c,main.firstChild);
+      if(window.ovAdoptCountdown)window.ovAdoptCountdown();
       c.querySelector('#evb-show-done').addEventListener('change',function(){
         evbShowDone=this.checked;
         try{localStorage.setItem('evb_show_done',String(evbShowDone));}catch(e){}
