@@ -1425,12 +1425,26 @@ twice: in the header and in the "⋯" menu.
     event's days-left number in a very dark event colour, raised with Boss).
     Tests: 334/334 (four new; the Team today tests follow the new class).
 
-- [ ] **53. Tab motion (decision 2)**
+- [x] **53. Tab motion (decision 2)**
   - Files: `assets/workspace-ui.css` (the pill's spring), tests.
   - Change if chosen: the pill overshoots by about 4% and settles, in the
     same 0.34s; Reduce Motion unchanged.
   - Test: a frame recording of a move; the tab bar checks pass three runs in
     a row.
+  - Done (28 Oct): the pill now overshoots by 4% and settles, in the same
+    0.33s it already took (the plan said 0.34s by mistake); a browser without
+    the newer curve gets one overshoot of about 4% too. One addition to the
+    plan: at either end of the bar a 4% overshoot would push the pill out of
+    the bar and cut it off, so there it squashes against the edge for a
+    moment instead, by about as much as it would have overshot, and springs
+    back; between tabs nothing is held back. That needed two measurements in
+    the tab script (`assets/ui-tabs.js`): where the row of tabs starts and
+    ends. Reduce Motion is unchanged: no glide, no slide. Recorded frame by
+    frame on a computer and an iPhone: a 4.0% overshoot on every move between
+    tabs, the pill never leaves the row, and it settles exactly on the tab.
+    The tab bar checks (arrow keys, Reduce Motion, resizing, the two-tab
+    dock, iPhone widths 320 to 440) passed three runs in a row. Tests:
+    340/340 (three new).
 
 - [x] **54. The department line on iPhone (decision 3)**
   - If shown: under the product name at the top of the page, gone once the
