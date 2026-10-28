@@ -1599,6 +1599,11 @@ returned, at Boss's request. Both are back:
 Their reports, scripts and screenshots are in
 `.oil-ui/workspace-redesign/review55/` and `ux55/` (not committed).
 
+Approved by Boss on 28 Oct: every step (58 to 66), then a fourth independent
+review, merge and deploy; the round buttons slide away while scrolling
+(decision 2, A); a "For" line at the top of Add Task (decision 3); person
+tabs open on the tasks, with the Event Hub after them (decision 4).
+
 ## What the checks found
 
 1. **Bug (older): a task shared with an event lands under "Other"** on the
