@@ -1770,13 +1770,31 @@ their colour (step 49 kept these marks on purpose).
     at 622px (818 before), so the first row of cards is above the fold.
     iPhone widths 320 to 440 pass. Tests: 354/354 (two new).
 
-- [ ] **63. Colour on a card means a status, a person or the event**
+- [x] **63. Colour on a card means a status, a person or the event**
   - Files: `assets/workspace-ui.css`, `index.html`, tests.
   - Change: due-soon dates read in plain ink with a clock (overdue stays
     red), so Waiting amber appears only on Waiting; Medium priority is
     neutral; one event tag style in the event's own colour; person tags carry
     the person's initial in their colour.
   - Test: sample every pill colour on the cards of all four tabs.
+  - Done (28 Oct): due soon reads in bold ink with a clock; overdue and High
+    stay red. Medium priority, a pending upload, a shoot time and a revision
+    count are quiet facts; a request number and the old "Together" category
+    take the navy of the other facts. Every event tag, on personal and shared
+    cards alike, is one style in the event's own colours: its fill under its
+    own text colour, or a tint with a readable shade of the colour as text.
+    An event with no colour, or no longer on the calendar, gets a quiet grey
+    tag; the teal and violet labels are gone. Shared cards find their event
+    by name, and the Event form's preview shows the same tag. A shared card
+    shows each person's initial in their colour, then the names in ink.
+    The boards now also redraw when the events change, so a tag follows its
+    event. Found on the way: in dark mode Dew's design menu showed "Approved"
+    at 3.5:1 (dark green on near black); Approved and In progress now use
+    the theme's status colours. Sampled every tag on the cards of all four
+    tabs in both themes: colour is left only on statuses, people's initials
+    and events. Contrast scans: zero failures in both themes at 1440 and
+    390, Timeline included. Tests: 360/360 (seven new; the old teal pair
+    retired).
 
 - [ ] **64. Trim (item 10)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.

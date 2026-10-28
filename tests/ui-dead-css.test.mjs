@@ -26,7 +26,9 @@ const removed=[
   'ov-agenda-eyebrow',
   // Step 48: the Overview's own search box; the header search finds everything.
   'ov-search','ov-search-box','ov-search-input','ov-search-clear','ov-search-results',
-  'ov-sr','ov-sr-head','ov-sr-ic','ov-sr-b','ov-sr-label','ov-sr-sub','ov-sr-arrow'
+  'ov-sr','ov-sr-head','ov-sr-ic','ov-sr-b','ov-sr-label','ov-sr-sub','ov-sr-arrow',
+  // Step 63: the second event chip on shared cards; every card shows one event tag.
+  'mb-evt'
 ];
 // These names still occur in markup or JavaScript, including legacy renderers.
 const retained=[

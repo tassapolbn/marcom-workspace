@@ -368,7 +368,7 @@ test('every event fill reads at 4.5:1 under the text colour the team chose, keep
   }
   assert.equal(c.evFill('#d6336c', '#ffffff'), '#d6336c', 'pink with white text already reads (4.62:1)');
   assert.equal(c.evFill('', '#ffffff'), '', 'no colour, no fill');
-  for (const use of ["background:'+evFill(_evClr,_evTc)+';color:'+_evTc", "border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'",
+  for (const use of [`if(t)st=' style="background:'+evFill(c,t)+';color:'+t+';"';`, "border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'",
     'const bg=t?evFill(base,t):evTint(base,0.14);', "background:'+evFill(_ec,_et)+';color:'+_et"])
     assert.ok(source.includes(use), 'the card label, the tile, the form preview and the event-day bar all use it: ' + use);
 });

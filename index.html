@@ -1644,6 +1644,11 @@ function eventsOf(w){
   if(!own.length)return schoolEvents;
   return schoolEvents.concat(own);
 }
+/* Step 63: a card's event tag wears the event's colours, so the boards redraw
+   when the events arrive or change, not only when a task does. */
+function evRedrawCards(w){
+  try{(w?[w]:MEMBER_ORDER).forEach(function(k){ if(k==='boss')renderBoss(); else renderMember(k); });}catch(e){}
+}
 /* The whole team shares ONE event hub, so the Team Overview must show each
    event ONCE, not once per member. This returns the shared events plus any
    legacy per-member events, de-duplicated by id and by name+date, so three
@@ -2030,7 +2035,7 @@ try{
   bossNotesRef.orderBy('createdAt','desc').onSnapshot(s=>{bossNotes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes('boss');},e=>syncErr(e));
   bestNotesRef.orderBy('createdAt','desc').onSnapshot(s=>{bestNotes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes('best');},e=>syncErr(e));
   sickRef.orderBy('date','desc').onSnapshot(s=>{sickLeave=s.docs.map(d=>({id:d.id,...d.data()}));renderSickWidget('boss');renderCalendar(bossTasks,'boss');},e=>syncErr(e));
-  eventsRef.onSnapshot(s=>{schoolEvents=s.docs.map(d=>({id:d.id,...d.data()}));eventsLoaded=true;renderEvHub('boss');renderEvHub('junior');},e=>syncErr(e));
+  eventsRef.onSnapshot(s=>{schoolEvents=s.docs.map(d=>({id:d.id,...d.data()}));eventsLoaded=true;renderEvHub('boss');renderEvHub('junior');evRedrawCards();},e=>syncErr(e));
   // Department members (Dew, O, Junior): own task/link/note collections
   Object.keys(DATA).forEach(k=>{
     DATA[k].ref=db.collection(k+'_tasks');
@@ -2042,7 +2047,7 @@ try{
     DATA[k].ref.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].tasks=s.docs.map(d=>({id:d.id,__src:'own',...d.data()}));DATA[k].loaded=true;reconcileDoneAt(k);renderMember(k);},e=>syncErr(e));
     DATA[k].linksRef.orderBy('createdAt','asc').onSnapshot(s=>{DATA[k].links=s.docs.map(d=>({id:d.id,...d.data()}));renderLinks(k);},e=>syncErr(e));
     DATA[k].notesRef.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].notes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes(k);},e=>syncErr(e));
-    DATA[k].eventsRef.onSnapshot(s=>{DATA[k].events=s.docs.map(d=>({id:d.id,...d.data()}));DATA[k].eventsLoaded=true;renderEvHub(k);},e=>syncErr(e));
+    DATA[k].eventsRef.onSnapshot(s=>{DATA[k].events=s.docs.map(d=>({id:d.id,...d.data()}));DATA[k].eventsLoaded=true;renderEvHub(k);evRedrawCards(k);},e=>syncErr(e));
     DATA[k].sickRef.orderBy('date','desc').onSnapshot(s=>{DATA[k].sick=s.docs.map(d=>({id:d.id,...d.data()}));renderSickWidget(k);renderCalendar(DATA[k].tasks,k);},e=>syncErr(e));
     DATA[k].lieuRef.orderBy('date','desc').onSnapshot(s=>{DATA[k].lieu=s.docs.map(d=>({id:d.id,...d.data()}));renderLieu(k);},e=>syncErr(e));
   });
@@ -2260,7 +2265,7 @@ function statusToDz(status,dz){
   return 'Brief Received';
 }
 function scColors(s){const m={'pending':['var(--gray-light)','var(--st-pending)'],'in-progress':['var(--blue-light)','var(--st-progress)'],'waiting':['var(--amber-light)','var(--st-waiting)'],'on-hold':['var(--purple-light)','var(--st-hold)'],'done':['var(--green-light)','var(--st-done)'],'canceled':['var(--danger-light)','var(--st-cancel)']};return m[s]||m.pending;}
-function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['#e6effd','#2563eb'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','#0f7a37'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
+function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['var(--blue-light)','var(--blue)'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','var(--green)'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
 /* this.blur() after choosing: the board redraw is deferred while a select
    inside it keeps focus, so releasing focus lets the card move to its new
    column immediately instead of waiting for a click elsewhere. */
@@ -3101,6 +3106,24 @@ function reconcileDoneAt(who){
     });
   }catch(e){console.error(e);}
 }
+/* Step 63: one event tag, in the event's own colours wherever a task shows it:
+   filled with its own text colour, or tinted with a readable shade of it. An
+   event without a colour gets the quiet tag. The event is found by its id, or
+   by its name on a shared card. */
+function evTagHTML(label,task,who){
+  label=String(label||'').trim();
+  var ev=null;
+  try{
+    var all=eventsOf(who)||[],key=label.toLowerCase();
+    ev=(task&&task.eventId&&all.find(function(e){return e.id===task.eventId;}))
+      ||(key&&all.find(function(e){return String(e.name||e.title||'').trim().toLowerCase()===key;}))||null;
+  }catch(e){}
+  var c=(ev&&evOkClr(ev.color))?ev.color:'',t=(c&&evOkClr(ev.textColor))?ev.textColor:'';
+  var cls='mb mb-event'+(t?' mb-event-filled':(c?' mb-event-tint':'')),st='';
+  if(t)st=' style="background:'+evFill(c,t)+';color:'+t+';"';
+  else if(c)st=' style="background:'+evTint(c,0.14)+';--evc-ink:'+evInk(c)+';--evc-ink-d:'+evInkDark(c)+';"';
+  return '<span class="'+cls+'"'+st+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(label||(ev&&(ev.name||ev.title))||'Event')+'</span>';
+}
 function taskCardHTML(task,who){
   const status=task.status||'pending',sc=SC[status],topic=task.topic||task.title||'';
   const du=task.dueDate?daysUntil(task.dueDate):null;
@@ -3109,29 +3132,28 @@ function taskCardHTML(task,who){
   const catClass=task.category==='Together'?'mb mb-together':(who==='best'?'mb mb-cat-coral':'mb mb-cat');
   let prv=task.priority||'medium';if(prv==='normal')prv='medium';
   const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-flag-3-filled" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
-  let _evClr='',_evTc='';try{if(task.eventId){const _ev=eventsOf(who).find(e=>e.id===task.eventId);if(_ev&&evOkClr(_ev.color)){_evClr=_ev.color;if(evOkClr(_ev.textColor))_evTc=_ev.textColor;}}}catch(e){}
-  let _evStyle='';
-  if(_evClr)_evStyle=_evTc?(' style="background:'+evFill(_evClr,_evTc)+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
   let evBadge='';
   if(isEventTask(task)){
     const _evLbl=(task.eventLabel||task.eventName||'').trim();
-    if(_evLbl)evBadge+='<span class="mb mb-evt"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(_evLbl)+'</span>';
+    if(_evLbl)evBadge+=evTagHTML(_evLbl,task,who);
     const _asg=taskAssignees(task);
     if(_asg.length){
       const _names=_asg.map(function(w){return memberName(w)||w;}).join(', ');
-      evBadge+='<span class="mb mb-shared" title="Shared card. A status change by anyone updates it for everyone."><i class="ti ti-users-group" style="font-size:11px;"></i> '+escHtml(_asg.length>1?('Shared · '+_names):_names)+'</span>';
+      /* Step 63: each person's initial in their colour; the names in ink. */
+      const _ini=_asg.map(function(w){return '<span class="mb-who" data-member="'+escHtml(w)+'" aria-hidden="true">'+escHtml((Array.from(String(memberName(w)||w).trim())[0]||'').toLocaleUpperCase())+'</span>';}).join('');
+      evBadge+='<span class="mb mb-shared" title="Shared card. A status change by anyone updates it for everyone.">'+_ini+' '+escHtml(_asg.length>1?('Shared · '+_names):_names)+'</span>';
     } else {
       evBadge+='<span class="mb mb-shared"><i class="ti ti-users-group" style="font-size:11px;"></i> Unassigned</span>';
     }
   } else if(task.eventId||task.eventName){
-    evBadge='<span class="mb mb-event'+(_evTc?' mb-event-filled':'')+'"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>';
+    evBadge=evTagHTML(task.eventName||'',task,who);
   }
   const reqBadge=task.requestRef?'<span class="mb mb-req"><i class="ti ti-send" style="font-size:11px;"></i> '+escHtml(task.requestRef)+'</span>':'';
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
   if(task.dueDate){
     if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue '+fmtDate(task.dueDate)+'</span>';
-    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-calendar" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
+    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-clock" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
     else dueLabel='<span class="mb mb-date"><i class="ti ti-calendar" style="font-size:11px;"></i> '+fmtDate(task.dueDate)+'</span>';
   }
   const linksHtml=(task.links&&task.links.length)?
@@ -4477,11 +4499,14 @@ function updateEvPreview(){
   if(!c&&!t){el.style.display='none';el.innerHTML='';return;}
   const base=c||'#1f3a5f';
   const bg=t?evFill(base,t):evTint(base,0.14); /* as the tiles will draw it (step 59) */
-  const tx=t||base;
+  /* Step 63: the card's own event tag, so a colour without a text colour shows
+     the readable shade the card will use, in either theme. */
+  const tag=t?('mb mb-event mb-event-filled" style="background:'+bg+';color:'+t+';')
+    :('mb mb-event mb-event-tint" style="background:'+bg+';--evc-ink:'+evInk(base)+';--evc-ink-d:'+evInkDark(base)+';');
   const nm=((document.getElementById('ev-name')||{}).value||'').trim()||'Event name';
   el.style.display='flex';
   el.innerHTML='<span class="ev-preview-lbl">Preview</span>'
-    +'<span class="mb" style="background:'+bg+';color:'+tx+';box-shadow:inset 0 0 0 1px '+evTint(base,0.4)+';"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(nm)+'</span>'
+    +'<span class="'+tag+'box-shadow:inset 0 0 0 1px '+evTint(base,0.4)+';"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(nm)+'</span>'
     +'<span class="ev-preview-bar" style="background:'+base+';"></span>';
 }
 function openEventModal(id,who){
@@ -5616,7 +5641,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
 </style>
 <style id="ov-contrast-fix">
 /* ===== READABILITY / WCAG-AA CONTRAST FIXES (additive, generated) ===== */
-html:not(.dark) .b-green,html:not(.dark) .mb-together,html:not(.dark) .lieu-tag-earn{color:#147c3b !important;}
+html:not(.dark) .b-green,html:not(.dark) .lieu-tag-earn{color:#147c3b !important;}
 html:not(.dark) .b-amber{color:#b05109 !important;}
 html:not(.dark) .mb-high,html:not(.dark) .mb-overdue{color:#cd2323 !important;}
 html:not(.dark) .menu-cat{color:#9b6a06 !important;}
@@ -11917,8 +11942,6 @@ html.dark .evt-chip:hover{border-color:#8fb4dc;}
 html.dark .evt-chip.on{background:#3f6ea5;border-color:#5f8cc4;color:#fff;}
 .mb-shared{background:#e0edff;color:#1e40af;}
 html.dark .mb-shared{background:rgba(59,110,165,.28);color:#cfe0f5;}
-.mb-evt{background:#ede9fe;color:#5b21b6;}
-html.dark .mb-evt{background:rgba(139,92,246,.22);color:#c4b5fd;}
 .evb-groups{display:flex;flex-direction:column;gap:11px;}
 .evb-g{border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .evb-g-h{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--gray-light);font-size:12.5px;font-weight:800;color:var(--text);}

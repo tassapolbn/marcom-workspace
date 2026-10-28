@@ -701,15 +701,17 @@ test('opened from the header, the chat panel drops down under it',()=>{
 
 /* ===== Step 40: task cards lead with the task ===== */
 const step40=stepBlock(40);
-function card(task,{who='dew',admin=true,soon=false,acts=false}={}){
+function card(task,{who='dew',admin=true,soon=false,acts=false,du=-1,events=null,names=null}={}){
   const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const context=vm.createContext({window:{__cur:admin?{role:'admin'}:{role:'designer',workspace:who},__tcActs:acts?{[who+'_'+task.id]:true}:{}},
     SC:{pending:{l:'Pending',i:'ti-circle'},waiting:{l:'Waiting',i:'ti-clock'},done:{l:'Done',i:'ti-check'}},
     DZ_STATUSES:['Brief Received'],MEMBER_ORDER:['boss','dew','o','junior'],
-    daysUntil:()=>-1,isSoon:()=>soon,eventsOf:()=>[],evOkClr:()=>false,evTint:()=>'',isEventTask:()=>false,taskAssignees:()=>[],
-    memberName:w=>w,escHtml:esc,fmtDate:d=>d,safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
+    daysUntil:()=>du,isSoon:()=>soon,eventsOf:()=>events||[],evOkClr:()=>false,evTint:()=>'',isEventTask:t=>t.__src==='event',taskAssignees:t=>t.assignees||[],
+    memberName:w=>(names&&names[w])||w,escHtml:esc,fmtDate:d=>d,safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
+  /* With events, the real colour helpers (step 63: the card draws the event's own tag). */
+  if(events)vm.runInContext(slice('function evOkClr(','const EV_TEXT_COLORS'),context);
   vm.runInContext(slice('function scColors(s){','function setTaskStatus(')+slice('function moveSelectHTML(who,task){','function moveCardTo(')
-    +slice('function taskCardHTML(task,who){','function kanbanHTML(')+'\nthis.taskCardHTML=taskCardHTML;',context);
+    +slice('function evTagHTML(','function kanbanHTML(')+'\nthis.taskCardHTML=taskCardHTML;',context);
   return context.taskCardHTML(task,who);
 }
 const sample={id:'t1',topic:'Plan the open day',status:'pending',dueDate:'2026-10-25',priority:'high',eventName:'Open Day',description:'More',links:[]};
@@ -747,7 +749,7 @@ test('inside a status column a card has no coloured rail, and a long name may ta
   assert.match(step40,/\.kb-col \.task-card\{border-left-width:1px!important;border-left-color:var\(--border\)!important;\}/);
   assert.match(step40,/\.kb-col \.task-card \.task-topic\{-webkit-line-clamp:3;line-clamp:3;\}/);
   assert.match(step40,/\.task-card \.task-foot\{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var\(--border\);\}/);
-  assert.match(step40,/\.task-card \.task-meta \.mb:not\(\.mb-event\):not\(\.mb-evt\):not\(\.mb-shared\)\{padding:0;background:none;/,'facts read as text; an event keeps its coloured chip');
+  assert.match(step40,/\.task-card \.task-meta \.mb:not\(\.mb-event\):not\(\.mb-shared\)\{padding:0;background:none;/,'facts read as text; an event keeps its coloured chip');
 });
 
 /* ===== Step 41: gold back to the brand; red only for trouble ===== */
@@ -765,10 +767,10 @@ test('an event countdown is amber within a week, calm before that, grey when pas
   assert.match(source,/var urg=it\.d<=7\?' soon':'';/,'the Overview countdown uses the same week');
 });
 
-test('a task due today or soon reads amber; only overdue work is red',()=>{
+test('a task due today or soon is not red; only overdue work is',()=>{
   assert.match(source,/else if\(soon\)dueLabel='<span class="mb mb-soon">/);
   assert.match(source,/if\(overdue\)dueLabel='<span class="mb mb-overdue">/);
-  assert.match(step41,/\.mb-soon\{background:var\(--amber-light\);color:var\(--st-waiting-ink,#7d5406\);\}/);
+  assert.doesNotMatch(step41,/\.mb-soon\{/,'its colour moved to step 63: plain ink with a clock, so amber means Waiting');
   assert.match(step41,/\.mh-stat-soon i,\.mh-stat-soon b\{color:var\(--st-waiting-ink,#7d5406\);\}/,'"5 Due Soon" is not red');
   assert.match(step41,/\.fpill \.pill-dot\{background:var\(--st-waiting,#a97614\);\}/);
   assert.match(source,/row\('ti-calendar-week','var\(--amber-light\)','var\(--st-waiting\)','Due this week',dueWk\)/);
@@ -831,8 +833,7 @@ test('on iPhone Team Chat opens as an even sheet below the header, and the two r
 test('small fixes from the second review',()=>{
   assert.match(step43,/#panel-overview \.ov-ann-act\{color:var\(--muted\);\}/,'announcement actions are visible');
   /* The Overview's search box (and its clear button) went in step 48: one search in the header. */
-  assert.match(step43,/\.mb-evt\{background:var\(--teal-light\);color:#0b6e69;\}/,'one event chip colour');
-  assert.ok(contrast('#0b6e69','#d6f5f0')>=4.5);
+  assert.doesNotMatch(step43,/\.mb-evt/,'the second event chip went in step 63: one event tag in the event\'s own colours');
   assert.match(step43,/body:not\(\.hdr-scrolled\) \.app-header\{box-shadow:inset 0 1px 0 rgba\(255,255,255,\.06\)!important;\}/);
   assert.match(step43,/\.tc-details\.open \.task-desc\{display:block;-webkit-line-clamp:unset;/,'opened details show the whole text');
   assert.match(step43,/\.member-head \.member-head-extra \.mh-dt\{display:none;\}/);
@@ -856,9 +857,10 @@ test('an event with its own text colour keeps its coloured tile in light mode',(
 });
 
 test("a task label on a coloured event keeps the event's own colours",()=>{
-  assert.match(css26,/html:not\(\.dark\) \.mb-event:not\(\.mb-event-filled\)\{color:#0b6e69!important;\}/,'the darker teal is only for labels without their own colours');
+  assert.doesNotMatch(css26,/#0b6e69/,'no teal label any more (step 63): the event\'s own colours, or the quiet tag');
   assert.doesNotMatch(css26,/html:not\(\.dark\) \.mb-event\{color/,'no rule repaints a filled label');
-  assert.match(source,/class="mb mb-event'\+\(_evTc\?' mb-event-filled':''\)\+'"'\+_evStyle/);
+  assert.doesNotMatch(css26,/\.mb-event[^{]*\{[^}]*!important/,'nothing outranks the colours a tag is drawn with');
+  assert.match(source,/var cls='mb mb-event'\+\(t\?' mb-event-filled':\(c\?' mb-event-tint':''\)\),st='';/);
 });
 
 
@@ -1352,4 +1354,87 @@ test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose
   assert.match(one,/\.member-head \.member-head-stats\{order:1;flex:0 0 auto;margin-left:auto;gap:5px;\}/);
   assert.match(one,/\.member-head \.mh-stat \.mh-l\{position:absolute;width:1px;height:1px;[^}]*clip:rect\(0 0 0 0\);/,'hidden from sight, not from screen readers');
   assert.match(one,/\.member-head \.member-role\{display:none;\}/);
+});
+
+/* ===== Step 63: colour on a card means a status, a person or the event ===== */
+const step63=stepBlock(63);
+const EVS=[{id:'sports-day',name:'Sports Day',color:'#d6336c',textColor:'#ffffff'},{id:'open-day',name:'School Open Day',color:'#4B8FD0'},
+  {id:'party',name:'Staff Party'},{id:'book-week',title:'Book Week',color:'#0d9488'}];
+const meta=html=>html.slice(html.indexOf('<div class="task-meta">'),html.indexOf('<i class="ti ti-arrow-up-right tc-open-hint"'));
+
+test("one event tag: the event's own fill, a tint with a readable shade, or the quiet tag",()=>{
+  assert.match(meta(card({...sample,eventId:'sports-day',eventName:'Sports Day'},{events:EVS})),
+    /<span class="mb mb-event mb-event-filled" style="background:#d6336c;color:#ffffff;"><i class="ti ti-confetti"[^>]*><\/i> Sports Day<\/span>/,'its fill under its own text colour');
+  const tint=meta(card({...sample,eventId:'open-day',eventName:'School Open Day'},{events:EVS}));
+  const m=tint.match(/<span class="mb mb-event mb-event-tint" style="background:rgba\(75,143,208,0\.14\);--evc-ink:(#[0-9a-f]{6});--evc-ink-d:(#[0-9a-f]{6});">/);
+  assert.ok(m,'a colour without a text colour: its tint, and a readable shade of it as the text');
+  assert.ok(contrast(m[1],'#ffffff')>=4.5,'the light shade reads on a white card: '+m[1]);
+  assert.match(meta(card({...sample,eventId:'party',eventName:'Staff Party'},{events:EVS})),/<span class="mb mb-event"><i class="ti ti-confetti"[^>]*><\/i> Staff Party<\/span>/,'no colour: the quiet tag');
+  assert.match(meta(card({...sample,eventName:'Old Event'},{events:EVS})),/<span class="mb mb-event"><i class="ti ti-confetti"[^>]*><\/i> Old Event<\/span>/,'a removed event keeps its name, quietly');
+  assert.match(meta(card({...sample,eventId:'book-week',eventName:''},{events:EVS})),/mb-event-tint[^>]*><i class="ti ti-confetti"[^>]*><\/i> Book Week<\/span>/,'an older event saved with a title only');
+  assert.match(step63,/\.mb-event:not\(\.mb-event-filled\):not\(\.mb-event-tint\)\{background:var\(--gray-light\);\}/);
+  assert.match(step63,/html:not\(\.dark\) \.mb-event:not\(\.mb-event-filled\):not\(\.mb-event-tint\)\{color:var\(--text\);\}/);
+  assert.match(step63,/html:not\(\.dark\) \.mb-event\.mb-event-tint\{color:var\(--evc-ink\);\}/);
+  assert.match(step63,/html\.dark \.mb-event\.mb-event-tint\{color:var\(--evc-ink-d\);\}/,'the dark card uses the lighter shade (step 57)');
+});
+
+test('a shared card finds its event by name and wears the same tag as a personal card',()=>{
+  const shared={id:'s1',topic:'Book the photographer',status:'pending',dueDate:'2026-11-02',eventLabel:'school open day ',__src:'event',assignees:['dew','o']};
+  const html=meta(card(shared,{events:EVS}));
+  const own=meta(card({...sample,eventId:'open-day',eventName:'School Open Day'},{events:EVS}));
+  assert.equal(html.match(/<span class="mb mb-event[^>]*>/)[0],own.match(/<span class="mb mb-event[^>]*>/)[0],'found by name, whatever the case and spacing');
+  assert.doesNotMatch(card(shared,{events:EVS}),/mb-evt/,'the second event chip is gone');
+  assert.match(meta(card({...shared,eventLabel:'Christmas Fair'},{events:EVS})),/<span class="mb mb-event"><i class="ti ti-confetti"[^>]*><\/i> Christmas Fair<\/span>/,'an event not on the calendar is quiet');
+});
+
+test("a shared card names its people in ink, each with their initial in their colour",()=>{
+  const shared={id:'s1',topic:'Book the photographer',status:'pending',__src:'event',eventLabel:'',assignees:['dew','junior']};
+  const html=meta(card(shared,{names:{dew:'Dew',junior:'Eye'}}));
+  assert.match(html,/<span class="mb mb-shared" title="Shared card\. A status change by anyone updates it for everyone\."><span class="mb-who" data-member="dew" aria-hidden="true">D<\/span><span class="mb-who" data-member="junior" aria-hidden="true">E<\/span> Shared · Dew, Eye<\/span>/);
+  assert.match(meta(card({...shared,assignees:['o']},{names:{o:'O'}})),/<span class="mb-who" data-member="o" aria-hidden="true">O<\/span> O<\/span>/,'one person: the initial and the name');
+  assert.match(meta(card({...shared,assignees:[]})),/<span class="mb mb-shared"><i class="ti ti-users-group"[^>]*><\/i> Unassigned<\/span>/);
+  assert.match(step63,/\.mb-shared\{background:var\(--gray-light\);color:var\(--text\);\}/,'the names in ink, not blue');
+  assert.match(step63,/\.mb-who\{[^}]*color:#fff;background:var\(--tm-c,var\(--navy,#003057\)\);\}/);
+  for(const w of ['boss','dew','o','junior'])assert.match(step63,new RegExp('\\.mb-who\\[data-member="'+w+'"\\]\\{--tm-c:var\\(--member-'+w+'\\);\\}'));
+  const root=css26.match(/:root\{--member-boss:(#[0-9A-Fa-f]{6});--member-dew:(#[0-9A-Fa-f]{6});--member-o:(#[0-9A-Fa-f]{6});--member-junior:(#[0-9A-Fa-f]{6});\}/);
+  for(const c of root.slice(1))assert.ok(contrast('#ffffff',c)>=4.5,'a white initial reads on '+c);
+  assert.match(source,/var ink=readable\(c,'#EFF3F9',4\.5\);/,'a custom colour is kept dark enough for a white initial');
+});
+
+test('due soon reads in ink with a clock, overdue stays red, and medium priority is quiet',()=>{
+  const soon=meta(card({...sample,dueDate:'2026-10-30',priority:'medium'},{soon:true,du:2}));
+  assert.match(soon,/<span class="mb mb-soon"><i class="ti ti-clock"[^>]*><\/i> 2d left \(2026-10-30\)<\/span>/);
+  assert.match(soon,/<span class="mb mb-med">/);
+  assert.match(meta(card(sample)),/<span class="mb mb-overdue"><i class="ti ti-calendar"[^>]*><\/i> Overdue 2026-10-25<\/span>/);
+  assert.match(step63,/\.mb-soon,\.mb-wmsoon\{background:var\(--gray-light\);color:var\(--text\);\}/,'a watermark due this week reads the same');
+  assert.match(step63,/\.task-card \.task-meta \.mb-soon\{color:var\(--text\);font-weight:700;\}/);
+  assert.match(step63,/\.mb-med,\.mb-pending,\.mb-time,\.mb-rev\{background:var\(--gray-light\);color:var\(--muted\);\}/,'medium priority, a pending upload, a shoot time and a revision count are facts');
+  assert.match(step63,/\.mb-req,\.mb-together\{background:var\(--navy-light\);color:var\(--navy\);\}/);
+  assert.doesNotMatch(css26,/\.mb-soon\{background:var\(--amber-light\)/,'no amber due date left');
+  assert.doesNotMatch(source,/html:not\(\.dark\) \.mb-together/,'no old rule keeps "Together" green');
+});
+
+test("Dew's design menu takes the theme's status colours, so Approved and In progress read in dark mode too",()=>{
+  assert.match(source,/'In Progress':\['var\(--blue-light\)','var\(--blue\)'\]/);
+  assert.match(source,/'Approved':\['var\(--green-light\)','var\(--green\)'\]/);
+  const light=source.match(/html:not\(\.dark\)\{\n  --st-pending[^}]*\}/)[0],dark=source.match(/html\.dark\{\n  --st-pending[^}]*\}/)[0];
+  const v=(blk,n)=>blk.match(new RegExp('--'+n+':([^;]+);'))[1];
+  for(const n of ['blue','green'])assert.ok(contrast(v(light,n),v(light,n+'-light'))>=4.5,n+' reads on its tint in light mode');
+  for(const n of ['blue','green'])assert.match(v(dark,n),/^#[0-9a-f]{6}$/,n+' has its own dark-mode ink');
+  for(const n of ['blue','green'])assert.ok(contrast(v(dark,n),'#262b36')>=4.5,n+' reads on a dark card: '+v(dark,n));
+});
+
+test('the boards redraw when the events change, so a tag follows its event',()=>{
+  assert.match(source,/eventsLoaded=true;renderEvHub\('boss'\);renderEvHub\('junior'\);evRedrawCards\(\);\}/);
+  assert.match(source,/DATA\[k\]\.eventsLoaded=true;renderEvHub\(k\);evRedrawCards\(k\);\}/,'an older per-person event list redraws that person');
+  const drawn=[];
+  const c=vm.createContext({MEMBER_ORDER:['boss','dew','o','junior'],renderBoss:()=>drawn.push('boss'),renderMember:w=>drawn.push(w)});
+  vm.runInContext(slice('function evRedrawCards(w){','// TASK MODAL').split('\n}\n')[0]+'\n}',c);
+  c.evRedrawCards();assert.deepEqual(drawn,['boss','dew','o','junior']);
+  drawn.length=0;c.evRedrawCards('o');assert.deepEqual(drawn,['o']);
+});
+
+test('the Event form previews the tag the cards will show',()=>{
+  assert.match(source,/const tag=t\?\('mb mb-event mb-event-filled" style="background:'\+bg\+';color:'\+t\+';'\)\n    :\('mb mb-event mb-event-tint" style="background:'\+bg\+';--evc-ink:'\+evInk\(base\)\+';--evc-ink-d:'\+evInkDark\(base\)\+';'\);/);
+  assert.match(source,/\+'<span class="'\+tag\+'box-shadow:inset 0 0 0 1px '\+evTint\(base,0\.4\)\+';">/);
 });

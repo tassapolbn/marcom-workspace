@@ -50,7 +50,7 @@ const pairs = [
   ['#panel-dew :is(', '#a25816', '#fbefe4'],
   ['#panel-o :is(', '#b73d0b', '#f8e8e2'],
   ['confirmReset', '#be123c', '#fde6ea'],
-  ['.mb-event', '#0b6e69', '#dbf0ef'],
+  // The teal event label went in step 63: a tag wears its event's colours or reads in ink.
   ['.myday-chip.warn', '#9a4a07', '#fbf0dc'],
   ['.menu-cat', '#7f5704', '#eef1f5'],
   ['::placeholder', '#5f6b7a', '#eef1f5'],
