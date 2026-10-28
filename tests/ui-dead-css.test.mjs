@@ -26,7 +26,15 @@ const removed=[
   'ov-agenda-eyebrow',
   // Step 48: the Overview's own search box; the header search finds everything.
   'ov-search','ov-search-box','ov-search-input','ov-search-clear','ov-search-results',
-  'ov-sr','ov-sr-head','ov-sr-ic','ov-sr-b','ov-sr-label','ov-sr-sub','ov-sr-arrow'
+  'ov-sr','ov-sr-head','ov-sr-ic','ov-sr-b','ov-sr-label','ov-sr-sub','ov-sr-arrow',
+  // Step 63: the second event chip on shared cards; every card shows one event tag.
+  'mb-evt',
+  // Step 64: the payday panel's second bar and badges, the Team today calendar
+  // note (now in Settings), and the dashed "No tasks" box.
+  'sal-cell-prog','sal-divider-prog','sal-bar','sal-bar-fill','sal-pct','sal-cycle','sb-soon','sb-reg',
+  'ov-team-note','team-note','kb-empty',
+  // Step 65: the Director request's count badge.
+  'dirq-n'
 ];
 // These names still occur in markup or JavaScript, including legacy renderers.
 const retained=[

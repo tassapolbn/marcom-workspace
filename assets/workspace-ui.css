@@ -14,7 +14,6 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 }
 .tab-nav .tab-btn:not(.a-active){border-bottom-color:transparent!important;}
 .icon-btn{color:var(--muted);}
-.kb-empty{opacity:1;}
 .salary-dock .sal-cell-label i{color:currentColor;-webkit-text-fill-color:currentColor;}
 .salary-dock .sal-cell-sub i{color:inherit;}
 
@@ -46,7 +45,6 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 }
 @media(max-width:1100px){
   .salary-dock .salary-strip{grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:14px 20px;}
-  .salary-dock .sal-cell-prog{grid-column:2 / -1;}
   .salary-dock #sal-badge{grid-column:1;grid-row:2;text-align:center;}
   .salary-dock .salary-badge{padding:6px 9px;}
 }
@@ -66,7 +64,6 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .salary-dock .sal-ring{width:64px;height:64px;}
   .salary-dock .salary-days-big{font-size:25px;}
   .salary-dock .sal-cell:nth-of-type(5){grid-column:2;grid-row:2;}
-  .salary-dock .sal-cell-prog{grid-column:1 / -1;grid-row:3;}
   .salary-dock .salary-badge{font-size:10px;padding:5px 7px;}
   .sub-nav{gap:4px;padding:5px;}
   .sub-tab{flex:0 0 auto;min-height:42px;padding:9px 12px;}
@@ -255,7 +252,6 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
   background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
 }
 .ev-past-clear:hover,.ews-del:hover{background:var(--danger-light);color:var(--danger);}
-@media(hover:none){.ev-chip-del{opacity:1;}}
 @media(max-width:480px){.ev-past{grid-template-columns:repeat(2,1fr);}}
 @media(prefers-reduced-motion:reduce){.ev-chip-del,.ev-past-toggle i{transition:none;}}
 
@@ -605,13 +601,11 @@ body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
 /* Step 21: light mode readability */
 html:not(.dark) .fpill.act-navy{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
 html:not(.dark) .btn-teal{background:linear-gradient(135deg,#0f766e,#115e59)!important;color:#fff!important;}
-html:not(.dark) .dirq-n{background:#b45309;}
 html:not(.dark) .kb-col .kb-col-count{background:#fff!important;}
 html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member-role i,.mh-greet){color:#366a9c!important;}
 html:not(.dark) #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#a25816!important;}
 html:not(.dark) #panel-o :is(#o-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#b73d0b!important;}
 html:not(.dark) button[onclick^="confirmReset"]{color:#be123c!important;}
-html:not(.dark) .mb-event:not(.mb-event-filled){color:#0b6e69!important;}
 html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b{color:#9a4a07;}
 html:not(.dark) body .menu-cat{color:#7f5704!important;}
 html:not(.dark) .meet-label{opacity:1;}
@@ -643,7 +637,7 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #evb-card .ov-card-title>span{flex-basis:100%;}
   #evb-card>.ov-card-head>.uxp-col-btn{order:1;}
   #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
-  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h,.dirq-n){font-size:11px!important;}
+  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h){font-size:11px!important;}
 }
 
 /* Step 23: dark mode readability */
@@ -654,10 +648,8 @@ html.dark .tcard-move{color:#e6edf5;border-color:rgba(255,255,255,.28);backgroun
 /* Dew, O and Eye: the selected filter sits on a tint of their colour, so its text uses the light shade. */
 html.dark .tab-panel .fpill.act-accent{color:var(--accent-ondark,#fcd34d)!important;}
 /* Today's date and the bright buttons take dark text. */
-html.dark .tab-panel:not(#panel-overview) .cal-day.today{color:var(--accent-on,#0b1220)!important;}
 html.dark #panel-boss .btn-accent{color:#0b1220!important;}
 html.dark .btn-teal{background:linear-gradient(135deg,#5eead4,#2dd4bf)!important;color:#032b28!important;}
-html.dark .dirq-n{background:#b45309;}
 /* Canceled cards fade less, so their small coloured labels stay readable. */
 html.dark .task-card.tc-canceled{opacity:.88;}
 /* Small coloured labels. */
@@ -959,7 +951,6 @@ html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-a
 .ov-team-next:empty+.ov-mini-btn{margin-left:auto;}
 .ov-team-head .ov-mini-btn{flex:0 0 auto;}
 .ov-team-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
-.ov-team-note{padding:4px 6px 2px;font-size:13px;color:var(--muted);}
 .tm{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"mono name open" "mono st st" "mono lv lv";
   align-items:center;align-content:start;column-gap:10px;row-gap:2px;min-width:0;padding:6px 8px;border:0;border-radius:12px;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .14s ease;}
@@ -1023,7 +1014,6 @@ html.dark .tm-meet{color:#93c5fd;}
   /* Refresh keeps a 36px target without making the heading taller. */
   .ov-team-head .ov-mini-btn{margin:-6px 0 -6px auto;}
   .ov-team-next+.ov-mini-btn{margin-left:0;}
-  .ov-team-note{display:none!important;}
   /* Each person reads like a line of text: the name, then the flags, which wrap
      under the name instead of being cut off when a narrow phone runs out of room. */
   .tm{display:flex;align-items:flex-start;column-gap:7px;padding:5px 2px;line-height:22px;}
@@ -1040,9 +1030,6 @@ html.dark .tm-meet{color:#93c5fd;}
   #ov-top,#ov-team{margin-bottom:12px;}
   #panel-overview #ov-dl-card{padding-top:12px;}
   #panel-overview #ov-dl-card>.ov-card-head{margin-bottom:8px;}
-  #panel-overview #ov-dl-card .ov-card-head{flex-wrap:nowrap;}
-  #ov-dl-title{font-size:0!important;gap:0;}
-  #ov-dl-title i{font-size:18px!important;}
   #panel-overview .ov-dl-filters{flex-wrap:nowrap;margin-left:4px;}
   /* On a phone the announcement line keeps its icon, the text and its two buttons. */
   #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:6px 6px 6px 12px;}
@@ -1135,7 +1122,7 @@ html.dark .tm-meet{color:#93c5fd;}
 /* Then one line of facts, read as text: the status as its own small menu, the
    due date, priority and the rest. An event keeps its coloured chip. */
 .task-card .task-meta{column-gap:10px;row-gap:5px;}
-.task-card .task-meta .mb:not(.mb-event):not(.mb-evt):not(.mb-shared){padding:0;background:none;border-radius:0;font-size:12px;}
+.task-card .task-meta .mb:not(.mb-event):not(.mb-shared){padding:0;background:none;border-radius:0;font-size:12px;}
 /* The other actions wait in a quiet row at the foot. */
 .task-card .task-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
 .task-card .task-foot .task-acts{display:flex;align-items:center;gap:2px;margin-left:auto;}
@@ -1168,8 +1155,6 @@ html:not(.dark) .evu-amber{color:var(--st-waiting-ink,#7d5406);}
 html:not(.dark) .evt-amber{border-top-color:var(--st-waiting,#a97614);}
 html.dark .evu-amber{color:#fcd34d;}
 /* Due soon or today is close, not trouble: amber. Only overdue is red. */
-.mb-soon{background:var(--amber-light);color:var(--st-waiting-ink,#7d5406);}
-html.dark .mb-soon{color:#fcd34d;}
 .mh-stat-soon i,.mh-stat-soon b{color:var(--st-waiting-ink,#7d5406);}
 html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
 .fpill .pill-dot{background:var(--st-waiting,#a97614);}
@@ -1222,10 +1207,6 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
 }
 /* An announcement's edit, pin and delete read at 3:1 at least. */
 #panel-overview .ov-ann-act{color:var(--muted);}
-/* One event chip: a task that belongs to an event wears the event teal, never
-   the violet of On hold. */
-.mb-evt{background:var(--teal-light);color:#0b6e69;}
-html.dark .mb-evt{background:rgba(13,148,136,.2);color:#5ad4c6;}
 /* The header casts its shadow only once something scrolls under it. */
 body:not(.hdr-scrolled) .app-header{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;}
 /* Opened details show the whole description. */
@@ -1388,3 +1369,206 @@ html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}
   transition-timing-function:linear(0,0.035,0.12,0.234,0.36,0.486,0.603,0.707,0.795,0.868,0.925,0.968,0.999,1.019,1.032,1.038,1.04,1.039,1.035,1.031,1.026,1.021,1.016,1.012,1.008,1.005,1.003,1.001,1,0.999,0.999,0.998,1);}
 .tab-nav.has-ind .tab-ind{--ind-a:max(var(--ind-min,-100000px),var(--ind-x));--ind-b:min(var(--ind-max,100000px),calc(var(--ind-x) + var(--ind-w)));
   width:calc(var(--ind-b) - var(--ind-a));transform:translateX(var(--ind-a));}
+
+/* Step 58: the Deadlines legend tells its three marks apart */
+/* A sick day tints the whole date, so the legend shows a tinted square, not a dot
+   that could be read as a deadline due soon. */
+.cal-leg-sick{width:10px;height:10px;border-radius:3px;background:var(--sick-light);box-shadow:inset 0 0 0 1px var(--sick);}
+
+/* Step 59: readable event tiles; no content text under 13px */
+/* A tile's date is drawn at full strength in the event's text colour (it was 78%
+   opacity), at the 11px the phone layout already used. The event names, the
+   day summary rows and the director request lines were 12.5px. */
+.ev-chip-date{font-size:11px;}
+.ev-chip-name,.dirq-s,.dirq-note,.myday-row{font-size:13px;}
+
+/* Step 60: after you add or open a task, you see it */
+/* The card you came to see wears a ring in the focus colour that fades away;
+   with Reduce Motion it stays still and simply goes after a moment. */
+@keyframes tc-found{from{outline-color:var(--focus-ink);}to{outline-color:transparent;}}
+.task-card.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
+@media(prefers-reduced-motion:reduce){.task-card.tc-found{animation:none;outline-color:var(--focus-ink);}}
+/* On iPhone and iPad the page behind an open sheet stays still. */
+.modal-overlay,.modal-overlay .modal{overscroll-behavior:contain;}
+@media(max-width:980px){html:has(.modal-overlay.open),html:has(.modal-overlay.open) body{overflow:hidden;}}
+/* "For" sits at the top of Add Task, for an admin adding a task. */
+.m-for[hidden]{display:none;}
+
+/* Step 61: iPhone, the round buttons never cover a control */
+/* They slide down out of sight while the page scrolls down and return when it
+   scrolls up (the scroll watcher sets body.fab-away); with Reduce Motion they
+   simply fade. */
+@media(max-width:600px){
+  .quickadd-fab,.chat-fab{transition:transform .24s cubic-bezier(.2,.8,.2,1),opacity .18s ease,visibility 0s linear 0s;}
+  body.fab-away .quickadd-fab,body.fab-away .chat-fab{transform:translateY(calc(100% + var(--float-lift) + 48px));opacity:0;visibility:hidden;pointer-events:none;
+    transition:transform .24s ease-in,opacity .18s ease,visibility 0s linear .24s;}
+}
+@media(max-width:600px) and (prefers-reduced-motion:reduce){
+  .quickadd-fab,.chat-fab,body.fab-away .quickadd-fab,body.fab-away .chat-fab{transition:opacity .12s linear,visibility 0s linear .12s;}
+  body.fab-away .quickadd-fab,body.fab-away .chat-fab{transform:none;}
+}
+
+/* Step 62: person tabs open on the person's work */
+/* The Event Hub now follows the tasks in the page itself. On iPhone the Add
+   Task bar goes (the round "+" opens the same sheet) and the filters are one
+   row that scrolls, as on the Overview. */
+@media(max-width:600px){
+  .tab-panel .addtask-bar{display:none;}
+  .tab-panel .filter-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .tab-panel .filter-tabs::-webkit-scrollbar{display:none;}
+  .tab-panel .filter-tabs .fpill{flex:0 0 auto;white-space:nowrap;}
+}
+/* The name card is one line: initial, name, the three counters (their icon and
+   number; screen readers still hear "Active", "Due Soon", "Done") and the
+   colour button. On 320px screens it keeps step 38's two rows. */
+@media(min-width:361px) and (max-width:600px){
+  .member-head .member-role{display:none;}
+  .member-head .member-head-stats{order:1;flex:0 0 auto;margin-left:auto;gap:5px;}
+  .member-head .mh-stat{padding:4px 8px;gap:4px;}
+  .member-head .mh-stat .mh-l{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+}
+
+/* Step 63: colour on a card means a status, a person or the event */
+/* Due soon reads in plain ink with a clock (overdue stays red), so Waiting
+   amber appears only on Waiting. Medium priority, a pending upload and a shoot
+   time are quiet facts; uploaded and mail sent keep Done's green. */
+.mb-soon,.mb-wmsoon{background:var(--gray-light);color:var(--text);}
+.task-card .task-meta .mb-soon{color:var(--text);font-weight:700;}
+.mb-med,.mb-pending,.mb-time,.mb-rev{background:var(--gray-light);color:var(--muted);}
+html.dark .mb-med,html.dark .mb-pending,html.dark .mb-time,html.dark .mb-rev{background:rgba(255,255,255,.06);color:var(--muted);}
+/* A request number and an old "Together" category are facts in the navy of
+   the other facts, not In progress blue or Done green. */
+.mb-req,.mb-together{background:var(--navy-light);color:var(--navy);}
+html.dark .mb-req,html.dark .mb-together{color:#8fb4dc;}
+/* One event tag, in the event's own colours: filled, or tinted with a readable
+   shade of the colour as its text. An event without a colour is quiet, never teal. */
+.mb-event:not(.mb-event-filled):not(.mb-event-tint){background:var(--gray-light);}
+html:not(.dark) .mb-event:not(.mb-event-filled):not(.mb-event-tint){color:var(--text);}
+html.dark .mb-event:not(.mb-event-filled):not(.mb-event-tint){background:rgba(255,255,255,.08);color:var(--text);}
+html:not(.dark) .mb-event.mb-event-tint{color:var(--evc-ink);}
+html.dark .mb-event.mb-event-tint{color:var(--evc-ink-d);}
+/* People on a shared card: each one's initial in their colour, the names in ink. */
+.mb-shared{background:var(--gray-light);color:var(--text);}
+html.dark .mb-shared{background:rgba(255,255,255,.08);color:var(--text);}
+/* The initials overlap a little, like a stack of avatars, and keep the tag the
+   height of the others. */
+.mb-who{display:inline-grid;place-items:center;width:16px;height:16px;margin:-2px -8px -2px 0;border-radius:50%;box-shadow:0 0 0 1.5px var(--surface);
+  font-size:9.5px;font-weight:800;line-height:1;color:#fff;background:var(--tm-c,var(--navy,#003057));}
+.mb-who:last-of-type{margin-right:2px;}
+.mb-who[data-member="boss"]{--tm-c:var(--member-boss);}
+.mb-who[data-member="dew"]{--tm-c:var(--member-dew);}
+.mb-who[data-member="o"]{--tm-c:var(--member-o);}
+.mb-who[data-member="junior"]{--tm-c:var(--member-junior);}
+/* A finished card fades in dark mode; a deeper dot keeps its white letter readable. */
+html.dark .task-card:is(.tc-done,.tc-canceled) .mb-who{background:color-mix(in srgb,var(--tm-c,var(--navy,#003057)) 72%,#000);}
+
+/* Step 64: trim what says a thing twice or only helps a keyboard */
+/* The search sheet closes with a real button: "ESC" on computers, "Cancel" on
+   touch screens, where the row of keyboard hints is no use either. */
+.cmdk-esc{cursor:pointer;font-family:inherit;line-height:1.2;}
+.cmdk-esc:hover{color:var(--text);}
+.cmdk-esc:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+.cmdk-esc-t{display:none;}
+@media(max-width:600px),(hover:none) and (pointer:coarse){
+  .cmdk-hint,.uxp-mi-kbd{display:none;}
+  .cmdk-esc{min-height:44px;margin:-10px -6px -10px 0;padding:0 6px;border:0;background:none;font-size:15px;font-weight:700;color:var(--navy);}
+  html.dark .cmdk-esc{color:#8fb4dc;}
+  .cmdk-esc-k{display:none;}
+  .cmdk-esc-t{display:inline;}
+}
+/* The payday panel: the ring, then the payday and the period side by side with
+   their labels on one line. The badge speaks only on payday. */
+.salary-dock .salary-strip{grid-template-columns:80px max-content max-content minmax(0,1fr);column-gap:48px;align-items:start;}
+.salary-dock .sal-ring-wrap{align-self:center;}
+.salary-dock #sal-badge{justify-self:end;align-self:center;}
+#sal-badge:empty{display:none;}
+@media(max-width:1100px){.salary-dock .salary-strip{grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);column-gap:20px;}}
+@media(max-width:600px){.salary-dock .salary-strip{grid-template-columns:64px minmax(0,1fr);column-gap:14px;}}
+/* Calendar setup lives in Settings now. */
+.gcs-team{margin:-2px 0 8px;font-size:12px;line-height:1.5;color:var(--muted);}
+.gcs-team:empty{display:none;}
+/* On touch screens an event is deleted from its own page (tap the tile), so no
+   delete button sits on every tile and row; computers show it on hover. */
+@media(hover:none){
+  .ev-chip-del{display:none;}
+  .ev-chip-date,.ev-chip-name{padding-right:0;}
+}
+/* An empty column is its header and its 0; it opens a drop area while a card
+   is dragged over it. */
+.kb-col-body:empty{min-height:0;padding:0!important;}
+.kb-col.kb-over>.kb-col-body:empty{min-height:56px;}
+
+/* Step 65: polish */
+/* iPhone: Upcoming Deadlines keeps its title, with the fold button beside it,
+   and the four filters get a row of their own, so "7 days" is never cut off. */
+@media(max-width:600px){
+  #panel-overview #ov-dl-card .ov-card-head{flex-wrap:wrap;row-gap:10px;}
+  #panel-overview #ov-dl-card .ov-card-title{flex:1 1 auto;}
+  #panel-overview #ov-dl-card .ov-dl-filters{order:3;flex:1 1 100%;margin-left:0;}
+}
+/* Deadline rows answer the keyboard; the focus ring follows the row. */
+#panel-overview .ov-dl:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;border-radius:8px!important;}
+/* One set of left edges. Every card title starts after the same 28px icon chip,
+   Team today's too. In light mode, where rows are flat, a row's first mark
+   starts at the card's edge like the label above it, and its hover tint
+   reaches into the card's padding instead. */
+.ov-team-title{gap:8px;}
+.ov-team-title>i.ti:first-child{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
+  margin-right:2px;border-radius:var(--r-sm);background:var(--icon-chip);font-size:15px;}
+html:not(.dark) #ov-dl-card .ov-dl,
+html:not(.dark) #panel-overview .ov-countdown .ov-cdn,
+html:not(.dark) #evb-card .evb-row{padding-left:0;padding-right:0;}
+html:not(.dark) #ov-dl-card .ov-dl:hover,
+html:not(.dark) #panel-overview .ov-countdown .ov-cdn:hover{background:var(--surface-3);box-shadow:-11px 0 0 var(--surface-3),11px 0 0 var(--surface-3)!important;}
+html:not(.dark) #evb-card .evb-g{overflow:visible;}
+html:not(.dark) #evb-card .evb-g-h{width:calc(100% + 24px);margin-left:-12px;margin-right:-12px;}
+html:not(.dark) #evb-card .evb-more{margin-left:-10px;}
+/* A widget's name keeps its place when it unfolds: the reorder arrows follow it. */
+.widget-title>.wmove{order:2;margin:0 0 0 8px;}
+/* On computers the Overview's two columns end together: the last card of each
+   fills its column. */
+@media(min-width:981px){
+  #panel-overview .ov-grid{align-items:stretch;}
+  #panel-overview :is(.ov-col-main,.ov-col-side){display:flex;flex-direction:column;}
+  #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child{flex-grow:1;}
+}
+/* A card without details has no footer row: "⋯" sits in the corner of its facts,
+   which keep room for it, so it never wraps onto a line of its own. Either way
+   "⋯" is in the card's bottom right corner. */
+.task-card .task-meta:has(>.tc-acts-btn){position:relative;padding-right:40px;}
+.task-card .task-meta>.tc-acts-btn{position:absolute;right:-4px;bottom:-3px;margin:0;}
+@media(max-width:600px){
+  .task-card .task-meta:has(>.tc-acts-btn){padding-right:44px;}
+  .task-card .task-meta>.tc-acts-btn{right:-6px;bottom:-9px;}
+}
+/* The Director request: one quote and one action. The amber rule marks it; the
+   rest is plain text and one quiet button. */
+html:not(.dark) .task-card .dirq,html.dark .task-card .dirq{margin-top:10px;padding:0 0 0 12px;border:0!important;
+  border-left:3px solid #d98324!important;border-radius:0!important;background:none!important;box-shadow:none!important;}
+.dirq-h{font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--muted);}
+html.dark .dirq-h{color:var(--muted);}
+.dirq-h i{font-size:14px;}
+.dirq-i{margin-top:4px;padding-top:0;border-top:0;}
+.dirq-i+.dirq-i{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+html.dark .dirq-i+.dirq-i{border-top-color:var(--border);}
+.dirq-m{font-size:12px;}
+.dirq-ok{margin-top:4px;min-height:32px;padding:0;border:0;border-radius:6px;background:none;color:var(--navy);font-size:13px;}
+.dirq-ok:hover{background:none;color:var(--navy);text-decoration:underline;text-underline-offset:3px;}
+html.dark .dirq-ok,html.dark .dirq-ok:hover{color:#8fb4dc;}
+.dirq-ok:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+@media(max-width:600px){.dirq-ok{min-height:40px;}}
+/* Priority on the deadline rows: plain 13px text beside a 13px date; High in
+   red, Medium and Low in the quiet ink of the other facts. */
+#panel-overview #ov-dl-card .ov-dl-sub{font-size:13px;}
+#panel-overview .ov-pri{font-size:13px!important;font-weight:600;padding:0;background:none!important;}
+#panel-overview .ov-pri.low{color:#636e7e!important;}
+html.dark #panel-overview .ov-pri.low{color:#a3adba!important;}
+/* A round focus ring in the search field, like the field itself. */
+#cmdk-input{border-radius:8px;}
+#cmdk-input:focus-visible{outline:2px solid var(--focus-ink);outline-offset:4px;}
+/* One calendar style: day numbers straight on the card, today filled navy, the
+   picked day ringed, and deadlines as navy dots on every tab, as the legends say. */
+#panel-overview .ov-cal-grid .cal-day{background:transparent;}
+#panel-overview .ov-cal-grid .cal-day:not(.empty):hover{border-color:transparent;background:var(--gray-light);}
+#panel-overview .ov-cal-grid .cal-day.today{background:var(--navy);}
+html.dark .cal-day.today{color:#fff;}

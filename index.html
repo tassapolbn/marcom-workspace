@@ -23,6 +23,8 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
   background:#003057;color:#fff;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
   transition:opacity .25s ease,visibility 0s linear .25s;}
 .boot-cover.done{opacity:0;visibility:hidden;pointer-events:none;}
+/* Step 65: until the cover lifts, the page itself is navy, so nothing white shows first. */
+html:not(.booted){background:#003057;}
 .boot-cover-mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
   background:linear-gradient(135deg,#f6c64a,#f0b323);box-shadow:0 12px 30px -12px rgba(240,179,35,.65);}
 .boot-cover-mark svg{width:28px;height:28px;fill:none;stroke:#003057;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
@@ -33,9 +35,12 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
 @keyframes boot-cover-slide{from{transform:translateX(-100%);}to{transform:translateX(250%);}}
 @media(prefers-reduced-motion:reduce){.boot-cover{transition:none;}.boot-cover-bar::after{animation:none;transform:translateX(75%);}}
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<!-- Step 65: the fonts and icons load beside the page instead of before its first
+     paint, so the app opens on the navy cover, not on a blank white page. -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css"></noscript>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -199,7 +204,6 @@ html.dark .lhub-ic{color:#8fb4dc;}
 .kb-col-name{font-size:13px;font-weight:700;color:var(--text);flex:1;}
 .kb-col-count{font-size:12px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:99px;min-width:24px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px;}
 .kb-col-body{padding:11px;display:flex;flex-direction:column;min-height:70px;}
-.kb-empty{text-align:center;color:var(--muted);font-size:12px;padding:16px 0;opacity:.65;border:1.5px dashed var(--border);border-radius:10px;}
 .kb-col-body .task-card{margin-bottom:11px;cursor:pointer;animation:none;min-width:0;}
 .kb-col-body .task-card:last-child{margin-bottom:0;}
 .kb-col-body .task-topic{overflow-wrap:anywhere;}
@@ -889,13 +893,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="sal-cell">
       <div class="sal-cell-label"><i class="ti ti-calendar-month"></i> Pay Period</div>
       <div class="sal-cell-value" id="sal-month">--</div>
-      <div class="sal-cell-sub" id="sal-cycle"></div>
-    </div>
-    <div class="salary-divider sal-divider-prog"></div>
-    <div class="sal-cell sal-cell-prog">
-      <div class="sal-cell-label"><i class="ti ti-progress-check"></i> Cycle Progress &middot; <span id="sal-pct">0%</span></div>
-      <div class="sal-bar"><div class="sal-bar-fill" id="sal-bar-fill"></div></div>
-      <div class="sal-cell-sub">through this pay period</div>
     </div>
     <div id="sal-badge"></div>
   </div>
@@ -922,18 +919,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         </div>
         <div class="meet-sub" id="meet-sub"></div>
       </div>
-      <!-- Event Hub -->
-      <div class="evhub" id="evhub">
-        <div class="evhub-head">
-          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
-          <div class="evhub-tools">
-            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
-            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
-            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
-          </div>
-        </div>
-        <div class="evhub-body" id="boss-evhub-body"></div>
-      </div>
       <div class="sub-nav">
         <button class="sub-tab act act-boss st-tasks" onclick="switchSub('boss','tasks',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>
         <button class="sub-tab act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
@@ -950,7 +935,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="bs-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>
           <div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="bs-done">0</div><div class="stat-lbl">Done</div></div></div>
         </div>
-        <div style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
+        <div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         <div class="filter-tabs">
           <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
@@ -984,6 +969,18 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="empty-state" id="boss-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>
       </div>
       <div class="sub-panel" id="boss-sub-sop" style="display:none;"></div>
+      <!-- Event Hub: after the tasks, so the tab opens on the work (step 62) -->
+      <div class="evhub" id="evhub">
+        <div class="evhub-head">
+          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
+          <div class="evhub-tools">
+            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
+            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
+            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
+          </div>
+        </div>
+        <div class="evhub-body" id="boss-evhub-body"></div>
+      </div>
     </div>
     <!-- BOSS SIDEBAR -->
     <div class="side-col">
@@ -1088,8 +1085,9 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <button class="sick-mode-btn" id="sick-mode-btn" onclick="toggleSickMode()"><i class="ti ti-hand-finger"></i> <span id="sick-mode-label">Tap dates to mark sick: OFF</span></button>
           <div class="cal-grid" id="boss-cal-grid"></div>
           <div class="cal-legend">
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Task</div>
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--sick);"></div>Sick</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div>
+            <div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div>
           </div>
           <div class="cal-detail" id="boss-cal-detail" style="display:none;">
             <div class="cal-detail-title" id="boss-cal-detail-title"></div>
@@ -1118,6 +1116,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <button type="button" class="tt-btn" id="tt-standard" onclick="setTaskType('standard')"><i class="ti ti-list-check"></i> Standard Task</button>
         <button type="button" class="tt-btn" id="tt-role" onclick="setTaskType('role')"><i class="ti ti-clipboard-data"></i> <span id="tt-role-label">Request</span></button>
       </div>
+      <div class="form-group m-for" id="m-for-group" hidden><label class="form-label" for="m-for">For</label><select class="form-select" id="m-for" onchange="taskForChange(this.value)"></select></div>
       <div class="form-group"><label class="form-label">Task Title</label><input type="text" class="form-input" id="m-topic" placeholder="Main heading of the task" /></div>
       <div class="form-row form-row-3">
         <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="m-due" /></div>
@@ -1431,7 +1430,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="cmdk-search">
       <i class="ti ti-search"></i>
       <input id="cmdk-input" placeholder="Search tasks, events, notes or links" oninput="renderCmdk()" autocomplete="off" />
-      <span class="cmdk-esc">ESC</span>
+      <button type="button" class="cmdk-esc" onclick="closeCmdk()" aria-label="Close search"><span class="cmdk-esc-k">ESC</span><span class="cmdk-esc-t">Cancel</span></button>
     </div>
     <div class="cmdk-results" id="cmdk-results"></div>
     <div class="cmdk-hint"><span><kbd>↑↓</kbd>navigate</span><span><kbd>↵</kbd>open</span><span><kbd>N</kbd>new task</span><span><kbd>/</kbd>search</span></div>
@@ -1642,6 +1641,11 @@ function eventsOf(w){
   if(!own.length)return schoolEvents;
   return schoolEvents.concat(own);
 }
+/* Step 63: a card's event tag wears the event's colours, so the boards redraw
+   when the events arrive or change, not only when a task does. */
+function evRedrawCards(w){
+  try{(w?[w]:MEMBER_ORDER).forEach(function(k){ if(k==='boss')renderBoss(); else renderMember(k); });}catch(e){}
+}
 /* The whole team shares ONE event hub, so the Team Overview must show each
    event ONCE, not once per member. This returns the shared events plus any
    legacy per-member events, de-duplicated by id and by name+date, so three
@@ -1723,7 +1727,6 @@ function memberPanelHTML(w){
   +  '</div>'
   +  '<div class="two-col"><div class="main-col">'
   +    '<div class="meet-card none" id="'+w+'-meet-card" onclick="openMeetingCal()"><div class="meet-ico"><i class="ti ti-calendar-time"></i></div><div class="meet-body"><div class="meet-label">Next Meeting</div><div class="meet-title">No upcoming meetings</div></div><div class="meet-sub"></div></div>'
-  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="sub-nav">'
   +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
   +      '<button class="sub-tab st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>'
@@ -1738,7 +1741,7 @@ function memberPanelHTML(w){
   +        '<div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="'+w+'-s-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>'
   +        '<div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="'+w+'-s-done">0</div><div class="stat-lbl">Done</div></div></div>'
   +      '</div>'
-  +      '<div style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
+  +      '<div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '<div class="filter-tabs">'
   +        '<button class="fpill act-accent" data-who="'+w+'" data-f="all" onclick="setFilter(\''+w+'\',\'all\',this)">All Tasks</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="pending" onclick="setFilter(\''+w+'\',\'pending\',this)">Pending</button>'
@@ -1765,6 +1768,7 @@ function memberPanelHTML(w){
   +      '<div class="empty-state" id="'+w+'-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>'
   +    '</div>'
   +    (w==='junior'?'<div class="sub-panel" id="'+w+'-sub-sop" style="display:none;"></div>':'')
+  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +  '</div>'
   +  '<div class="side-col">'
   +    '<div id="'+w+'-role-extra"></div>'
@@ -1772,7 +1776,7 @@ function memberPanelHTML(w){
   +    '<div class="widget gcal-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-event"></i> Google Calendar</div><button class="gcal-refresh" id="'+w+'-gcal-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-gcal-body"></div></div></div>'
   +    '<div class="widget upcoming-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-clock-hour-4"></i> Upcoming Events</div><button class="gcal-refresh" id="'+w+'-upcoming-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-upcoming-body"></div></div></div>'
   +    '<div class="widget pin-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-pin"></i> Pinned Notes</div></div><div class="widget-body"><input class="pin-search pin-search-input" placeholder="Search pinned notes..." oninput="pinSearchInput(this.value)" /><div class="pin-slot"></div></div></div>'
-  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
+  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div><div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
   +    '<div class="widget lieu-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-beach"></i> Day-off in Lieu</div><button class="btn btn-teal btn-sm" onclick="openLieu(\''+w+'\')"><i class="ti ti-plus"></i> Add</button></div><div class="widget-body"><div class="lieu-balance"><div class="lieu-num" id="'+w+'-lieu-balance">0</div><div class="lieu-num-lbl">days available</div><div class="lieu-split"><span>Earned: <b id="'+w+'-lieu-earned">0</b></span><span>Used: <b id="'+w+'-lieu-used">0</b></span></div></div><div class="lieu-records" id="'+w+'-lieu-records"></div></div></div>'
   +    '<div class="widget sick-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-heart-broken"></i> Sick Leave</div><button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset(\''+w+'\')"><i class="ti ti-refresh"></i> Reset Year</button></div><div class="widget-body"><div class="sick-balance"><div class="sick-num" id="'+w+'-sick-count">0</div><div class="sick-num-lbl" id="'+w+'-sick-year-label">days this year</div></div><div style="display:flex;gap:6px;margin:10px 0 4px;"><input type="date" id="'+w+'-sick-date-input" class="form-input" style="flex:1;padding:7px 10px;font-size:12px;" /><button onclick="addSickDay(\''+w+'\')" style="background:var(--sick);color:white;border:none;border-radius:var(--rsm);padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><i class="ti ti-plus"></i> Add</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pick any date to mark as sick leave</div><div class="sick-list" id="'+w+'-sick-list"></div></div></div>'
   +  '</div>'
@@ -2028,7 +2032,7 @@ try{
   bossNotesRef.orderBy('createdAt','desc').onSnapshot(s=>{bossNotes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes('boss');},e=>syncErr(e));
   bestNotesRef.orderBy('createdAt','desc').onSnapshot(s=>{bestNotes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes('best');},e=>syncErr(e));
   sickRef.orderBy('date','desc').onSnapshot(s=>{sickLeave=s.docs.map(d=>({id:d.id,...d.data()}));renderSickWidget('boss');renderCalendar(bossTasks,'boss');},e=>syncErr(e));
-  eventsRef.onSnapshot(s=>{schoolEvents=s.docs.map(d=>({id:d.id,...d.data()}));eventsLoaded=true;renderEvHub('boss');renderEvHub('junior');},e=>syncErr(e));
+  eventsRef.onSnapshot(s=>{schoolEvents=s.docs.map(d=>({id:d.id,...d.data()}));eventsLoaded=true;renderEvHub('boss');renderEvHub('junior');evRedrawCards();},e=>syncErr(e));
   // Department members (Dew, O, Junior): own task/link/note collections
   Object.keys(DATA).forEach(k=>{
     DATA[k].ref=db.collection(k+'_tasks');
@@ -2040,7 +2044,7 @@ try{
     DATA[k].ref.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].tasks=s.docs.map(d=>({id:d.id,__src:'own',...d.data()}));DATA[k].loaded=true;reconcileDoneAt(k);renderMember(k);},e=>syncErr(e));
     DATA[k].linksRef.orderBy('createdAt','asc').onSnapshot(s=>{DATA[k].links=s.docs.map(d=>({id:d.id,...d.data()}));renderLinks(k);},e=>syncErr(e));
     DATA[k].notesRef.orderBy('createdAt','desc').onSnapshot(s=>{DATA[k].notes=s.docs.map(d=>({id:d.id,...d.data()}));renderNotes(k);},e=>syncErr(e));
-    DATA[k].eventsRef.onSnapshot(s=>{DATA[k].events=s.docs.map(d=>({id:d.id,...d.data()}));DATA[k].eventsLoaded=true;renderEvHub(k);},e=>syncErr(e));
+    DATA[k].eventsRef.onSnapshot(s=>{DATA[k].events=s.docs.map(d=>({id:d.id,...d.data()}));DATA[k].eventsLoaded=true;renderEvHub(k);evRedrawCards(k);},e=>syncErr(e));
     DATA[k].sickRef.orderBy('date','desc').onSnapshot(s=>{DATA[k].sick=s.docs.map(d=>({id:d.id,...d.data()}));renderSickWidget(k);renderCalendar(DATA[k].tasks,k);},e=>syncErr(e));
     DATA[k].lieuRef.orderBy('date','desc').onSnapshot(s=>{DATA[k].lieu=s.docs.map(d=>({id:d.id,...d.data()}));renderLieu(k);},e=>syncErr(e));
   });
@@ -2134,12 +2138,13 @@ function initSalary(){
   _setT('sal-date',DAYS[pd.date.getDay()].slice(0,3)+', '+pd.date.getDate()+' '+MONTHS[pd.date.getMonth()]);
   _setH('sal-note',pd.adjusted?('<i class="ti ti-info-circle-filled"></i> '+pd.note):'Last working day of the month');
   _setT('sal-month',MONTHS[pd.date.getMonth()]+' '+pd.date.getFullYear());
-  _setT('sal-cycle',_elapsed+' of '+_cycleTotal+' days elapsed');
-  _setT('sal-pct',_pct+'%');
-  var _bar=document.getElementById('sal-bar-fill');if(_bar)_bar.style.width=_pct+'%';
+  /* Step 64: the ring says the days left and fills as the period passes, so the
+     panel no longer repeats it as a count and a second bar. The compact line's
+     small bar reads the same share from here. */
+  var _card=document.getElementById('salary-card');if(_card)_card.setAttribute('data-pct',_pct+'%');
   var _ring=document.getElementById('sal-ring-fg');
   if(_ring){var _C=2*Math.PI*34;_ring.style.strokeDasharray=_C.toFixed(1);_ring.style.strokeDashoffset=(_C*(1-_pct/100)).toFixed(1);}
-  _setH('sal-badge',days===0?'<span class="salary-badge sb-pay">Payday!</span>':(days<=5?'<span class="salary-badge sb-soon">Soon</span>':'<span class="salary-badge sb-reg">On track</span>'));
+  _setH('sal-badge',days===0?'<span class="salary-badge sb-pay">Payday!</span>':'');
 }
 initSalary();
 
@@ -2147,6 +2152,8 @@ initSalary();
 function switchTab(t){
   const panel=document.getElementById('panel-'+t),tab=document.getElementById('tab-'+t);
   if(!panel||!tab)return;
+  /* Step 60: a tab opens at its top, not at the last tab's scroll position. */
+  if(!panel.classList.contains('active')){try{window.scrollTo(0,0);}catch(e){}}
   document.querySelectorAll('.tab-panel').forEach(p=>{
     p.classList.toggle('active',p===panel);
     p.setAttribute('role','tabpanel');
@@ -2171,6 +2178,33 @@ function switchTab(t){
   }
 }
 function motionBehavior(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';}
+/* Step 60: bring a task into view on its person's tab and mark it for a moment,
+   from search, an Overview deadline or the "Show" after saving. A board filter
+   that hides it goes back to All; opts.open then opens its editor as before. */
+function showTask(who,id,opts){
+  opts=opts||{};
+  var panel=document.getElementById('panel-'+who);
+  if(!panel){if(opts.open)openEdit(who,id);return;}
+  if(!panel.classList.contains('active'))switchTab(who);
+  var tries=0,reset=false;
+  (function find(){
+    var card=null;
+    panel.querySelectorAll('.task-card[data-id]').forEach(function(c){ if(!card&&c.getAttribute('data-id')===String(id))card=c; });
+    if(!card){
+      if(!reset&&filterOf(who)!=='all'){
+        reset=true;var all=document.querySelector('.fpill[data-who="'+who+'"][data-f="all"]');
+        if(all)setFilter(who,'all',all);
+      }
+      if(++tries<15)return setTimeout(find,80);
+      if(opts.open)openEdit(who,id);
+      return;
+    }
+    try{card.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){card.scrollIntoView();}
+    card.classList.remove('tc-found');void card.offsetWidth;card.classList.add('tc-found');
+    setTimeout(function(){card.classList.remove('tc-found');},2400);
+    if(opts.open)openEdit(who,id);
+  })();
+}
 document.addEventListener('keydown',function(e){
   const tab=e.target.closest&&e.target.closest('.tab-nav .tab-btn');
   if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
@@ -2229,7 +2263,7 @@ function statusToDz(status,dz){
   return 'Brief Received';
 }
 function scColors(s){const m={'pending':['var(--gray-light)','var(--st-pending)'],'in-progress':['var(--blue-light)','var(--st-progress)'],'waiting':['var(--amber-light)','var(--st-waiting)'],'on-hold':['var(--purple-light)','var(--st-hold)'],'done':['var(--green-light)','var(--st-done)'],'canceled':['var(--danger-light)','var(--st-cancel)']};return m[s]||m.pending;}
-function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['#e6effd','#2563eb'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','#0f7a37'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
+function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--purple)'],'Brief Received':['var(--gray-light)','var(--gray)'],'In Progress':['var(--blue-light)','var(--blue)'],'Review':['var(--amber-light)','var(--amber)'],'Revision Required':['var(--danger-light)','var(--danger)'],'Approved':['var(--green-light)','var(--green)'],'Delivered':['var(--navy-light)','var(--navy)']};return m[s]||m['Brief Received'];}
 /* this.blur() after choosing: the board redraw is deferred while a select
    inside it keeps focus, so releasing focus lets the card move to its new
    column immediately instead of waiting for a click elsewhere. */
@@ -2486,6 +2520,22 @@ function uiPrompt(o){
     setTimeout(function(){inp.focus();try{inp.select();}catch(e){}},30);
   });
 }
+/* Step 61: on iPhone the round "+" and Team Chat buttons slide away while the
+   page scrolls down, so they never sit on a card's controls as you read, and
+   come back as soon as it scrolls up, near the top, or while Team Chat is open
+   (Boss, 28 Oct: both stay round buttons). */
+(function(){
+  var mq=window.matchMedia?window.matchMedia('(max-width:600px)'):null,last=window.scrollY||0,run=0;
+  function away(on){ if(document.body)document.body.classList.toggle('fab-away',!!on); }
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY||0,d=y-last; last=y;
+    if(!mq||!mq.matches||y<=24||document.querySelector('.chat-panel.open')){ run=0; away(false); return; }
+    if((d>0&&run<0)||(d<0&&run>0))run=0;
+    run+=d;
+    if(run>6)away(true); else if(run<-6)away(false);
+  },{passive:true});
+  if(mq&&mq.addEventListener)mq.addEventListener('change',function(){ away(false); });
+})();
 function uiToast(msg,opts){
   opts=opts||{};
   var host=document.getElementById('uxp-toasts');
@@ -2494,6 +2544,11 @@ function uiToast(msg,opts){
   var sp=document.createElement('span');sp.className='uxp-toast-msg';sp.textContent=msg||'';t.appendChild(sp);
   var done=false;
   function kill(){ if(t.parentNode)t.parentNode.removeChild(t); }
+  if(opts.action&&!opts.undo){
+    var a=document.createElement('button');a.className='uxp-undo';a.type='button';a.textContent=opts.actionLabel||'Show';
+    a.onclick=function(){ if(done)return; done=true; kill(); try{opts.action();}catch(e){console.error(e);} };
+    t.appendChild(a);
+  }
   if(opts.undo){
     var b=document.createElement('button');b.className='uxp-undo';b.type='button';b.textContent=opts.undoLabel||'Undo';
     b.setAttribute('aria-label','Undo last action');
@@ -2562,6 +2617,13 @@ function designEventName(){
   return event?(event.name||'Untitled'):'';
 }
 function syncDesignEvent(){
+  /* Step 58: a shared card's "Event name" follows the event picked here, unless
+     someone typed their own, so the card is filed under that event. */
+  var lab=document.getElementById('m-evt-label'),pick=document.getElementById('m-event');
+  if(lab&&pick&&(!lab.value.trim()||lab.value===lab.getAttribute('data-auto'))){
+    var ev=eventsOf(modalState.who).find(function(e){return e.id===pick.value;});
+    lab.value=ev?(ev.name||''):'';lab.setAttribute('data-auto',lab.value);
+  }
   if(modalState.who!=='dew'||modalState.taskType!=='role')return;
   var brand=document.getElementById('m-dz-brand');
   if(!brand.value.trim()||brand.value===brand.getAttribute('data-auto')){
@@ -2603,6 +2665,7 @@ function openAdd(who){
   populateEventSelect(who,'');
   if(window.rcTaskPanel)try{rcTaskPanel(null);}catch(e){}
   setTaskType((who==='o'||who==='dew')?'role':'standard');
+  taskForFill(who);
   document.getElementById('modal').classList.add('open');
   autoGrowDesc();
   tfSync();
@@ -2613,6 +2676,7 @@ function openEdit(who,id){
   const task=(tasksOf(who)).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
+  taskForFill(who);
   resetRoleDetails();
   if(!window.__sopBatchOpening)window.__sopBatch=null;
   modalLinks=JSON.parse(JSON.stringify(task.links||[]));
@@ -2667,6 +2731,35 @@ function styleModal(who){
   const tt=document.getElementById('m-tasktype');
   if(who==='o'||who==='dew'){tt.style.display='flex';document.getElementById('tt-role-label').textContent=who==='o'?'Media request':'Design request';}
   else{tt.style.display='none';}
+}
+/* Step 60: Add Task says whose board the task goes to, and an admin can change
+   it: one person puts it on their board; several make a shared card, as before
+   through "Share this card with the team". Editing moves a task with Move to. */
+function taskForFill(who){
+  var g=document.getElementById('m-for-group'),sel=document.getElementById('m-for');
+  if(!g||!sel)return;
+  var people=(typeof MEMBER_ORDER!=='undefined'?MEMBER_ORDER:['boss','dew','o','junior']).filter(function(w){return !!refOf(w);});
+  g.hidden=((window.__cur||{}).role!=='admin')||!!modalState.editId||people.length<2;
+  if(g.hidden)return;
+  sel.innerHTML=people.map(function(w){return '<option value="'+w+'"'+(w===who?' selected':'')+'>'+escHtml(memberName(w))+'</option>';}).join('')
+    +'<option value="__shared">Several people (a shared card)</option>';
+}
+function taskForChange(v){
+  var cb=document.getElementById('m-evt-on');
+  if(v==='__shared'){
+    if(cb&&!cb.checked){cb.checked=true;if(window.evtToggle)window.evtToggle();}
+    var box=document.getElementById('m-evt-fields');
+    if(box)try{box.scrollIntoView({block:'nearest',behavior:motionBehavior()});}catch(e){}
+    return;
+  }
+  if(cb&&cb.checked&&window.evtPeopleSet)window.evtPeopleSet([v]);
+  if(v===modalState.who)return;
+  var ev=(document.getElementById('m-event')||{}).value||'';
+  modalState.who=v;
+  styleModal(v);
+  populateEventSelect(v,ev);
+  setTaskType((v==='o'||v==='dew')?'role':'standard');
+  if(window.evtPeopleSet&&!(cb&&cb.checked))window.evtPeopleSet([v]);
 }
 function setTaskType(mode){
   modalState.taskType=mode;
@@ -2752,7 +2845,9 @@ function saveTask(){
   const evtOn=!!(document.getElementById('m-evt-on')||{}).checked;
   const wasEvent=isEventTask(old);
   if(evtOn){
-    data.eventLabel=((document.getElementById('m-evt-label')||{}).value||'').trim();
+    /* Step 58: the Event Board files a shared card by this name; left empty, the
+       event picked above names it. */
+    data.eventLabel=((document.getElementById('m-evt-label')||{}).value||'').trim()||data.eventName||'';
     /* A shared card can name several responsible people. It then shows on each
        of their boards, and because it is a single document the status stays in
        sync for everyone. owner = the first person, kept for the Event Board's
@@ -2798,6 +2893,17 @@ function saveTask(){
       console.error('[task] save failed',e);
       dbSaveFailed(e,'the task');
     });
+    /* Step 60: say what was added and for whom, with a way to see it. */
+    try{
+      var _ppl2=evtOn?(data.assignees||[]):[whoNow];
+      var _due=data.dueDate?(' \u00b7 due '+new Date(data.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})):'';
+      var _msg=(evtOn&&!_ppl2.length)?('Added to the Event Board'+_due):('Added for '+_ppl2.map(memberName).join(', ')+_due);
+      var _nid=newRef.id;
+      uiToast(_msg,{actionLabel:'Show',action:function(){
+        if(_ppl2.length)showTask(_ppl2[0],_nid);
+        else{switchTab('overview');var b=document.getElementById('evb-card');if(b)try{b.scrollIntoView({behavior:motionBehavior(),block:'start'});}catch(e){}}
+      }});
+    }catch(e){}
     if(wantCal){
       try{ calAfterSave(ref,newRef.id,data,whoNow); }
       catch(e){ console.error('[calendar] step failed',e); try{uiToast('Calendar step failed: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){} }
@@ -2918,9 +3024,25 @@ function toggleTaskDone(who,id){
   if(!t)return;
   const newStatus=(t.status==='done')?'pending':'done';
   const rf=taskRef(t,who); if(!rf)return;
+  tcLinger(who,id,t.status||'pending');
   rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()))
     .catch(function(e){dbSaveFailed(e,newStatus==='done'?'the completed task':'the reopened task');});
 }
+/* Step 65: a task ticked done (or reopened) stays in its column for a moment,
+   ticked, so the next card does not jump under the thumb; then it moves. */
+window.__tcLinger={};
+var TC_LINGER_MS=1400;
+function tcLinger(who,id,from){
+  /* A second tick inside the moment (an undo) keeps the card where it is shown.
+     The card also keeps its height, so nothing under it moves until it leaves. */
+  var k=who+'_'+id,prev=window.__tcLinger[k],el=null;
+  try{el=document.querySelector('#panel-'+who+' .kb-col .task-card[data-id="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');}catch(e){}
+  var rec={from:prev?prev.from:from,h:prev?prev.h:(el?Math.round(el.getBoundingClientRect().height):0)};
+  window.__tcLinger[k]=rec;
+  setTimeout(function(){ if(window.__tcLinger[k]===rec){ delete window.__tcLinger[k]; evRedrawCards(who); } },TC_LINGER_MS);
+}
+function tcLingerRec(t,who){return (window.__tcLinger&&window.__tcLinger[who+'_'+t.id])||null;}
+function tcLingerFrom(t,who){var L=tcLingerRec(t,who);return L?L.from:'';}
 const KB_STATUS_ORDER=['pending','in-progress','waiting','on-hold','done','canceled'];
 var _taskDrag={who:null,id:null};
 function taskDragStart(e,who,id){_taskDrag={who:who,id:id};try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}var c=e.currentTarget;if(c&&c.classList)c.classList.add('kb-dragging');}
@@ -2998,6 +3120,24 @@ function reconcileDoneAt(who){
     });
   }catch(e){console.error(e);}
 }
+/* Step 63: one event tag, in the event's own colours wherever a task shows it:
+   filled with its own text colour, or tinted with a readable shade of it. An
+   event without a colour gets the quiet tag. The event is found by its id, or
+   by its name on a shared card. */
+function evTagHTML(label,task,who){
+  label=String(label||'').trim();
+  var ev=null;
+  try{
+    var all=eventsOf(who)||[],key=label.toLowerCase();
+    ev=(task&&task.eventId&&all.find(function(e){return e.id===task.eventId;}))
+      ||(key&&all.find(function(e){return String(e.name||e.title||'').trim().toLowerCase()===key;}))||null;
+  }catch(e){}
+  var c=(ev&&evOkClr(ev.color))?ev.color:'',t=(c&&evOkClr(ev.textColor))?ev.textColor:'';
+  var cls='mb mb-event'+(t?' mb-event-filled':(c?' mb-event-tint':'')),st='';
+  if(t)st=' style="background:'+evFill(c,t)+';color:'+t+';"';
+  else if(c)st=' style="background:'+evTint(c,0.14)+';--evc-ink:'+evTagInk(c)+';--evc-ink-d:'+evTagInkDark(c)+';"';
+  return '<span class="'+cls+'"'+st+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(label||(ev&&(ev.name||ev.title))||'Event')+'</span>';
+}
 function taskCardHTML(task,who){
   const status=task.status||'pending',sc=SC[status],topic=task.topic||task.title||'';
   const du=task.dueDate?daysUntil(task.dueDate):null;
@@ -3006,29 +3146,28 @@ function taskCardHTML(task,who){
   const catClass=task.category==='Together'?'mb mb-together':(who==='best'?'mb mb-cat-coral':'mb mb-cat');
   let prv=task.priority||'medium';if(prv==='normal')prv='medium';
   const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-flag-3-filled" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
-  let _evClr='',_evTc='';try{if(task.eventId){const _ev=eventsOf(who).find(e=>e.id===task.eventId);if(_ev&&evOkClr(_ev.color)){_evClr=_ev.color;if(evOkClr(_ev.textColor))_evTc=_ev.textColor;}}}catch(e){}
-  let _evStyle='';
-  if(_evClr)_evStyle=_evTc?(' style="background:'+_evClr+';color:'+_evTc+';"'):(' style="background:'+evTint(_evClr,0.14)+';color:'+_evClr+';"');
   let evBadge='';
   if(isEventTask(task)){
     const _evLbl=(task.eventLabel||task.eventName||'').trim();
-    if(_evLbl)evBadge+='<span class="mb mb-evt"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(_evLbl)+'</span>';
+    if(_evLbl)evBadge+=evTagHTML(_evLbl,task,who);
     const _asg=taskAssignees(task);
     if(_asg.length){
       const _names=_asg.map(function(w){return memberName(w)||w;}).join(', ');
-      evBadge+='<span class="mb mb-shared" title="Shared card. A status change by anyone updates it for everyone."><i class="ti ti-users-group" style="font-size:11px;"></i> '+escHtml(_asg.length>1?('Shared · '+_names):_names)+'</span>';
+      /* Step 63: each person's initial in their colour; the names in ink. */
+      const _ini=_asg.map(function(w){return '<span class="mb-who" data-member="'+escHtml(w)+'" aria-hidden="true">'+escHtml((Array.from(String(memberName(w)||w).trim())[0]||'').toLocaleUpperCase())+'</span>';}).join('');
+      evBadge+='<span class="mb mb-shared" title="Shared card. A status change by anyone updates it for everyone.">'+_ini+' '+escHtml(_asg.length>1?('Shared · '+_names):_names)+'</span>';
     } else {
       evBadge+='<span class="mb mb-shared"><i class="ti ti-users-group" style="font-size:11px;"></i> Unassigned</span>';
     }
   } else if(task.eventId||task.eventName){
-    evBadge='<span class="mb mb-event'+(_evTc?' mb-event-filled':'')+'"'+_evStyle+'><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(task.eventName||'Event')+'</span>';
+    evBadge=evTagHTML(task.eventName||'',task,who);
   }
   const reqBadge=task.requestRef?'<span class="mb mb-req"><i class="ti ti-send" style="font-size:11px;"></i> '+escHtml(task.requestRef)+'</span>':'';
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
   if(task.dueDate){
     if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue '+fmtDate(task.dueDate)+'</span>';
-    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-calendar" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
+    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-clock" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
     else dueLabel='<span class="mb mb-date"><i class="ti ti-calendar" style="font-size:11px;"></i> '+fmtDate(task.dueDate)+'</span>';
   }
   const linksHtml=(task.links&&task.links.length)?
@@ -3043,6 +3182,7 @@ function taskCardHTML(task,who){
      row at the foot. Every control and handler is the one the card always had. */
   const doneLbl=status==='done'?'Mark as not done':'Mark as done';
   const actsOpen=!!(window.__tcActs&&window.__tcActs[who+'_'+task.id]);
+  const actsBtn='<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>';
   return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
       +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
@@ -3050,14 +3190,15 @@ function taskCardHTML(task,who){
     +'</div>'
     +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
+      +(detHtml?'':actsBtn) /* Step 65: without details, "⋯" ends the facts line instead of a row of its own */
     +'</div>'+roleHtml
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
     /* Step 50: at rest one bar, Details on the left and "⋯" on the right; "⋯"
        opens the action row under it. A click on the card still opens the task. */
-    +'<div class="tc-bar">'
-      +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>':'')
-      +'<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>'
-    +'</div>'
+    +(detHtml?'<div class="tc-bar">'
+      +'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>'
+      +actsBtn
+    +'</div>':'')
     +'<div class="task-foot">'+statusSelectHTML(who,task).replace('class="tcard-sel"','class="tcard-sel tc-row-sel"')+moveSelectHTML(who,task)
       +'<span class="task-acts">'
         +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
@@ -3072,10 +3213,11 @@ function taskCardHTML(task,who){
 function kanbanHTML(tasks,who,filter){
   return '<div class="kanban-board">'+KB_STATUS_ORDER.map(function(S){
     var sc=SC[S];var col=scColors(S);
-    var cards=tasks.filter(function(t){return (t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return kbFilterPass(t,filter);});
+    var cards=tasks.filter(function(t){return (tcLingerFrom(t,who)||t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return !!tcLingerFrom(t,who)||kbFilterPass(t,filter);});
     cards.sort(function(a,b){return dueSortValue(a)-dueSortValue(b);});
     var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span></div>';
-    var body=cards.length?cards.map(function(t){return taskCardHTML(t,who);}).join(''):'<div class="kb-empty">No tasks</div>';
+    var body=cards.map(function(t){var h=taskCardHTML(t,who),L=tcLingerRec(t,who);
+      return (L&&L.h)?h.replace('<div class="task-card ','<div style="min-height:'+L.h+'px" class="task-card '):h;}).join(''); /* empty: the header's 0 says it (step 64) */
     return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
   }).join('')+'</div>';
 }
@@ -4029,6 +4171,8 @@ function openCmdk(){
   const ov=document.getElementById('cmdk-overlay');
   ov.classList.add('open');
   const inp=document.getElementById('cmdk-input');
+  /* Step 64: beside "Cancel" on a phone, the short form still fits. */
+  inp.placeholder=(window.matchMedia&&matchMedia('(max-width:600px)').matches)?'Tasks, events, notes, links':'Search tasks, events, notes or links';
   inp.value='';renderCmdk();
   setTimeout(()=>inp.focus(),30);
 }
@@ -4072,7 +4216,7 @@ function renderCmdk(){
       html+='<div class="cmdk-section">'+k[1]+' ('+rows.length+')</div>';
       rows.slice(0,k[2]).forEach(r=>{
         const i=cmdkItems.length;
-        cmdkItems.push({run:r.kind==='task'?()=>{closeCmdk();switchTab(r.w);setTimeout(()=>openEdit(r.w,r.id),70);}:()=>{closeCmdk();if(window.ovGoto)ovGoto(r.w);else switchTab(r.w);}});
+        cmdkItems.push({run:r.kind==='task'?()=>{closeCmdk();showTask(r.w,r.id,{open:true});}:()=>{closeCmdk();if(window.ovGoto)ovGoto(r.w);else switchTab(r.w);}});
         html+=cmdkRow(i,r.ic,'',escHtml(r.label),escHtml(r.sub),'');
       });
     });
@@ -4217,11 +4361,13 @@ function evHubHTML(evs,who){
       var cd=evCountdown(ev),u=evUrgency(cd.ms);
       var clr=evOkClr(ev.color)?ev.color:'',tc=(clr&&evOkClr(ev.textColor))?ev.textColor:'';
       var chipStyle='';
-      if(clr)chipStyle=tc?('border-top-color:'+clr+';background:linear-gradient(180deg,'+clr+','+evTint(clr,0.86)+');'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
+      /* Step 59: a filled tile is the event's colour edge to edge; the fade it had
+         towards the bottom dropped its lower text below 4.5:1. */
+      if(clr)chipStyle=tc?('border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
       /* ev-chip-filled: the event has its own text colour, so it is a coloured
          tile in every theme; its text is chosen for that fill (step 44). */
       html+='<div class="ev-chip evt-'+u+(tc?' ev-chip-filled':'')+(isPast?' ev-chip-past':'')+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
-        +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';opacity:.78;"':'')+'>'+evChipDate(ev)+'</div>'
+        +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';"':'')+'>'+evChipDate(ev)+'</div>'
         +'<div class="ev-chip-name"'+(tc?' style="color:'+tc+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
         +'<div class="ev-chip-cd evu-'+u+'"'+(tc?' style="color:'+tc+';"':'')+'>'+evShort(cd.ms)+'</div>'
         +evDeleteButtonHTML(ev,who)+'</div>';
@@ -4287,11 +4433,14 @@ const EV_COLORS=['#1f3a5f','#2563eb','#0d9488','#15a34a','#e6a417','#e8850c','#e
 function evOkClr(c){return /^#[0-9a-fA-F]{6}$/.test(c||'');}
 function evTint(hex,a){if(!evOkClr(hex))return '';var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
 /* Event colour as text (step 46): the colour itself when it reads on white at
-   4.5:1, otherwise the lightest darker shade of the same colour that does. */
-function evInk(hex){
+   4.5:1, otherwise the lightest darker shade of the same colour that does. A tag
+   on a tint of the colour passes that tint as bg (step 66), so it reads there. */
+function evInk(hex,bg){
   if(!evOkClr(hex))return '';
   var rgb=[1,3,5].map(function(i){return parseInt(hex.slice(i,i+2),16);});
-  function reads(v){var l=v.map(function(x){x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});return 1.05/(0.2126*l[0]+0.7152*l[1]+0.0722*l[2]+0.05)>=4.5;}
+  function lum(v){var l=v.map(function(x){x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});return 0.2126*l[0]+0.7152*l[1]+0.0722*l[2];}
+  var under=lum(bg||[255,255,255]);
+  function reads(v){return (under+0.05)/(lum(v)+0.05)>=4.5;}
   if(reads(rgb))return hex;
   for(var i=49;i>0;i--){var v=rgb.map(function(x){return Math.round(x*i/50);});if(reads(v))return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
   return '#000000';
@@ -4300,15 +4449,43 @@ function evInk(hex){
    card, otherwise the darkest lighter shade of the same colour that does.
    Measured against the card's hover tint (#242831; #161a24 at rest), so it
    reads on both. */
-function evInkDark(hex){
+function evInkDark(hex,bg,target){
   if(!evOkClr(hex))return '';
   var rgb=[1,3,5].map(function(i){return parseInt(hex.slice(i,i+2),16);});
   function lum(v){var l=v.map(function(x){x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});return 0.2126*l[0]+0.7152*l[1]+0.0722*l[2];}
-  var card=lum([36,40,49]);
-  function reads(v){return (lum(v)+0.05)/(card+0.05)>=4.5;}
+  var card=lum(bg||[36,40,49]),need=target||4.5;
+  function reads(v){return (lum(v)+0.05)/(card+0.05)>=need;}
   if(reads(rgb))return hex;
   for(var i=1;i<50;i++){var v=rgb.map(function(x){return Math.round(x+(255-x)*i/50);});if(reads(v))return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
   return '#ffffff';
+}
+/* The colour at alpha a over a solid base, as the eye sees a tint (step 66). */
+function evMix(hex,a,base){
+  if(!evOkClr(hex))return base.slice();
+  return [1,3,5].map(function(i,k){var c=parseInt(hex.slice(i,i+2),16);return Math.round(base[k]+(c-base[k])*a);});
+}
+/* An event tag's text on its 14% tint (step 66). Light: measured on the tint over
+   the greyer card of a finished task, so it reads on every card. Dark: a finished
+   card fades to 85%, which costs about an eighth of the contrast, so the shade
+   aims for 5.3:1 and still reads at 4.5:1 faded. */
+function evTagInk(hex){return evInk(hex,evMix(hex,0.14,[248,250,252]));}
+function evTagInkDark(hex){return evInkDark(hex,evMix(hex,0.14,[36,40,49]),5.3);}
+/* A fill under the event's own text colour (step 59): the colour itself when the
+   pair reads at 4.5:1, otherwise the nearest shade of it that does (darker under
+   light text, lighter under dark text), so the text colour the team chose stays. */
+function evFill(fill,text){
+  if(!evOkClr(fill)||!evOkClr(text))return fill||'';
+  function rgb(h){return [1,3,5].map(function(i){return parseInt(h.slice(i,i+2),16);});}
+  function lum(v){var l=v.map(function(x){x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});return 0.2126*l[0]+0.7152*l[1]+0.0722*l[2];}
+  function ratio(a,b){var x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
+  var f=rgb(fill),t=rgb(text);
+  if(ratio(f,t)>=4.5)return fill;
+  var darker=lum(t)>lum(f);
+  for(var i=1;i<=50;i++){
+    var v=f.map(function(x){return Math.round(darker?x*(50-i)/50:x+(255-x)*i/50);});
+    if(ratio(v,t)>=4.5)return '#'+v.map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+  }
+  return darker?'#000000':'#ffffff';
 }
 /* Class and style for text drawn in an event's colour. A colour too light for
    white gets ev-ink, which swaps in the darker shade in light mode only; a
@@ -4354,12 +4531,15 @@ function updateEvPreview(){
   const t=((document.getElementById('ev-tcolor')||{}).value||'');
   if(!c&&!t){el.style.display='none';el.innerHTML='';return;}
   const base=c||'#1f3a5f';
-  const bg=t?base:evTint(base,0.14);
-  const tx=t||base;
+  const bg=t?evFill(base,t):evTint(base,0.14); /* as the tiles will draw it (step 59) */
+  /* Step 63: the card's own event tag, so a colour without a text colour shows
+     the readable shade the card will use, in either theme. */
+  const tag=t?('mb mb-event mb-event-filled" style="background:'+bg+';color:'+t+';')
+    :('mb mb-event mb-event-tint" style="background:'+bg+';--evc-ink:'+evTagInk(base)+';--evc-ink-d:'+evTagInkDark(base)+';');
   const nm=((document.getElementById('ev-name')||{}).value||'').trim()||'Event name';
   el.style.display='flex';
   el.innerHTML='<span class="ev-preview-lbl">Preview</span>'
-    +'<span class="mb" style="background:'+bg+';color:'+tx+';box-shadow:inset 0 0 0 1px '+evTint(base,0.4)+';"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(nm)+'</span>'
+    +'<span class="'+tag+'box-shadow:inset 0 0 0 1px '+evTint(base,0.4)+';"><i class="ti ti-confetti" style="font-size:11px;"></i> '+escHtml(nm)+'</span>'
     +'<span class="ev-preview-bar" style="background:'+base+';"></span>';
 }
 function openEventModal(id,who){
@@ -4845,7 +5025,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
    +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
    +  '<div class="ov-team-list" id="team-list"></div>'
-   +  '<div class="ov-team-note" id="team-note" hidden></div>'
    +'</section>'
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
@@ -5130,12 +5309,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(nxEl)MarcomUI.setHTML(nxEl,nx?'<button type="button" class="nx-btn" onclick="openMeetingCal()" title="Open Google Calendar">'
       +'<i class="ti ti-calendar-time" aria-hidden="true"></i> <span class="nx-l">Next meeting: </span>'
       +nx.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' '+esc((nx.title||'').slice(0,60))+'</button>':'');
-    var missing=typeof window.avlMissing==='function'?window.avlMissing():[];
-    var note=document.getElementById('team-note');
-    if(note){
-      MarcomUI.setHTML(note,missing.length?'Calendar not connected: '+esc(missing.join(', '))+'. Each person connects it in Settings.':'');
-      note.hidden=!missing.length;
-    }
   }
   window.ovRenderTeam=renderTeam;
 
@@ -5240,7 +5413,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       /* Step 52: the owner as their initial in their colour, as in Team today and the
          tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
       var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
-      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      return '<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey(event)" onclick="ovShowTask(\''+it.w+'\',\''+esc(it.t.id)+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;
@@ -5263,11 +5436,12 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     arr.sort(function(a,b){ return a.d-b.d; });
     if(!arr.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No upcoming events.</div>'); return; }
     MarcomUI.setHTML(el,arr.slice(0,8).map(function(it){
-      var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':it.d+' days');
+      /* Step 64: the big number says how many days; a word only where it adds one. */
+      var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':'');
       var urg=it.d<=7?' soon':'';
-      return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">days</div></div>'
+      return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
-        +'<div class="ov-cdn-tag">'+lbl+'</div>'+evDeleteButtonHTML(it.e,'boss')+'</div>';
+        +(lbl?'<div class="ov-cdn-tag">'+lbl+'</div>':'')+evDeleteButtonHTML(it.e,'boss')+'</div>';
     }).join(''));
   }
 
@@ -5411,6 +5585,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.renderOverview=renderOverview;
   window.ovGo=function(){ try{ switchTab('overview'); }catch(e){} renderOverview(); };
   window.ovGoto=function(w){ try{ switchTab(w); }catch(e){} try{ window.scrollTo({top:0,behavior:motionBehavior()}); }catch(e){} };
+  /* Step 60: a deadline row opens its person's tab at that task, marked. */
+  window.ovShowTask=function(w,id){ try{ showTask(w,id); }catch(e){ window.ovGoto(w); } };
+  /* Step 65: Enter or Space opens a deadline row, as a click does. */
+  window.ovRowKey=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); e.currentTarget.click(); } };
   window.ovCalPrev=function(){ ovCalM--; if(ovCalM<0){ ovCalM=11; ovCalY--; } renderCal(); };
   window.ovCalNext=function(){ ovCalM++; if(ovCalM>11){ ovCalM=0; ovCalY++; } renderCal(); };
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };
@@ -5492,7 +5670,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
 </style>
 <style id="ov-contrast-fix">
 /* ===== READABILITY / WCAG-AA CONTRAST FIXES (additive, generated) ===== */
-html:not(.dark) .b-green,html:not(.dark) .mb-together,html:not(.dark) .lieu-tag-earn{color:#147c3b !important;}
+html:not(.dark) .b-green,html:not(.dark) .lieu-tag-earn{color:#147c3b !important;}
 html:not(.dark) .b-amber{color:#b05109 !important;}
 html:not(.dark) .mb-high,html:not(.dark) .mb-overdue{color:#cd2323 !important;}
 html:not(.dark) .menu-cat{color:#9b6a06 !important;}
@@ -5548,10 +5726,6 @@ body.theme-dew .evhub-head,body.theme-o .evhub-head,body.theme-junior .evhub-hea
 body.theme-dew .evhub-btn:hover,body.theme-o .evhub-btn:hover,body.theme-junior .evhub-btn:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
 body.theme-dew .sub-tab.act,body.theme-o .sub-tab.act,body.theme-junior .sub-tab.act{color:var(--accent-ink);}
 body.theme-dew .widget:not(.lieu-widget):not(.sick-widget):not(.gcal-widget):not(.upcoming-widget):not(.wx-widget):not(.menu-widget):not(.clockoff-widget) .widget-title i,body.theme-o .widget:not(.lieu-widget):not(.sick-widget):not(.gcal-widget):not(.upcoming-widget):not(.wx-widget):not(.menu-widget):not(.clockoff-widget) .widget-title i,body.theme-junior .widget:not(.lieu-widget):not(.sick-widget):not(.gcal-widget):not(.upcoming-widget):not(.wx-widget):not(.menu-widget):not(.clockoff-widget) .widget-title i{color:var(--accent);}
-body.theme-dew .cal-day.today,body.theme-o .cal-day.today,body.theme-junior .cal-day.today{background:var(--accent-ink);color:#fff;}
-body.theme-dew .cal-day.today .cal-day-dot,body.theme-o .cal-day.today .cal-day-dot,body.theme-junior .cal-day.today .cal-day-dot{background:#fff;}
-body.theme-dew .cal-day.sel,body.theme-o .cal-day.sel,body.theme-junior .cal-day.sel{outline-color:var(--accent-ink);}
-body.theme-dew .cd-normal,body.theme-o .cd-normal,body.theme-junior .cd-normal{background:var(--accent);}
 body.theme-dew .meet-card:not(.none),body.theme-o .meet-card:not(.none),body.theme-junior .meet-card:not(.none){background:linear-gradient(135deg,var(--accent-ink),var(--accent-ink));}
 body.theme-dew .fpill.act-accent,body.theme-o .fpill.act-accent,body.theme-junior .fpill.act-accent{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
 body.theme-junior .stat-box.stat-accent .stat-num{color:var(--accent) !important;}
@@ -5834,7 +6008,7 @@ body.auth-locked{overflow:hidden;}
   }
   /* Step 36: lift the start-up cover once, when the screen behind it is settled:
      the workspace after sign-in, or the sign-in form for someone signed out. */
-  function liftCover(){ var c=el('boot-cover'); if(!c||c.classList.contains('done'))return; c.classList.add('done'); c.setAttribute('aria-hidden','true'); setTimeout(function(){ if(c.parentNode)c.parentNode.removeChild(c); },400); }
+  function liftCover(){ var c=el('boot-cover'); if(!c||c.classList.contains('done'))return; try{document.documentElement.classList.add('booted');}catch(e){} c.classList.add('done'); c.setAttribute('aria-hidden','true'); setTimeout(function(){ if(c.parentNode)c.parentNode.removeChild(c); },400); }
   window.uxpLiftCover=liftCover;
   function showGate(mode){ if(window.__rcMode){ liftCover(); return; } buildGate(); var g=el('auth-gate'); if(g)g.classList.add('show'); document.body.classList.add('auth-locked'); liftCover();
     if(mode==='noaccess'){ var f=el('auth-form'); if(f)f.innerHTML='<div class="auth-msg show err" style="margin:0 0 14px;">This account is not authorised for the workspace yet. Please ask your administrator to add your email under Settings.</div><button type="button" class="auth-btn" onclick="authSignOut()"><i class="ti ti-logout"></i> Sign out</button>'; } }
@@ -7034,7 +7208,6 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
 html.dark .dirq{background:#3b2b14;border-color:#7d5c26;}
 .dirq-h{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#8a4b12;}
 html.dark .dirq-h{color:#f0b95f;}
-.dirq-n{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#d98324;color:#fff;font-size:10px;font-weight:800;}
 .dirq-i{margin-top:8px;padding-top:8px;border-top:1px dashed #edd9bb;}
 .dirq-i:first-of-type{padding-top:0;border-top:0;}
 html.dark .dirq-i{border-top-color:#6d5124;}
@@ -7105,8 +7278,7 @@ html.dark .dirq-ok{color:#f0b95f;}
         +'<i class="ti ti-check"></i> Mark as handled</button></div>';
     }).join('');
     return '<div class="dirq" onclick="event.stopPropagation()"><div class="dirq-h">'
-      +'<i class="ti ti-user-star"></i> Director request'+(list.length>1?'s':'')
-      +'<span class="dirq-n">'+list.length+'</span></div>'+rows+'</div>';
+      +'<i class="ti ti-user-star"></i> '+(list.length>1?list.length+' Director requests':'Director request')+'</div>'+rows+'</div>';
   }
   /* The card markup is built as a string and swapped in wholesale, so the panel
      is added to that string rather than to the DOM: a redraw keeps it, and the
@@ -7663,18 +7835,13 @@ html.dark :is(#panel-overview,#settings-modal) .trq-status.s-reject{color:#f4a3a
 .salary-days-label{font-size:8.5px;color:rgba(255,255,255,.6);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
 .salary-divider{width:1px;height:48px;background:rgba(255,255,255,.15);margin:0 22px;flex:0 0 auto;}
 .sal-cell{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;flex:0 0 auto;}
-.sal-cell-prog{flex:1 1 auto;min-width:200px;}
 .sal-cell-label{font-size:10px;font-weight:800;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
 .sal-cell-label i{font-size:14px;color:var(--gold);-webkit-text-fill-color:var(--gold);}
 .sal-cell-value{font-size:16px;font-weight:700;color:#fff;line-height:1.2;white-space:nowrap;}
 .sal-cell-sub{font-size:11px;color:rgba(255,255,255,.58);font-weight:500;display:flex;align-items:center;gap:5px;line-height:1.3;}
 .sal-cell-sub i{font-size:12px;color:rgba(255,255,255,.7);}
-.sal-bar{height:11px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden;margin:6px 0 5px;}
-.sal-bar-fill{height:100%;border-radius:99px;width:0;background:linear-gradient(90deg,#e6a417,#ffd884);box-shadow:0 0 10px rgba(230,164,23,.6);transition:width .7s cubic-bezier(.4,0,.2,1);}
 #sal-badge{margin-left:auto;flex:0 0 auto;padding-left:18px;}
 .salary-badge{font-size:11px;font-weight:800;padding:6px 14px;border-radius:99px;white-space:nowrap;background:var(--gold);color:#3a2a00;}
-.salary-badge.sb-soon{background:#ffcf5c;color:#3a2a00;}
-.salary-badge.sb-reg{background:rgba(255,255,255,.16);color:rgba(255,255,255,.9);}
 .salary-badge.sb-pay{background:#34d399;color:#04361f;}
 
 /* ---- 3) DASHBOARD SUMMARY CARDS ------------------------------------- */
@@ -7739,7 +7906,6 @@ html.dark .stat-box.stat-accent .stat-ic{color:var(--accent-ondark,#8fb4dc);}
   .salary-strip{flex-wrap:wrap;gap:10px 16px;justify-content:flex-start;margin:2px 12px 12px;padding:14px 16px;}
   .salary-divider{display:none;}
   .sal-cell{flex:1 1 42%;}
-  .sal-cell-prog{flex:1 1 100%;max-width:none;}
   #sal-badge{margin-left:0;padding-left:0;}
 }
 @media(max-width:520px){
@@ -7901,9 +8067,9 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
            o:{role:'Photographer & Video Editor',icon:'ti-camera'},
            junior:{role:'Junior Events Coordinator',icon:'ti-user-plus'}};
   /* The header numbers are also the quickest filters for the board below. */
-  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> Active</button>'
-                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> Due Soon</button>'
-                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> Done</button>';
+  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">Active</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> <span class="mh-l">Due Soon</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">Done</span></button>';
   document.addEventListener('click',function(e){
     var chip=e.target&&e.target.closest?e.target.closest('.member-head .mh-stat[data-f]'):null; if(!chip)return;
     var panel=chip.closest('.tab-panel'); if(!panel)return;
@@ -8191,7 +8357,6 @@ html.dark .kb-col{background:rgba(255,255,255,.025);}
 .kb-col[data-status="done"]{border-top:3px solid var(--st-done);}
 .kb-col[data-status="canceled"]{border-top:3px solid var(--st-cancel);}
 .kb-col-head{border-bottom:none;padding-bottom:6px;}
-.kb-empty{border-style:dashed;background:transparent;}
 
 /* ---- 3) BADGES & ICON RHYTHM ---------------------------------------- */
 .mb,.badge{gap:4px;border-radius:99px;}
@@ -8384,9 +8549,6 @@ html.dark .kb-col{background:rgba(255,255,255,.02);}
 
 /* ---- 13) CALENDAR: keep 'today' readable on hover and select ---------- */
 .cal-day.today:not(.empty):hover{background:var(--navy2);color:#fff;}
-body.theme-dew .cal-day.today:not(.empty):hover,
-body.theme-o .cal-day.today:not(.empty):hover,
-body.theme-junior .cal-day.today:not(.empty):hover{background:var(--accent-ink,var(--navy2));color:#fff;filter:brightness(1.1);}
 .cal-day.coral-today:not(.empty):hover{background:var(--coral2)!important;color:#fff;}
 .cal-day.sick-day.today:not(.empty):hover{background:var(--sick);color:#fff;}
 .cal-day.today.sel{outline-color:var(--gold);}
@@ -8844,7 +9006,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
         var _ec=(ev.color&&/^#[0-9a-fA-F]{6}$/.test(ev.color))?ev.color:'';
         var _et=(_ec&&ev.textColor&&/^#[0-9a-fA-F]{6}$/.test(ev.textColor))?ev.textColor:'';
         var _eds='';
-        if(_ec)_eds=_et?(' style="--edc:'+_ec+';background:'+_ec+';color:'+_et+';border-style:solid;"'):(' style="--edc:'+_ec+';background:'+evTint(_ec,0.1)+';"');
+        if(_ec)_eds=_et?(' style="--edc:'+_ec+';background:'+evFill(_ec,_et)+';color:'+_et+';border-style:solid;"'):(' style="--edc:'+_ec+';background:'+evTint(_ec,0.1)+';"');
         h+='<div class="ews-tl-eventday"'+_eds+'><i class="ti ti-confetti"></i> EVENT DAY · '+esc(evDateLabel(ev))+'</div>';
         return;
       }
@@ -9144,7 +9306,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       var body=cards.length?cards.map(function(t){
         var o=t.__own||w;
         return '<div class="ews-ownwrap"><span class="ews-owner-chip oc-'+o+'"><i class="ti ti-user"></i> '+esc(nmW(o))+'</span>'+taskCardHTML(t,o)+'</div>';
-      }).join(''):'<div class="kb-empty">No tasks</div>';
+      }).join(''):'';
       return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="evwsColDrop(event,\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
     }).join('')+'</div>';
   }
@@ -11255,7 +11417,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');
       b.innerHTML=c
-        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
+        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var sc=document.getElementById('salary-card'),pc=((sc&&sc.getAttribute('data-pct'))||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
         :'<i class="ti ti-chevron-up"></i> Hide salary period';
     }
     /* The payday strip starts as one compact line; Show salary period opens it. */
@@ -11327,7 +11489,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     var me=window.__cur||{},rl={admin:'Admin',designer:'Designer',media:'Media',junior:'Junior'}[me.role]||me.role||'';
     p.innerHTML=''
       +(me.email?'<div class="uxp-mi-who"><i class="ti ti-user-circle"></i><span class="uxp-mi-name">'+esc(String(me.email).split('@')[0])+'</span>'+(rl?'<span class="uxp-mi-role">'+esc(rl)+'</span>':'')+'</div>':'')
-      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search (Ctrl K)</button>'
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search<span class="uxp-mi-kbd"> (Ctrl K)</span></button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpQuickAdd()"><i class="ti ti-plus"></i> New task</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-'+(document.documentElement.classList.contains('dark')?'sun':'moon')+'"></i> Dark mode: '+(document.documentElement.classList.contains('dark')?'on':'off')+'</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openSettings()"><i class="ti ti-settings"></i> '+(admin?'Team settings':'Settings')+'</button>'
@@ -11388,9 +11550,6 @@ html.dark .uxp-mi i{color:#8fb4dc;}
 .salary-dock .salary-info-sub{color:var(--muted);}
 .salary-dock .salary-divider{background:rgba(20,30,50,.16);}
 .salary-dock .sal-ring-bg{stroke:rgba(20,30,50,.12);}
-.salary-dock .sal-bar{background:rgba(20,30,50,.14);}
-.salary-dock .salary-badge.sb-reg{background:var(--green-light,#e7f6ec);color:#147c3b;}
-.salary-dock .salary-badge.sb-soon{background:var(--amber-light,#fdf3e0);color:#b45309;}
 .salary-dock .salary-badge.sb-pay{background:var(--gold);color:#003057;}
 /* dark mode: the page behind it is dark, so the original light text returns */
 html.dark .salary-dock .salary-strip{border-color:rgba(230,164,23,.35);}
@@ -11403,8 +11562,6 @@ html.dark .salary-dock .sal-cell-sub,
 html.dark .salary-dock .salary-info-sub{color:rgba(255,255,255,.6);}
 html.dark .salary-dock .salary-divider{background:rgba(255,255,255,.15);}
 html.dark .salary-dock .sal-ring-bg{stroke:rgba(255,255,255,.15);}
-html.dark .salary-dock .sal-bar{background:rgba(255,255,255,.16);}
-html.dark .salary-dock .salary-badge.sb-reg{background:rgba(255,255,255,.14);color:#d9f2e2;}
 </style>
 <style id="uxp-style6">
 /* ===== One design format for the Name bar and the Event Hub bar (all tabs) ===== */
@@ -11482,7 +11639,6 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
 .empty-state i{font-size:32px;color:var(--accent,var(--navy));opacity:.75;display:block;margin-bottom:8px;}
 .uxp-es-t{font-size:14.5px;font-weight:800;color:var(--text);margin-bottom:4px;}
 .uxp-es-s{font-size:12.5px;color:var(--muted);margin-bottom:13px;line-height:1.55;}
-.kb-empty{border:1.5px dashed var(--border);border-radius:10px;color:var(--muted);font-size:12px;padding:14px 8px;text-align:center;}
 </style>
 <script id="uxp-script8">
 /* ===== P1-P3: My Day, widget reorder, milestones, empty states ===== */
@@ -11493,7 +11649,9 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
   function tmr(){var n=new Date();n.setDate(n.getDate()+1);return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
   function members(){try{return MEMBER_ORDER.slice();}catch(e){return ['boss','dew','o','junior'];}}
   function nm(w){try{return memberName(w)||tabLabel(w);}catch(e){return w;}}
-  function act(w){try{return (tasksOf(w)||[]).filter(function(t){return t.status!=='done'&&t.status!=='canceled';});}catch(e){return [];}}
+  /* Step 65: a task ticked a moment ago stays listed until its card moves, so
+     this card does not shrink under the thumb either. */
+  function act(w){try{return (tasksOf(w)||[]).filter(function(t){return (t.status!=='done'&&t.status!=='canceled')||(typeof tcLingerFrom==='function'&&!!tcLingerFrom(t,w));});}catch(e){return [];}}
   function evs(w){try{return eventsOf(w)||[];}catch(e){return [];}}
   function fdt(d){try{return fmtDate(d);}catch(e){return d||'';}}
   function isOwn(w){var c=window.__cur||{};return c.workspace===w||(c.role==='admin'&&w==='boss');}
@@ -11546,11 +11704,11 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var dueTmr=t.filter(function(x){return x.dueDate===tomorrow;});
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
-    var greet=h<12?'Good morning':(h<17?'Good afternoon':'Good evening');
-    var title=isOwn(w)?(greet+', '+esc(nm(w))):(esc(nm(w))+"'s day");
-    /* Before 5pm the "due today" chip already gives today's focus, so the line
-       under the greeting only speaks when there is nothing due today. */
-    var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):(dueToday.length?'':'Here is the plan for today');
+    /* Step 64: the Overview says good morning; here the card says what it holds. */
+    var title=isOwn(w)?'Today':(esc(nm(w))+"'s day");
+    /* Before 5pm the chips and rows speak for today; after 5pm one line looks
+       ahead to tomorrow. */
+    var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):'';
     var rc=window.__rcCounts||{};
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
     /* A count of zero is not drawn: only what is there takes room. */
@@ -11793,8 +11951,6 @@ html.dark .evt-chip:hover{border-color:#8fb4dc;}
 html.dark .evt-chip.on{background:#3f6ea5;border-color:#5f8cc4;color:#fff;}
 .mb-shared{background:#e0edff;color:#1e40af;}
 html.dark .mb-shared{background:rgba(59,110,165,.28);color:#cfe0f5;}
-.mb-evt{background:#ede9fe;color:#5b21b6;}
-html.dark .mb-evt{background:rgba(139,92,246,.22);color:#c4b5fd;}
 .evb-groups{display:flex;flex-direction:column;gap:11px;}
 .evb-g{border:1px solid var(--border);border-radius:12px;overflow:hidden;}
 .evb-g-h{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--gray-light);font-size:12.5px;font-weight:800;color:var(--text);}
@@ -11834,7 +11990,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   /* known event names: from the shared board plus each member's Event Hub */
   function knownEvents(){
     var set={};
-    evtList().forEach(function(t){ if(t.eventLabel)set[t.eventLabel]=1; });
+    evtList().forEach(function(t){ var n=t.eventLabel||t.eventName; if(n)set[n]=1; });
     order().forEach(function(w){ try{(eventsOf(w)||[]).forEach(function(e){ if(e&&e.name)set[e.name]=1; });}catch(e){} });
     return Object.keys(set).sort();
   }
@@ -11845,7 +12001,13 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   window.evtFill=function(task,who){
     var on=!!(task&&task.__src==='event');
     var cb=document.getElementById('m-evt-on'); if(cb)cb.checked=on;
-    var lab=document.getElementById('m-evt-label'); if(lab)lab.value=(task&&(task.eventLabel||task.eventName))||'';
+    var lab=document.getElementById('m-evt-label');
+    if(lab){
+      lab.value=(task&&(task.eventLabel||task.eventName))||'';
+      /* Only a name someone typed stays put when the event picker changes (step 58). */
+      if(!lab.value||lab.value===((task&&task.eventName)||''))lab.setAttribute('data-auto',lab.value);
+      else lab.removeAttribute('data-auto');
+    }
     var dl=document.getElementById('m-evt-list');
     if(dl)dl.innerHTML=knownEvents().map(function(n){return '<option value="'+esc(n)+'">';}).join('');
     var pplBox=document.getElementById('m-evt-people');
@@ -12466,6 +12628,15 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var c=cfgOf(w)||{};
     var u=document.getElementById('gcs-url'); if(u&&document.activeElement!==u)u.value=c.url||'';
     var s2=document.getElementById('gcs-secret'); if(s2&&document.activeElement!==s2)s2.value=c.secret||'';
+    /* Step 64: who still has to connect, here in Settings instead of on the
+       Overview. Boss sees the team; everyone else sees their own calendar. */
+    var tm=document.getElementById('gcs-team');
+    if(tm){
+      if((window.__cur||{}).role==='admin'){
+        var miss=typeof window.avlMissing==='function'?window.avlMissing():[];
+        tm.textContent=miss.length?('Not connected yet: '+miss.join(', ')+'. Each person connects their own calendar here.'):'Everyone\'s calendar is connected.';
+      }else tm.textContent=gcsConfigured(w)?'Your calendar is connected.':'Your calendar is not connected yet.';
+    }
 
   };
   function inject(){
@@ -12476,6 +12647,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     d.style.cssText='margin-top:14px;padding-top:14px;border-top:1px solid var(--border);';
     d.innerHTML='<label class="form-label"><i class="ti ti-calendar-cog" style="margin-right:5px;"></i> Google Calendar sync ('+esc(nm(w))+')</label>'
       +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;">Create events automatically when you add a task, and remove them when the task is deleted. Follow google-apps-script/SETUP.md, then paste your Web app URL below.</div>'
+      +'<div class="gcs-team" id="gcs-team" role="status"></div>'
       +'<input class="form-input" id="gcs-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:6px;">'
       +'<input class="form-input" id="gcs-secret" type="text" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Secret phrase (must match the script)" style="margin-bottom:6px;">'
 
@@ -12776,7 +12948,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .kb-col-body .task-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
 .task-card{border-left-width:4px;transition:var(--dm-trans),transform .16s var(--ease),box-shadow .18s var(--ease),border-color .16s;}
 .task-card.kb-dragging{opacity:.4;transform:scale(.98) rotate(-.4deg);box-shadow:var(--shadow-lg);}
-.kb-empty{border:1.5px dashed var(--border-strong);color:var(--muted);background:linear-gradient(var(--surface-2),transparent);}
 
 /* ---- 11. Meeting / hero cards ---- */
 .meet-card{background:var(--grad-brand);box-shadow:var(--shadow-brand);}
@@ -12915,7 +13086,6 @@ html.dark .kb-col{background:rgba(255,255,255,.035);}
 html.dark .kb-col-head{background:rgba(255,255,255,.03);}
 html.dark .kb-col-count{background:rgba(255,255,255,.10);border-color:var(--border);color:var(--text);}
 html.dark .kb-col.kb-over{background:rgba(240,179,35,.10);box-shadow:inset 0 0 0 2px rgba(240,179,35,.55),var(--shadow);}
-html.dark .kb-empty{border-color:var(--border-strong);background:rgba(255,255,255,.02);color:var(--muted);}
 html.dark .kb-col-body .task-card,html.dark .task-card{background:rgba(255,255,255,.06);border-color:var(--border);}
 html.dark .task-card:hover{background:rgba(255,255,255,.10);box-shadow:var(--shadow-lg);}
 html.dark .task-card.tc-pending,html.dark .task-card.tc-in-progress,html.dark .task-card.tc-waiting,
@@ -13209,7 +13379,6 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
 .kb-col-body{padding:12px 0 0!important;background:transparent!important;}
 .kb-col.kb-over{background:color-mix(in srgb,var(--c) 10%,transparent)!important;
   border-radius:16px!important;box-shadow:inset 0 0 0 2px var(--c)!important;}
-.kb-empty{background:transparent!important;}
 </style>
 <style id="light-2026">
 /* ============================================================
@@ -13364,7 +13533,6 @@ html:not(.dark) .app-header{background:#FFFFFF!important;
 
 /* the board stays frameless; cards carry the elevation */
 html:not(.dark) .kb-col,html:not(.dark) .kb-col[data-status]{background:transparent!important;box-shadow:none!important;}
-html:not(.dark) .kb-empty{background:transparent!important;border-color:rgba(16,24,40,.14)!important;}
 
 /* fields and rails need a hint of tone so they read on white */
 html:not(.dark) .form-input,html:not(.dark) .form-select,html:not(.dark) .form-textarea{

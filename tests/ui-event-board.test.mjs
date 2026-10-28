@@ -211,3 +211,15 @@ test('late helper loading, blocked storage and both empty messages work', () => 
   h.checkbox.checked = true; h.checkbox.listeners.change.call(h.checkbox);
   assert.match(h.body.innerHTML, /Finished/);
 });
+
+/* Step 58: a card made with the event picker alone carries eventName but no label. */
+test('a card with only the picked event\'s name is filed under that event, and found by its filter', () => {
+  const picked = {title: 'Order banners', eventName: 'School Open Day', status: 'pending', dueDate: '2026-11-02', owner: 'dew'};
+  const result = groups(sample.concat([picked]));
+  assert.deepEqual(result.groups.map(g => g.label), ['School Open Day'], 'not "Other"');
+  assert.equal(result.groups[0].open, 3);
+  assert.deepEqual(groups([picked], {filter: 'School Open Day'}).groups.map(g => g.tasks.length), [1]);
+  assert.equal(groups([{...picked, eventLabel: 'Open Day prep'}]).groups[0].label, 'Open Day prep', 'a typed label still wins');
+  assert.equal(groups([{title: 'Loose', status: 'pending'}]).groups[0].label, 'Other', 'no event at all is still "Other"');
+  assert.equal(context.window.MarcomEventBoard.labelOf(picked), 'School Open Day');
+});

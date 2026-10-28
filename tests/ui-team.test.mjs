@@ -111,13 +111,10 @@ test('Step 52: a person with nothing to flag fades back; anyone with a flag keep
   assert.match(label(cells(html)[0]),/^BOSS: clear\. 1 open\./,'the spoken summary is unchanged');
 });
 
-test('the not-connected note lists only members without a calendar and hides when all are connected',()=>{
-  let nodes=team({missing:['Boss','Eye']});
-  assert.match(nodes['team-note'].innerHTML,/Calendar not connected: Boss, Eye\./);
-  assert.equal(nodes['team-note'].hidden,false);
-  nodes=team({missing:[]});
-  assert.equal(nodes['team-note'].innerHTML,'');
-  assert.equal(nodes['team-note'].hidden,true);
+test('Team today no longer carries the calendar setup note; Settings does (step 64)',()=>{
+  const nodes=team({missing:['Boss','Eye']});
+  assert.equal(nodes['team-note'].innerHTML,'','nothing is written into the old note');
+  assert.doesNotMatch(nodes['team-list'].innerHTML+nodes['team-sum'].innerHTML,/not connected/i);
 });
 
 test('names are escaped, each cell opens that person, and sick days and the lieu balance stay in view',()=>{

@@ -286,7 +286,8 @@ test('a chip with its own text colour is marked as a coloured tile', () => {
   ], 'boss');
   const chip = name => html.split('<div class="ev-chip ').find(part => part.includes('>' + name + '<'));
   assert.match(chip('Tile'), /^evt-\w+ ev-chip-filled"/, 'a fill with its own text colour');
-  assert.match(chip('Tile'), /background:linear-gradient\(180deg,#d6336c,rgba\(214,51,108,0\.86\)\)/);
+  assert.match(chip('Tile'), /border-top-color:#d6336c;background:#d6336c;"/, 'the event colour edge to edge, no fade (step 59)');
+  assert.match(chip('Tile'), /class="ev-chip-date" style="color:#ffffff;">/, 'the date at full strength (step 59)');
   assert.match(chip('Tile'), /class="ev-chip-name" style="color:#ffffff;"/);
   assert.doesNotMatch(chip('Tint'), /ev-chip-filled/, 'a colour alone stays a flat row in light mode');
   assert.match(chip('Tint'), /border-top-color:#0d9488/);
@@ -342,6 +343,34 @@ test('every event colour has a shade that reads on the dark card, and a readable
   assert.match(c.evTextAttrs('ev-tl-name', '#e05a3d'), /^ class="ev-tl-name ev-ink ev-ink-d" style="color:#e05a3d;--evc-ink:#[0-9a-f]{6};--evc-ink-d:#[0-9a-f]{6};"$/,
     'coral needs a darker shade on white and a lighter one on the dark card');
   assert.doesNotMatch(c.evTextAttrs('ov-cdn-n', '#e6a417'), /ev-ink-d/, 'amber already reads on the dark card');
+});
+
+/* Step 59: a tile, label or event-day bar filled with the event's colour under its own text colour. */
+test('every event fill reads at 4.5:1 under the text colour the team chose, keeping its hue', () => {
+  const { context: c } = fixture();
+  vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
+  const texts = JSON.parse(source.match(/const EV_TEXT_COLORS=(\[[^\]]+\])/)[1].replace(/'/g, '"'));
+  assert.deepEqual(texts, ['#ffffff', '#16202e', '#fdf3da']);
+  for (const fill of presets.concat(['#4a9be0', '#556b2f', '#7a5c1e'])) for (const text of texts) {
+    const out = c.evFill(fill, text);
+    assert.ok(ratio(out, text) >= 4.5, fill + ' under ' + text + ' -> ' + out + ' reads at ' + ratio(out, text).toFixed(2));
+    if (ratio(fill, text) >= 4.5) { assert.equal(out, fill, fill + ' under ' + text + ' already reads, so it is kept'); continue; }
+    const a = fill.slice(1).match(/../g).map(h => parseInt(h, 16)), b = out.slice(1).match(/../g).map(h => parseInt(h, 16));
+    if (lum(text) > lum(fill)) {
+      assert.ok(b.every((v, i) => v <= a[i]), out + ' is a darker shade of ' + fill);
+      const k = Math.max(...b) / Math.max(...a);
+      assert.ok(b.every((v, i) => Math.abs(v - a[i] * k) <= 1), out + ' keeps the hue of ' + fill);
+    } else {
+      assert.ok(b.every((v, i) => v >= a[i]), out + ' is a lighter shade of ' + fill);
+      const i0 = a.indexOf(Math.min(...a)), k = (255 - b[i0]) / (255 - a[i0]);
+      assert.ok(b.every((v, i) => Math.abs((255 - v) - (255 - a[i]) * k) <= 1), out + ' keeps the hue of ' + fill);
+    }
+  }
+  assert.equal(c.evFill('#d6336c', '#ffffff'), '#d6336c', 'pink with white text already reads (4.62:1)');
+  assert.equal(c.evFill('', '#ffffff'), '', 'no colour, no fill');
+  for (const use of [`if(t)st=' style="background:'+evFill(c,t)+';color:'+t+';"';`, "border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'",
+    'const bg=t?evFill(base,t):evTint(base,0.14);', "background:'+evFill(_ec,_et)+';color:'+_et"])
+    assert.ok(source.includes(use), 'the card label, the tile, the form preview and the event-day bar all use it: ' + use);
 });
 
 test('the Timeline names and the Overview countdown numbers use the readable shade', () => {

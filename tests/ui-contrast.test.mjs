@@ -45,12 +45,12 @@ const pairs = [
   ['.fpill.act-navy', '#ffffff', '#003057'],
   ['.btn-teal', '#ffffff', '#0f766e'],
   // The person tabs' buttons left their person colour for navy in step 49.
-  ['.dirq-n', '#ffffff', '#b45309'],
+  // The Director request's count badge went in step 65: one quote and one action.
   ['#panel-boss :is(', '#366a9c', '#e9f2f9'],
   ['#panel-dew :is(', '#a25816', '#fbefe4'],
   ['#panel-o :is(', '#b73d0b', '#f8e8e2'],
   ['confirmReset', '#be123c', '#fde6ea'],
-  ['.mb-event', '#0b6e69', '#dbf0ef'],
+  // The teal event label went in step 63: a tag wears its event's colours or reads in ink.
   ['.myday-chip.warn', '#9a4a07', '#fbf0dc'],
   ['.menu-cat', '#7f5704', '#eef1f5'],
   ['::placeholder', '#5f6b7a', '#eef1f5'],
@@ -60,14 +60,9 @@ for (const [fragment, foreground, background] of pairs) {
   test(`light mode ${fragment} has at least 4.5:1 contrast`, () => {
     const rule = rules.find(({ selector }) => selector.includes(fragment));
     assert.ok(rule, `missing selector ${fragment}`);
-    if (fragment === '.dirq-n') {
-      // This override retains the existing white text and only changes its background.
-      assert.match(rule.declarations, /(?:^|;)\s*background:\s*#b45309\s*;/i);
-    } else {
-      const colour = rule.declarations.match(/(?:^|;)\s*color:\s*(#[\da-f]{3,6})\b/i);
-      assert.ok(colour, `${fragment} sets its foreground`);
-      assert.equal(hexColour(colour[1]), hexColour(foreground));
-    }
+    const colour = rule.declarations.match(/(?:^|;)\s*color:\s*(#[\da-f]{3,6})\b/i);
+    assert.ok(colour, `${fragment} sets its foreground`);
+    assert.equal(hexColour(colour[1]), hexColour(foreground));
     const ratio = contrast(foreground, background);
     assert.ok(ratio >= 4.5, `${fragment}: ${ratio.toFixed(2)}:1`);
   });
@@ -136,9 +131,7 @@ for (const [fragment, property, value, background] of darkPairs) {
   });
 }
 
-test('dark mode buttons with white text keep a dark enough background', () => {
-  const badge = darkRules.find(({ selector }) => selector.includes('.dirq-n'));
-  assert.match(badge.declarations, /background:\s*#b45309/i);
-  assert.ok(contrast('#ffffff', '#b45309') >= 4.5);
+test('dark mode buttons keep readable text on their fills', () => {
+  assert.ok(!darkRules.some(({ selector }) => selector.includes('.dirq-n')), 'the request badge went in step 65');
   assert.ok(contrast('#032b28', '#5eead4') >= 4.5, 'dark text on the light end of the teal gradient');
 });

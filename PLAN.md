@@ -1582,3 +1582,356 @@ them, and they ship with plan 5.
    change to how that widget is built on every tab.
 2. **Step 57:** recommended, include it (small, the same helper as step 46);
    or leave dark mode as it is for now.
+
+# Follow-up plan 6 (28 Oct 2026): what the third review and the walkthrough found, for Boss to approve
+
+Plan 5 went live on 28 Oct (PR #9) before the two independent checks
+returned, at Boss's request. Both are back:
+
+- **Scored visual review: 7/10** (the same as round two). It confirms the
+  iPhone header, one search, the Event Board, the initials on deadline rows,
+  the tab motion and the dark-mode event text. Keep: the Overview deadline
+  list and the tab pill. What holds the score at 7: the iPhone round buttons
+  cover row controls, and person tabs do not open on the person's work.
+- **Walkthrough:** a reviewer who had not seen the work added a task for Dew
+  on an iPhone. It worked, after a detour.
+
+Their reports, scripts and screenshots are in
+`.oil-ui/workspace-redesign/review55/` and `ux55/` (not committed).
+
+Approved by Boss on 28 Oct: every step (58 to 66), then a fourth independent
+review, merge and deploy; the round buttons slide away while scrolling
+(decision 2, A); a "For" line at the top of Add Task (decision 3); person
+tabs open on the tasks, with the Event Hub after them (decision 4).
+
+## What the checks found
+
+1. **Bug (older): a task shared with an event lands under "Other"** on the
+   Event Board until it is saved a second time. Confirmed in the code: a new
+   shared card takes its event group from the "Event name" box, which picking
+   the event does not fill, and the board groups only by that box
+   (`assets/event-board.js`).
+2. **Bug (older, Boss's tab only): the Deadlines legend** reads "Task" and
+   "Sick", but deadlines due soon are drawn red, so they look like sick days.
+   The other tabs' legend reads "Deadline" and "Due soon".
+3. **Readability in light mode:** the filled event tiles fade towards the
+   bottom, so their lower text drops to 4.0:1 on pink and 4.2:1 on olive, and
+   the tile dates (9.5px at 78% opacity) read at about 3.3:1. Four texts are
+   12.5px (the day summary rows, the director request lines, the event chip
+   names). My contrast scan skips text on a gradient, which is why it
+   reported zero; it will sample those too.
+4. **iPhone: the two round buttons** ("+" and Team Chat) sit in the lane of
+   each row's controls (the done tick, "⋯", the priority, delete). At most
+   scroll positions one of them covers a control, so a tap meant for a tick
+   can open Add Task or the chat.
+5. **Person tabs do not open on the person's work:** on iPhone the name card,
+   the Event Hub (391px), the sub-tabs, a full-width Add Task bar and the
+   filters come first, so the first task card starts about 1.6 screens down.
+   On a computer it starts at y=818 of 900.
+6. **Finding and adding:** opening a task from search or from an Overview
+   deadline switches tab but leaves the card off-screen and unmarked; a new
+   task saves without a word, often into a folded group; each tab keeps the
+   previous tab's scroll position; on iPhone the page behind the Add Task
+   sheet scrolls along.
+7. **Choosing who a task is for** appears only after ticking "Share this
+   card with the team".
+8. **Colour on cards:** "Due today" and "1d left" use exactly the Waiting
+   amber, and Medium priority a near twin; one event's tag is teal on one card
+   and pink on the next; person tags are one blue for everyone.
+9. **iPhone Overview:** Upcoming Deadlines shows no title, and its "7 days"
+   filter is cut off under the fold button. Overview deadline rows cannot be
+   reached with the keyboard.
+10. **Extras the review would remove:** the keyboard hints and "ESC" in the
+    iPhone search; "(Ctrl K)" in the iPhone "⋯" menu; the "N days" pills on
+    the Event Board (the big number already says it); the payday panel says
+    "2 days left" four ways; "Calendar not connected" inside Team today
+    (belongs in Settings); the iPhone full-width Add Task bar (the same sheet
+    as "+"); delete buttons shown at rest on event tiles and Event Board rows;
+    the second "Good morning, Boss"; the dashed "No tasks" box.
+11. **Polish:** card titles and left edges do not share one line; a widget's
+    name moves 54px right when it unfolds (the reorder arrows appear); the
+    Overview columns end 24px apart; a "⋯" alone on its own row; the director
+    request wears five decorations; priority labels at 10px; a square focus
+    ring in the round search field; three calendar styles; marking a task
+    done makes the next one jump under the thumb; the app opens white, then
+    navy, then light.
+
+Noted, not changed: the payday line above the announcement (it is the status
+line under the header on every tab; the announcement stays first in the
+Overview, as Boss decided on 24 Oct); a person's name, role and titles in
+their colour (step 49 kept these marks on purpose).
+
+## Steps
+
+- [x] **58. Bugs: the event a task belongs to, and the Deadlines legend**
+  - Files: `index.html` (saving a task, Boss's Deadlines legend),
+    `assets/event-board.js`, tests.
+  - Change: a shared task takes its event from the Event picker when the name
+    box is empty, and the Event Board falls back to the event's name, so no
+    task lands in "Other" by mistake. Boss's Deadlines legend matches the
+    other tabs (Deadline, Due soon) and sick days keep their own mark.
+  - Test: a shared task made with the picker alone shows under its event at
+    once; existing cards are unchanged; every dot colour has a legend entry.
+  - Done (28 Oct): picking an event now also fills a shared card's "Event
+    name" (unless someone typed their own name, which is never overwritten),
+    saving falls back to the picked event if the box is empty, and the Event
+    Board files a card by its event's name when it has no label, so cards
+    already saved that way leave "Other" too. The walkthrough's path, run
+    again on an iPhone screen: Order printed banners for Dew, School Open Day
+    picked, saved once, and School Open Day goes from 4 to 5 open with no
+    "Other" group. Every Deadlines calendar's legend now reads Deadline (navy
+    dot), Due soon (red dot) and Sick day (a tinted square, as a sick date
+    is drawn), on Boss's tab and the others. Noticed in dark mode, older and
+    left as it is: the navy deadline dot is faint on the dark card. Tests:
+    343/343 (three new).
+
+- [x] **59. Readable event tiles; no text under 13px**
+  - Files: `assets/workspace-ui.css`, tests; the contrast scan learns to
+    sample gradients.
+  - Change: the tiles keep each event's own colours but stop fading; their
+    dates read at 4.5:1 or better; the four 12.5px texts become 13px.
+  - Test: pixel-sampled contrast on every tile at 1440 and 390, both themes.
+  - Done (28 Oct): a filled tile is now its event's colour edge to edge, and
+    its date is drawn at full strength at 11px (it was 9.5px at 78%). One
+    thing the fade had hidden: some colour pairs the team chose never reached
+    4.5:1 even at the top of a tile, for example white on the light blue of
+    Open House (3.0:1). Where that happens, the tile, the task card's event
+    label, the event form's preview and the Run-up Timeline's event-day bar
+    now use the nearest shade of the same colour that reads (darker under
+    light text, lighter under dark text); the text colour the team chose
+    stays, and a pair that already reads is untouched. The event names, the
+    day summary rows and the director request lines are 13px. The contrast
+    scan now checks every colour of a gradient instead of skipping it: run
+    on the old tiles it finds what the review found (dates at 3.45:1, pink
+    names at 3.83:1); on the new ones, zero failures on every tab in both
+    themes, at 1440 and 390, in list and Timeline views. Tests: 345/345 (two
+    new; one step 44 test follows the solid tile).
+
+- [x] **60. After you add or open a task, you see it (decision 3)**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: saving says what happened ("Added for Dew · due 2 Nov", with
+    Show); opening a task from search or an Overview deadline scrolls to its
+    card and marks it for a moment; each tab opens at its top; on iPhone the
+    page behind a sheet stays still. If chosen, a "For" line at the top of Add
+    Task shows whose board the task goes to and lets Boss change it.
+  - Test: add a task from the Overview and from a person tab; open one from
+    search and from a deadline row; on a computer and an iPhone.
+  - Done (28 Oct): Add Task now opens with "For" at the top, for an admin
+    adding a task: it starts with the board you are on, choosing someone else
+    puts the task on their board (what was typed stays, and the form follows
+    that person: their event list and Dew's or O's request fields), and
+    "Several people (a shared card)" ticks the share option and shows its
+    people. A member adding to their own board, and anyone editing, does not
+    see it (Move to already moves a task). Saving now says what happened,
+    for example "Added for Dew · due 2 Nov", with Show, which opens that
+    person's tab at the new card and marks it with a ring that fades
+    (switching a hidden filter back to All if needed). A search result and
+    an Overview deadline row do the same, the search then opening the
+    editor as before, so the card is in view once it closes. Every tab now
+    opens at its top. On iPhone and iPad the page behind an open sheet stays
+    still while the sheet scrolls (checked with a real touch drag). Checked
+    end to end at 390x844 and 1440x900. Tests: 350/350 (five new; the search
+    and deadline row tests follow the new behaviour).
+
+- [x] **61. iPhone: the round buttons never cover a control (decision 2)**
+  - Files: `assets/workspace-ui.css`, `index.html`, tests.
+  - Test: the reviewer's check (every 40px of scroll at 390x664 and 390x844
+    on the Overview, Boss and Dew) finds no control under a round button
+    while scrolling.
+  - Done (28 Oct): on iPhone the round "+" and Team Chat buttons slide down
+    out of sight as soon as the page scrolls down, and come back as soon as
+    it scrolls up, near the top of the page, or while Team Chat is open;
+    from the moment they start to leave, a tap goes through to the card
+    underneath. With Reduce Motion they simply fade. iPads and computers are
+    unchanged. The reviewer's own check, rerun: covered positions went from
+    21 to 46 per page to 0 on Dew and 1 on the Overview and Boss, that one
+    being the very top of the page, where the buttons stay as decided.
+    Tests: 352/352 (two new).
+
+- [x] **62. Person tabs open on the person's work (decision 4)**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: on iPhone the name card slims to one line and the tasks come
+    before the Event Hub; the full-width Add Task bar goes (the round "+"
+    opens the same sheet); on computers the first row of cards sits above the
+    fold.
+  - Test: at 390x664 the first task card starts in the first screen; at
+    1440x900 the first full row of cards is above the fold; the Event Hub
+    keeps its coloured tiles.
+  - Done (28 Oct): on every person tab the Event Hub now comes after the
+    tasks, on every screen, and keeps its coloured tiles. On iPhone the
+    full-width Add Task bar is gone (the round "+" opens the same sheet), the
+    filters are one row that scrolls (an addition, as on the Overview), and
+    from 375px wide the name card is one line: initial, name, the three
+    counters with their icon and number (screen readers still hear Active,
+    Due Soon and Done) and the colour button; on 320px screens it keeps its
+    two rows. Measured at 390x664: the first task card now starts at 542 to
+    578px (1092 to 1128 before), just above the dock, which still covers
+    most of it; the trims in step 64 lift it further. At 1440x900 it starts
+    at 622px (818 before), so the first row of cards is above the fold.
+    iPhone widths 320 to 440 pass. Tests: 354/354 (two new).
+
+- [x] **63. Colour on a card means a status, a person or the event**
+  - Files: `assets/workspace-ui.css`, `index.html`, tests.
+  - Change: due-soon dates read in plain ink with a clock (overdue stays
+    red), so Waiting amber appears only on Waiting; Medium priority is
+    neutral; one event tag style in the event's own colour; person tags carry
+    the person's initial in their colour.
+  - Test: sample every pill colour on the cards of all four tabs.
+  - Done (28 Oct): due soon reads in bold ink with a clock; overdue and High
+    stay red. Medium priority, a pending upload, a shoot time and a revision
+    count are quiet facts; a request number and the old "Together" category
+    take the navy of the other facts. Every event tag, on personal and shared
+    cards alike, is one style in the event's own colours: its fill under its
+    own text colour, or a tint with a readable shade of the colour as text.
+    An event with no colour, or no longer on the calendar, gets a quiet grey
+    tag; the teal and violet labels are gone. Shared cards find their event
+    by name, and the Event form's preview shows the same tag. A shared card
+    shows each person's initial in their colour, then the names in ink.
+    The boards now also redraw when the events change, so a tag follows its
+    event. Found on the way: in dark mode Dew's design menu showed "Approved"
+    at 3.5:1 (dark green on near black); Approved and In progress now use
+    the theme's status colours. Sampled every tag on the cards of all four
+    tabs in both themes: colour is left only on statuses, people's initials
+    and events. Contrast scans: zero failures in both themes at 1440 and
+    390, Timeline included. Tests: 360/360 (seven new; the old teal pair
+    retired).
+
+- [x] **64. Trim (item 10)**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Test: each removed text is gone, nothing it pointed to is lost, and the
+    person's work moves up rather than leaving gaps.
+  - Done (28 Oct):
+    - Search: on iPhone the "ESC" chip is now a "Cancel" button (44px)
+      that closes the sheet; before, the only way out was tapping the dimmed
+      area. The keyboard hints row is gone there, and the placeholder is
+      shortened to fit beside Cancel. Computers keep "ESC" (now clickable)
+      and the hints. The "⋯" menu reads "Search" on touch screens.
+    - Event Board: no "N days" pill beside the big number ("1 day" is
+      singular); only Today and Tomorrow keep a word.
+    - Payday panel: the ring (days left, filling as the period passes), Next
+      Payday and Pay Period stay; the count of days gone, the second bar and
+      the "Soon" or "On track" badge are gone. "Payday!" still shows on the
+      day. On iPhone the panel is 152px tall (243 before), and on computers
+      the two cells sit side by side with their labels on one line.
+    - Calendar setup: the note moved from Team today to the Google Calendar
+      card in Settings. Boss sees who has not connected; everyone else sees
+      their own calendar. Team today is 22px shorter on computers.
+    - The iPhone full-width Add Task bar already went in step 62.
+    - Delete buttons: on touch screens they are removed (not just hidden)
+      from event tiles, Coming up rows and Timeline items, so nothing can be
+      tapped by accident. An event is deleted from its own page (tap the
+      tile); computers still show the button on hover and focus.
+    - Greeting: the Overview says "Good morning, Boss"; My day on your own
+      tab now reads "Today", and its filler line went too. Boss's first task
+      card on a 390x664 iPhone moves up from 568 to 542px.
+    - Empty columns: the dashed "No tasks" box is gone. An empty column is
+      its header and its 0, and opens a 56px drop area while a card is
+      dragged over it (checked with a real drag and drop). On iPhone each
+      empty column gives back 70px.
+    - Checks: nothing moved down on any tab at 390x664 or 1440x900. Contrast
+      scans: zero failures in both themes, Timeline included. iPhone widths
+      320 to 440 pass. Tests: 367/367 (seven new).
+
+- [x] **65. Polish (items 9 and 11)**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: the iPhone deadlines title and full filter row; deadline rows
+    reachable by keyboard; one set of left edges; a widget's name keeps its
+    place when it unfolds; the columns end together; card footers one height;
+    the director request as one quote and one action; priority at 13px; a
+    round focus ring; one calendar style; a finished task lingers a moment so
+    nothing jumps under the thumb; the app opens without the white flash.
+  - Test: measured edges and column ends; a recording of marking a task done.
+  - Done (28 Oct):
+    - iPhone deadlines: the title is back, with its fold button beside it,
+      and the four filters have a row of their own (all fit from 320px). The
+      first deadline row on a 390x664 screen moves from 389 to 439px.
+    - Deadline rows are buttons in the tab order: Enter or Space opens the
+      task, with a focus ring.
+    - Left edges: every Overview card title starts at the same point (Team
+      today now has the same icon chip: 79 to 93px). In light mode, deadline
+      rows, Coming up rows and Event Board groups and rows start at the
+      card's edge, like their labels (11 to 23px in before); their hover
+      tint reaches into the card's padding instead.
+    - A widget's name stays put when it unfolds (it moved 54px before); the
+      reorder arrows now follow the name.
+    - The Overview columns end together from 1100 to 1920px wide (24px
+      apart before).
+    - Card footers: a card with details ends in one bar, Details and "⋯",
+      one height (30px on computers, 40px on iPhone). A card without details
+      has no footer row; its "⋯" sits in the corner of its facts.
+    - Director request: one amber rule as the quote, a quiet label, the
+      request, the note, who and when, and one "Mark as handled". The tint,
+      badge, banner and dashed rule are gone; it is 144px tall (183 before),
+      117 on iPhone (149).
+    - Priority on deadline rows is 13px text beside a 13px date (10px pills
+      before); Low is no longer blue.
+    - The search field's focus ring is rounded, like the field.
+    - One calendar style: plain day numbers on the Overview too (no grey
+      tiles), today navy on every tab, and deadline dots navy everywhere, as
+      the legend says. On Dew's, O's and Eye's tabs both were in the
+      person's colour.
+    - A finished task lingers: once ticked, it stays where it is for 1.4
+      seconds, at its height, and "Today" above it waits too; then it moves.
+      Recorded at 390 and 1440: nothing under the thumb moves during that
+      moment. A quick second tick (undo) leaves it where it is.
+    - Opening: the font and icon style sheets no longer hold back the first
+      paint, and the page is navy until the cover lifts. With those style
+      sheets slow (1.5s), the first paint came at 1676ms (white until then);
+      it is now 112ms (navy), and the app is ready at 579ms instead of
+      2113ms. With fast style sheets both open alike.
+    - Checks: contrast scans zero failures in both themes, Timeline
+      included; iPhone widths and the tab bar pass. Tests: 376/376 (ten new).
+
+- [x] **66. Final check and a fourth independent review**
+  - Done (28 Oct):
+    - Final check: 376/376 tests. Contrast scans: zero failures in both
+      themes at 1440 and 390, Timeline included. iPhone widths 320 to 440 and
+      the tab bar pass, and so do the end-to-end checks of steps 58 to 65.
+    - Found and fixed on the way: a colour-only event's tag (School Open Day,
+      light blue) read at 4.00:1, because its text shade was measured on white
+      rather than on the tint it sits on. It is now measured on the tint, over
+      the greyer card of a finished task, and in dark mode aims for 5.3:1 so
+      it still reads at 4.5:1 when a finished card fades. The scans now
+      include cards tagged with colour-only events.
+    - Boss's question, why an event tag on the Boss tab did not match its
+      event's colour: three causes on the live site (plan 5). Teal text was
+      forced on any event with a colour but no text colour; a card linked to
+      its event by name got the default teal tag; and shared cards always used
+      a fixed teal tag. Step 63 fixes all three. Compared event by event with
+      the live code, every tag on Boss's tab now matches its Event Hub tile.
+    - Fourth walkthrough (independent reviewer, iPhone 390x844, its own path):
+      as the lead it found the School Open Day task with no owner, gave it to
+      Eye and confirmed it on Eye's tab. It completed the task, with three
+      hesitations and one wrong turn. Older behaviours, not changed by plan 6:
+      - a shared task with no owner is missing from Upcoming Deadlines and
+        Team today;
+      - tapping an event under "Coming up" opens the Boss tab, not the
+        event;
+      - an event's own page counts only cards linked to it;
+      - the assign menu on the Event Board keeps focus, so on a computer the
+        row looks unchanged until you click elsewhere;
+      - a shared task's row cuts its title, opens nothing and shows no
+        priority.
+      These go to Boss as a proposed follow-up plan. The repeated task names
+      it saw are the preview's demo data.
+    - Scored visual review: still running when Boss asked to go live; its
+      score and findings follow separately.
+    - Notes and evidence: `.oil-ui/workspace-redesign/evidence66/`, `ux66/`
+      and `review66/` (not committed).
+
+## Decisions needed from Boss (plan 6)
+
+1. **The plan:** recommended, approve steps 58 to 66; or only the bugs and
+   readability (58 to 60) for now.
+2. **iPhone round buttons:** A (recommended), keep both, but they slide away
+   while you scroll down and come back when you scroll up (Boss's 27 Oct
+   decision stands; at the very top of a page they still sit over the lower
+   right corner); or B, "+" joins the dock and Team Chat moves beside the
+   bell, so nothing ever floats over the work (this changes the 27 Oct
+   decision).
+3. **Who a task is for:** recommended, a "For" line at the top of Add Task:
+   it starts with the board you are on, and choosing someone else puts the
+   task on their board (choosing several makes a shared card, as now); or
+   keep today's form.
+4. **Person tabs:** recommended, the tasks first and the Event Hub after
+   them; or the Event Hub stays first but starts folded on iPhone.
