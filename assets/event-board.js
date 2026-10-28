@@ -2,6 +2,9 @@
 (function(root){
   'use strict';
   function finished(t){return t.status === 'done' || t.status === 'canceled';}
+  /* A card's event: its label, or the name of the event picked for it (step 58),
+     so a card made with the event picker alone never lands in "Other". */
+  function labelOf(t){return t.eventLabel || t.eventName || '';}
   function compare(a, b){return a < b ? -1 : (a > b ? 1 : 0);}
   function due(a, b){
     if(!a || !b)return a ? -1 : (b ? 1 : 0);
@@ -17,8 +20,8 @@
       return Array.isArray(people) ? people.some(Boolean) : !!people;
     }
     (tasks || []).forEach(function(t){
-      if(opts.filter && t.eventLabel !== opts.filter)return;
-      var label = t.eventLabel || 'Other';
+      if(opts.filter && labelOf(t) !== opts.filter)return;
+      var label = labelOf(t) || 'Other';
       var group = byLabel[label] || (byLabel[label] = {
         label:label, tasks:[], open:0, done:0, unassigned:0, nextDue:''
       });
@@ -44,5 +47,5 @@
     result.sort(function(a, b){return due(a.nextDue, b.nextDue) || compare(a.label, b.label);});
     return {groups:result, finishedCount:finishedCount};
   }
-  root.MarcomEventBoard = {groups:groups};
+  root.MarcomEventBoard = {groups:groups, labelOf:labelOf};
 })(window);

@@ -1088,8 +1088,9 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <button class="sick-mode-btn" id="sick-mode-btn" onclick="toggleSickMode()"><i class="ti ti-hand-finger"></i> <span id="sick-mode-label">Tap dates to mark sick: OFF</span></button>
           <div class="cal-grid" id="boss-cal-grid"></div>
           <div class="cal-legend">
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Task</div>
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--sick);"></div>Sick</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div>
+            <div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div>
           </div>
           <div class="cal-detail" id="boss-cal-detail" style="display:none;">
             <div class="cal-detail-title" id="boss-cal-detail-title"></div>
@@ -1772,7 +1773,7 @@ function memberPanelHTML(w){
   +    '<div class="widget gcal-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-event"></i> Google Calendar</div><button class="gcal-refresh" id="'+w+'-gcal-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-gcal-body"></div></div></div>'
   +    '<div class="widget upcoming-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-clock-hour-4"></i> Upcoming Events</div><button class="gcal-refresh" id="'+w+'-upcoming-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-upcoming-body"></div></div></div>'
   +    '<div class="widget pin-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-pin"></i> Pinned Notes</div></div><div class="widget-body"><input class="pin-search pin-search-input" placeholder="Search pinned notes..." oninput="pinSearchInput(this.value)" /><div class="pin-slot"></div></div></div>'
-  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
+  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div><div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
   +    '<div class="widget lieu-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-beach"></i> Day-off in Lieu</div><button class="btn btn-teal btn-sm" onclick="openLieu(\''+w+'\')"><i class="ti ti-plus"></i> Add</button></div><div class="widget-body"><div class="lieu-balance"><div class="lieu-num" id="'+w+'-lieu-balance">0</div><div class="lieu-num-lbl">days available</div><div class="lieu-split"><span>Earned: <b id="'+w+'-lieu-earned">0</b></span><span>Used: <b id="'+w+'-lieu-used">0</b></span></div></div><div class="lieu-records" id="'+w+'-lieu-records"></div></div></div>'
   +    '<div class="widget sick-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-heart-broken"></i> Sick Leave</div><button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset(\''+w+'\')"><i class="ti ti-refresh"></i> Reset Year</button></div><div class="widget-body"><div class="sick-balance"><div class="sick-num" id="'+w+'-sick-count">0</div><div class="sick-num-lbl" id="'+w+'-sick-year-label">days this year</div></div><div style="display:flex;gap:6px;margin:10px 0 4px;"><input type="date" id="'+w+'-sick-date-input" class="form-input" style="flex:1;padding:7px 10px;font-size:12px;" /><button onclick="addSickDay(\''+w+'\')" style="background:var(--sick);color:white;border:none;border-radius:var(--rsm);padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><i class="ti ti-plus"></i> Add</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pick any date to mark as sick leave</div><div class="sick-list" id="'+w+'-sick-list"></div></div></div>'
   +  '</div>'
@@ -2562,6 +2563,13 @@ function designEventName(){
   return event?(event.name||'Untitled'):'';
 }
 function syncDesignEvent(){
+  /* Step 58: a shared card's "Event name" follows the event picked here, unless
+     someone typed their own, so the card is filed under that event. */
+  var lab=document.getElementById('m-evt-label'),pick=document.getElementById('m-event');
+  if(lab&&pick&&(!lab.value.trim()||lab.value===lab.getAttribute('data-auto'))){
+    var ev=eventsOf(modalState.who).find(function(e){return e.id===pick.value;});
+    lab.value=ev?(ev.name||''):'';lab.setAttribute('data-auto',lab.value);
+  }
   if(modalState.who!=='dew'||modalState.taskType!=='role')return;
   var brand=document.getElementById('m-dz-brand');
   if(!brand.value.trim()||brand.value===brand.getAttribute('data-auto')){
@@ -2752,7 +2760,9 @@ function saveTask(){
   const evtOn=!!(document.getElementById('m-evt-on')||{}).checked;
   const wasEvent=isEventTask(old);
   if(evtOn){
-    data.eventLabel=((document.getElementById('m-evt-label')||{}).value||'').trim();
+    /* Step 58: the Event Board files a shared card by this name; left empty, the
+       event picked above names it. */
+    data.eventLabel=((document.getElementById('m-evt-label')||{}).value||'').trim()||data.eventName||'';
     /* A shared card can name several responsible people. It then shows on each
        of their boards, and because it is a single document the status stays in
        sync for everyone. owner = the first person, kept for the Event Board's
@@ -11834,7 +11844,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   /* known event names: from the shared board plus each member's Event Hub */
   function knownEvents(){
     var set={};
-    evtList().forEach(function(t){ if(t.eventLabel)set[t.eventLabel]=1; });
+    evtList().forEach(function(t){ var n=t.eventLabel||t.eventName; if(n)set[n]=1; });
     order().forEach(function(w){ try{(eventsOf(w)||[]).forEach(function(e){ if(e&&e.name)set[e.name]=1; });}catch(e){} });
     return Object.keys(set).sort();
   }
@@ -11845,7 +11855,13 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   window.evtFill=function(task,who){
     var on=!!(task&&task.__src==='event');
     var cb=document.getElementById('m-evt-on'); if(cb)cb.checked=on;
-    var lab=document.getElementById('m-evt-label'); if(lab)lab.value=(task&&(task.eventLabel||task.eventName))||'';
+    var lab=document.getElementById('m-evt-label');
+    if(lab){
+      lab.value=(task&&(task.eventLabel||task.eventName))||'';
+      /* Only a name someone typed stays put when the event picker changes (step 58). */
+      if(!lab.value||lab.value===((task&&task.eventName)||''))lab.setAttribute('data-auto',lab.value);
+      else lab.removeAttribute('data-auto');
+    }
     var dl=document.getElementById('m-evt-list');
     if(dl)dl.innerHTML=knownEvents().map(function(n){return '<option value="'+esc(n)+'">';}).join('');
     var pplBox=document.getElementById('m-evt-people');

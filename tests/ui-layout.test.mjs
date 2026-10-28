@@ -1179,3 +1179,36 @@ test('in dark mode only, an event colour too dark for the card shows its lighter
   assert.doesNotMatch(css26,/html:not\(\.dark\)[^{]*\.ev-ink-d/,'light mode keeps step 46\'s shade');
   assert.match(source,/var ink=evInk\(hex\),inkD=evInkDark\(hex\),c=cls,st='color:'\+hex\+';';/,'both shades come from one helper call per text');
 });
+
+/* ===== Step 58: the event a shared task belongs to, and the Deadlines legend ===== */
+const step58=stepBlock(58);
+
+test('picking an event fills a shared card\'s "Event name", unless someone typed their own',()=>{
+  const el=(value='')=>({value,attrs:{},getAttribute(k){return k in this.attrs?this.attrs[k]:null;},setAttribute(k,v){this.attrs[k]=String(v);}});
+  const lab=el(),pick=el('open');
+  const c=vm.createContext({document:{getElementById:id=>({'m-evt-label':lab,'m-event':pick})[id]||null},
+    modalState:{who:'boss',taskType:'normal'},eventsOf:()=>[{id:'open',name:'School Open Day'},{id:'fair',name:'Christmas Fair'}]});
+  vm.runInContext(slice('function syncDesignEvent(){','function toggleRoleDetails('),c);
+  c.syncDesignEvent();
+  assert.equal(lab.value,'School Open Day','an empty box takes the picked event');
+  pick.value='fair';c.syncDesignEvent();
+  assert.equal(lab.value,'Christmas Fair','and follows the picker while it is still the automatic name');
+  pick.value='';c.syncDesignEvent();
+  assert.equal(lab.value,'','"None" clears it again');
+  lab.value='Open Day prep';pick.value='open';c.syncDesignEvent();
+  assert.equal(lab.value,'Open Day prep','a typed name is never overwritten');
+  assert.match(source,/data\.eventLabel=\(\(document\.getElementById\('m-evt-label'\)\|\|\{\}\)\.value\|\|''\)\.trim\(\)\|\|data\.eventName\|\|'';/,'saving falls back to the picked event too');
+  assert.match(source,/if\(!lab\.value\|\|lab\.value===\(\(task&&task\.eventName\)\|\|''\)\)lab\.setAttribute\('data-auto',lab\.value\);/,'an edited card keeps following the picker unless its name was typed');
+  assert.match(source,/evtList\(\)\.forEach\(function\(t\)\{ var n=t\.eventLabel\|\|t\.eventName; if\(n\)set\[n\]=1; \}\);/,'the board\'s filter lists events named either way');
+});
+
+test('every Deadlines legend tells a deadline, one due soon and a sick day apart',()=>{
+  const boss=slice('<div class="cal-grid" id="boss-cal-grid"></div>','<div class="cal-detail" id="boss-cal-detail"');
+  assert.match(boss,/style="background:var\(--navy\);"><\/div>Deadline<\/div>/);
+  assert.match(boss,/style="background:var\(--danger\);"><\/div>Due soon<\/div>/,'the red dot the calendar draws for a deadline due soon');
+  assert.match(boss,/<div class="cal-leg-sick"><\/div>Sick day<\/div>/);
+  assert.doesNotMatch(boss,/var\(--sick\);"><\/div>Sick</,'no red dot that reads like a deadline');
+  assert.match(source,/Due soon<\/div><div class="cal-leg-item"><div class="cal-leg-sick"><\/div>Sick day<\/div><\/div>/,'the member tabs\' calendars say the same');
+  assert.match(source,/const dc=info\.urgent\?'cd-urgent':/,'red dots still mean due soon or overdue');
+  assert.match(step58,/\.cal-leg-sick\{width:10px;height:10px;border-radius:3px;background:var\(--sick-light\);box-shadow:inset 0 0 0 1px var\(--sick\);\}/,'the same tint a sick day gets');
+});

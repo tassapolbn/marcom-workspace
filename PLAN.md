@@ -1663,7 +1663,7 @@ their colour (step 49 kept these marks on purpose).
 
 ## Steps
 
-- [ ] **58. Bugs: the event a task belongs to, and the Deadlines legend**
+- [x] **58. Bugs: the event a task belongs to, and the Deadlines legend**
   - Files: `index.html` (saving a task, Boss's Deadlines legend),
     `assets/event-board.js`, tests.
   - Change: a shared task takes its event from the Event picker when the name
@@ -1672,6 +1672,18 @@ their colour (step 49 kept these marks on purpose).
     other tabs (Deadline, Due soon) and sick days keep their own mark.
   - Test: a shared task made with the picker alone shows under its event at
     once; existing cards are unchanged; every dot colour has a legend entry.
+  - Done (28 Oct): picking an event now also fills a shared card's "Event
+    name" (unless someone typed their own name, which is never overwritten),
+    saving falls back to the picked event if the box is empty, and the Event
+    Board files a card by its event's name when it has no label, so cards
+    already saved that way leave "Other" too. The walkthrough's path, run
+    again on an iPhone screen: Order printed banners for Dew, School Open Day
+    picked, saved once, and School Open Day goes from 4 to 5 open with no
+    "Other" group. Every Deadlines calendar's legend now reads Deadline (navy
+    dot), Due soon (red dot) and Sick day (a tinted square, as a sick date
+    is drawn), on Boss's tab and the others. Noticed in dark mode, older and
+    left as it is: the navy deadline dot is faint on the dark card. Tests:
+    343/343 (three new).
 
 - [ ] **59. Readable event tiles; no text under 13px**
   - Files: `assets/workspace-ui.css`, tests; the contrast scan learns to
