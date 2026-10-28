@@ -2931,12 +2931,22 @@ function taskColDrop(e,who,status){e.preventDefault();var c=e.currentTarget;if(c
 function taskCardClick(e,who,id){ if(e.target&&e.target.closest&&e.target.closest('button,select,a,input,label,.tcard-sel'))return; openEdit(who,id); }
 window.__tcOpen={};
 window.tcToggleDetails=function(btn,key){
-  var det=btn.nextElementSibling;
+  var card=btn.closest?btn.closest('.task-card'):null;
+  var det=card?card.querySelector('.tc-details'):btn.nextElementSibling;
   var open=!(det&&det.classList.contains('open'));
   if(det)det.classList.toggle('open',open);
   btn.classList.toggle('open',open);
   btn.setAttribute('aria-expanded',open?'true':'false');
   window.__tcOpen[key]=open;
+};
+/* Step 50: "⋯" shows or hides a card's action row, and the choice survives a redraw. */
+window.__tcActs={};
+window.tcToggleActs=function(btn,key){
+  var card=btn.closest?btn.closest('.task-card'):null; if(!card)return;
+  var open=!card.classList.contains('acts-open');
+  card.classList.toggle('acts-open',open);
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  window.__tcActs[key]=open;
 };
 function kbFilterPass(t,filter){
   if(filter==='soon')return isSoon(t);
@@ -3032,7 +3042,8 @@ function taskCardHTML(task,who){
      role's own controls and the details. The other actions wait in a quiet
      row at the foot. Every control and handler is the one the card always had. */
   const doneLbl=status==='done'?'Mark as not done':'Mark as done';
-  return '<div class="task-card tc-'+status+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
+  const actsOpen=!!(window.__tcActs&&window.__tcActs[who+'_'+task.id]);
+  return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
       +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
       +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+doneLbl+'" aria-label="'+doneLbl+'"><i class="ti ti-check"></i></button>'
@@ -3040,9 +3051,14 @@ function taskCardHTML(task,who){
     +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
     +'</div>'+roleHtml
-    +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button><div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
-    +'<div class="task-foot">'+moveSelectHTML(who,task)
+    /* Step 50: at rest one bar, Details on the left and "⋯" on the right; "⋯"
+       opens the action row under it. A click on the card still opens the task. */
+    +'<div class="tc-bar">'
+      +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>':'')
+      +'<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>'
+    +'</div>'
+    +'<div class="task-foot">'+statusSelectHTML(who,task).replace('class="tcard-sel"','class="tcard-sel tc-row-sel"')+moveSelectHTML(who,task)
       +'<span class="task-acts">'
         +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
         +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate" aria-label="Duplicate this task"><i class="ti ti-copy"></i></button>'
@@ -3050,6 +3066,7 @@ function taskCardHTML(task,who){
         +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete" aria-label="Delete this task"><i class="ti ti-trash"></i></button>'
       +'</span>'
     +'</div>'
+    +(detHtml?'<div class="tc-details'+(detOpen?' open':'')+'">'+detHtml+'</div>':'')
     +'</div>';
 }
 function kanbanHTML(tasks,who,filter){

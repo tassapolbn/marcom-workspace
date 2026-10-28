@@ -703,9 +703,9 @@ test('sidebar widgets keep their whole name, with the summary under it',()=>{
 
 /* ===== Step 40: task cards lead with the task ===== */
 const step40=stepBlock(40);
-function card(task,{who='dew',admin=true,soon=false}={}){
+function card(task,{who='dew',admin=true,soon=false,acts=false}={}){
   const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const context=vm.createContext({window:{__cur:admin?{role:'admin'}:{role:'designer',workspace:who}},
+  const context=vm.createContext({window:{__cur:admin?{role:'admin'}:{role:'designer',workspace:who},__tcActs:acts?{[who+'_'+task.id]:true}:{}},
     SC:{pending:{l:'Pending',i:'ti-circle'},waiting:{l:'Waiting',i:'ti-clock'},done:{l:'Done',i:'ti-check'}},
     DZ_STATUSES:['Brief Received'],MEMBER_ORDER:['boss','dew','o','junior'],
     daysUntil:()=>-1,isSoon:()=>soon,eventsOf:()=>[],evOkClr:()=>false,evTint:()=>'',isEventTask:()=>false,taskAssignees:()=>[],
@@ -1021,3 +1021,48 @@ test('in light mode a person colour fills no large area: plain name and Event Hu
   assert.ok(contrast('#ffffff','#003057')>=4.5&&contrast('#ffffff','#00264a')>=4.5,'white reads on the navy and its hover');
   assert.doesNotMatch(step49,/html\.dark/,'dark mode keeps its colours');
 });
+
+/* ===== Step 50: task cards are calm at rest ===== */
+const step50=stepBlock(50);
+
+test('at rest a card ends in one bar, Details and "⋯"; the action row and the details follow it',()=>{
+  const html=card(sample);
+  const bar=html.slice(html.indexOf('<div class="tc-bar">'),html.indexOf('<div class="task-foot">'));
+  assert.match(bar,/^<div class="tc-bar"><button type="button" class="tc-more" aria-expanded="false" onclick="event\.stopPropagation\(\);tcToggleDetails\(this,'dew_t1'\)">/,'Details on the left');
+  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" on the right');
+  const foot=html.slice(html.indexOf('<div class="task-foot">'),html.indexOf('<div class="tc-details'));
+  assert.match(foot,/^<div class="task-foot"><select class="tcard-sel tc-row-sel" title="Task status"/,'the row can carry the status menu for a status column');
+  for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
+  assert.ok(html.indexOf('tc-open-hint')<html.indexOf('tc-bar'),'a Director request lands above the bar');
+  assert.ok(html.indexOf('task-foot')<html.indexOf('tc-details'),'the action row opens right under "⋯", before the details');
+  assert.match(html,/^<div class="task-card tc-pending" draggable="true"/,'closed at rest');
+  const open=card(sample,{acts:true});
+  assert.match(open,/^<div class="task-card tc-pending acts-open" draggable="true"/,'a row left open stays open after a redraw');
+  assert.match(open,/class="tc-acts-btn" aria-expanded="true"/);
+  assert.doesNotMatch(card({...sample,description:'',links:[]}),/class="tc-more"/,'no Details button without details; "⋯" stays');
+});
+
+test('"⋯" opens and closes the row and remembers it; Details finds its own panel',()=>{
+  const classes=new Set(),attrs={},panel={classList:{contains:n=>false,toggle(){}}};
+  const cardEl={classList:{contains:n=>classes.has(n),toggle:(n,on)=>on?classes.add(n):classes.delete(n)},querySelector:s=>s==='.tc-details'?panel:null};
+  const btn={closest:s=>s==='.task-card'?cardEl:null,setAttribute:(k,v)=>{attrs[k]=v;},classList:{toggle(){}},nextElementSibling:null};
+  const c=vm.createContext({window:{}});c.window=c;
+  vm.runInContext(slice('window.__tcOpen={};','function kbFilterPass('),c);
+  c.tcToggleActs(btn,'dew_t1');
+  assert.ok(classes.has('acts-open'));assert.equal(attrs['aria-expanded'],'true');assert.equal(c.__tcActs.dew_t1,true);
+  c.tcToggleActs(btn,'dew_t1');
+  assert.ok(!classes.has('acts-open'));assert.equal(attrs['aria-expanded'],'false');assert.equal(c.__tcActs.dew_t1,false);
+  let opened=null;panel.classList={contains:()=>false,toggle:(n,on)=>{opened=on;}};
+  c.tcToggleDetails(btn,'dew_t1');
+  assert.equal(opened,true,'the panel is found through the card, now that Details sits in the bar');
+});
+
+test('the row stays hidden until "⋯"; in a status column the status menu waits in it',()=>{
+  assert.match(step50,/\.task-card:not\(\.acts-open\) \.task-foot\{display:none;\}/);
+  assert.match(step50,/\.task-card \.task-foot \.tc-row-sel\{display:none;\}/);
+  assert.match(step50,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
+  assert.match(step50,/\.kb-col \.task-card \.task-foot \.tc-row-sel\{display:inline-flex;\}/);
+  assert.match(media(step50,'max-width:600px'),/\.task-card \.tc-acts-btn\{width:40px;height:40px;\}/,'a full touch target on iPhone');
+  assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:auto;/,'"⋯" at the right end of the bar');
+});
+

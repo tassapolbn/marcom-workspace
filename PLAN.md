@@ -1339,7 +1339,7 @@ twice: in the header and in the "⋯" menu.
     five tabs. Dark mode unchanged. Tests: 324/324 (one new; three contrast
     entries for the removed buttons went).
 
-- [ ] **50. Task cards are calm at rest**
+- [x] **50. Task cards are calm at rest**
   - Files: `index.html` (the card's action row and a "⋯" button),
     `assets/workspace-ui.css`, tests.
   - Change: at rest a card shows its name and tick, one line of facts, and
@@ -1352,6 +1352,24 @@ twice: in the header and in the "⋯" menu.
     keyboard (Tab reaches the row and shows it); drag and drop between
     columns unchanged; spoken names unchanged; at 1440x900 more task names
     fit on the first screen of a person tab.
+  - Done (28 Oct): at rest a card is its name and tick, the facts, the role's
+    controls and one bar: Details on the left, "⋯" on the right. "⋯" opens the
+    action row under it (Move to… for Boss, calendar, duplicate, edit,
+    delete) and closes it again; an open row stays open through a live
+    refresh. Inside a status column the status menu sits in that row; elsewhere
+    it stays on the facts line. A click on the card still opens the task, so
+    editing is one click as before. One difference from the written plan:
+    "⋯" opens the row on computers too, instead of a mouse hover, because a
+    row appearing under the pointer would make every card below it jump as
+    you move down a column. Checked by mouse at 1440 and by touch on an
+    iPhone 13 screen: every action calls what it did before, Details opens
+    its own panel, and a dragged card still lands in the Waiting column. By
+    keyboard the order is tick, design status, Details, "⋯", then the row.
+    Cards are about 73px shorter (Dew's first card 269px to 196px; Dew's
+    board 226px shorter). At 1440x900 the count of task names fully on the
+    first screen stays at four per tab, since the board starts low on the page
+    and its first row was already in view; the gain shows once you scroll.
+    Contrast: zero failures. Tests: 327/327 (three new).
 
 - [ ] **51. The Overview: one heavy block, columns that end together**
   - Files: `index.html` (the Overview layout, Request Centre, Event

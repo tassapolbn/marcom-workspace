@@ -1310,3 +1310,20 @@ html:not(.dark) .evhub-head{background:transparent!important;background-image:no
 html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent{background:var(--navy,#003057)!important;background-image:none!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
 html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:hover{background:#00264a!important;border-color:#00264a!important;}
 html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
+
+/* Step 50: task cards are calm at rest */
+/* At rest a card is its name and tick, one line of facts, and one bar: Details
+   on the left, "⋯" on the right. "⋯" opens the action row under it, the same way
+   with a mouse, a finger or the keyboard; a click on the card still opens it. A
+   row that appeared on hover would make the cards below jump under the pointer. */
+.task-card .tc-bar{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px;}
+.task-card .tc-bar .tc-more{margin:0;}
+.task-card .tc-acts-btn{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
+.task-card .tc-acts-btn:hover,.task-card .tc-acts-btn:focus-visible,.task-card.acts-open .tc-acts-btn{background:var(--surface-3,rgba(16,24,40,.06));color:var(--text);}
+.task-card:not(.acts-open) .task-foot{display:none;}
+/* The status menu sits on the facts line, except in a status column: the column
+   names the status, so the menu waits in the action row. */
+.task-card .task-foot .tc-row-sel{display:none;}
+.kb-col .task-card .task-meta .tcard-sel{display:none;}
+.kb-col .task-card .task-foot .tc-row-sel{display:inline-flex;}
+@media(max-width:600px){.task-card .tc-acts-btn{width:40px;height:40px;}}
