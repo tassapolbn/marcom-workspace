@@ -633,9 +633,9 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
 }
 /* Phones: finger-sized buttons and no text under 11px. */
 @media(max-width:640px){
-  #panel-overview :is(.ov-fpill,.ov-mini-btn,.cal-arrow,.ov-search-clear,.ov-ann-act,.menu-week-toggle,.ov-dl-more,.ov-more-link),
+  #panel-overview :is(.ov-fpill,.ov-mini-btn,.cal-arrow,.ov-ann-act,.menu-week-toggle,.ov-dl-more,.ov-more-link),
   .tab-panel :is(.filter-tabs .fpill,.mh-stat,.evhub-btn,.uxp-drawer-btn){min-height:36px;}
-  #panel-overview :is(.ov-mini-btn,.cal-arrow,.ov-search-clear,.ov-ann-act),.tab-panel .evhub-btn.icon-only{min-width:36px;justify-content:center;}
+  #panel-overview :is(.ov-mini-btn,.cal-arrow,.ov-ann-act),.tab-panel .evhub-btn.icon-only{min-width:36px;justify-content:center;}
   .ov-cdn>.ev-chip-del,.ev-tl-item>.ev-chip-del{width:36px;height:36px;}
   .ev-chip>.ev-chip-del{width:32px;height:32px;top:4px;right:4px;}
   .ev-chip-date,.ev-chip-name{padding-right:34px;}
@@ -729,7 +729,6 @@ html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba
 html:not(.dark){--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);--shadow-hover:0 2px 4px rgba(16,24,40,.05),0 10px 22px -8px rgba(16,24,40,.14);}
 /* Raised on purpose: hover still deepens as cards lift, and search results float. */
 html:not(.dark) :is(.task-card,.evc-card,.rq-card):hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
-html:not(.dark) #panel-overview .ov-search-results{box-shadow:var(--shadow-lg);}
 /* One card radius: task cards were 14px and the Resources fold 18px. */
 .task-card,#panel-overview .ov-more{border-radius:var(--r-lg,16px)!important;}
 /* Decorative side rails go. Rails that carry meaning stay: task status, a pinned
@@ -1235,8 +1234,6 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
 }
 /* An announcement's edit, pin and delete read at 3:1 at least. */
 #panel-overview .ov-ann-act{color:var(--muted);}
-/* An empty search box has nothing to clear. */
-#panel-overview .ov-search-input:placeholder-shown~.ov-search-clear{visibility:hidden;}
 /* One event chip: a task that belongs to an event wears the event teal, never
    the violet of On hold. */
 .mb-evt{background:var(--teal-light);color:#0b6e69;}
@@ -1295,3 +1292,13 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
 }
 /* The smallest iPhones: the banknote and "2 days". */
 @media(max-width:360px){.header-right .uxp-sal-toggle :is(.uxp-sal-word,.uxp-sal-sep){display:none;}}
+
+/* Step 48: one search that finds everything */
+@media(max-width:600px){
+  /* The header search is one tap away on every tab, beside the bell. */
+  .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
+  html.dark .header-right .cmdk-trigger{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.85);}
+  .header-right .cmdk-trigger i{font-size:16px;}
+  /* The Overview's greeting gives way on a phone and its search box is gone. */
+  #panel-overview .ov-topbar{display:none;}
+}

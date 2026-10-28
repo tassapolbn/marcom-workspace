@@ -241,7 +241,7 @@ test('in light mode every card shares one calm shadow, and raised things keep th
   assert.doesNotMatch(tokens[1],/12px 30px/,'the floating card shadow is gone');
   assert.equal(tokens[1],'0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)','cards use the calm design-refresh shadow');
   assert.match(step28,/:is\(\.task-card,\.evc-card,\.rq-card\):hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'hover still deepens as a card lifts');
-  assert.match(step28,/\.ov-search-results\{box-shadow:var\(--shadow-lg\);\}/,'search results still float above the page');
+  /* The Overview's search results floated above the page here; that box went in step 48. */
 });
 
 test('cards share one radius, decorative rails go and meaningful rails stay',()=>{
@@ -832,7 +832,7 @@ test('on iPhone Team Chat opens as an even sheet below the header, and the two r
 
 test('small fixes from the second review',()=>{
   assert.match(step43,/#panel-overview \.ov-ann-act\{color:var\(--muted\);\}/,'announcement actions are visible');
-  assert.match(step43,/\.ov-search-input:placeholder-shown~\.ov-search-clear\{visibility:hidden;\}/);
+  /* The Overview's search box (and its clear button) went in step 48: one search in the header. */
   assert.match(step43,/\.mb-evt\{background:var\(--teal-light\);color:#0b6e69;\}/,'one event chip colour');
   assert.ok(contrast('#0b6e69','#d6f5f0')>=4.5);
   assert.match(step43,/body:not\(\.hdr-scrolled\) \.app-header\{box-shadow:inset 0 1px 0 rgba\(255,255,255,\.06\)!important;\}/);
@@ -957,4 +957,53 @@ test('the "⋯" menu and the bell panel open under their own button',()=>{
   assert.match(source,/document\.body\.classList\.toggle\('hdr-scrolled',\(window\.scrollY\|\|0\)>10\);\n      reanchor\(\);/,'and stays under it while the header scrolls');
   assert.match(source,/if\(open\)reanchor\(\);/);
   assert.match(source,/if\(open&&window\.uxpReanchor\)window\.uxpReanchor\(\);/);
+});
+
+/* ===== Step 48: one search that finds everything ===== */
+const step48=stepBlock(48);
+
+test('the finder covers every person: tasks and shared cards, events, notes and links',()=>{
+  const c=vm.createContext({MORDER:['boss','dew'],topicOf:t=>t.topic,nm:w=>({boss:'Boss',dew:'Dew'})[w],fdt:d=>d,
+    tOf:w=>w==='dew'?[{id:'d1',topic:'Poster for Open Day'},{id:'d2',topic:'Banner',description:'open day welcome'}]:[{id:'b1',topic:'Budget'}],
+    eOf:w=>w==='boss'?[{id:'e1',name:'School Open Day',date:'2026-11-04'}]:[],
+    nOf:w=>w==='dew'?[{id:'n1',title:'Ideas',content:'Open day photo wall'}]:[],
+    lkOf:w=>w==='boss'?[{id:'l1',title:'Open day brief',url:'#'}]:[]});
+  vm.runInContext(slice('  function marcomFind(q){','  /* ---------- master render'),c);
+  const found=JSON.parse(JSON.stringify(c.marcomFind('open day')));
+  assert.deepEqual(found.map(r=>r.kind+':'+r.w+':'+r.id),['event:boss:e1','link:boss:l1','task:dew:d1','task:dew:d2','note:dew:n1'],'person by person, in tab order');
+  assert.equal(found[0].sub,'Team event · 2026-11-04');
+  assert.deepEqual(JSON.parse(JSON.stringify(c.marcomFind('o'))),[],'two letters at least');
+});
+
+test('the header search lists the tabs you can see, by today\'s names, and what the finder finds',()=>{
+  const tab=(id,name,icon,hidden)=>({id,hidden,querySelector:s=>s==='.tab-name'?{textContent:name}:(s==='i.ti'?{className:'ti '+icon}:null)});
+  const tabs=[tab('tab-overview','Overview','ti-layout-grid'),tab('tab-boss','Boss','ti-user'),tab('tab-dew','Dew','ti-palette'),tab('tab-o','O','ti-camera',true),tab('tab-junior','Eye','ti-user-plus')];
+  const out={innerHTML:''},input={value:''},calls=[];
+  const c=vm.createContext({
+    document:{querySelectorAll:s=>s==='.tab-nav .tab-btn'?tabs:[],getElementById:id=>({'cmdk-input':input,'cmdk-results':out})[id]},
+    getComputedStyle:b=>({display:b.hidden?'none':'flex'}),escHtml:x=>String(x),
+    closeCmdk:()=>calls.push('close'),switchTab:w=>calls.push('tab:'+w),openEdit:(w,id)=>calls.push('edit:'+w+':'+id),ovGoto:w=>calls.push('goto:'+w),
+    setTimeout:f=>f(),highlightCmdk:()=>{},cmdkItems:[],cmdkSel:0});
+  c.window=c;c.marcomRoleOf=w=>({boss:'Marcom manager',dew:'Graphic Designer',junior:'Junior Events Coordinator'})[w];
+  c.marcomFind=q=>[{kind:'task',w:'dew',id:'t9',ic:'ti-clipboard-list',label:'Poster',sub:'Dew'},{kind:'note',w:'boss',id:'n2',ic:'ti-notes',label:'Ideas',sub:'Boss'}];
+  vm.runInContext('let cmdkItems=[],cmdkSel=0;'+slice('function cmdkActions(q){','function setCmdkSel(')+'\nthis.run=i=>cmdkItems[i].run();',c);
+  const titles=JSON.parse(JSON.stringify(c.cmdkActions('').map(a=>a.title)));
+  assert.deepEqual(titles,['New task','Go to Overview','Go to Boss','Go to Dew','Go to Eye','Toggle dark mode','Settings'],'a tab you cannot see is not offered');
+  assert.equal(c.cmdkActions('').find(a=>a.title==='Go to Dew').sub,'Graphic Designer','roles from Settings');
+  assert.doesNotMatch(slice('function cmdkActions(q){','function setCmdkSel('),/Best|best|Junior tab|bossTasks/,'nothing left of the old fixed list');
+  input.value='poster';c.renderCmdk();
+  assert.match(out.innerHTML,/<div class="cmdk-section">Tasks \(1\)<\/div>/);
+  assert.match(out.innerHTML,/<div class="cmdk-section">Notes \(1\)<\/div>/);
+  const n=(out.innerHTML.match(/class="cmdk-item"/g)||[]).length;
+  c.run(n-2);c.run(n-1);
+  assert.deepEqual(calls,['close','tab:dew','edit:dew:t9','close','goto:boss'],'a task opens in its editor; a note opens its tab');
+});
+
+test('one search on every screen: the header button on iPhone, no box on the Overview',()=>{
+  const phone=media(step48,'max-width:600px');
+  assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;[^}]*width:42px;height:42px;/,'the same size as the bell');
+  assert.match(phone,/#panel-overview \.ov-topbar\{display:none;\}/,'nothing left of the Overview\'s top bar on a phone');
+  assert.doesNotMatch(source,/ov-search|doSearch|ovClearSearch/,'the Overview\'s own search is gone');
+  assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)" aria-label="Search">/);
+  assert.match(source,/placeholder="Search tasks, events, notes or links"/);
 });

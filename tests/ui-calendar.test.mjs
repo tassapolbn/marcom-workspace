@@ -13,7 +13,7 @@ function calendar(){
     tOf:w=>[{dueDate:'2026-09-06',topic:w+' task'}],eOf:()=>[],sOf:()=>[],lOf:()=>[],isActive:()=>true,topicOf:t=>t.topic,
     MarcomUI:{setHTML:(el,html)=>{el.innerHTML=html;}}});
   vm.runInContext(source.slice(source.indexOf('  function calMembers(){'),source.indexOf('  /* ---------- deadlines ---------- */')),context);
-  vm.runInContext(source.slice(source.indexOf('  window.ovCalPrev='),source.indexOf('  window.ovSearch=')),context);
+  vm.runInContext(source.slice(source.indexOf('  window.ovCalPrev='),source.indexOf('  window.marcomFind=')),context);
   return {context,nodes};
 }
 

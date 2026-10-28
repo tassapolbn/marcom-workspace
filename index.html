@@ -862,7 +862,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <span class="hdr-context" id="hdr-context" style="display:none;"></span>
     </div>
     <div class="header-right">
-      <button class="cmdk-trigger" onclick="openCmdk()" title="Search and commands (Ctrl K)"><i class="ti ti-search"></i><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="cmdk-trigger" onclick="openCmdk()" title="Search and commands (Ctrl K)" aria-label="Search"><i class="ti ti-search"></i><span>Search</span><kbd>⌘K</kbd></button>
       <button class="dm-toggle" id="hdr-add" onclick="uxpQuickAdd()" title="New task" aria-label="New task"><i class="ti ti-plus"></i></button>
       <button class="dm-toggle" id="uxp-bell" onclick="uxpBellToggle()" title="Notifications" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" style="position:relative;"><i class="ti ti-bell"></i><span class="uxp-bell-badge" id="uxp-bell-badge" style="display:none;">0</span></button>
       <button class="dm-toggle" id="dm-btn" onclick="toggleDark()" title="Toggle dark mode"><i class="ti ti-moon" id="dm-icon"></i></button>
@@ -1430,7 +1430,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   <div class="cmdk-box">
     <div class="cmdk-search">
       <i class="ti ti-search"></i>
-      <input id="cmdk-input" placeholder="Search tasks or type a command..." oninput="renderCmdk()" autocomplete="off" />
+      <input id="cmdk-input" placeholder="Search tasks, events, notes or links" oninput="renderCmdk()" autocomplete="off" />
       <span class="cmdk-esc">ESC</span>
     </div>
     <div class="cmdk-results" id="cmdk-results"></div>
@@ -4017,16 +4017,18 @@ function openCmdk(){
 }
 function closeCmdk(){document.getElementById('cmdk-overlay').classList.remove('open');}
 function cmdkActions(q){
-  const acts=[
-    {icon:'ti-plus',cls:'',title:'New task in Boss',sub:'Create a task',run:()=>{closeCmdk();openAdd('boss');}},
-    {icon:'ti-plus',cls:'best',title:'New task in Best',sub:'Create a task',run:()=>{closeCmdk();openAdd('best');}},
-    {icon:'ti-user',cls:'',title:'Go to Boss tab',sub:'Marcom manager',run:()=>{closeCmdk();switchTab('boss');}},
-    {icon:'ti-palette',cls:'',title:'Go to Dew tab',sub:'Graphic Designer',run:()=>{closeCmdk();switchTab('dew');}},
-    {icon:'ti-camera',cls:'',title:'Go to O tab',sub:'Photographer & Video Editor',run:()=>{closeCmdk();switchTab('o');}},
-    {icon:'ti-user-plus',cls:'',title:'Go to Junior tab',sub:'Junior Events Coordinator',run:()=>{closeCmdk();switchTab('junior');}},
-    {icon:'ti-moon',cls:'',title:'Toggle dark mode',sub:'Appearance',run:()=>{closeCmdk();toggleDark();}},
-    {icon:'ti-settings',cls:'',title:'Team settings',sub:'Edit member names',run:()=>{closeCmdk();openSettings();}}
-  ];
+  /* One "New task" (the board you are on), one "Go to" per tab you can see, then
+     the two settings (step 48). Names and roles come from Settings, never fixed. */
+  const acts=[{icon:'ti-plus',cls:'',title:'New task',sub:'On the board you are on',run:()=>{closeCmdk();if(window.uxpQuickAdd)uxpQuickAdd();else openAdd('boss');}}];
+  document.querySelectorAll('.tab-nav .tab-btn').forEach(b=>{
+    if(!b.id||getComputedStyle(b).display==='none')return;
+    const w=b.id.replace(/^tab-/,''),name=((b.querySelector('.tab-name')||b).textContent||w).trim();
+    const ic=(((b.querySelector('i.ti')||{}).className||'').match(/ti-[a-z0-9-]+/)||['ti-layout-grid'])[0];
+    const role=w==='overview'?'The whole team':((window.marcomRoleOf&&window.marcomRoleOf(w))||'');
+    acts.push({icon:ic,cls:'',title:'Go to '+name,sub:role,run:()=>{closeCmdk();switchTab(w);}});
+  });
+  acts.push({icon:'ti-moon',cls:'',title:'Toggle dark mode',sub:'Appearance',run:()=>{closeCmdk();toggleDark();}});
+  acts.push({icon:'ti-settings',cls:'',title:'Settings',sub:'Names, colours and lunch',run:()=>{closeCmdk();openSettings();}});
   return q?acts.filter(a=>a.title.toLowerCase().includes(q)):acts;
 }
 function cmdkRow(idx,icon,cls,title,sub,tag){
@@ -4043,23 +4045,20 @@ function renderCmdk(){
     html+='<div class="cmdk-section">Actions</div>';
     acts.forEach(a=>{const i=cmdkItems.length;cmdkItems.push(a);html+=cmdkRow(i,a.icon,a.cls,a.title,a.sub,'');});
   }
-  if(q){
-    const matches=[];
-    [['boss',bossTasks],['best',bestTasks]].forEach(pair=>{
-      pair[1].forEach(t=>{
-        const hay=((t.topic||t.title||'')+' '+(t.description||'')).toLowerCase();
-        if(hay.includes(q))matches.push({who:pair[0],t:t});
+  if(q.length>=2&&window.marcomFind){
+    /* Everything the workspace holds, grouped (step 48). A task opens in its editor;
+       an event, note or link opens the tab it belongs to. */
+    const found=window.marcomFind(q),kinds=[['task','Tasks',12],['event','Events',6],['note','Notes',6],['link','Links',6]];
+    kinds.forEach(k=>{
+      const rows=found.filter(r=>r.kind===k[0]);
+      if(!rows.length)return;
+      html+='<div class="cmdk-section">'+k[1]+' ('+rows.length+')</div>';
+      rows.slice(0,k[2]).forEach(r=>{
+        const i=cmdkItems.length;
+        cmdkItems.push({run:r.kind==='task'?()=>{closeCmdk();switchTab(r.w);setTimeout(()=>openEdit(r.w,r.id),70);}:()=>{closeCmdk();if(window.ovGoto)ovGoto(r.w);else switchTab(r.w);}});
+        html+=cmdkRow(i,r.ic,'',escHtml(r.label),escHtml(r.sub),'');
       });
     });
-    if(matches.length){
-      html+='<div class="cmdk-section">Tasks ('+matches.length+')</div>';
-      matches.slice(0,12).forEach(mt=>{
-        const i=cmdkItems.length;const who=mt.who,t=mt.t;
-        cmdkItems.push({run:()=>{closeCmdk();switchTab(who);setTimeout(()=>openEdit(who,t.id),70);}});
-        const sub=(who==='boss'?'Boss':'Best')+(t.dueDate?' \u00b7 due '+t.dueDate:'')+(t.status?' \u00b7 '+t.status.replace('-',' '):'');
-        html+=cmdkRow(i,'ti-checkbox',who==='best'?'best':'',escHtml(t.topic||t.title||'(untitled)'),sub,who==='boss'?'Boss':'Best');
-      });
-    }
   }
   if(!cmdkItems.length)html='<div class="cmdk-empty">No matches found. Try another search.</div>';
   document.getElementById('cmdk-results').innerHTML=html;
@@ -4591,22 +4590,6 @@ html.dark body.theme-overview{background:linear-gradient(170deg,#0c1422 0%,#0e15
 #panel-overview .ov-topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
 #panel-overview .ov-hello-title{font-size:20px;font-weight:800;letter-spacing:-0.4px;}
 #panel-overview .ov-hello-sub{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
-#panel-overview .ov-search-box{position:relative;flex:1;min-width:240px;max-width:460px;display:flex;align-items:center;}
-#panel-overview .ov-search-box>i{position:absolute;left:14px;color:var(--muted);font-size:17px;}
-#panel-overview .ov-search-input{width:100%;border:1.5px solid var(--border);border-radius:99px;padding:11px 38px 11px 40px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:all .15s;}
-#panel-overview .ov-search-input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,95,.12);}
-#panel-overview .ov-search-clear{position:absolute;right:8px;background:var(--gray-light);border:none;width:26px;height:26px;border-radius:50%;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;}
-#panel-overview .ov-search-clear:hover{background:var(--danger-light);color:var(--danger);}
-#panel-overview .ov-search-results{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:8px;margin-bottom:16px;max-height:380px;overflow-y:auto;}
-#panel-overview .ov-sr-head{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding:6px 8px;}
-#panel-overview .ov-sr{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background .12s;}
-#panel-overview .ov-sr:hover{background:var(--gray-light);}
-#panel-overview .ov-sr-ic{width:32px;height:32px;border-radius:9px;background:var(--navy-light);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-html.dark #panel-overview .ov-sr-ic{color:#8fb4dc;}
-#panel-overview .ov-sr-b{flex:1;min-width:0;}
-#panel-overview .ov-sr-label{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#panel-overview .ov-sr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-#panel-overview .ov-sr-arrow{color:var(--gray-mid);font-size:16px;}
 
 #panel-overview .ov-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);padding:15px 16px;margin-bottom:16px;transition:var(--dm-trans);}
 #panel-overview .ov-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px;}
@@ -4655,7 +4638,7 @@ html.dark #panel-overview .ov-st-ok{color:#5fcf85;}
 /* grid */
 #panel-overview .ov-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
 @media(max-width:880px){#panel-overview .ov-grid{grid-template-columns:1fr;}}
-@media(max-width:520px){#panel-overview .ov-topbar{flex-direction:column;align-items:stretch;}#panel-overview .ov-search-box{max-width:none;}#panel-overview .ov-res{grid-template-columns:1fr;}}
+@media(max-width:520px){#panel-overview .ov-topbar{flex-direction:column;align-items:stretch;}#panel-overview .ov-res{grid-template-columns:1fr;}}
 
 /* master calendar */
 #panel-overview .ov-cal-nav{display:flex;align-items:center;gap:6px;}
@@ -4823,9 +4806,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'</div>'
    +'<div class="ov-topbar">'
    +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
-   +  '<div class="ov-search-box"><i class="ti ti-search"></i><input id="ov-search" class="ov-search-input" placeholder="Search tasks, events, notes, links..." oninput="ovSearch(this.value)" autocomplete="off"><button class="ov-search-clear" onclick="ovClearSearch()" title="Clear"><i class="ti ti-x"></i></button></div>'
    +'</div>'
-   +'<div class="ov-search-results" id="ov-search-results" style="display:none;"></div>'
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
    +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
    +  '<div class="ov-team-list" id="team-list"></div>'
@@ -5345,22 +5326,18 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   function saveAnn(items){ var d=db(); if(d)d.collection('dept_settings').doc('announcements').set({items:items},{merge:true}).catch(function(e){ console.error(e); }); }
 
   /* ---------- global search ---------- */
-  function doSearch(q){
-    var box=document.getElementById('ov-search-results'); if(!box)return;
+  /* One search for the whole workspace (step 48): every person's tasks and shared
+     cards, events, notes and links. The header search lists what it finds. */
+  function marcomFind(q){
     q=(q||'').trim().toLowerCase();
-    if(q.length<2){ box.style.display='none'; box.innerHTML=''; return; }
-    var res=[];
+    var res=[]; if(q.length<2)return res;
     MORDER.forEach(function(w){
-      tOf(w).forEach(function(t){ if((topicOf(t)+' '+(t.description||'')+' '+(t.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Task',ic:'ti-clipboard-list',label:topicOf(t),sub:nm(w)}); });
-      eOf(w).forEach(function(e){ if(((e.name||'')+' '+(e.notes||'')+' '+(e.category||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Event',ic:'ti-confetti',label:e.name||'Event',sub:'Team event'+(e.date?' · '+fdt(e.date):'')}); });
-      nOf(w).forEach(function(n){ if(((n.title||'')+' '+(n.content||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Note',ic:'ti-notes',label:n.title||'Untitled note',sub:nm(w)}); });
-      lkOf(w).forEach(function(l){ if(((l.title||'')+' '+(l.url||'')).toLowerCase().indexOf(q)>=0)res.push({w:w,type:'Link',ic:'ti-link',label:l.title||l.url||'Link',sub:nm(w)}); });
+      tOf(w).forEach(function(t){ if((topicOf(t)+' '+(t.description||'')+' '+(t.category||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'task',w:w,id:t.id,ic:'ti-clipboard-list',label:topicOf(t),sub:nm(w)}); });
+      eOf(w).forEach(function(e){ if(((e.name||'')+' '+(e.notes||'')+' '+(e.category||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'event',w:w,id:e.id,ic:'ti-confetti',label:e.name||'Event',sub:'Team event'+(e.date?' · '+fdt(e.date):'')}); });
+      nOf(w).forEach(function(n){ if(((n.title||'')+' '+(n.content||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'note',w:w,id:n.id,ic:'ti-notes',label:n.title||'Untitled note',sub:nm(w)}); });
+      lkOf(w).forEach(function(l){ if(((l.title||'')+' '+(l.url||'')).toLowerCase().indexOf(q)>=0)res.push({kind:'link',w:w,id:l.id,ic:'ti-link',label:l.title||l.url||'Link',sub:nm(w)}); });
     });
-    if(!res.length){ box.style.display='block'; box.innerHTML='<div class="ov-empty-sm">No matches found.</div>'; return; }
-    box.style.display='block';
-    box.innerHTML='<div class="ov-sr-head">'+res.length+' result'+(res.length>1?'s':'')+'</div>'+res.slice(0,25).map(function(r){
-      return '<div class="ov-sr" onclick="ovGoto(\''+r.w+'\')"><div class="ov-sr-ic"><i class="ti '+r.ic+'"></i></div><div class="ov-sr-b"><div class="ov-sr-label">'+esc(r.label)+'</div><div class="ov-sr-sub">'+r.type+' · '+esc(r.sub)+'</div></div><i class="ti ti-arrow-right ov-sr-arrow"></i></div>';
-    }).join('');
+    return res;
   }
 
   /* ---------- master render ---------- */
@@ -5382,8 +5359,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };
   window.ovPickDay=function(ds){ ovSel=ds; renderCal(); };
   window.ovCalToday=function(){var now=new Date();ovCalY=now.getFullYear();ovCalM=now.getMonth();ovSel=tdy();renderCal();};
-  window.ovSearch=function(v){ doSearch(v); };
-  window.ovClearSearch=function(){ var i=document.getElementById('ov-search'); if(i)i.value=''; var b=document.getElementById('ov-search-results'); if(b){ b.style.display='none'; b.innerHTML=''; } };
+  window.marcomFind=marcomFind;
+  window.marcomRoleOf=roleOf;
   window.ovAddAnnouncement=function(){
     var ta=document.getElementById('ov-ann-text'); if(!ta)return; var txt=ta.value.trim(); if(!txt)return;
     var pin=document.getElementById('ov-ann-pinnew');
@@ -10716,7 +10693,7 @@ html.dark .rc-review-sec-h .rc-review-edit{color:#93b8e8;}
 .uxp-nt-empty{padding:22px 16px;text-align:center;color:var(--muted);font-size:12.5px;}
 .uxp-nt-empty i{font-size:22px;display:block;margin-bottom:6px;opacity:.6;}
 /* readability: raise frequently read text to 12.5px minimum */
-.task-desc,.rq-dl-item,.rc-note,.trq-text,.tc-b,.ov-sr-label,.uxp-msg{font-size:12.5px!important;}
+.task-desc,.rq-dl-item,.rc-note,.trq-text,.tc-b,.uxp-msg{font-size:12.5px!important;}
 .form-label{font-size:12.5px;}
 .task-topic{font-size:13.5px;}
 /* mobile touch targets and spacing */

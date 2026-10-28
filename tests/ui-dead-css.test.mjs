@@ -23,7 +23,10 @@ const removed=[
   // Step 40: the status chip and the "close to deadline" dot on task cards.
   'tcard-sicon','dl-dot',
   // Step 43: the "DAY AGENDA" label above the selected day.
-  'ov-agenda-eyebrow'
+  'ov-agenda-eyebrow',
+  // Step 48: the Overview's own search box; the header search finds everything.
+  'ov-search','ov-search-box','ov-search-input','ov-search-clear','ov-search-results',
+  'ov-sr','ov-sr-head','ov-sr-ic','ov-sr-b','ov-sr-label','ov-sr-sub','ov-sr-arrow'
 ];
 // These names still occur in markup or JavaScript, including legacy renderers.
 const retained=[

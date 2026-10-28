@@ -1290,7 +1290,7 @@ twice: in the header and in the "⋯" menu.
     pinned row keeps payday instead of the logo, so the header never changes
     height under your finger.
 
-- [ ] **48. One search that finds everything**
+- [x] **48. One search that finds everything**
   - Files: `index.html` (the search palette and the Overview's search box),
     `assets/workspace-ui.css`, tests.
   - Change: the header search finds everything the Overview's box finds
@@ -1301,6 +1301,20 @@ twice: in the header and in the "⋯" menu.
   - Test: words from a Dew task, an O note, an event and a link are each
     found and open the right place; Ctrl K and "/" still open the search;
     on iPhone the Overview's first task row moves up by the box's height.
+  - Done (28 Oct): the header search now finds what the Overview's box found:
+    every person's tasks and shared cards, the team's events, notes and links,
+    grouped as Tasks, Events, Notes and Links. A task opens in its editor; an
+    event, note or link opens the tab it belongs to. Its actions come from the
+    tabs you can see, with names and roles from Settings: New task (on the
+    board you are on), Go to each tab, dark mode and Settings. The "Best"
+    entries and "Go to Junior tab" are gone, and a member is offered only
+    their own tabs. The Overview's search box and its results went, with
+    their styles. On iPhone a search button the size of the bell sits beside
+    it, and the Overview's empty top bar is hidden. Measured at 390x664: the
+    first deadline row now starts at 389px (491 before plan 5, 443 after
+    step 47), so a third row fits above the tab bar. The search field reads
+    "Search tasks, events, notes or links". Tests: 326/326 (three new; the
+    step 28, step 43 and calendar tests follow the removed box).
 
 - [ ] **49. Person colours as small marks only**
   - Files: `assets/workspace-ui.css` (`index.html` only where a colour is set
