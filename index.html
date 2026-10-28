@@ -922,18 +922,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         </div>
         <div class="meet-sub" id="meet-sub"></div>
       </div>
-      <!-- Event Hub -->
-      <div class="evhub" id="evhub">
-        <div class="evhub-head">
-          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
-          <div class="evhub-tools">
-            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
-            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
-            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
-          </div>
-        </div>
-        <div class="evhub-body" id="boss-evhub-body"></div>
-      </div>
       <div class="sub-nav">
         <button class="sub-tab act act-boss st-tasks" onclick="switchSub('boss','tasks',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>
         <button class="sub-tab act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
@@ -950,7 +938,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="bs-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>
           <div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="bs-done">0</div><div class="stat-lbl">Done</div></div></div>
         </div>
-        <div style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
+        <div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         <div class="filter-tabs">
           <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
@@ -984,6 +972,18 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="empty-state" id="boss-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>
       </div>
       <div class="sub-panel" id="boss-sub-sop" style="display:none;"></div>
+      <!-- Event Hub: after the tasks, so the tab opens on the work (step 62) -->
+      <div class="evhub" id="evhub">
+        <div class="evhub-head">
+          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
+          <div class="evhub-tools">
+            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
+            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
+            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
+          </div>
+        </div>
+        <div class="evhub-body" id="boss-evhub-body"></div>
+      </div>
     </div>
     <!-- BOSS SIDEBAR -->
     <div class="side-col">
@@ -1725,7 +1725,6 @@ function memberPanelHTML(w){
   +  '</div>'
   +  '<div class="two-col"><div class="main-col">'
   +    '<div class="meet-card none" id="'+w+'-meet-card" onclick="openMeetingCal()"><div class="meet-ico"><i class="ti ti-calendar-time"></i></div><div class="meet-body"><div class="meet-label">Next Meeting</div><div class="meet-title">No upcoming meetings</div></div><div class="meet-sub"></div></div>'
-  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="sub-nav">'
   +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
   +      '<button class="sub-tab st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>'
@@ -1740,7 +1739,7 @@ function memberPanelHTML(w){
   +        '<div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="'+w+'-s-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>'
   +        '<div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="'+w+'-s-done">0</div><div class="stat-lbl">Done</div></div></div>'
   +      '</div>'
-  +      '<div style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
+  +      '<div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '<div class="filter-tabs">'
   +        '<button class="fpill act-accent" data-who="'+w+'" data-f="all" onclick="setFilter(\''+w+'\',\'all\',this)">All Tasks</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="pending" onclick="setFilter(\''+w+'\',\'pending\',this)">Pending</button>'
@@ -1767,6 +1766,7 @@ function memberPanelHTML(w){
   +      '<div class="empty-state" id="'+w+'-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>'
   +    '</div>'
   +    (w==='junior'?'<div class="sub-panel" id="'+w+'-sub-sop" style="display:none;"></div>':'')
+  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +  '</div>'
   +  '<div class="side-col">'
   +    '<div id="'+w+'-role-extra"></div>'
@@ -8025,9 +8025,9 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
            o:{role:'Photographer & Video Editor',icon:'ti-camera'},
            junior:{role:'Junior Events Coordinator',icon:'ti-user-plus'}};
   /* The header numbers are also the quickest filters for the board below. */
-  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> Active</button>'
-                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> Due Soon</button>'
-                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> Done</button>';
+  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">Active</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> <span class="mh-l">Due Soon</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">Done</span></button>';
   document.addEventListener('click',function(e){
     var chip=e.target&&e.target.closest?e.target.closest('.member-head .mh-stat[data-f]'):null; if(!chip)return;
     var panel=chip.closest('.tab-panel'); if(!panel)return;

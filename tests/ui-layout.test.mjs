@@ -1328,3 +1328,28 @@ test('the slide uses the page\'s motion and becomes a plain fade with Reduce Mot
     'out of sight and out of the way of a tap at once');
   assert.match(step61,/@media\(max-width:600px\) and \(prefers-reduced-motion:reduce\)\{[^@]*body\.fab-away \.quickadd-fab,body\.fab-away \.chat-fab\{transform:none;\}/);
 });
+
+/* ===== Step 62: person tabs open on the person's work ===== */
+const step62=stepBlock(62);
+
+test('every person tab puts the tasks before the Event Hub',()=>{
+  const boss=slice('<div class="two-col">\n    <div class="main-col">','<div class="side-col">');
+  assert.ok(boss.indexOf('id="boss-sub-tasks"')<boss.indexOf('<div class="evhub" id="evhub">'),'Boss: the tasks first');
+  assert.ok(boss.indexOf('id="boss-sub-sop"')<boss.indexOf('<div class="evhub" id="evhub">'),'the Event Hub after every pane');
+  const tpl=slice("  +  '<div class=\"two-col\"><div class=\"main-col\">'","  +  '<div class=\"side-col\">'");
+  assert.ok(tpl.indexOf("-sub-tasks\">'")<tpl.indexOf("'<div class=\"evhub\">"),'the others: the tasks first');
+  assert.ok(tpl.indexOf("-sub-sop\" style=\"display:none;\"></div>':'')")<tpl.indexOf("'<div class=\"evhub\">"),'and the Event Hub last');
+});
+
+test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose counters are still heard',()=>{
+  assert.match(source,/<div class="addtask-bar" style="margin-bottom:0\.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd\('boss'\)">/);
+  assert.match(source,/'<div class="addtask-bar" style="margin-bottom:0\.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd\(\\''\+w\+'\\'\)">/);
+  const phone=media(step62,'max-width:600px');
+  assert.match(phone,/\.tab-panel \.addtask-bar\{display:none;\}/,'the round "+" opens the same sheet');
+  assert.match(phone,/\.tab-panel \.filter-tabs\{flex-wrap:nowrap;overflow-x:auto;/);
+  for(const l of ['Active','Due Soon','Done'])assert.match(source,new RegExp('<b>0</b> <span class="mh-l">'+l+'</span></button>'));
+  const one=media(step62,'min-width:361px) and (max-width:600px');
+  assert.match(one,/\.member-head \.member-head-stats\{order:1;flex:0 0 auto;margin-left:auto;gap:5px;\}/);
+  assert.match(one,/\.member-head \.mh-stat \.mh-l\{position:absolute;width:1px;height:1px;[^}]*clip:rect\(0 0 0 0\);/,'hidden from sight, not from screen readers');
+  assert.match(one,/\.member-head \.member-role\{display:none;\}/);
+});

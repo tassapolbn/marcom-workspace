@@ -1426,3 +1426,23 @@ html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}
   .quickadd-fab,.chat-fab,body.fab-away .quickadd-fab,body.fab-away .chat-fab{transition:opacity .12s linear,visibility 0s linear .12s;}
   body.fab-away .quickadd-fab,body.fab-away .chat-fab{transform:none;}
 }
+
+/* Step 62: person tabs open on the person's work */
+/* The Event Hub now follows the tasks in the page itself. On iPhone the Add
+   Task bar goes (the round "+" opens the same sheet) and the filters are one
+   row that scrolls, as on the Overview. */
+@media(max-width:600px){
+  .tab-panel .addtask-bar{display:none;}
+  .tab-panel .filter-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .tab-panel .filter-tabs::-webkit-scrollbar{display:none;}
+  .tab-panel .filter-tabs .fpill{flex:0 0 auto;white-space:nowrap;}
+}
+/* The name card is one line: initial, name, the three counters (their icon and
+   number; screen readers still hear "Active", "Due Soon", "Done") and the
+   colour button. On 320px screens it keeps step 38's two rows. */
+@media(min-width:361px) and (max-width:600px){
+  .member-head .member-role{display:none;}
+  .member-head .member-head-stats{order:1;flex:0 0 auto;margin-left:auto;gap:5px;}
+  .member-head .mh-stat{padding:4px 8px;gap:4px;}
+  .member-head .mh-stat .mh-l{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+}

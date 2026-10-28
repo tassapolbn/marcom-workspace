@@ -1748,7 +1748,7 @@ their colour (step 49 kept these marks on purpose).
     being the very top of the page, where the buttons stay as decided.
     Tests: 352/352 (two new).
 
-- [ ] **62. Person tabs open on the person's work (decision 4)**
+- [x] **62. Person tabs open on the person's work (decision 4)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: on iPhone the name card slims to one line and the tasks come
     before the Event Hub; the full-width Add Task bar goes (the round "+"
@@ -1757,6 +1757,18 @@ their colour (step 49 kept these marks on purpose).
   - Test: at 390x664 the first task card starts in the first screen; at
     1440x900 the first full row of cards is above the fold; the Event Hub
     keeps its coloured tiles.
+  - Done (28 Oct): on every person tab the Event Hub now comes after the
+    tasks, on every screen, and keeps its coloured tiles. On iPhone the
+    full-width Add Task bar is gone (the round "+" opens the same sheet), the
+    filters are one row that scrolls (an addition, as on the Overview), and
+    from 375px wide the name card is one line: initial, name, the three
+    counters with their icon and number (screen readers still hear Active,
+    Due Soon and Done) and the colour button; on 320px screens it keeps its
+    two rows. Measured at 390x664: the first task card now starts at 542 to
+    578px (1092 to 1128 before), just above the dock, which still covers
+    most of it; the trims in step 64 lift it further. At 1440x900 it starts
+    at 622px (818 before), so the first row of cards is above the fold.
+    iPhone widths 320 to 440 pass. Tests: 354/354 (two new).
 
 - [ ] **63. Colour on a card means a status, a person or the event**
   - Files: `assets/workspace-ui.css`, `index.html`, tests.
