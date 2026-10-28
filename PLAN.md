@@ -1958,6 +1958,14 @@ Each finding below was checked in the code and on the preview before this
 plan was written. The reports, scripts and screenshots are in
 `.oil-ui/workspace-redesign/review66/` and `ux66/` (not committed).
 
+Approved by Boss on 28 Oct: **only the bugs for now**: steps 67, 69 and 70,
+and the colour picker bug from step 72 (step 72a below), with nothing
+visual changed; this round ends with a final check of those fixes. Decisions
+recorded for when the other steps are built: the tick moves to the left of
+each card's name and both round buttons stay (step 68, A); the Payday line
+stays where it is (step 71); the greeting goes and the date stays (step 71).
+Steps 68, 71 to 76 and the fifth review (77) wait.
+
 ## What the checks found
 
 1. **Bug (older): un-ticking a finished task loses its status.** Ticking
@@ -2085,6 +2093,16 @@ browser tab, which the test browser does not show).
     "Coming up" to the School Open Day tasks; assigning shows the owner at
     once and the row does not move; the event page and the Event Board show
     the same number of open tasks.
+
+- [ ] **72a. Bug: a new person colour reaches the name and role (part of 72, approved now)**
+  - Files: `index.html` (the colour picker), tests.
+  - Change: when a person picks a colour, their name, role, greeting line
+    and Event Hub title take the readable shade of that colour, as their
+    initials and tab label already do. With no colour picked, nothing
+    changes. The step 21 rule keeps the default shades readable.
+  - Test: pick a colour on Boss's, Dew's and O's tabs: the name and role
+    change at once, in both themes, and read at 4.5:1 or better; with no
+    colour picked the page looks exactly as before.
 
 - [ ] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
