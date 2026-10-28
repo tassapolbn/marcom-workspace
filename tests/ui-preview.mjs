@@ -87,6 +87,16 @@ function fixtureBootstrap() {
   docs.set('dept_settings/team', { names: { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' } });
   docs.set('boss_settings/theme', { color: '#4B8FD0', textColor: 'auto' });
   docs.set('school_events/open-day', { title: 'School Open Day', name: 'School Open Day', date: date(7), category: 'School Event', color: '#4B8FD0', notes: 'Synthetic visual QA event' });
+  /* Events coloured the way the team colours theirs: a fill with its own text
+     colour (white, cream or dark), and one light colour with no text colour.
+     Without them the checks never see an event's chosen colours (step 44). */
+  [['teacher-day', 'Teacher Day', 4, '#e6a417', '#16202e'], ['sports-day', 'Sports Day', 21, '#d6336c', '#ffffff'],
+    ['book-week', 'Book Week', 25, '#0d9488', ''], ['alumni-reunion', 'Alumni Reunion', 42, '#556b2f', '#fdf3da'],
+  ].forEach(([id, name, offset, color, textColor]) => docs.set('school_events/' + id,
+    { title: name, name, date: date(offset), category: 'School Event', color, textColor, notes: 'Synthetic visual QA event' }));
+  /* Two of Boss's tasks linked to coloured events, so their labels are checked too. */
+  Object.assign(docs.get('boss_tasks/sample-0'), { eventId: 'open-day' });
+  Object.assign(docs.get('boss_tasks/sample-1'), { eventId: 'sports-day', eventName: 'Sports Day' });
   docs.set('dept_settings/announcements', { items: [{ id: 'preview', title: 'September planning', text: 'Coordinate the next campaign with your team.', body: 'Coordinate the next campaign with your team.', author: 'Boss', createdAt: Date.now() }] });
   function docSnapshot(key) {
     return { id: key.split('/').at(-1), ref: new Ref(key, true), exists: docs.has(key), metadata: { fromCache: false, hasPendingWrites: false }, data: () => docs.get(key), get: field => docs.get(key)?.[field] };
