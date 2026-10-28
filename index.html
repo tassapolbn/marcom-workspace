@@ -1119,6 +1119,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <button type="button" class="tt-btn" id="tt-standard" onclick="setTaskType('standard')"><i class="ti ti-list-check"></i> Standard Task</button>
         <button type="button" class="tt-btn" id="tt-role" onclick="setTaskType('role')"><i class="ti ti-clipboard-data"></i> <span id="tt-role-label">Request</span></button>
       </div>
+      <div class="form-group m-for" id="m-for-group" hidden><label class="form-label" for="m-for">For</label><select class="form-select" id="m-for" onchange="taskForChange(this.value)"></select></div>
       <div class="form-group"><label class="form-label">Task Title</label><input type="text" class="form-input" id="m-topic" placeholder="Main heading of the task" /></div>
       <div class="form-row form-row-3">
         <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="m-due" /></div>
@@ -2148,6 +2149,8 @@ initSalary();
 function switchTab(t){
   const panel=document.getElementById('panel-'+t),tab=document.getElementById('tab-'+t);
   if(!panel||!tab)return;
+  /* Step 60: a tab opens at its top, not at the last tab's scroll position. */
+  if(!panel.classList.contains('active')){try{window.scrollTo(0,0);}catch(e){}}
   document.querySelectorAll('.tab-panel').forEach(p=>{
     p.classList.toggle('active',p===panel);
     p.setAttribute('role','tabpanel');
@@ -2172,6 +2175,33 @@ function switchTab(t){
   }
 }
 function motionBehavior(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth';}
+/* Step 60: bring a task into view on its person's tab and mark it for a moment,
+   from search, an Overview deadline or the "Show" after saving. A board filter
+   that hides it goes back to All; opts.open then opens its editor as before. */
+function showTask(who,id,opts){
+  opts=opts||{};
+  var panel=document.getElementById('panel-'+who);
+  if(!panel){if(opts.open)openEdit(who,id);return;}
+  if(!panel.classList.contains('active'))switchTab(who);
+  var tries=0,reset=false;
+  (function find(){
+    var card=null;
+    panel.querySelectorAll('.task-card[data-id]').forEach(function(c){ if(!card&&c.getAttribute('data-id')===String(id))card=c; });
+    if(!card){
+      if(!reset&&filterOf(who)!=='all'){
+        reset=true;var all=document.querySelector('.fpill[data-who="'+who+'"][data-f="all"]');
+        if(all)setFilter(who,'all',all);
+      }
+      if(++tries<15)return setTimeout(find,80);
+      if(opts.open)openEdit(who,id);
+      return;
+    }
+    try{card.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){card.scrollIntoView();}
+    card.classList.remove('tc-found');void card.offsetWidth;card.classList.add('tc-found');
+    setTimeout(function(){card.classList.remove('tc-found');},2400);
+    if(opts.open)openEdit(who,id);
+  })();
+}
 document.addEventListener('keydown',function(e){
   const tab=e.target.closest&&e.target.closest('.tab-nav .tab-btn');
   if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
@@ -2495,6 +2525,11 @@ function uiToast(msg,opts){
   var sp=document.createElement('span');sp.className='uxp-toast-msg';sp.textContent=msg||'';t.appendChild(sp);
   var done=false;
   function kill(){ if(t.parentNode)t.parentNode.removeChild(t); }
+  if(opts.action&&!opts.undo){
+    var a=document.createElement('button');a.className='uxp-undo';a.type='button';a.textContent=opts.actionLabel||'Show';
+    a.onclick=function(){ if(done)return; done=true; kill(); try{opts.action();}catch(e){console.error(e);} };
+    t.appendChild(a);
+  }
   if(opts.undo){
     var b=document.createElement('button');b.className='uxp-undo';b.type='button';b.textContent=opts.undoLabel||'Undo';
     b.setAttribute('aria-label','Undo last action');
@@ -2611,6 +2646,7 @@ function openAdd(who){
   populateEventSelect(who,'');
   if(window.rcTaskPanel)try{rcTaskPanel(null);}catch(e){}
   setTaskType((who==='o'||who==='dew')?'role':'standard');
+  taskForFill(who);
   document.getElementById('modal').classList.add('open');
   autoGrowDesc();
   tfSync();
@@ -2621,6 +2657,7 @@ function openEdit(who,id){
   const task=(tasksOf(who)).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
+  taskForFill(who);
   resetRoleDetails();
   if(!window.__sopBatchOpening)window.__sopBatch=null;
   modalLinks=JSON.parse(JSON.stringify(task.links||[]));
@@ -2675,6 +2712,35 @@ function styleModal(who){
   const tt=document.getElementById('m-tasktype');
   if(who==='o'||who==='dew'){tt.style.display='flex';document.getElementById('tt-role-label').textContent=who==='o'?'Media request':'Design request';}
   else{tt.style.display='none';}
+}
+/* Step 60: Add Task says whose board the task goes to, and an admin can change
+   it: one person puts it on their board; several make a shared card, as before
+   through "Share this card with the team". Editing moves a task with Move to. */
+function taskForFill(who){
+  var g=document.getElementById('m-for-group'),sel=document.getElementById('m-for');
+  if(!g||!sel)return;
+  var people=(typeof MEMBER_ORDER!=='undefined'?MEMBER_ORDER:['boss','dew','o','junior']).filter(function(w){return !!refOf(w);});
+  g.hidden=((window.__cur||{}).role!=='admin')||!!modalState.editId||people.length<2;
+  if(g.hidden)return;
+  sel.innerHTML=people.map(function(w){return '<option value="'+w+'"'+(w===who?' selected':'')+'>'+escHtml(memberName(w))+'</option>';}).join('')
+    +'<option value="__shared">Several people (a shared card)</option>';
+}
+function taskForChange(v){
+  var cb=document.getElementById('m-evt-on');
+  if(v==='__shared'){
+    if(cb&&!cb.checked){cb.checked=true;if(window.evtToggle)window.evtToggle();}
+    var box=document.getElementById('m-evt-fields');
+    if(box)try{box.scrollIntoView({block:'nearest',behavior:motionBehavior()});}catch(e){}
+    return;
+  }
+  if(cb&&cb.checked&&window.evtPeopleSet)window.evtPeopleSet([v]);
+  if(v===modalState.who)return;
+  var ev=(document.getElementById('m-event')||{}).value||'';
+  modalState.who=v;
+  styleModal(v);
+  populateEventSelect(v,ev);
+  setTaskType((v==='o'||v==='dew')?'role':'standard');
+  if(window.evtPeopleSet&&!(cb&&cb.checked))window.evtPeopleSet([v]);
 }
 function setTaskType(mode){
   modalState.taskType=mode;
@@ -2808,6 +2874,17 @@ function saveTask(){
       console.error('[task] save failed',e);
       dbSaveFailed(e,'the task');
     });
+    /* Step 60: say what was added and for whom, with a way to see it. */
+    try{
+      var _ppl2=evtOn?(data.assignees||[]):[whoNow];
+      var _due=data.dueDate?(' \u00b7 due '+new Date(data.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})):'';
+      var _msg=(evtOn&&!_ppl2.length)?('Added to the Event Board'+_due):('Added for '+_ppl2.map(memberName).join(', ')+_due);
+      var _nid=newRef.id;
+      uiToast(_msg,{actionLabel:'Show',action:function(){
+        if(_ppl2.length)showTask(_ppl2[0],_nid);
+        else{switchTab('overview');var b=document.getElementById('evb-card');if(b)try{b.scrollIntoView({behavior:motionBehavior(),block:'start'});}catch(e){}}
+      }});
+    }catch(e){}
     if(wantCal){
       try{ calAfterSave(ref,newRef.id,data,whoNow); }
       catch(e){ console.error('[calendar] step failed',e); try{uiToast('Calendar step failed: '+((e&&e.message)||'unknown error'),{duration:9000});}catch(_){} }
@@ -4082,7 +4159,7 @@ function renderCmdk(){
       html+='<div class="cmdk-section">'+k[1]+' ('+rows.length+')</div>';
       rows.slice(0,k[2]).forEach(r=>{
         const i=cmdkItems.length;
-        cmdkItems.push({run:r.kind==='task'?()=>{closeCmdk();switchTab(r.w);setTimeout(()=>openEdit(r.w,r.id),70);}:()=>{closeCmdk();if(window.ovGoto)ovGoto(r.w);else switchTab(r.w);}});
+        cmdkItems.push({run:r.kind==='task'?()=>{closeCmdk();showTask(r.w,r.id,{open:true});}:()=>{closeCmdk();if(window.ovGoto)ovGoto(r.w);else switchTab(r.w);}});
         html+=cmdkRow(i,r.ic,'',escHtml(r.label),escHtml(r.sub),'');
       });
     });
@@ -5269,7 +5346,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       /* Step 52: the owner as their initial in their colour, as in Team today and the
          tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
       var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
-      return '<div class="ov-dl" onclick="ovGoto(\''+it.w+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      return '<div class="ov-dl" onclick="ovShowTask(\''+it.w+'\',\''+esc(it.t.id)+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;
@@ -5440,6 +5517,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   window.renderOverview=renderOverview;
   window.ovGo=function(){ try{ switchTab('overview'); }catch(e){} renderOverview(); };
   window.ovGoto=function(w){ try{ switchTab(w); }catch(e){} try{ window.scrollTo({top:0,behavior:motionBehavior()}); }catch(e){} };
+  /* Step 60: a deadline row opens its person's tab at that task, marked. */
+  window.ovShowTask=function(w,id){ try{ showTask(w,id); }catch(e){ window.ovGoto(w); } };
   window.ovCalPrev=function(){ ovCalM--; if(ovCalM<0){ ovCalM=11; ovCalY--; } renderCal(); };
   window.ovCalNext=function(){ ovCalM++; if(ovCalM>11){ ovCalM=0; ovCalY++; } renderCal(); };
   window.ovSetCalFilter=function(f){ ovCalFilter=f; calFilters(); renderCal(); };

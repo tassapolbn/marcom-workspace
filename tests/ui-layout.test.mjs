@@ -981,6 +981,7 @@ test('the header search lists the tabs you can see, by today\'s names, and what 
     document:{querySelectorAll:s=>s==='.tab-nav .tab-btn'?tabs:[],getElementById:id=>({'cmdk-input':input,'cmdk-results':out})[id]},
     getComputedStyle:b=>({display:b.hidden?'none':'flex'}),escHtml:x=>String(x),
     closeCmdk:()=>calls.push('close'),switchTab:w=>calls.push('tab:'+w),openEdit:(w,id)=>calls.push('edit:'+w+':'+id),ovGoto:w=>calls.push('goto:'+w),
+    showTask:(w,id,o)=>calls.push('show:'+w+':'+id+(o&&o.open?':open':'')),
     setTimeout:f=>f(),highlightCmdk:()=>{},cmdkItems:[],cmdkSel:0});
   c.window=c;c.marcomRoleOf=w=>({boss:'Marcom manager',dew:'Graphic Designer',junior:'Junior Events Coordinator'})[w];
   c.marcomFind=q=>[{kind:'task',w:'dew',id:'t9',ic:'ti-clipboard-list',label:'Poster',sub:'Dew'},{kind:'note',w:'boss',id:'n2',ic:'ti-notes',label:'Ideas',sub:'Boss'}];
@@ -994,7 +995,7 @@ test('the header search lists the tabs you can see, by today\'s names, and what 
   assert.match(out.innerHTML,/<div class="cmdk-section">Notes \(1\)<\/div>/);
   const n=(out.innerHTML.match(/class="cmdk-item"/g)||[]).length;
   c.run(n-2);c.run(n-1);
-  assert.deepEqual(calls,['close','tab:dew','edit:dew:t9','close','goto:boss'],'a task opens in its editor; a note opens its tab');
+  assert.deepEqual(calls,['close','show:dew:t9:open','close','goto:boss'],'a task is shown where it lives, then opens in its editor (step 60); a note opens its tab');
 });
 
 test('one search on every screen: the header button on iPhone, no box on the Overview',()=>{
@@ -1120,14 +1121,14 @@ test('Team today: overdue reads strongest, waiting next, on hold and Clear quiet
 test('each deadline opens with its owner\'s initial in their colour; screen readers still hear the name',()=>{
   const nodes={'ov-deadlines':{innerHTML:''},'ov-dl-filters':{innerHTML:''}};
   const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const tasks={boss:[{status:'pending',dueDate:'2026-10-28',topic:'Brochure'}],dew:[{status:'pending',dueDate:'2026-10-29',topic:'Banner',priority:'high'}]};
+  const tasks={boss:[{id:'b1',status:'pending',dueDate:'2026-10-28',topic:'Brochure'}],dew:[{id:'d1',status:'pending',dueDate:'2026-10-29',topic:'Banner',priority:'high'}]};
   const context=vm.createContext({window:{},document:{getElementById:id=>nodes[id]||null},MORDER:['boss','dew'],
     tOf:w=>tasks[w]||[],isActive:()=>true,dU:d=>d==='2026-10-28'?0:1,nm:w=>({boss:'Boss',dew:'<b>dew</b>'})[w],esc,
     topicOf:t=>t.topic,fdt:d=>'on '+d,MarcomUI:{setHTML:(el,h)=>{el.innerHTML=h;}}});
   vm.runInContext(slice("  var ovDl='all', ovDlOpen={};",'  /* ---------- event countdown ---------- */'),context);
   context.renderDeadlines();
   const html=nodes['ov-deadlines'].innerHTML;
-  assert.match(html,/<div class="ov-dl" onclick="ovGoto\('boss'\)"><span class="ov-dl-who" data-member="boss" title="Boss" aria-hidden="true">B<\/span><div class="ov-dl-main">/);
+  assert.match(html,/<div class="ov-dl" onclick="ovShowTask\('boss','b1'\)"><span class="ov-dl-who" data-member="boss" title="Boss" aria-hidden="true">B<\/span><div class="ov-dl-main">/,'the row opens its task (step 60)');
   assert.match(html,/<div class="ov-dl-sub"><span class="ov-dl-wn">Boss &middot; <\/span>on 2026-10-28<\/div>/,'the name stays in the text for screen readers');
   assert.match(html,/data-member="dew" title="&lt;b&gt;dew&lt;\/b&gt;" aria-hidden="true">&lt;<\/span>/,'names are escaped; the initial is the first letter shown');
   assert.doesNotMatch(html,/<b>dew<\/b>/);
@@ -1221,4 +1222,83 @@ test('tile dates at full strength and 11px; event names, day rows and director l
   assert.match(step59,/\.ev-chip-name,\.dirq-s,\.dirq-note,\.myday-row\{font-size:13px;\}/);
   assert.doesNotMatch(source,/opacity:\.78/,'no faded tile date');
   assert.doesNotMatch(source,/linear-gradient\(180deg,'\+clr\+','\+evTint\(clr,0\.86\)/,'no fading tile');
+});
+
+/* ===== Step 60: after you add or open a task, you see it ===== */
+const step60=stepBlock(60);
+
+test('a toast can offer one action ("Show") that runs once and closes it',()=>{
+  const mk=tag=>({tag,children:[],className:'',textContent:'',attrs:{},parentNode:null,classList:{add(){}},
+    appendChild(c){c.parentNode=this;this.children.push(c);return c;},removeChild(c){this.children=this.children.filter(x=>x!==c);c.parentNode=null;},
+    setAttribute(k,v){this.attrs[k]=v;}});
+  const body=mk('body'),timers=[];
+  const c=vm.createContext({document:{body,createElement:mk,getElementById:id=>body.children.find(x=>x.id===id)||null},
+    setTimeout:f=>timers.push(f),console});
+  vm.runInContext(slice('function uiToast(msg,opts){','function deleteWithUndo('),c);
+  let shown=0;
+  c.uiToast('Added for Dew · due 2 Nov',{actionLabel:'Show',action:()=>shown++});
+  const host=body.children[0],toast=host.children[0],btn=toast.children.find(x=>x.tag==='button');
+  assert.equal(toast.children[0].textContent,'Added for Dew · due 2 Nov');
+  assert.equal(btn.textContent,'Show');
+  btn.onclick();btn.onclick();
+  assert.equal(shown,1,'runs once');
+  assert.equal(toast.parentNode,null,'and the toast goes');
+});
+
+test('showTask opens the person\'s tab at the task, marks it, and resets a filter that hides it',()=>{
+  const calls=[],card={id:'t1',getAttribute:()=>'t1',classList:{list:[],add(x){this.list.push(x);},remove(){}},scrollIntoView:o=>calls.push('scroll:'+o.block),offsetWidth:1};
+  let filtered=true;
+  const panel={classList:{contains:()=>false},querySelectorAll:()=>filtered?[]:[card]};
+  const c=vm.createContext({document:{getElementById:id=>id==='panel-dew'?panel:null,querySelector:s=>s==='.fpill[data-who="dew"][data-f="all"]'?{all:1}:null},
+    switchTab:w=>calls.push('tab:'+w),filterOf:()=>filtered?'pending':'all',setFilter:(w,f)=>{calls.push('filter:'+w+':'+f);filtered=false;},
+    openEdit:(w,id)=>calls.push('edit:'+w+':'+id),motionBehavior:()=>'auto',setTimeout:f=>f()});
+  vm.runInContext(slice('function showTask(who,id,opts){','\ndocument.addEventListener'),c);
+  c.showTask('dew','t1',{open:true});
+  assert.deepEqual(calls,['tab:dew','filter:dew:all','scroll:center','edit:dew:t1']);
+  assert.deepEqual(card.classList.list,['tc-found']);
+  calls.length=0;c.showTask('ghost','x',{open:true});
+  assert.deepEqual(calls,['edit:ghost:x'],'no tab: the editor still opens');
+  assert.match(source,/if\(!panel\.classList\.contains\('active'\)\)\{try\{window\.scrollTo\(0,0\);\}catch\(e\)\{\}\}/,'every tab opens at its top');
+  assert.match(source,/cmdkItems\.push\(\{run:r\.kind==='task'\?\(\)=>\{closeCmdk\(\);showTask\(r\.w,r\.id,\{open:true\}\);\}:/,'search shows the task, then opens it');
+  assert.match(source,/window\.ovShowTask=function\(w,id\)\{ try\{ showTask\(w,id\); \}catch\(e\)\{ window\.ovGoto\(w\); \} \};/);
+});
+
+test('saving a new task says what was added, for whom and when, with Show',()=>{
+  assert.match(source,/var _msg=\(evtOn&&!_ppl2\.length\)\?\('Added to the Event Board'\+_due\):\('Added for '\+_ppl2\.map\(memberName\)\.join\(', '\)\+_due\);/);
+  assert.match(source,/uiToast\(_msg,\{actionLabel:'Show',action:function\(\)\{\n\s*if\(_ppl2\.length\)showTask\(_ppl2\[0\],_nid\);/);
+});
+
+test('"For" at the top of Add Task: an admin picks whose board, or several people for a shared card',()=>{
+  const el=()=>({hidden:false,innerHTML:'',value:'',checked:false,scrollIntoView(){}});
+  const els={'m-for-group':el(),'m-for':el(),'m-evt-on':el(),'m-evt-fields':el(),'m-event':el()};
+  els['m-event'].value='open-day';
+  const calls=[];
+  const c=vm.createContext({document:{getElementById:id=>els[id]||null},window:{__cur:{role:'admin'}},
+    MEMBER_ORDER:['boss','dew','o','junior'],refOf:()=>({}),memberName:w=>w.toUpperCase(),escHtml:x=>x,motionBehavior:()=>'auto',
+    styleModal:w=>calls.push('style:'+w),populateEventSelect:(w,e)=>calls.push('events:'+w+':'+e),setTaskType:m=>calls.push('type:'+m)});
+  c.window.evtToggle=()=>calls.push('share-toggle');c.window.evtPeopleSet=a=>calls.push('people:'+a.join('+'));
+  vm.runInContext('var modalState={who:"boss",editId:null};'+slice('function taskForFill(who){','function setTaskType(mode){'),c);
+  c.taskForFill('boss');
+  assert.equal(els['m-for-group'].hidden,false);
+  assert.match(els['m-for'].innerHTML,/^<option value="boss" selected>BOSS<\/option><option value="dew">DEW<\/option>.*<option value="__shared">Several people \(a shared card\)<\/option>$/);
+  c.taskForChange('dew');
+  assert.equal(vm.runInContext('modalState.who',c),'dew','the task goes on Dew\'s board');
+  assert.deepEqual(calls,['style:dew','events:dew:open-day','type:role','people:dew'],'the form follows Dew and keeps the event');
+  calls.length=0;c.taskForChange('__shared');
+  assert.equal(els['m-evt-on'].checked,true,'several people: a shared card');
+  assert.deepEqual(calls,['share-toggle']);
+  vm.runInContext('modalState.editId="t1"',c);c.taskForFill('dew');
+  assert.equal(els['m-for-group'].hidden,true,'editing keeps Move to for that');
+  vm.runInContext('modalState.editId=null;window.__cur={role:"designer"}',c);c.taskForFill('dew');
+  assert.equal(els['m-for-group'].hidden,true,'a member adds to their own board only');
+  assert.match(source,/<div class="form-group m-for" id="m-for-group" hidden><label class="form-label" for="m-for">For<\/label><select class="form-select" id="m-for" onchange="taskForChange\(this\.value\)"><\/select><\/div>\n\s*<div class="form-group"><label class="form-label">Task Title<\/label>/,'it comes first');
+});
+
+test('the shown card is marked for a moment; on iPhone and iPad the page holds still behind a sheet',()=>{
+  assert.match(step60,/@keyframes tc-found\{from\{outline-color:var\(--focus-ink\);\}to\{outline-color:transparent;\}\}/);
+  assert.match(step60,/\.task-card\.tc-found\{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2\.4s ease-in forwards;\}/);
+  assert.match(step60,/@media\(prefers-reduced-motion:reduce\)\{\.task-card\.tc-found\{animation:none;outline-color:var\(--focus-ink\);\}\}/);
+  assert.match(step60,/\.modal-overlay,\.modal-overlay \.modal\{overscroll-behavior:contain;\}/);
+  assert.match(media(step60,'max-width:980px'),/html:has\(\.modal-overlay\.open\),html:has\(\.modal-overlay\.open\) body\{overflow:hidden;\}/);
+  assert.match(step60,/\.m-for\[hidden\]\{display:none;\}/);
 });

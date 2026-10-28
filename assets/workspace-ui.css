@@ -1400,3 +1400,15 @@ html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}
    day summary rows and the director request lines were 12.5px. */
 .ev-chip-date{font-size:11px;}
 .ev-chip-name,.dirq-s,.dirq-note,.myday-row{font-size:13px;}
+
+/* Step 60: after you add or open a task, you see it */
+/* The card you came to see wears a ring in the focus colour that fades away;
+   with Reduce Motion it stays still and simply goes after a moment. */
+@keyframes tc-found{from{outline-color:var(--focus-ink);}to{outline-color:transparent;}}
+.task-card.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
+@media(prefers-reduced-motion:reduce){.task-card.tc-found{animation:none;outline-color:var(--focus-ink);}}
+/* On iPhone and iPad the page behind an open sheet stays still. */
+.modal-overlay,.modal-overlay .modal{overscroll-behavior:contain;}
+@media(max-width:980px){html:has(.modal-overlay.open),html:has(.modal-overlay.open) body{overflow:hidden;}}
+/* "For" sits at the top of Add Task, for an admin adding a task. */
+.m-for[hidden]{display:none;}

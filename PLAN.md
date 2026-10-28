@@ -1707,7 +1707,7 @@ their colour (step 49 kept these marks on purpose).
     themes, at 1440 and 390, in list and Timeline views. Tests: 345/345 (two
     new; one step 44 test follows the solid tile).
 
-- [ ] **60. After you add or open a task, you see it (decision 3)**
+- [x] **60. After you add or open a task, you see it (decision 3)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: saving says what happened ("Added for Dew · due 2 Nov", with
     Show); opening a task from search or an Overview deadline scrolls to its
@@ -1716,6 +1716,22 @@ their colour (step 49 kept these marks on purpose).
     Task shows whose board the task goes to and lets Boss change it.
   - Test: add a task from the Overview and from a person tab; open one from
     search and from a deadline row; on a computer and an iPhone.
+  - Done (28 Oct): Add Task now opens with "For" at the top, for an admin
+    adding a task: it starts with the board you are on, choosing someone else
+    puts the task on their board (what was typed stays, and the form follows
+    that person: their event list and Dew's or O's request fields), and
+    "Several people (a shared card)" ticks the share option and shows its
+    people. A member adding to their own board, and anyone editing, does not
+    see it (Move to already moves a task). Saving now says what happened,
+    for example "Added for Dew · due 2 Nov", with Show, which opens that
+    person's tab at the new card and marks it with a ring that fades
+    (switching a hidden filter back to All if needed). A search result and
+    an Overview deadline row do the same, the search then opening the
+    editor as before, so the card is in view once it closes. Every tab now
+    opens at its top. On iPhone and iPad the page behind an open sheet stays
+    still while the sheet scrolls (checked with a real touch drag). Checked
+    end to end at 390x844 and 1440x900. Tests: 350/350 (five new; the search
+    and deadline row tests follow the new behaviour).
 
 - [ ] **61. iPhone: the round buttons never cover a control (decision 2)**
   - Files: `assets/workspace-ui.css`, `index.html`, tests.
