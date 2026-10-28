@@ -1235,9 +1235,12 @@ the event form already previews the pair while choosing.
 
 Boss asked on 28 Oct to continue plan 5. Its seven proposals (above) become
 the steps below. Same scope: UX and UI only, light mode first, dark mode
-checked for no regression, iPhone first. Nothing here is built until Boss
-approves. Every step is checked with the team-like sample data (coloured
-events, shared cards, long names).
+checked for no regression, iPhone first. Every step is checked with the
+team-like sample data (coloured events, shared cards, long names).
+
+Approved by Boss on 28 Oct: every step; the livelier spring (step 53); the
+department line stays hidden on iPhone, so step 54 needs nothing built; merge
+and deploy once every check passes.
 
 Baseline (28 Oct, 390x664, the visible size of Safari on an iPhone 13 or 14):
 on the Overview the header (110px), the payday line, the announcement, the
@@ -1338,9 +1341,11 @@ twice: in the header and in the "⋯" menu.
   - Test: a frame recording of a move; the tab bar checks pass three runs in
     a row.
 
-- [ ] **54. The department line on iPhone (decision 3)**
+- [x] **54. The department line on iPhone (decision 3)**
   - If shown: under the product name at the top of the page, gone once the
     header shrinks (step 47). If kept hidden: nothing to build.
+  - Done (28 Oct): Boss chose to keep it hidden on iPhone, so the space goes
+    to the work; computers and iPads still show it. Nothing to build.
 
 - [ ] **55. Final check and a third independent review**
   - The suite, contrast in both themes, iPhone widths 320 to 440, evidence
