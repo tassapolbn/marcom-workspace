@@ -1796,10 +1796,41 @@ their colour (step 49 kept these marks on purpose).
     390, Timeline included. Tests: 360/360 (seven new; the old teal pair
     retired).
 
-- [ ] **64. Trim (item 10)**
+- [x] **64. Trim (item 10)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Test: each removed text is gone, nothing it pointed to is lost, and the
     person's work moves up rather than leaving gaps.
+  - Done (28 Oct):
+    - Search: on iPhone the "ESC" chip is now a "Cancel" button (44px)
+      that closes the sheet; before, the only way out was tapping the dimmed
+      area. The keyboard hints row is gone there, and the placeholder is
+      shortened to fit beside Cancel. Computers keep "ESC" (now clickable)
+      and the hints. The "⋯" menu reads "Search" on touch screens.
+    - Event Board: no "N days" pill beside the big number ("1 day" is
+      singular); only Today and Tomorrow keep a word.
+    - Payday panel: the ring (days left, filling as the period passes), Next
+      Payday and Pay Period stay; the count of days gone, the second bar and
+      the "Soon" or "On track" badge are gone. "Payday!" still shows on the
+      day. On iPhone the panel is 152px tall (243 before), and on computers
+      the two cells sit side by side with their labels on one line.
+    - Calendar setup: the note moved from Team today to the Google Calendar
+      card in Settings. Boss sees who has not connected; everyone else sees
+      their own calendar. Team today is 22px shorter on computers.
+    - The iPhone full-width Add Task bar already went in step 62.
+    - Delete buttons: on touch screens they are removed (not just hidden)
+      from event tiles, Coming up rows and Timeline items, so nothing can be
+      tapped by accident. An event is deleted from its own page (tap the
+      tile); computers still show the button on hover and focus.
+    - Greeting: the Overview says "Good morning, Boss"; My day on your own
+      tab now reads "Today", and its filler line went too. Boss's first task
+      card on a 390x664 iPhone moves up from 568 to 542px.
+    - Empty columns: the dashed "No tasks" box is gone. An empty column is
+      its header and its 0, and opens a 56px drop area while a card is
+      dragged over it (checked with a real drag and drop). On iPhone each
+      empty column gives back 70px.
+    - Checks: nothing moved down on any tab at 390x664 or 1440x900. Contrast
+      scans: zero failures in both themes, Timeline included. iPhone widths
+      320 to 440 pass. Tests: 367/367 (seven new).
 
 - [ ] **65. Polish (items 9 and 11)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.

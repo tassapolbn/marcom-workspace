@@ -219,7 +219,7 @@ test('an empty meetings card is hidden, and a booked meeting still shows',()=>{
 
 test('a member tab greets once, and the greeting and counts share one line',()=>{
   assert.match(step27,/\.member-head-extra \.mh-greet\{display:none;\}/,'the header card drops its plain greeting');
-  assert.match(source,/var title=isOwn\(w\)\?\(greet\+', '/,'the my-day greeting stays: it knows the hour and whose desk it is');
+  assert.match(source,/var title=isOwn\(w\)\?'Today':/,'since step 64 the Overview greets, and my day on your own tab is "Today"');
   assert.match(step27,/\.myday\{display:flex;flex-wrap:wrap;/,'greeting and chips sit on one line and wrap on iPhone');
   assert.match(step27,/\.myday-list\{flex:1 1 100%;/,'the focus list runs full width below');
 });
@@ -543,7 +543,7 @@ test('on a phone each person is one short line and the work list starts on the f
   assert.match(phone,/#ov-top,#ov-team\{margin-bottom:12px;\}/);
   assert.match(phone,/\.tm-s\{display:inline;\}/,'a flag without a count keeps a short word');
   assert.match(phone,/#panel-overview \.ov-hello\{display:none;\}/,'the greeting gives way to the work');
-  assert.match(phone,/\.ov-team-note\{display:none!important;\}/,'only the calendar setup note gives way');
+  assert.doesNotMatch(css26,/\.ov-team-note/,'the calendar setup note moved to Settings (step 64)');
   assert.doesNotMatch(phone,/\.ov-mini-btn[^{]*\{[^}]*display:none/,'refreshing availability stays on a phone');
   assert.doesNotMatch(phone,/\.ov-team-next[^{]*\{[^}]*display:none/,'so does the next meeting');
   assert.match(phone,/html #panel-overview #ov-ann-card:not\(\.ov-ann-all\) \.ov-ann-foot\{display:none;\}/,'the line keeps its text and New; tapping the text shows the rest');
@@ -593,7 +593,7 @@ test('My day draws only the counts that are there, and never repeats "due today"
   assert.doesNotMatch(html,/new request/);
   html=myDay('dew',{tasks:[],hour:9});
   assert.doesNotMatch(html,/myday-chips/,'no counts, no row of chips');
-  assert.match(html,/Here is the plan for today/);
+  assert.doesNotMatch(html,/Here is the plan for today|class="myday-sub"/,'no filler line before 5pm (step 64)');
   assert.match(html,/All clear for now/);
   html=myDay('dew',{tasks:[due],hour:18});
   assert.match(html,/Tomorrow is clear so far|due tomorrow/,'after 5pm the line still looks ahead');
@@ -1437,4 +1437,90 @@ test('the boards redraw when the events change, so a tag follows its event',()=>
 test('the Event form previews the tag the cards will show',()=>{
   assert.match(source,/const tag=t\?\('mb mb-event mb-event-filled" style="background:'\+bg\+';color:'\+t\+';'\)\n    :\('mb mb-event mb-event-tint" style="background:'\+bg\+';--evc-ink:'\+evInk\(base\)\+';--evc-ink-d:'\+evInkDark\(base\)\+';'\);/);
   assert.match(source,/\+'<span class="'\+tag\+'box-shadow:inset 0 0 0 1px '\+evTint\(base,0\.4\)\+';">/);
+});
+
+/* ===== Step 64: trim what says a thing twice or only helps a keyboard ===== */
+const step64=stepBlock(64);
+
+test('the search sheet closes with a real button: "ESC" on computers, "Cancel" on touch, and no keyboard hints there',()=>{
+  assert.match(source,/<button type="button" class="cmdk-esc" onclick="closeCmdk\(\)" aria-label="Close search"><span class="cmdk-esc-k">ESC<\/span><span class="cmdk-esc-t">Cancel<\/span><\/button>/);
+  const touch=media(step64,'max-width:600px),(hover:none) and (pointer:coarse');
+  assert.match(touch,/\.cmdk-hint,\.uxp-mi-kbd\{display:none;\}/,'no ↑↓, ↵, N or / hints, and no "(Ctrl K)" in the "⋯" menu');
+  assert.match(touch,/\.cmdk-esc\{min-height:44px;/,'Cancel is a full-size touch target');
+  assert.match(touch,/\.cmdk-esc-k\{display:none;\}/);
+  assert.match(touch,/\.cmdk-esc-t\{display:inline;\}/);
+  assert.match(step64,/\.cmdk-esc-t\{display:none;\}/,'computers keep "ESC"');
+  assert.match(source,/<i class="ti ti-search"><\/i> Search<span class="uxp-mi-kbd"> \(Ctrl K\)<\/span><\/button>'/);
+  assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)"/,'the shortcut is still named where a keyboard is likely');
+  assert.match(source,/inp\.placeholder=\(window\.matchMedia&&matchMedia\('\(max-width:600px\)'\)\.matches\)\?'Tasks, events, notes, links':'Search tasks, events, notes or links';/,'beside Cancel a phone gets the short placeholder');
+});
+
+test('a countdown row says its days once: the big number, with a word only for today and tomorrow',()=>{
+  const fn=slice('  function renderCountdown(){','\n  }\n')+'\n  }';
+  const el={};const c=vm.createContext({document:{getElementById:()=>el},MarcomUI:{setHTML:(n,h)=>{n.html=h;}},MORDER:['boss'],
+    eOf:()=>[{id:'a',name:'Fair',date:'d0'},{id:'b',name:'Book Week',date:'d1'},{id:'c',name:'Sports Day',date:'d5'}],
+    dU:d=>({d0:0,d1:1,d5:5})[d],esc:s=>s,fdt:s=>s,evTextAttrs:cls=>' class="'+cls+'"',evDeleteButtonHTML:()=>'<button class="ev-chip-del"></button>'});
+  vm.runInContext(fn+'\nthis.renderCountdown=renderCountdown;',c);
+  c.renderCountdown();
+  const rows=el.html.split(/(?=<div class="ov-cdn(?: soon)?" onclick)/);
+  assert.equal(rows.length,3);
+  assert.match(rows[0],/>0<\/div><div class="ov-cdn-u">days<\/div>.*<div class="ov-cdn-tag">Today<\/div>/);
+  assert.match(rows[1],/>1<\/div><div class="ov-cdn-u">day<\/div>.*<div class="ov-cdn-tag">Tomorrow<\/div>/,'one day, singular');
+  assert.match(rows[2],/>5<\/div><div class="ov-cdn-u">days<\/div>/);
+  assert.doesNotMatch(rows[2],/ov-cdn-tag/,'no "5 days" pill beside the 5');
+});
+
+test('the payday panel says the days left once: the ring, with no count of days gone, second bar or badge',()=>{
+  const strip=slice('<div class="salary-strip" id="salary-card">','<div id="sal-badge"></div>');
+  assert.match(strip,/class="salary-days-big" id="sal-days"/,'the ring and its number stay');
+  assert.match(strip,/Next Payday/);
+  assert.match(strip,/Pay Period/);
+  assert.doesNotMatch(strip,/Cycle Progress|sal-bar|days elapsed|sal-cycle/);
+  assert.match(source,/_setH\('sal-badge',days===0\?'<span class="salary-badge sb-pay">Payday!<\/span>':''\);/,'"Payday!" on the day itself, no "Soon" or "On track"');
+  assert.match(step64,/#sal-badge:empty\{display:none;\}/);
+  assert.match(source,/var _card=document\.getElementById\('salary-card'\);if\(_card\)_card\.setAttribute\('data-pct',_pct\+'%'\);/);
+  assert.match(source,/var sc=document\.getElementById\('salary-card'\),pc=\(\(sc&&sc\.getAttribute\('data-pct'\)\)\|\|''\)\.trim\(\);/,'the compact line keeps its small bar');
+});
+
+test('the calendar setup note lives in Settings: Boss sees who is missing, everyone else their own calendar',()=>{
+  assert.doesNotMatch(source,/Calendar not connected: /,'not on the Overview any more');
+  assert.match(source,/\+'<div class="gcs-team" id="gcs-team" role="status"><\/div>'/);
+  const paint=slice('  window.gcsPaintSettings=function(){','  function inject(){');
+  const run=(role,cfg,missing)=>{const tm={textContent:''};
+    const c=vm.createContext({window:{__cur:{role,workspace:'dew'},avlMissing:()=>missing},document:{getElementById:id=>id==='gcs-team'?tm:null,activeElement:null},
+      myWs:()=>role==='admin'?'boss':'dew',cfgOf:()=>cfg,gcsConfigured:()=>!!(cfg&&cfg.url)});
+    vm.runInContext(paint.replace('window.gcsPaintSettings=','this.paint='),c);c.paint();return tm.textContent;};
+  assert.equal(run('admin',{url:'x'},['Dew','Eye']),'Not connected yet: Dew, Eye. Each person connects their own calendar here.');
+  assert.equal(run('admin',{url:'x'},[]),"Everyone's calendar is connected.");
+  assert.equal(run('designer',null,['Boss','Dew']),'Your calendar is not connected yet.','a member is not told about the others');
+  assert.equal(run('designer',{url:'x'},[]),'Your calendar is connected.');
+  assert.match(step64,/\.gcs-team:empty\{display:none;\}/);
+});
+
+test('on touch screens no delete button sits on every event tile and row; an event is deleted from its own page',()=>{
+  const touch=media(step64,'hover:none');
+  assert.match(touch,/\.ev-chip-del\{display:none;\}/,'hidden, not invisible: nothing to tap by accident');
+  assert.match(touch,/\.ev-chip-date,\.ev-chip-name\{padding-right:0;\}/,'the names take the room back');
+  assert.doesNotMatch(css26,/@media\(hover:none\)\{\.ev-chip-del\{opacity:1;\}\}/);
+  assert.match(source,/window\.evChipClick=function\(id,who\)\{\n    if\(WS\.indexOf\(who\)>=0\)\{evwsOpenEvent\(who,id\);\}/,'a tap opens the event');
+  assert.match(source,/class="btn btn-ghost btn-sm ews-del" onclick="quickDeleteEvent\(/,'whose page keeps Delete');
+  assert.match(css26,/\.ev-chip:hover \.ev-chip-del,\.ev-chip:focus-within \.ev-chip-del,/,'computers still show it on hover and focus');
+});
+
+test('one greeting: My day on your own tab is "Today"',()=>{
+  const own=myDay('dew',{tasks:[],own:true,hour:9});
+  assert.match(own,/<span class="myday-greet">Today<\/span>/);
+  assert.doesNotMatch(own,/Good (morning|afternoon|evening)/);
+  assert.match(myDay('dew',{tasks:[]}),/<span class="myday-greet">Dew's day<\/span>/,'someone else\'s tab keeps its name');
+  assert.match(source,/var greeting=g\+', '\+myName\(\);/,'the Overview keeps "Good morning, Boss"');
+});
+
+test('an empty status column is its header and its 0, with a drop area only while a card is dragged over it',()=>{
+  const html=kanban=>kanban;
+  assert.doesNotMatch(source,/No tasks<\/div>/);
+  assert.match(source,/var body=cards\.map\(function\(t\)\{return taskCardHTML\(t,who\);\}\)\.join\(''\);/);
+  assert.match(step64,/\.kb-col-body:empty\{min-height:0;padding:0!important;\}/);
+  assert.match(step64,/\.kb-col\.kb-over>\.kb-col-body:empty\{min-height:56px;\}/);
+  assert.match(source,/<div class="kb-col" data-status="'\+S\+'" ondragover="taskColOver\(event\)"/,'the whole column still takes a drop');
+  void html;
 });

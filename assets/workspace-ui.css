@@ -14,7 +14,6 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 }
 .tab-nav .tab-btn:not(.a-active){border-bottom-color:transparent!important;}
 .icon-btn{color:var(--muted);}
-.kb-empty{opacity:1;}
 .salary-dock .sal-cell-label i{color:currentColor;-webkit-text-fill-color:currentColor;}
 .salary-dock .sal-cell-sub i{color:inherit;}
 
@@ -46,7 +45,6 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 }
 @media(max-width:1100px){
   .salary-dock .salary-strip{grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);gap:14px 20px;}
-  .salary-dock .sal-cell-prog{grid-column:2 / -1;}
   .salary-dock #sal-badge{grid-column:1;grid-row:2;text-align:center;}
   .salary-dock .salary-badge{padding:6px 9px;}
 }
@@ -66,7 +64,6 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .salary-dock .sal-ring{width:64px;height:64px;}
   .salary-dock .salary-days-big{font-size:25px;}
   .salary-dock .sal-cell:nth-of-type(5){grid-column:2;grid-row:2;}
-  .salary-dock .sal-cell-prog{grid-column:1 / -1;grid-row:3;}
   .salary-dock .salary-badge{font-size:10px;padding:5px 7px;}
   .sub-nav{gap:4px;padding:5px;}
   .sub-tab{flex:0 0 auto;min-height:42px;padding:9px 12px;}
@@ -255,7 +252,6 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
   background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
 }
 .ev-past-clear:hover,.ews-del:hover{background:var(--danger-light);color:var(--danger);}
-@media(hover:none){.ev-chip-del{opacity:1;}}
 @media(max-width:480px){.ev-past{grid-template-columns:repeat(2,1fr);}}
 @media(prefers-reduced-motion:reduce){.ev-chip-del,.ev-past-toggle i{transition:none;}}
 
@@ -958,7 +954,6 @@ html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-a
 .ov-team-next:empty+.ov-mini-btn{margin-left:auto;}
 .ov-team-head .ov-mini-btn{flex:0 0 auto;}
 .ov-team-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}
-.ov-team-note{padding:4px 6px 2px;font-size:13px;color:var(--muted);}
 .tm{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"mono name open" "mono st st" "mono lv lv";
   align-items:center;align-content:start;column-gap:10px;row-gap:2px;min-width:0;padding:6px 8px;border:0;border-radius:12px;background:transparent;
   color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .14s ease;}
@@ -1022,7 +1017,6 @@ html.dark .tm-meet{color:#93c5fd;}
   /* Refresh keeps a 36px target without making the heading taller. */
   .ov-team-head .ov-mini-btn{margin:-6px 0 -6px auto;}
   .ov-team-next+.ov-mini-btn{margin-left:0;}
-  .ov-team-note{display:none!important;}
   /* Each person reads like a line of text: the name, then the flags, which wrap
      under the name instead of being cut off when a narrow phone runs out of room. */
   .tm{display:flex;align-items:flex-start;column-gap:7px;padding:5px 2px;line-height:22px;}
@@ -1473,3 +1467,39 @@ html.dark .mb-shared{background:rgba(255,255,255,.08);color:var(--text);}
 .mb-who[data-member="junior"]{--tm-c:var(--member-junior);}
 /* A finished card fades in dark mode; a deeper dot keeps its white letter readable. */
 html.dark .task-card:is(.tc-done,.tc-canceled) .mb-who{background:color-mix(in srgb,var(--tm-c,var(--navy,#003057)) 72%,#000);}
+
+/* Step 64: trim what says a thing twice or only helps a keyboard */
+/* The search sheet closes with a real button: "ESC" on computers, "Cancel" on
+   touch screens, where the row of keyboard hints is no use either. */
+.cmdk-esc{cursor:pointer;font-family:inherit;line-height:1.2;}
+.cmdk-esc:hover{color:var(--text);}
+.cmdk-esc:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+.cmdk-esc-t{display:none;}
+@media(max-width:600px),(hover:none) and (pointer:coarse){
+  .cmdk-hint,.uxp-mi-kbd{display:none;}
+  .cmdk-esc{min-height:44px;margin:-10px -6px -10px 0;padding:0 6px;border:0;background:none;font-size:15px;font-weight:700;color:var(--navy);}
+  html.dark .cmdk-esc{color:#8fb4dc;}
+  .cmdk-esc-k{display:none;}
+  .cmdk-esc-t{display:inline;}
+}
+/* The payday panel: the ring, then the payday and the period side by side with
+   their labels on one line. The badge speaks only on payday. */
+.salary-dock .salary-strip{grid-template-columns:80px max-content max-content minmax(0,1fr);column-gap:48px;align-items:start;}
+.salary-dock .sal-ring-wrap{align-self:center;}
+.salary-dock #sal-badge{justify-self:end;align-self:center;}
+#sal-badge:empty{display:none;}
+@media(max-width:1100px){.salary-dock .salary-strip{grid-template-columns:80px minmax(0,1fr) minmax(0,1fr);column-gap:20px;}}
+@media(max-width:600px){.salary-dock .salary-strip{grid-template-columns:64px minmax(0,1fr);column-gap:14px;}}
+/* Calendar setup lives in Settings now. */
+.gcs-team{margin:-2px 0 8px;font-size:12px;line-height:1.5;color:var(--muted);}
+.gcs-team:empty{display:none;}
+/* On touch screens an event is deleted from its own page (tap the tile), so no
+   delete button sits on every tile and row; computers show it on hover. */
+@media(hover:none){
+  .ev-chip-del{display:none;}
+  .ev-chip-date,.ev-chip-name{padding-right:0;}
+}
+/* An empty column is its header and its 0; it opens a drop area while a card
+   is dragged over it. */
+.kb-col-body:empty{min-height:0;padding:0!important;}
+.kb-col.kb-over>.kb-col-body:empty{min-height:56px;}

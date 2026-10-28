@@ -199,7 +199,6 @@ html.dark .lhub-ic{color:#8fb4dc;}
 .kb-col-name{font-size:13px;font-weight:700;color:var(--text);flex:1;}
 .kb-col-count{font-size:12px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:99px;min-width:24px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px;}
 .kb-col-body{padding:11px;display:flex;flex-direction:column;min-height:70px;}
-.kb-empty{text-align:center;color:var(--muted);font-size:12px;padding:16px 0;opacity:.65;border:1.5px dashed var(--border);border-radius:10px;}
 .kb-col-body .task-card{margin-bottom:11px;cursor:pointer;animation:none;min-width:0;}
 .kb-col-body .task-card:last-child{margin-bottom:0;}
 .kb-col-body .task-topic{overflow-wrap:anywhere;}
@@ -889,13 +888,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="sal-cell">
       <div class="sal-cell-label"><i class="ti ti-calendar-month"></i> Pay Period</div>
       <div class="sal-cell-value" id="sal-month">--</div>
-      <div class="sal-cell-sub" id="sal-cycle"></div>
-    </div>
-    <div class="salary-divider sal-divider-prog"></div>
-    <div class="sal-cell sal-cell-prog">
-      <div class="sal-cell-label"><i class="ti ti-progress-check"></i> Cycle Progress &middot; <span id="sal-pct">0%</span></div>
-      <div class="sal-bar"><div class="sal-bar-fill" id="sal-bar-fill"></div></div>
-      <div class="sal-cell-sub">through this pay period</div>
     </div>
     <div id="sal-badge"></div>
   </div>
@@ -1433,7 +1425,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
     <div class="cmdk-search">
       <i class="ti ti-search"></i>
       <input id="cmdk-input" placeholder="Search tasks, events, notes or links" oninput="renderCmdk()" autocomplete="off" />
-      <span class="cmdk-esc">ESC</span>
+      <button type="button" class="cmdk-esc" onclick="closeCmdk()" aria-label="Close search"><span class="cmdk-esc-k">ESC</span><span class="cmdk-esc-t">Cancel</span></button>
     </div>
     <div class="cmdk-results" id="cmdk-results"></div>
     <div class="cmdk-hint"><span><kbd>↑↓</kbd>navigate</span><span><kbd>↵</kbd>open</span><span><kbd>N</kbd>new task</span><span><kbd>/</kbd>search</span></div>
@@ -2141,12 +2133,13 @@ function initSalary(){
   _setT('sal-date',DAYS[pd.date.getDay()].slice(0,3)+', '+pd.date.getDate()+' '+MONTHS[pd.date.getMonth()]);
   _setH('sal-note',pd.adjusted?('<i class="ti ti-info-circle-filled"></i> '+pd.note):'Last working day of the month');
   _setT('sal-month',MONTHS[pd.date.getMonth()]+' '+pd.date.getFullYear());
-  _setT('sal-cycle',_elapsed+' of '+_cycleTotal+' days elapsed');
-  _setT('sal-pct',_pct+'%');
-  var _bar=document.getElementById('sal-bar-fill');if(_bar)_bar.style.width=_pct+'%';
+  /* Step 64: the ring says the days left and fills as the period passes, so the
+     panel no longer repeats it as a count and a second bar. The compact line's
+     small bar reads the same share from here. */
+  var _card=document.getElementById('salary-card');if(_card)_card.setAttribute('data-pct',_pct+'%');
   var _ring=document.getElementById('sal-ring-fg');
   if(_ring){var _C=2*Math.PI*34;_ring.style.strokeDasharray=_C.toFixed(1);_ring.style.strokeDashoffset=(_C*(1-_pct/100)).toFixed(1);}
-  _setH('sal-badge',days===0?'<span class="salary-badge sb-pay">Payday!</span>':(days<=5?'<span class="salary-badge sb-soon">Soon</span>':'<span class="salary-badge sb-reg">On track</span>'));
+  _setH('sal-badge',days===0?'<span class="salary-badge sb-pay">Payday!</span>':'');
 }
 initSalary();
 
@@ -3200,7 +3193,7 @@ function kanbanHTML(tasks,who,filter){
     var cards=tasks.filter(function(t){return (t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return kbFilterPass(t,filter);});
     cards.sort(function(a,b){return dueSortValue(a)-dueSortValue(b);});
     var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span></div>';
-    var body=cards.length?cards.map(function(t){return taskCardHTML(t,who);}).join(''):'<div class="kb-empty">No tasks</div>';
+    var body=cards.map(function(t){return taskCardHTML(t,who);}).join(''); /* empty: the header's 0 says it (step 64) */
     return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
   }).join('')+'</div>';
 }
@@ -4154,6 +4147,8 @@ function openCmdk(){
   const ov=document.getElementById('cmdk-overlay');
   ov.classList.add('open');
   const inp=document.getElementById('cmdk-input');
+  /* Step 64: beside "Cancel" on a phone, the short form still fits. */
+  inp.placeholder=(window.matchMedia&&matchMedia('(max-width:600px)').matches)?'Tasks, events, notes, links':'Search tasks, events, notes or links';
   inp.value='';renderCmdk();
   setTimeout(()=>inp.focus(),30);
 }
@@ -4992,7 +4987,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
    +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
    +  '<div class="ov-team-list" id="team-list"></div>'
-   +  '<div class="ov-team-note" id="team-note" hidden></div>'
    +'</section>'
    +'<div class="ov-grid">'
    +  '<div class="ov-col-main">'
@@ -5277,12 +5271,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(nxEl)MarcomUI.setHTML(nxEl,nx?'<button type="button" class="nx-btn" onclick="openMeetingCal()" title="Open Google Calendar">'
       +'<i class="ti ti-calendar-time" aria-hidden="true"></i> <span class="nx-l">Next meeting: </span>'
       +nx.st.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' '+esc((nx.title||'').slice(0,60))+'</button>':'');
-    var missing=typeof window.avlMissing==='function'?window.avlMissing():[];
-    var note=document.getElementById('team-note');
-    if(note){
-      MarcomUI.setHTML(note,missing.length?'Calendar not connected: '+esc(missing.join(', '))+'. Each person connects it in Settings.':'');
-      note.hidden=!missing.length;
-    }
   }
   window.ovRenderTeam=renderTeam;
 
@@ -5410,11 +5398,12 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     arr.sort(function(a,b){ return a.d-b.d; });
     if(!arr.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No upcoming events.</div>'); return; }
     MarcomUI.setHTML(el,arr.slice(0,8).map(function(it){
-      var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':it.d+' days');
+      /* Step 64: the big number says how many days; a word only where it adds one. */
+      var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':'');
       var urg=it.d<=7?' soon':'';
-      return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">days</div></div>'
+      return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
-        +'<div class="ov-cdn-tag">'+lbl+'</div>'+evDeleteButtonHTML(it.e,'boss')+'</div>';
+        +(lbl?'<div class="ov-cdn-tag">'+lbl+'</div>':'')+evDeleteButtonHTML(it.e,'boss')+'</div>';
     }).join(''));
   }
 
@@ -7812,18 +7801,13 @@ html.dark :is(#panel-overview,#settings-modal) .trq-status.s-reject{color:#f4a3a
 .salary-days-label{font-size:8.5px;color:rgba(255,255,255,.6);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
 .salary-divider{width:1px;height:48px;background:rgba(255,255,255,.15);margin:0 22px;flex:0 0 auto;}
 .sal-cell{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;flex:0 0 auto;}
-.sal-cell-prog{flex:1 1 auto;min-width:200px;}
 .sal-cell-label{font-size:10px;font-weight:800;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px;}
 .sal-cell-label i{font-size:14px;color:var(--gold);-webkit-text-fill-color:var(--gold);}
 .sal-cell-value{font-size:16px;font-weight:700;color:#fff;line-height:1.2;white-space:nowrap;}
 .sal-cell-sub{font-size:11px;color:rgba(255,255,255,.58);font-weight:500;display:flex;align-items:center;gap:5px;line-height:1.3;}
 .sal-cell-sub i{font-size:12px;color:rgba(255,255,255,.7);}
-.sal-bar{height:11px;border-radius:99px;background:rgba(255,255,255,.16);overflow:hidden;margin:6px 0 5px;}
-.sal-bar-fill{height:100%;border-radius:99px;width:0;background:linear-gradient(90deg,#e6a417,#ffd884);box-shadow:0 0 10px rgba(230,164,23,.6);transition:width .7s cubic-bezier(.4,0,.2,1);}
 #sal-badge{margin-left:auto;flex:0 0 auto;padding-left:18px;}
 .salary-badge{font-size:11px;font-weight:800;padding:6px 14px;border-radius:99px;white-space:nowrap;background:var(--gold);color:#3a2a00;}
-.salary-badge.sb-soon{background:#ffcf5c;color:#3a2a00;}
-.salary-badge.sb-reg{background:rgba(255,255,255,.16);color:rgba(255,255,255,.9);}
 .salary-badge.sb-pay{background:#34d399;color:#04361f;}
 
 /* ---- 3) DASHBOARD SUMMARY CARDS ------------------------------------- */
@@ -7888,7 +7872,6 @@ html.dark .stat-box.stat-accent .stat-ic{color:var(--accent-ondark,#8fb4dc);}
   .salary-strip{flex-wrap:wrap;gap:10px 16px;justify-content:flex-start;margin:2px 12px 12px;padding:14px 16px;}
   .salary-divider{display:none;}
   .sal-cell{flex:1 1 42%;}
-  .sal-cell-prog{flex:1 1 100%;max-width:none;}
   #sal-badge{margin-left:0;padding-left:0;}
 }
 @media(max-width:520px){
@@ -8340,7 +8323,6 @@ html.dark .kb-col{background:rgba(255,255,255,.025);}
 .kb-col[data-status="done"]{border-top:3px solid var(--st-done);}
 .kb-col[data-status="canceled"]{border-top:3px solid var(--st-cancel);}
 .kb-col-head{border-bottom:none;padding-bottom:6px;}
-.kb-empty{border-style:dashed;background:transparent;}
 
 /* ---- 3) BADGES & ICON RHYTHM ---------------------------------------- */
 .mb,.badge{gap:4px;border-radius:99px;}
@@ -9293,7 +9275,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       var body=cards.length?cards.map(function(t){
         var o=t.__own||w;
         return '<div class="ews-ownwrap"><span class="ews-owner-chip oc-'+o+'"><i class="ti ti-user"></i> '+esc(nmW(o))+'</span>'+taskCardHTML(t,o)+'</div>';
-      }).join(''):'<div class="kb-empty">No tasks</div>';
+      }).join(''):'';
       return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="evwsColDrop(event,\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
     }).join('')+'</div>';
   }
@@ -11404,7 +11386,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');
       b.innerHTML=c
-        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var pc=((document.getElementById('sal-pct')||{}).textContent||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
+        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var sc=document.getElementById('salary-card'),pc=((sc&&sc.getAttribute('data-pct'))||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
         :'<i class="ti ti-chevron-up"></i> Hide salary period';
     }
     /* The payday strip starts as one compact line; Show salary period opens it. */
@@ -11476,7 +11458,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     var me=window.__cur||{},rl={admin:'Admin',designer:'Designer',media:'Media',junior:'Junior'}[me.role]||me.role||'';
     p.innerHTML=''
       +(me.email?'<div class="uxp-mi-who"><i class="ti ti-user-circle"></i><span class="uxp-mi-name">'+esc(String(me.email).split('@')[0])+'</span>'+(rl?'<span class="uxp-mi-role">'+esc(rl)+'</span>':'')+'</div>':'')
-      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search (Ctrl K)</button>'
+      +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openCmdk()"><i class="ti ti-search"></i> Search<span class="uxp-mi-kbd"> (Ctrl K)</span></button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpQuickAdd()"><i class="ti ti-plus"></i> New task</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);toggleDark()"><i class="ti ti-'+(document.documentElement.classList.contains('dark')?'sun':'moon')+'"></i> Dark mode: '+(document.documentElement.classList.contains('dark')?'on':'off')+'</button>'
       +'<button type="button" class="uxp-mi" role="menuitem" onclick="uxpMoreToggle(true);openSettings()"><i class="ti ti-settings"></i> '+(admin?'Team settings':'Settings')+'</button>'
@@ -11537,9 +11519,6 @@ html.dark .uxp-mi i{color:#8fb4dc;}
 .salary-dock .salary-info-sub{color:var(--muted);}
 .salary-dock .salary-divider{background:rgba(20,30,50,.16);}
 .salary-dock .sal-ring-bg{stroke:rgba(20,30,50,.12);}
-.salary-dock .sal-bar{background:rgba(20,30,50,.14);}
-.salary-dock .salary-badge.sb-reg{background:var(--green-light,#e7f6ec);color:#147c3b;}
-.salary-dock .salary-badge.sb-soon{background:var(--amber-light,#fdf3e0);color:#b45309;}
 .salary-dock .salary-badge.sb-pay{background:var(--gold);color:#003057;}
 /* dark mode: the page behind it is dark, so the original light text returns */
 html.dark .salary-dock .salary-strip{border-color:rgba(230,164,23,.35);}
@@ -11552,8 +11531,6 @@ html.dark .salary-dock .sal-cell-sub,
 html.dark .salary-dock .salary-info-sub{color:rgba(255,255,255,.6);}
 html.dark .salary-dock .salary-divider{background:rgba(255,255,255,.15);}
 html.dark .salary-dock .sal-ring-bg{stroke:rgba(255,255,255,.15);}
-html.dark .salary-dock .sal-bar{background:rgba(255,255,255,.16);}
-html.dark .salary-dock .salary-badge.sb-reg{background:rgba(255,255,255,.14);color:#d9f2e2;}
 </style>
 <style id="uxp-style6">
 /* ===== One design format for the Name bar and the Event Hub bar (all tabs) ===== */
@@ -11631,7 +11608,6 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
 .empty-state i{font-size:32px;color:var(--accent,var(--navy));opacity:.75;display:block;margin-bottom:8px;}
 .uxp-es-t{font-size:14.5px;font-weight:800;color:var(--text);margin-bottom:4px;}
 .uxp-es-s{font-size:12.5px;color:var(--muted);margin-bottom:13px;line-height:1.55;}
-.kb-empty{border:1.5px dashed var(--border);border-radius:10px;color:var(--muted);font-size:12px;padding:14px 8px;text-align:center;}
 </style>
 <script id="uxp-script8">
 /* ===== P1-P3: My Day, widget reorder, milestones, empty states ===== */
@@ -11695,11 +11671,11 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var dueTmr=t.filter(function(x){return x.dueDate===tomorrow;});
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
-    var greet=h<12?'Good morning':(h<17?'Good afternoon':'Good evening');
-    var title=isOwn(w)?(greet+', '+esc(nm(w))):(esc(nm(w))+"'s day");
-    /* Before 5pm the "due today" chip already gives today's focus, so the line
-       under the greeting only speaks when there is nothing due today. */
-    var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):(dueToday.length?'':'Here is the plan for today');
+    /* Step 64: the Overview says good morning; here the card says what it holds. */
+    var title=isOwn(w)?'Today':(esc(nm(w))+"'s day");
+    /* Before 5pm the chips and rows speak for today; after 5pm one line looks
+       ahead to tomorrow. */
+    var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):'';
     var rc=window.__rcCounts||{};
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
     /* A count of zero is not drawn: only what is there takes room. */
@@ -12619,6 +12595,15 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var c=cfgOf(w)||{};
     var u=document.getElementById('gcs-url'); if(u&&document.activeElement!==u)u.value=c.url||'';
     var s2=document.getElementById('gcs-secret'); if(s2&&document.activeElement!==s2)s2.value=c.secret||'';
+    /* Step 64: who still has to connect, here in Settings instead of on the
+       Overview. Boss sees the team; everyone else sees their own calendar. */
+    var tm=document.getElementById('gcs-team');
+    if(tm){
+      if((window.__cur||{}).role==='admin'){
+        var miss=typeof window.avlMissing==='function'?window.avlMissing():[];
+        tm.textContent=miss.length?('Not connected yet: '+miss.join(', ')+'. Each person connects their own calendar here.'):'Everyone\'s calendar is connected.';
+      }else tm.textContent=gcsConfigured(w)?'Your calendar is connected.':'Your calendar is not connected yet.';
+    }
 
   };
   function inject(){
@@ -12629,6 +12614,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     d.style.cssText='margin-top:14px;padding-top:14px;border-top:1px solid var(--border);';
     d.innerHTML='<label class="form-label"><i class="ti ti-calendar-cog" style="margin-right:5px;"></i> Google Calendar sync ('+esc(nm(w))+')</label>'
       +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;">Create events automatically when you add a task, and remove them when the task is deleted. Follow google-apps-script/SETUP.md, then paste your Web app URL below.</div>'
+      +'<div class="gcs-team" id="gcs-team" role="status"></div>'
       +'<input class="form-input" id="gcs-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:6px;">'
       +'<input class="form-input" id="gcs-secret" type="text" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Secret phrase (must match the script)" style="margin-bottom:6px;">'
 
@@ -12929,7 +12915,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .kb-col-body .task-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
 .task-card{border-left-width:4px;transition:var(--dm-trans),transform .16s var(--ease),box-shadow .18s var(--ease),border-color .16s;}
 .task-card.kb-dragging{opacity:.4;transform:scale(.98) rotate(-.4deg);box-shadow:var(--shadow-lg);}
-.kb-empty{border:1.5px dashed var(--border-strong);color:var(--muted);background:linear-gradient(var(--surface-2),transparent);}
 
 /* ---- 11. Meeting / hero cards ---- */
 .meet-card{background:var(--grad-brand);box-shadow:var(--shadow-brand);}
@@ -13068,7 +13053,6 @@ html.dark .kb-col{background:rgba(255,255,255,.035);}
 html.dark .kb-col-head{background:rgba(255,255,255,.03);}
 html.dark .kb-col-count{background:rgba(255,255,255,.10);border-color:var(--border);color:var(--text);}
 html.dark .kb-col.kb-over{background:rgba(240,179,35,.10);box-shadow:inset 0 0 0 2px rgba(240,179,35,.55),var(--shadow);}
-html.dark .kb-empty{border-color:var(--border-strong);background:rgba(255,255,255,.02);color:var(--muted);}
 html.dark .kb-col-body .task-card,html.dark .task-card{background:rgba(255,255,255,.06);border-color:var(--border);}
 html.dark .task-card:hover{background:rgba(255,255,255,.10);box-shadow:var(--shadow-lg);}
 html.dark .task-card.tc-pending,html.dark .task-card.tc-in-progress,html.dark .task-card.tc-waiting,
@@ -13362,7 +13346,6 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
 .kb-col-body{padding:12px 0 0!important;background:transparent!important;}
 .kb-col.kb-over{background:color-mix(in srgb,var(--c) 10%,transparent)!important;
   border-radius:16px!important;box-shadow:inset 0 0 0 2px var(--c)!important;}
-.kb-empty{background:transparent!important;}
 </style>
 <style id="light-2026">
 /* ============================================================
@@ -13517,7 +13500,6 @@ html:not(.dark) .app-header{background:#FFFFFF!important;
 
 /* the board stays frameless; cards carry the elevation */
 html:not(.dark) .kb-col,html:not(.dark) .kb-col[data-status]{background:transparent!important;box-shadow:none!important;}
-html:not(.dark) .kb-empty{background:transparent!important;border-color:rgba(16,24,40,.14)!important;}
 
 /* fields and rails need a hint of tone so they read on white */
 html:not(.dark) .form-input,html:not(.dark) .form-select,html:not(.dark) .form-textarea{
