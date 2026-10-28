@@ -1463,6 +1463,9 @@ person tab's sidebar has its name covered by the "<" month button. It is
 reproduced in the preview, and the check across every sidebar widget found
 more of the same.
 
+Approved by Boss on 28 Oct: step 56 as written (the month switcher stays in
+the header, on its own line when it does not fit) and step 57.
+
 ## What the checks found
 
 1. **Sidebar widget headers on computers (Boss's screenshot).** Step 39 (live
