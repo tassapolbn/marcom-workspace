@@ -1882,7 +1882,42 @@ their colour (step 49 kept these marks on purpose).
     - Checks: contrast scans zero failures in both themes, Timeline
       included; iPhone widths and the tab bar pass. Tests: 376/376 (ten new).
 
-- [ ] **66. Final check and a fourth independent review**
+- [x] **66. Final check and a fourth independent review**
+  - Done (28 Oct):
+    - Final check: 376/376 tests. Contrast scans: zero failures in both
+      themes at 1440 and 390, Timeline included. iPhone widths 320 to 440 and
+      the tab bar pass, and so do the end-to-end checks of steps 58 to 65.
+    - Found and fixed on the way: a colour-only event's tag (School Open Day,
+      light blue) read at 4.00:1, because its text shade was measured on white
+      rather than on the tint it sits on. It is now measured on the tint, over
+      the greyer card of a finished task, and in dark mode aims for 5.3:1 so
+      it still reads at 4.5:1 when a finished card fades. The scans now
+      include cards tagged with colour-only events.
+    - Boss's question, why an event tag on the Boss tab did not match its
+      event's colour: three causes on the live site (plan 5). Teal text was
+      forced on any event with a colour but no text colour; a card linked to
+      its event by name got the default teal tag; and shared cards always used
+      a fixed teal tag. Step 63 fixes all three. Compared event by event with
+      the live code, every tag on Boss's tab now matches its Event Hub tile.
+    - Fourth walkthrough (independent reviewer, iPhone 390x844, its own path):
+      as the lead it found the School Open Day task with no owner, gave it to
+      Eye and confirmed it on Eye's tab. It completed the task, with three
+      hesitations and one wrong turn. Older behaviours, not changed by plan 6:
+      - a shared task with no owner is missing from Upcoming Deadlines and
+        Team today;
+      - tapping an event under "Coming up" opens the Boss tab, not the
+        event;
+      - an event's own page counts only cards linked to it;
+      - the assign menu on the Event Board keeps focus, so on a computer the
+        row looks unchanged until you click elsewhere;
+      - a shared task's row cuts its title, opens nothing and shows no
+        priority.
+      These go to Boss as a proposed follow-up plan. The repeated task names
+      it saw are the preview's demo data.
+    - Scored visual review: still running when Boss asked to go live; its
+      score and findings follow separately.
+    - Notes and evidence: `.oil-ui/workspace-redesign/evidence66/`, `ux66/`
+      and `review66/` (not committed).
 
 ## Decisions needed from Boss (plan 6)
 
