@@ -1368,7 +1368,18 @@ test("one event tag: the event's own fill, a tint with a readable shade, or the 
   const tint=meta(card({...sample,eventId:'open-day',eventName:'School Open Day'},{events:EVS}));
   const m=tint.match(/<span class="mb mb-event mb-event-tint" style="background:rgba\(75,143,208,0\.14\);--evc-ink:(#[0-9a-f]{6});--evc-ink-d:(#[0-9a-f]{6});">/);
   assert.ok(m,'a colour without a text colour: its tint, and a readable shade of it as the text');
-  assert.ok(contrast(m[1],'#ffffff')>=4.5,'the light shade reads on a white card: '+m[1]);
+  /* Step 66: measured on the tint the text sits on, not on the white card around it. */
+  const over=(base,a)=>'#'+[75,143,208].map((c,k)=>Math.round(base[k]+(c-base[k])*a).toString(16).padStart(2,'0')).join('');
+  assert.ok(contrast(m[1],over([255,255,255],0.14))>=4.5,'the light shade reads on its tint: '+m[1]+' on '+over([255,255,255],0.14));
+  assert.ok(contrast(m[2],over([36,40,49],0.14))>=4.5,'the dark-mode shade reads on its tint: '+m[2]+' on '+over([36,40,49],0.14));
+  for(const ev of [{id:'a',name:'A',color:'#e6a417'},{id:'b',name:'B',color:'#8e3ad6'},{id:'c',name:'C',color:'#0d9488'},{id:'d',name:'D',color:'#4B8FD0'},{id:'e',name:'E',color:'#697586'}]){
+    const h=meta(card({...sample,eventId:ev.id,eventName:ev.name},{events:[ev]}));
+    const q=h.match(/--evc-ink:(#[0-9a-f]{6});--evc-ink-d:(#[0-9a-f]{6});/);
+    const rgb=[1,3,5].map(i=>parseInt(ev.color.slice(i,i+2),16));
+    const on=base=>'#'+rgb.map((c,k)=>Math.round(base[k]+(c-base[k])*0.14).toString(16).padStart(2,'0')).join('');
+    assert.ok(contrast(q[1],on([248,250,252]))>=4.5,ev.color+': '+q[1]+' on its light tint, even on a finished card');
+    assert.ok(contrast(q[2],on([36,40,49]))>=5.3,ev.color+': '+q[2]+' on its dark tint, with room for a faded card');
+  }
   assert.match(meta(card({...sample,eventId:'party',eventName:'Staff Party'},{events:EVS})),/<span class="mb mb-event"><i class="ti ti-confetti"[^>]*><\/i> Staff Party<\/span>/,'no colour: the quiet tag');
   assert.match(meta(card({...sample,eventName:'Old Event'},{events:EVS})),/<span class="mb mb-event"><i class="ti ti-confetti"[^>]*><\/i> Old Event<\/span>/,'a removed event keeps its name, quietly');
   assert.match(meta(card({...sample,eventId:'book-week',eventName:''},{events:EVS})),/mb-event-tint[^>]*><i class="ti ti-confetti"[^>]*><\/i> Book Week<\/span>/,'an older event saved with a title only');
@@ -1435,7 +1446,7 @@ test('the boards redraw when the events change, so a tag follows its event',()=>
 });
 
 test('the Event form previews the tag the cards will show',()=>{
-  assert.match(source,/const tag=t\?\('mb mb-event mb-event-filled" style="background:'\+bg\+';color:'\+t\+';'\)\n    :\('mb mb-event mb-event-tint" style="background:'\+bg\+';--evc-ink:'\+evInk\(base\)\+';--evc-ink-d:'\+evInkDark\(base\)\+';'\);/);
+  assert.match(source,/const tag=t\?\('mb mb-event mb-event-filled" style="background:'\+bg\+';color:'\+t\+';'\)\n    :\('mb mb-event mb-event-tint" style="background:'\+bg\+';--evc-ink:'\+evTagInk\(base\)\+';--evc-ink-d:'\+evTagInkDark\(base\)\+';'\);/,'the same shades as the card, measured on the tint (step 66)');
   assert.match(source,/\+'<span class="'\+tag\+'box-shadow:inset 0 0 0 1px '\+evTint\(base,0\.4\)\+';">/);
 });
 
