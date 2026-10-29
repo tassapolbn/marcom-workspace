@@ -114,7 +114,7 @@ test('the Overview watermark card shows only deletions due within three days',()
   let tasks=[];
   const days={'2026-10-26':2,'2026-11-10':17,'2026-10-20':-4};
   const context=vm.createContext({document:{getElementById:id=>nodes[id]||null},
-    tOf:()=>tasks,dU:d=>days[d],esc:s=>s,fdt:s=>s,topicOf:t=>t.topic,
+    fmtDue:d=>days[d]<0?'Overdue':days[d]+' days left',tOf:()=>tasks,dU:d=>days[d],esc:s=>s,fdt:s=>s,topicOf:t=>t.topic,
     MarcomUI:{setHTML:(el,html)=>{el.innerHTML=html;}}});
   vm.runInContext(slice('  function renderWM(){','  /* ---------- department resources ---------- */')+'\nthis.renderWM=renderWM;',context);
   tasks=[{topic:'Later',mdWatermark:'2026-11-10'}];
@@ -707,7 +707,7 @@ function card(task,{who='dew',admin=true,soon=false,acts=false,du=-1,events=null
     SC:{pending:{l:'Pending',i:'ti-circle'},waiting:{l:'Waiting',i:'ti-clock'},done:{l:'Done',i:'ti-check'}},
     DZ_STATUSES:['Brief Received'],MEMBER_ORDER:['boss','dew','o','junior'],
     daysUntil:()=>du,isSoon:()=>soon,eventsOf:()=>events||[],evOkClr:()=>false,evTint:()=>'',isEventTask:t=>t.__src==='event',taskAssignees:t=>t.assignees||[],
-    memberName:w=>(names&&names[w])||w,escHtml:esc,fmtDate:d=>d,safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
+    memberName:w=>(names&&names[w])||w,escHtml:esc,fmtDate:d=>d,fmtDue:()=>du===0?'Due today':du+' days left',safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
   /* With events, the real colour helpers (step 63: the card draws the event's own tag). */
   if(events)vm.runInContext(slice('function evOkClr(','const EV_TEXT_COLORS'),context);
   vm.runInContext(slice('function scColors(s){','function setTaskStatus(')+slice('function moveSelectHTML(who,task){','function moveCardTo(')
@@ -1363,7 +1363,7 @@ test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose
   const phone=media(step62,'max-width:600px');
   assert.match(phone,/\.tab-panel \.addtask-bar\{display:none;\}/,'the round "+" opens the same sheet');
   assert.match(phone,/\.tab-panel \.filter-tabs\{flex-wrap:nowrap;overflow-x:auto;/);
-  for(const l of ['Active','Due Soon','Done'])assert.match(source,new RegExp('<b>0</b> <span class="mh-l">'+l+'</span></button>'));
+  for(const l of ['active','due soon','done'])assert.match(source,new RegExp('<b>0</b> <span class="mh-l">'+l+'</span></button>'));
   const one=media(step62,'min-width:361px) and (max-width:600px');
   assert.match(one,/\.member-head \.member-head-stats\{order:1;flex:0 0 auto;margin-left:auto;gap:5px;\}/);
   assert.match(one,/\.member-head \.mh-stat \.mh-l\{position:absolute;width:1px;height:1px;[^}]*clip:rect\(0 0 0 0\);/,'hidden from sight, not from screen readers');
@@ -1428,9 +1428,9 @@ test("a shared card names its people in ink, each with their initial in their co
 
 test('due soon reads in ink with a clock, overdue stays red, and medium priority is quiet',()=>{
   const soon=meta(card({...sample,dueDate:'2026-10-30',priority:'medium'},{soon:true,du:2}));
-  assert.match(soon,/<span class="mb mb-soon"><i class="ti ti-clock"[^>]*><\/i> 2d left \(2026-10-30\)<\/span>/);
+  assert.match(soon,/<span class="mb mb-soon"><i class="ti ti-clock"[^>]*><\/i> 2 days left<\/span>/);
   assert.match(soon,/<span class="mb mb-med">/);
-  assert.match(meta(card(sample)),/<span class="mb mb-overdue"><i class="ti ti-calendar"[^>]*><\/i> Overdue 2026-10-25<\/span>/);
+  assert.match(meta(card(sample)),/<span class="mb mb-overdue"><i class="ti ti-calendar"[^>]*><\/i> Overdue · was due 2026-10-25<\/span>/);
   assert.match(step63,/\.mb-soon,\.mb-wmsoon\{background:var\(--gray-light\);color:var\(--text\);\}/,'a watermark due this week reads the same');
   assert.match(step63,/\.task-card \.task-meta \.mb-soon\{color:var\(--text\);font-weight:700;\}/);
   assert.match(step63,/\.mb-med,\.mb-pending,\.mb-time,\.mb-rev\{background:var\(--gray-light\);color:var\(--muted\);\}/,'medium priority, a pending upload, a shoot time and a revision count are facts');
@@ -1668,7 +1668,7 @@ test('a task ticked done stays in its column for a moment, at its height, then m
   assert.match(source,/function act\(w\)\{try\{return \(tasksOf\(w\)\|\|\[\]\)\.filter\(function\(t\)\{return \(t\.status!=='done'&&t\.status!=='canceled'\)\|\|\(typeof tcLingerFrom==='function'&&!!tcLingerFrom\(t,w\)\);\}\);/,'"Today" above the board waits too');
 });
 
-test('the app opens on the navy cover: the font and icon style sheets no longer hold back the first paint',()=>{
+test('the app opens on its themed frame: the font and icon style sheets no longer hold back the first paint',()=>{
   const head=source.slice(0,source.indexOf('<body>'));
   for(const url of ['fonts.googleapis.com/css2?family=Plus+Jakarta+Sans','fonts.googleapis.com/css2?family=Sarabun','tabler-icons.min.css']){
     const tags=head.match(new RegExp('<link[^>]*'+url.replace(/[.?+]/g,'\\$&')+'[^>]*>','g'));
@@ -1676,7 +1676,7 @@ test('the app opens on the navy cover: the font and icon style sheets no longer 
     assert.match(tags[0],/media="print" onload="this\.media='all'"/,url+' does not block the first paint');
   }
   assert.match(head,/<noscript><link href="https:\/\/fonts\.googleapis\.com/);
-  assert.match(head,/html:not\(\.booted\)\{background:#003057;\}/,'until the cover lifts, the page itself is navy');
+  assert.match(head,/html:not\(\.booted\)\{background:#f4f6f9;\}/,'the first paint has the light page colour');
   assert.match(source,/function liftCover\(\)\{ var c=el\('boot-cover'\); if\(!c\|\|c\.classList\.contains\('done'\)\)return; try\{document\.documentElement\.classList\.add\('booted'\);\}catch\(e\)\{\}/);
 });
 

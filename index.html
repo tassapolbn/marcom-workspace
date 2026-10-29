@@ -15,28 +15,32 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#003057">
+<script>try{if(localStorage.getItem('bb_dark')!=='0')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}</script>
 <style id="boot-cover-style">
 /* Step 36: one calm screen while the workspace opens. It covers the page as the
    HTML first draws it, and the sign-in check behind it, until the person is
    signed in and their first tab is set (see liftCover in the sign-in script). */
 .boot-cover{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  background:#003057;color:#fff;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(#003057 0 88px,#f4f6f9 88px);color:#0e1726;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
   transition:opacity .25s ease,visibility 0s linear .25s;}
 .boot-cover.done{opacity:0;visibility:hidden;pointer-events:none;}
-/* Step 65: until the cover lifts, the page itself is navy, so nothing white shows first. */
-html:not(.booted){background:#003057;}
+/* Step 76 preserves step 65: the first paint has the saved theme and never a blank white page. */
+html:not(.booted){background:#f4f6f9;}
+html.dark:not(.booted){background:#0e1521;}
+html.dark .boot-cover{background:linear-gradient(#003057 0 88px,#0e1521 88px);color:#e9edf3;}
+html.dark .boot-cover-sub{color:#bdc7d5;}
 .boot-cover-mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
   background:linear-gradient(135deg,#f6c64a,#f0b323);box-shadow:0 12px 30px -12px rgba(240,179,35,.65);}
 .boot-cover-mark svg{width:28px;height:28px;fill:none;stroke:#003057;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .boot-cover-name{margin-top:4px;font-size:17px;font-weight:800;letter-spacing:-.01em;}
-.boot-cover-sub{font-size:13px;color:rgba(255,255,255,.74);}
-.boot-cover-bar{width:72px;height:3px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;}
+.boot-cover-sub{font-size:13px;color:#5b6674;}
+.boot-cover-bar{width:72px;height:3px;border-radius:3px;background:#64748b;overflow:hidden;}
 .boot-cover-bar::after{content:'';display:block;width:40%;height:100%;border-radius:inherit;background:rgba(255,255,255,.75);animation:boot-cover-slide 1.1s ease-in-out infinite;}
 @keyframes boot-cover-slide{from{transform:translateX(-100%);}to{transform:translateX(250%);}}
 @media(prefers-reduced-motion:reduce){.boot-cover{transition:none;}.boot-cover-bar::after{animation:none;transform:translateX(75%);}}
 </style>
 <!-- Step 65: the fonts and icons load beside the page instead of before its first
-     paint, so the app opens on the navy cover, not on a blank white page. -->
+     paint, so the themed frame can draw immediately. -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
@@ -936,7 +940,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <button class="sub-tab act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','links',this)"><i class="ti ti-link"></i> Links</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','notes',this)"><i class="ti ti-notes"></i> Notes</button>
-        <button class="sub-tab act-boss" onclick="switchSub('boss','sop',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>
+        <button class="sub-tab act-boss" onclick="switchSub('boss','sop',this)"><i class="ti ti-clipboard-check"></i> Templates</button>
       </div>
       <!-- Events sub-panel (event-first workspace) -->
       <div class="sub-panel" id="boss-sub-events" style="display:none;"></div>
@@ -1729,11 +1733,11 @@ function memberPanelHTML(w){
   +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="meet-card none" id="'+w+'-meet-card" onclick="openMeetingCal()"><div class="meet-ico"><i class="ti ti-calendar-time"></i></div><div class="meet-body"><div class="meet-label">Next Meeting</div><div class="meet-title">No upcoming meetings</div></div><div class="meet-sub"></div></div>'
   +    '<div class="sub-nav">'
-  +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
+  +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>'
   +      '<button class="sub-tab st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'links\',this)"><i class="ti ti-link"></i> Links</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'notes\',this)"><i class="ti ti-notes"></i> Notes</button>'
-  +      (w==='junior'?'<button class="sub-tab" onclick="switchSub(\''+w+'\',\'sop\',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>':'')
+  +      (w==='junior'?'<button class="sub-tab" onclick="switchSub(\''+w+'\',\'sop\',this)"><i class="ti ti-clipboard-check"></i> Templates</button>':'')
   +    '</div>'
   +    '<div class="sub-panel" id="'+w+'-sub-events" style="display:none;"></div>'
   +    '<div class="sub-panel" id="'+w+'-sub-tasks">'
@@ -1823,7 +1827,7 @@ function renderOWidgets(){
     else wq.innerHTML=items.map(t=>{
       const dr=daysUntil(t.mdWatermark);
       const cls=dr<0?'wmq-overdue':(dr===0?'wmq-today':(dr<=7?'wmq-soon':'wmq-ok'));
-      const lbl=dr<0?('Overdue by '+Math.abs(dr)+'d'):(dr===0?'Due today':dr+' days left');
+      const lbl=fmtDue(t.mdWatermark);
       return '<div class="wmq-item '+cls+'"><div class="wmq-name">'+escHtml(t.topic||t.title||'Untitled')+'</div>'
         +'<div class="wmq-meta">Uploaded '+(t.mdUpload?fmtDate(t.mdUpload):'-')+' &middot; Delete '+fmtDate(t.mdWatermark)+'</div>'
         +'<div class="wmq-days">'+lbl+'</div></div>';
@@ -2220,7 +2224,18 @@ function switchSub(who,panel,btn){
 }
 
 // DATES
-function fmtDate(d){if(!d)return'';const x=new Date(d+'T00:00:00');return x.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDate(d){
+  if(!d)return '';
+  const x=d instanceof Date?d:new Date(String(d).slice(0,10)+'T00:00:00');
+  if(isNaN(x.getTime()))return '';
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return x.getDate()+' '+months[x.getMonth()]+(x.getFullYear()===new Date().getFullYear()?'':' '+x.getFullYear());
+}
+function fmtDue(d){
+  const days=daysUntil(d);
+  if(days===null)return '';
+  return days<0?'Overdue':days===0?'Due today':days+' day'+(days===1?'':'s')+' left';
+}
 function daysUntil(d){if(!d)return null;const t=new Date(d+'T00:00:00');const today=new Date(new Date().toDateString());return Math.ceil((t-today)/86400000);}
 function todayStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
 function isSoon(task){
@@ -2669,6 +2684,7 @@ function openAdd(who){
   autoGrowDesc();
   tfSync();
   if(window.MarcomDraft)MarcomDraft.offer(who);
+  document.getElementById('m-topic').focus({preventScroll:true});
 }
 function openEdit(who,id){
   if(window.MarcomDraft)MarcomDraft.hideOffer();
@@ -2895,7 +2911,7 @@ function saveTask(){
     /* Step 60: say what was added and for whom, with a way to see it. */
     try{
       var _ppl2=evtOn?(data.assignees||[]):[whoNow];
-      var _due=data.dueDate?(' \u00b7 due '+new Date(data.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})):'';
+      var _due=data.dueDate?(' \u00b7 due '+fmtDate(data.dueDate)):'';
       var _msg=(evtOn&&!_ppl2.length)?('Added to the Event Board'+_due):('Added for '+_ppl2.map(memberName).join(', ')+_due);
       var _nid=newRef.id;
       uiToast(_msg,{actionLabel:'Show',action:function(){
@@ -3178,8 +3194,8 @@ function taskCardHTML(task,who){
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
   if(task.dueDate){
-    if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue '+fmtDate(task.dueDate)+'</span>';
-    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-clock" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
+    if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue · was due '+fmtDate(task.dueDate)+'</span>';
+    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-clock" style="font-size:11px;"></i> '+fmtDue(task.dueDate)+'</span>';
     else dueLabel='<span class="mb mb-date"><i class="ti ti-calendar" style="font-size:11px;"></i> '+fmtDate(task.dueDate)+'</span>';
   }
   const linksHtml=(task.links&&task.links.length)?
@@ -3255,8 +3271,16 @@ function boardBusy(list){
 function setBoardHTML(list,html){
   /* Keep existing controls and animation state when a snapshot changes nothing. */
   if(list.__boardHTML===html)return;
+  var counts={};
+  list.querySelectorAll('.kb-col').forEach(function(col){
+    counts[col.dataset.status]=Number(col.querySelector('.kb-col-count').textContent);
+  });
   list.innerHTML=html;
   list.__boardHTML=html;
+  list.querySelectorAll('.kb-col').forEach(function(col){
+    var count=col.querySelector('.kb-col-count'),old=counts[col.dataset.status];
+    if(old!==undefined&&Number(count.textContent)>old)count.classList.add('kb-count-tick');
+  });
 }
 function drawBoard(listId){
   __boardTimer[listId]=null;
@@ -3286,7 +3310,7 @@ function oCardExtra(task){
   if(task.mdCategory)h+='<span class="mb mb-media"><i class="ti ti-photo" style="font-size:11px;"></i> '+escHtml(task.mdCategory)+'</span>';
   if(task.mdUpload)h+='<span class="mb mb-uploaded"><i class="ti ti-cloud-check" style="font-size:11px;"></i> Uploaded '+fmtDate(task.mdUpload)+'</span>';
   else if(!finished)h+='<span class="mb mb-pending"><i class="ti ti-cloud-up" style="font-size:11px;"></i> Pending upload</span>';
-  if(task.mdWatermark){const dr=daysUntil(task.mdWatermark);const cls=dr<0?'mb-overdue':(dr<=7?'mb-wmsoon':'mb-wm');const lbl=dr<0?('overdue '+Math.abs(dr)+'d'):(dr===0?'due today':dr+'d left');h+='<span class="mb '+cls+'"><i class="ti ti-eraser" style="font-size:11px;"></i> Watermark '+lbl+'</span>';}
+  if(task.mdWatermark){const dr=daysUntil(task.mdWatermark);const cls=dr<0?'mb-overdue':(dr<=7?'mb-wmsoon':'mb-wm');const lbl=fmtDue(task.mdWatermark);h+='<span class="mb '+cls+'"><i class="ti ti-eraser" style="font-size:11px;"></i> Watermark '+lbl+'</span>';}
   if(task.mdMailSent)h+='<span class="mb mb-mailsent"><i class="ti ti-mail-check" style="font-size:11px;"></i> Mail sent</span>';
   h+='</div><div class="role-actions">';
   if(task.mdFile){if(isUrl(task.mdFile))h+='<a class="task-link" href="'+escHtml(safeUrl(task.mdFile))+'" target="_blank" rel="noopener"><i class="ti ti-folder" style="font-size:11px;"></i> File location</a>';else h+='<span class="task-link" style="cursor:default;"><i class="ti ti-folder" style="font-size:11px;"></i> '+escHtml(task.mdFile)+'</span>';}
@@ -3447,7 +3471,7 @@ function renderNotes(who){
   if(!filtered.length){grid.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   grid.innerHTML=filtered.map(n=>{
-    const ts=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+    const ts=n.createdAt&&n.createdAt.toDate?fmtDate(n.createdAt.toDate()):'';
     const bid='btn-note-'+n.id;
     return `<div class="note-card nc-${who}">
       <div class="note-card-top">
@@ -3685,7 +3709,7 @@ function renderWidgets(tasks,who){
   const upcoming=tasks.filter(t=>{if(t.status==='done'||t.status==='canceled'||!t.dueDate)return false;const d=daysUntil(t.dueDate);return d!==null&&d>=0&&d<=7;}).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
   const upEl=document.getElementById(who+'-upcoming');
   upEl.innerHTML=!upcoming.length?'<div class="widget-empty">No deadlines in the next 7 days</div>':
-    upcoming.map(t=>{const d=daysUntil(t.dueDate);const lbl=d===0?'Today':d===1?'Tomorrow':'in '+d+' days';const urgent=d<=3;
+    upcoming.map(t=>{const d=daysUntil(t.dueDate);const lbl=fmtDue(t.dueDate);const urgent=d<=3;
       return '<div class="wlist-item"><div class="wlist-dot" style="background:'+(urgent?'var(--danger)':(who==='best'?'var(--coral)':'var(--navy)'))+';"></div><div><div class="wlist-topic">'+(t.topic||t.title||'')+'</div><div class="wlist-sub">'+fmtDate(t.dueDate)+' &middot; '+lbl+'</div></div></div>';
     }).join('');
   const active=tasks.filter(t=>t.status!=='canceled');
@@ -4118,7 +4142,7 @@ function renderGCal(who){
   if(selInMonth){
     const sd=new Date(sel+'T00:00:00');
     html+='<div class="cal-detail"><div class="cal-detail-title">'+(sel===tStr?'Today \u00b7 ':'')
-      +sd.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'short'})+'</div>';
+      +fmtDate(sd)+'</div>';
     const evs=map[sel]||[];
     if(!evs.length){
       html+='<div class="gcal-msg" style="padding:12px 0;"><i class="ti ti-calendar-off" style="font-size:22px;"></i>No events this day.</div>';
@@ -4159,7 +4183,7 @@ function renderUpcoming(who){
     const s=new Date(ev.start);
     const key=s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');
     const col=GCAL_COLORS[ev.color]||'var(--blue)';
-    const dlabel=key===tStr?'Today':(key===tmwStr?'Tomorrow':s.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}));
+    const dlabel=key===tStr?'Today':(key===tmwStr?'Tomorrow':fmtDate(s));
     const tlabel=ev.allDay?'All day':s.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     return '<div class="upc-item"><div class="upc-bar" style="background:'+col+';"></div>'
       +'<div class="upc-info"><div class="upc-title">'+escHtml(ev.title||'Untitled')+'</div>'
@@ -4317,9 +4341,9 @@ function renderMeeting(who){
     let cd;
     if(mins<60)cd=mins<1?'Starting now':'in '+mins+' min';
     else if(mins<1440){const h=Math.floor(mins/60),m=mins%60;cd='in '+h+'h'+(m?' '+m+'m':'');}
-    else{const dys=Math.floor(mins/1440);cd='in '+dys+' day'+(dys>1?'s':'');}
+    else{const dys=Math.floor(mins/1440);cd=dys+' day'+(dys===1?'':'s')+' left';}
     const tstr=start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    const dstr=start.toDateString()===now.toDateString()?'Today':start.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const dstr=start.toDateString()===now.toDateString()?'Today':fmtDate(start);
     titleTxt=next.title||'Meeting';
     subHtml='<span class="meet-countdown">Starts '+cd+'</span><span>'+dstr+' '+tstr+'</span>'+(next.location?'<span><i class="ti ti-map-pin" style="font-size:11px;"></i> '+escHtml(next.location)+'</span>':'');
   }
@@ -4350,11 +4374,11 @@ function evCountLabel(ms){
 function evProgress(ms){if(ms<0)return 100;const d=ms/86400000;return Math.max(3,Math.min(100,Math.round(100-(d/60*100))));}
 function evDateLabel(ev){
   const d=new Date(ev.date+'T00:00:00');
-  let s=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  let s=fmtDate(d);
   if(ev.time)s+=' \u00b7 '+ev.time;
   return s;
 }
-function evChipDate(ev){return new Date(ev.date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
+function evChipDate(ev){return fmtDate(ev.date);}
 function evShort(ms){
   if(ms<0)return 'Done';
   const days=Math.floor(ms/86400000);
@@ -5485,7 +5509,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     acts.sort(function(a,b){ return b.dt-a.dt; });
     if(!acts.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No recent activity.</div>'); return; }
     MarcomUI.setHTML(el,acts.slice(0,ovActAll?10:5).map(function(a){
-      var when=a.dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+a.dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      var when=fmtDate(a.dt)+' · '+a.dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       return '<div class="ov-act"><div class="ov-act-ic"><i class="ti '+a.i+'"></i></div><div class="ov-act-b"><div class="ov-act-txt">'+a.txt+'</div><div class="ov-act-t">'+when+'</div></div></div>';
     }).join('')+(acts.length>5?'<button type="button" class="ov-more-link" onclick="ovActMore()">'+(ovActAll?'Show fewer':'Show more')+'</button>':''));
   }
@@ -5501,7 +5525,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     MarcomUI.setHTML(el,items.map(function(t){
       var dr=dU(t.mdWatermark);
       var cls=dr<0?'od':(dr===0?'today':(dr<=7?'soon':'ok'));
-      var lbl=dr<0?('Overdue by '+Math.abs(dr)+'d'):(dr===0?'Delete today':dr+' days left');
+      var lbl=fmtDue(t.mdWatermark);
       return '<div class="ov-wm '+cls+'"><div class="ov-wm-name">'+esc(topicOf(t))+'</div><div class="ov-wm-meta">Uploaded '+(t.mdUpload?fdt(t.mdUpload):'-')+' · Delete '+fdt(t.mdWatermark)+'</div><div class="ov-wm-days">'+lbl+'</div></div>';
     }).join(''));
   }
@@ -5570,7 +5594,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(annCard)annCard.classList.toggle('ov-ann-all',!!ovAnnAll);
     el.innerHTML=(ovAnnAll?items:items.slice(0,1)).map(function(a){
       var dt=a.createdAt?new Date(a.createdAt):null;
-      var when=(dt&&!isNaN(dt.getTime()))?dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+      var when=(dt&&!isNaN(dt.getTime()))?fmtDate(dt)+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
       var text=esc(a.text).replace(/\n/g,'<br>');
       return '<div class="ov-ann-item'+(a.pinned?' pinned':'')+'">'
         +(a.pinned?'<div class="ov-ann-pinbadge"><i class="ti ti-pin-filled"></i> Pinned</div>':'')
@@ -6204,7 +6228,7 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
   function lRef(w){ try{return lieuRefOf(w);}catch(e){return null;} }
   function ts(){ try{return firebase.firestore.FieldValue.serverTimestamp();}catch(e){return null;} }
   function normUrl(u){ if(!u)return ''; return (/^https?:\/\//i.test(u)||u.charAt(0)==='/')?u:'https://'+u; }
-  function editedMark(t){ if(!t)return''; var d=null; if(t.toDate)d=t.toDate(); else if(t.seconds)d=new Date(t.seconds*1000); else {d=new Date(t); if(isNaN(d.getTime()))return'';} return 'edited '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+  function editedMark(t){ if(!t)return''; var d=null; if(t.toDate)d=t.toDate(); else if(t.seconds)d=new Date(t.seconds*1000); else {d=new Date(t); if(isNaN(d.getTime()))return'';} return 'edited '+fmtDate(d); }
 
   window.ovCopy=function(text,btn){ try{ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text); }catch(e){}
     if(btn){ var old=btn.innerHTML; btn.classList.add('done'); btn.innerHTML='<i class="ti ti-check"></i>'; setTimeout(function(){ btn.classList.remove('done'); btn.innerHTML=old; },1200); } };
@@ -6838,7 +6862,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   function isAdmin(){ var c=me(); return !!(c&&c.role==='admin'); }
   function myName(){ var c=me(); if(!c)return 'You'; if(c.role==='admin')return (mn('boss')||'Boss'); if(c.workspace)return (mn(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
   function myWs(){ var c=me(); if(!c)return ''; return c.role==='admin'?'boss':(c.workspace||''); }
-  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; var now=new Date(); var sd=d.toDateString()===now.toDateString(); return (sd?'':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' ')+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
+  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; var now=new Date(); var sd=d.toDateString()===now.toDateString(); return (sd?'':fmtDate(d)+' ')+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
   /* ---- presence + read receipts ----
      Each member writes a small heartbeat to their OWN {workspace}_settings
      document (a doc every member is already allowed to write), so no extra
@@ -6868,7 +6892,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     var diff=Date.now()-ms; if(diff<ONLINE_MS)return 'online now';
     var m=Math.round(diff/60000); if(m<60)return 'last seen '+m+'m ago';
     var h=Math.round(m/60); if(h<24)return 'last seen '+h+'h ago';
-    return 'last seen '+Math.round(h/24)+'d ago';
+    return 'last seen '+Math.round(h/24)+' days ago';
   }
   function readersOf(msg){
     var mt=tsMs(msg.createdAt); if(!mt)return [];
@@ -7268,6 +7292,11 @@ html.dark .dirq-ok{color:#f0b95f;}
   function myEmail(){ var c=me(); return c?(c.email||''):''; }
   function mn(w){ try{ return (typeof memberName==='function')?(memberName(w)||w):w; }catch(e){ return w; } }
   function day(iso){ try{ return iso?fmtDate(String(iso).slice(0,10)):''; }catch(e){ return ''; } }
+  function requestText(n){
+    return n.action==='deadline'&&/^\d{4}-\d{2}-\d{2}$/.test(n.value||'')
+      ?(n.actionLabel||'Needs to be done by')+' '+fmtDate(n.value)
+      :(n.sentence||n.actionLabel||'Request');
+  }
   /* The admin sees every request; a member sees only the ones addressed to them. */
   function visible(n){ if(isAdmin())return true; var w=myWs(); return !!(w&&(n.owners||[]).indexOf(w)>=0); }
   function keyOf(task,who){
@@ -7281,7 +7310,7 @@ html.dark .dirq-ok{color:#f0b95f;}
     return NOTES.filter(visible).map(function(n){
       var owners=(n.owners||[]).map(mn).join(', ');
       return { g:'Director requests', cls:'warn', ic:'ti-user-star',
-        t:n.sentence||n.actionLabel||'Request',
+        t:requestText(n),
         s:(n.taskTopic||'Task')+' \u00b7 from '+(n.from||'the Director')+(owners?' \u00b7 for '+owners:''),
         go:((n.owners||[])[0]||myWs()||'boss') };
     });
@@ -7299,7 +7328,7 @@ html.dark .dirq-ok{color:#f0b95f;}
   function panelHTML(list){
     if(!list.length)return '';
     var rows=list.map(function(n){
-      return '<div class="dirq-i"><div class="dirq-s">'+esc(n.sentence||n.actionLabel||'Request')+'</div>'
+      return '<div class="dirq-i"><div class="dirq-s">'+esc(requestText(n))+'</div>'
         +'<div class="dirq-m">'+esc([n.from||'Director',day(n.createdAtIso)].filter(Boolean).join(' \u00b7 '))+'</div>'
         +(n.note?'<div class="dirq-note">'+esc(n.note)+'</div>':'')
         +'<button type="button" class="dirq-ok" onclick="event.stopPropagation();dirqHandled(&quot;'+esc(n.id)+'&quot;)">'
@@ -7412,7 +7441,7 @@ html.dark :is(#panel-overview,#settings-modal) .trq-status.s-reject{color:#f4a3a
   function myEmail(){ var c=me(); return c?(c.email||''):''; }
   function isAdmin(){ var c=me(); return !!(c&&c.role==='admin'); }
   function myName(){ var c=me(); if(!c)return 'Member'; if(c.role==='admin')return (mn('boss')||'Boss'); if(c.workspace)return (mn(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
-  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
+  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; return fmtDate(d)+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
   function ensureCard(){
     /* App feedback lives in Settings, so the Overview stays about the team's work. */
     var main=document.querySelector('#settings-modal .modal-body'); if(!main)return false;
@@ -8072,9 +8101,9 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
       var cd;
       if(mins<60) cd=mins<1?'Now':'in '+mins+'m';
       else if(mins<1440){var h=Math.floor(mins/60),m=mins%60; cd='in '+h+'h'+(m?' '+m+'m':'');}
-      else{var dys=Math.floor(mins/1440); cd='in '+dys+'d';}
+      else{var dys=Math.floor(mins/1440); cd=dys+' day'+(dys===1?'':'s')+' left';}
       var tstr=start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      var dstr=sameDay?'Today':start.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+      var dstr=sameDay?'Today':fmtDate(start);
       return '<div class="meet-item'+(sameDay?' today':'')+'">'
         +'<div class="meet-item-row"><span class="meet-cd'+(sameDay?' urgent':'')+'">'+(sameDay?'<span class="meet-cd-dot"></span>':'')+cd+'</span><span class="meet-item-time">'+dstr+' &middot; '+tstr+'</span></div>'
         +'<div class="meet-item-title">'+esc(ev.title||'Meeting')+'</div>'
@@ -8095,9 +8124,9 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
            o:{role:'Photographer & Video Editor',icon:'ti-camera'},
            junior:{role:'Junior Events Coordinator',icon:'ti-user-plus'}};
   /* The header numbers are also the quickest filters for the board below. */
-  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">Active</span></button>'
-                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-clock"></i> <b>0</b> <span class="mh-l">Due Soon</span></button>'
-                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">Done</span></button>';
+  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">active</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-clock"></i> <b>0</b> <span class="mh-l">due soon</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">done</span></button>';
   document.addEventListener('click',function(e){
     var chip=e.target&&e.target.closest?e.target.closest('.member-head .mh-stat[data-f]'):null; if(!chip)return;
     var panel=chip.closest('.tab-panel'); if(!panel)return;
@@ -9002,7 +9031,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     var sup=(ev.suppliers||[]),supOk=sup.filter(function(s){return s.status==='Confirmed'||s.status==='Paid';}).length;
     var d=dU(ev.date);
     var h='<div class="ews-ov-grid">'
-      +'<div class="ews-mini"><div class="ews-mini-num">'+(d===null?'–':(d<0?'Done':d+'d'))+'</div><div class="ews-mini-lbl"><i class="ti ti-hourglass-high"></i>'+(d!==null&&d>=0?'Until event day':'Event finished')+'</div></div>'
+      +'<div class="ews-mini"><div class="ews-mini-num">'+(d===null?'–':(d<0?'Done':d+' day'+(d===1?'':'s')))+'</div><div class="ews-mini-lbl"><i class="ti ti-hourglass-high"></i>'+(d!==null&&d>=0?'Until event day':'Event finished')+'</div></div>'
       +'<div class="ews-mini"><div class="ews-mini-num">'+open+'</div><div class="ews-mini-lbl"><i class="ti ti-clipboard-list"></i>Open tasks</div></div>'
       +'<div class="ews-mini"><div class="ews-mini-num" style="color:'+(soon?'var(--st-overdue)':'inherit')+';">'+soon+'</div><div class="ews-mini-lbl"><i class="ti ti-alarm"></i>Due soon</div></div>'
       +'<div class="ews-mini"><div class="ews-mini-num">'+supOk+'/'+sup.length+'</div><div class="ews-mini-lbl"><i class="ti ti-building-store"></i>Suppliers confirmed</div></div>'
@@ -9050,7 +9079,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       var overdue=!finished&&du!==null&&du<0;
       var dot=finished?(t.status==='done'?'var(--st-done)':'var(--st-cancel)'):(overdue?'var(--st-overdue)':(du!==null&&du<=3?'var(--st-waiting)':'var(--st-progress)'));
       h+='<div class="ews-tl-item" style="--dotc:'+dot+';" onclick="openEdit(\''+(t.__own||w)+'\',\''+t.id+'\')">'
-        +'<div class="ews-tl-date">'+esc(fdt(t.dueDate))+(du!==null&&!finished?'<br><span style="color:'+(overdue?'var(--st-overdue)':'var(--muted)')+';">'+(overdue?Math.abs(du)+'d late':(du===0?'today':'in '+du+'d'))+'</span>':'')+'</div>'
+        +'<div class="ews-tl-date">'+esc(fdt(t.dueDate))+(du!==null&&!finished?'<br><span style="color:'+(overdue?'var(--st-overdue)':'var(--muted)')+';">'+fmtDue(t.dueDate)+'</span>':'')+'</div>'
         +'<div class="ews-tl-topic'+(t.status==='done'?' struck':'')+'">'+esc(t.topic||t.title||'Untitled')+'</div>'
         +tlStatusChip(t,overdue)+'</div>';
     });
@@ -9149,7 +9178,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     }else{
       nts.forEach(function(n){
         var d=n.ts?new Date(n.ts):null;
-        var ds=d?d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+        var ds=d?fmtDate(d)+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
         h+='<div class="ews-row"><div class="ews-row-ic"><i class="ti ti-note"></i></div>'
           +'<div class="ews-row-main"><div class="ews-row-s" style="margin-top:0;color:var(--text);">'+esc(n.text)+'</div>'
           +(ds?'<div class="ews-note-ts" style="margin-top:4px;">'+ds+'</div>':'')
@@ -10324,6 +10353,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
           if(f.type==='links')return;
           var v=d[f.k];
           if(Array.isArray(v))v=v.join(', ');
+          if(f.type==='date'&&v)v=fmtDate(v);
           if(v)items+='<div class="rq-dl-item"><b>'+esc(f.l.replace(/ \(.*?\)/,''))+'</b>'+esc(String(v))+'</div>';
         });
       });
@@ -10376,7 +10406,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
   function rcHistRow(r){
     return '<div class="rc-hist-row"><span class="rq-ref">'+esc(r.refNo||'')+'</span>'
       +'<span style="font-weight:700;font-size:12.5px;flex:1;min-width:140px;">'+esc(r.eventName||'Request')+'<span style="color:var(--muted);font-weight:600;"> &middot; '+esc(LT(r.typeLabel||''))+'</span></span>'
-      +'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+(r.createdAtIso?new Date(r.createdAtIso).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'')+'</span>'
+      +'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+(r.createdAtIso?fmtDate(new Date(r.createdAtIso)):'')+'</span>'
       +stChip(r.status||'Submitted')+'</div>';
   }
   window.rcTrackOne=function(){
@@ -10455,7 +10485,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       uiConfirm({
         title:'Possible double booking',
         icon:'ti-alert-triangle',
-        message:'There is already something booked on '+(r.eventDate||r.deadline||'that date')+': "'+clash+'".'
+        message:'There is already something booked on '+(fmtDate(r.eventDate||r.deadline)||'that date')+': "'+clash+'".'
           +'\n\nThis request is for "'+(r.eventName||'the event')+'"'+(when?' at '+when:'')+'.'
           +'\n\nThe shoots may still both be possible if the venues are close or one is short. Please message the requester to agree the timing, then decide whether to accept.',
         okLabel:'Add anyway',
@@ -10531,6 +10561,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
         if(f.type==='links')return;
         var v=(r.data||{})[f.k];
         if(Array.isArray(v))v=v.join(', ');
+        if(f.type==='date'&&v)v=fmtDate(v);
         if(v)items.push('<div class="rq-dl-item"><b>'+esc(f.l.replace(/ \(.*?\)/,''))+'</b>'+esc(String(v))+'</div>');
       });
     });
@@ -10552,7 +10583,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     var autoNote='';
     if(r.status==='Completed'&&r.completedAtIso){
       var _rm=Date.parse(r.completedAtIso);
-      if(isFinite(_rm))autoNote='<span style="color:var(--muted);"><i class="ti ti-trash-x"></i>Auto-removes '+new Date(_rm+RC_KEEP_MS).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'</span>';
+      if(isFinite(_rm))autoNote='<span style="color:var(--muted);"><i class="ti ti-trash-x"></i>Auto-removes '+fmtDate(new Date(_rm+RC_KEEP_MS))+'</span>';
     }
     var stOpts=RC_STATUSES.map(function(s){return '<option'+(s===(r.status||'Submitted')?' selected':'')+'>'+s+'</option>';}).join('');
     var c=RC_ST[r.status||'Submitted']||RC_ST.Submitted;
@@ -10562,7 +10593,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       +'<div class="rq-main"><div class="rq-title">'+esc(r.eventName||'Request')+(isNew?'<span class="rq-newtag">New</span>':'')+'</div>'
       +'<div class="rq-sub">'
       +'<span><i class="ti ti-user"></i>'+esc((r.requester&&r.requester.name)||'Unknown')+(r.requester&&r.requester.department?' · '+esc(r.requester.department):'')+'</span>'
-      +'<span><i class="ti ti-clock"></i>'+(r.createdAtIso?new Date(r.createdAtIso).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'')+'</span>'
+      +'<span><i class="ti ti-clock"></i>'+(r.createdAtIso?fmtDate(new Date(r.createdAtIso)):'')+'</span>'
       +dueChip+autoNote
       +'</div></div>'
       +'<span class="rq-ref">'+esc(r.refNo||'')+'</span>'
@@ -11718,7 +11749,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
       }
       if(w==='junior'){
         var up=evs('junior').filter(function(e){return e.date&&e.date>=tdy();}).sort(function(a,b){return a.date<b.date?-1:1;});
-        if(up.length){var du=daysUntil(up[0].date);return {cls:'info',ic:'ti-confetti',txt:'Next event: '+(up[0].name||'Event')+(du===0?' today':' in '+du+'d')};}
+        if(up.length){var du=daysUntil(up[0].date);return {cls:'info',ic:'ti-confetti',txt:'Next event: '+(up[0].name||'Event')+' · '+fmtDue(up[0].date)};}
       }
       if(w==='boss'){
         var rc=window.__rcCounts||{};
@@ -12047,7 +12078,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var who=t.lastEditedByName||String(t.lastEditedBy).split('@')[0];
     var d=null,v=t.lastEditedAt;
     try{ d=v&&v.toDate?v.toDate():(v&&v.seconds?new Date(v.seconds*1000):null); }catch(e){}
-    return 'Last edited by '+who+(d?(' · '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})):'');
+    return 'Last edited by '+who+(d?(' · '+fmtDate(d)+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})):'');
   }
   /* known event names: from the shared board plus each member's Event Hub */
   function knownEvents(){

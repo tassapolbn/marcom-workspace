@@ -1764,3 +1764,30 @@ html body .task-card .tc-more:is(.open,:hover){background:var(--gray-light);colo
 html body .fpill[data-f="soon"] .pill-dot{background:var(--muted);}
 #ov-rc-card .ov-rc-btns{flex-wrap:wrap;}
 #ov-rc-card .ov-rc-btns>.btn{min-width:max-content;}
+
+/* Step 76: consistent dates, quiet links and responsive polish with gentle motion. */
+.task-card .task-topic{text-wrap:pretty;}
+html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .ov-more-link){
+  display:inline-flex;align-items:center;width:auto;min-height:0;height:auto;padding:3px 0;margin:4px 0;
+  border:0;background:transparent;font-size:12px;font-weight:600;color:var(--muted);line-height:1.5;box-shadow:none;
+}
+html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .ov-more-link):hover{text-decoration:underline;background:transparent;}
+.kb-count-tick{animation:kb-count-tick .4s ease-out;}
+@keyframes kb-count-tick{0%{transform:translateY(5px) scale(.85);opacity:.35;}55%{transform:translateY(-2px) scale(1.18);}100%{transform:none;opacity:1;}}
+@media(prefers-reduced-motion:reduce){.kb-count-tick{animation:none;}}
+@media(max-width:600px){
+  .member-head .member-head-stats{order:3;flex:1 1 100%;margin:0;gap:0;}
+  .member-head .mh-stat{background:transparent;border:0;padding:2px 0;gap:4px;min-height:0;font-size:11px;}
+  .member-head .mh-stat+.mh-stat::before{content:'·';margin:0 7px;color:var(--muted);}
+  .member-head .mh-stat i{display:none;}
+  .member-head .mh-stat .mh-l{position:static;width:auto;height:auto;margin:0;padding:0;overflow:visible;clip:auto;white-space:nowrap;}
+  .tab-panel .sub-nav{gap:0;padding:4px 0;overflow:visible;justify-content:space-between;}
+  .tab-panel .sub-nav::after{content:none;}
+  .tab-panel .sub-nav :is(.sub-tab,.uxp-drawer-btn){font-size:10px;padding:7px 4px;gap:2px;margin:0;min-width:0;}
+  .tab-panel .sub-nav .sub-tab i,.tab-panel .sub-nav .uxp-drawer-btn i{display:none;}
+  body::after{content:'';position:fixed;z-index:389;left:0;right:0;bottom:0;height:115px;pointer-events:none;
+    background:linear-gradient(transparent,var(--bg) 65%);}
+  html #panel-overview #ov-ann-card.ov-ann-all .ov-ann-list{display:flex;flex-direction:column;gap:6px;}
+  html #panel-overview #ov-ann-card.ov-ann-all .ov-ann-item{margin:0;}
+  html #panel-overview #ov-ann-card.ov-ann-all .ov-more-link{align-self:flex-start;margin:0;}
+}

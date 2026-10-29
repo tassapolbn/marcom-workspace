@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const html=fs.readFileSync('index.html','utf8');
-const css=fs.readFileSync('assets/workspace-ui.css','utf8').split('/* Step 74:')[1];
+const css=fs.readFileSync('assets/workspace-ui.css','utf8').split('/* Step 74:')[1].split('/* Step 75:')[0];
 test('step 74 uses flat header, logo, avatars and floating actions in both themes',()=>{
   assert.match(css,/html body \.app-header\{background:#003057!important;[^}]*box-shadow:none!important/);
   assert.match(css,/\.app-header::after\{content:none!important;display:none!important;background:none!important/);

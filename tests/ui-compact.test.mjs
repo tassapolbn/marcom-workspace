@@ -38,7 +38,7 @@ function fakeTabs(){
 }
 test('switching a Resources tab shows exactly one panel and remembers it',()=>{
   const nodes=fakeTabs(),stored={};
-  const context=vm.createContext({window:{},document:{getElementById:id=>nodes[id]||null},
+  const context=vm.createContext({fmtDate:String,window:{},document:{getElementById:id=>nodes[id]||null},
     localStorage:{setItem:(k,v)=>{stored[k]=v;},getItem:k=>stored[k]||null}});
   vm.runInContext(slice('  var RES_TABS=','  function ovResTabRestore(){'),context);
   context.window.ovResTab('brand');
@@ -55,7 +55,7 @@ test('switching a Resources tab shows exactly one panel and remembers it',()=>{
 
 function announcements(items){
   const list={innerHTML:''},card={on:new Set(),classList:{toggle(n,on){on?card.on.add(n):card.on.delete(n);},remove(n){card.on.delete(n);}}};
-  const context=vm.createContext({window:{},document:{getElementById:id=>id==='ov-ann-list'?list:id==='ov-ann-card'?card:null},
+  const context=vm.createContext({fmtDate:String,window:{},document:{getElementById:id=>id==='ov-ann-list'?list:id==='ov-ann-card'?card:null},
     annItems:items,buildAuthorOptions(){},esc:s=>String(s)});
   vm.runInContext(slice('  var ovAnnAll=false;','  function saveAnn(items){')+'\nthis.renderAnnouncements=renderAnnouncements;',context);
   context.renderAnnouncements();

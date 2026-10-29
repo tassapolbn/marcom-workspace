@@ -2282,7 +2282,7 @@ browser tab, which the test browser does not show).
 
   - Done (2026-10-29, built by Codex from .codex-tasks/step-75.md): Browser pop-ups now use app messages, keeping five existing emergency fallbacks. Card controls stay quiet and Move to has room; Request Centre uses clearer button labels. Removed repeated payday and owner signals, finished-card controls and empty Canceled columns; fixed Today and 1 day and made the Due Soon dot quiet ink. Checked rendered card and payday output with regression tests: 416 passed, with only the documented sandbox Netlify failure for .aws and .codex. Preview at 1440x900 and 390x844 and screenshots could not be completed because this environment blocks both the local server socket and Chromium launch (Operation not permitted). No screenshots were produced.
 
-- [ ] **76. Polish and motion**
+- [x] **76. Polish and motion**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: one date format ("29 Oct", with the year only when it is not
     this year, and "2 days left"); no lone last word in card names; one set
@@ -2294,6 +2294,7 @@ browser tab, which the test browser does not show).
     its own light frame instead of a full navy screen.
   - Test: a text scan finds one date pattern; screenshots at 1440 and 390 in
     both themes; the opening recorded with slow style sheets.
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-76.md): Dates share short month names and show the year only outside this year. Deadline labels use complete words, including Director requests displayed from their structured date without changing stored records. Person tabs say All Tasks; titles wrap prettily and Show more links are compact. Phone headers keep labelled counts, sub-tabs use shorter labels with Widgets visible, the dock has a soft fade, Add Task focuses its title, and expanded announcements use a compact list. Column counts tick on increases with reduced motion respected. Opening uses a navy band over the saved light or dark page colour. Added seven regression checks and updated isolated fixtures and old date expectations. UI checks: 423 pass, one documented sandbox-only Netlify failure for .aws and .codex. All 50 inline scripts parse and the diff has no whitespace errors. Localhost binding fails with EPERM and Chromium launch fails with Operation not permitted, so the visible-text scan across all five tabs, desktop and phone screenshots in both themes, and the 100ms light opening screenshot could not be completed. No screenshots were produced. A source scan leaves calendar month/year headings, clock times and user-authored text outside the date-only formatter.
 
 - [ ] **77. Final check and a fifth independent review**
   - Files: `PLAN.md`, tests, evidence (not committed).

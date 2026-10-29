@@ -77,6 +77,7 @@ function board() {
   const state = { loaded: true, dragging: false, writes: 0, html: '', timers: [] };
   const empty = { style: {} };
   const list = {
+    querySelectorAll: () => [],
     get innerHTML() { return state.html; },
     set innerHTML(value) { state.html = value; state.writes++; },
     querySelector: () => state.dragging ? {} : null,

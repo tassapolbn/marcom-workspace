@@ -79,7 +79,7 @@ function trackerHarness(saved = {}, response = { ok: false }) {
     'rc-hist-email': { value: '' },
     'rc-hist-ref': { value: '' }
   };
-  const context = vm.createContext({
+  const context = vm.createContext({fmtDate:String,
     window: {}, document: { getElementById: id => nodes[id] },
     localStorage: { getItem: key => saved[key] || null, setItem: (key, value) => { saved[key] = value; } },
     U: key => key, esc: String, LT: String, stChip: String,
