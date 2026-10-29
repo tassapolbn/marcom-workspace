@@ -1791,3 +1791,15 @@ html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .o
   html #panel-overview #ov-ann-card.ov-ann-all .ov-ann-item{margin:0;}
   html #panel-overview #ov-ann-card.ov-ann-all .ov-more-link{align-self:flex-start;margin:0;}
 }
+
+/* Step 78: Boss brings back the gold payday ring and its soft glow. */
+html body .salary-dock #salary-card .sal-ring-fg{
+  stroke:#f0b323;filter:drop-shadow(0 0 4px rgba(230,164,23,.55));
+}
+html:not(.dark) body .salary-dock #salary-card .salary-days-big{color:#8a5b00;}
+html:not(.dark) body .salary-dock #salary-card .salary-days-label{color:#5b4619;}
+html.dark body .salary-dock #salary-card .salary-days-big{color:#ffd569!important;}
+html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
+@media(prefers-reduced-motion:reduce){
+  html body .salary-dock #salary-card .sal-ring-fg{transition:none;}
+}

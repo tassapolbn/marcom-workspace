@@ -46,11 +46,10 @@ test('step 76 mobile polish keeps labels and Widgets visible, with quiet list li
   assert.match(css,/\.ov-ann-list\{display:flex;flex-direction:column;gap:6px/);
   assert.match(slice('function openAdd(', 'function openEdit('),/getElementById\('m-topic'\)\.focus\(\{preventScroll:true\}\)/);
 });
-test('step 76 opening frame reads the saved theme before any blocking stylesheet',()=>{
+test('opening cover still reads the saved theme before any blocking stylesheet',()=>{
   const head=html.slice(0,html.indexOf('<body>'));
   assert.ok(head.indexOf("localStorage.getItem('bb_dark')")<head.indexOf('<style id="boot-cover-style">'));
-  assert.match(head,/background:linear-gradient\(#003057 0 88px,#f4f6f9 88px\)/);
-  assert.match(head,/html.dark .boot-cover\{background:linear-gradient\(#003057 0 88px,#0e1521 88px\)/);
+  assert.match(head,/html:not\(\.booted\),html.dark:not\(\.booted\)\{background:#00223C;/);
 });
 
 test('step 76 displays a Director deadline from its structured date without rewriting the record',()=>{

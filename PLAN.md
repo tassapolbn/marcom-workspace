@@ -2309,6 +2309,13 @@ browser tab, which the test browser does not show).
     one); steps 68 and 74 each needed one correction. The fifth scored
     review was not run, to save usage at Boss's request; it can follow.
 
+- [x] **78. The yellow glowing payday circle and the navy loading screen come back (Boss's request, 29 Oct)**
+  - Files: `index.html`, `assets/workspace-ui.css`, `PLAN.md`, tests.
+  - Change: reverses those parts of steps 72b, 74 and 76 at Boss's choice: restores the yellow gold payday ring and glow and the full navy opening screen with a soft blue gradient in both themes. The header stays flat navy. The ring says "1 DAY LEFT", with other counts and payday wording preserved.
+  - Test: `npm run test:ui`; gold ring and glow, readable text in both themes, navy gradient and first paint, reduced motion, singular day and payday; desktop and phone screenshots where available.
+
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-78.md): Restored the earlier gold ring and soft glow, with readable light and dark text, and the full navy loading screen with a soft blue gradient. The header remains flat navy. One day now says "1 DAY LEFT"; payday keeps its existing zero count and Payday! badge. Checked the earlier styles in git, contrast ratios, reduced motion, first paint and salary rendering. UI checks: 426 pass, one documented sandbox-only Netlify failure for .aws and .codex. Preview binding fails with EPERM and Chromium cannot launch, so desktop and phone screenshots in both themes could not be captured. No screenshot paths were produced.
+
 ## Decisions needed from Boss (plan 7)
 
 1. **The plan:** recommended, approve steps 67 to 77; or the gap to 8 and
