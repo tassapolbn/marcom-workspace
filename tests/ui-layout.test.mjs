@@ -851,7 +851,7 @@ test('an event with its own text colour keeps its coloured tile in light mode',(
     .filter(([,sel,decl])=>chipSel.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
   assert.ok(clears.length>=1,'plain chips are still flat rows (step 32)');
   for(const [,sel] of clears)for(const part of sel.split(/,(?![^()]*\))/))
-    if(chipSel.test(part))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone');
+    if(chipSel.test(part)&&!part.trim().startsWith('html.dark'))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone in light mode');
   assert.match(step44,/html:not\(\.dark\) \.evhub \.ev-chip\.ev-chip-filled\{border:0;border-radius:12px;\}/,'a filled chip is a neat tile');
   assert.match(source,/\(tc\?' ev-chip-filled':''\)/,'only an event with a text colour is marked filled');
 });

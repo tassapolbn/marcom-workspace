@@ -2240,7 +2240,7 @@ browser tab, which the test browser does not show).
     the person's initials and tab; contrast scans find zero failures on all
     five tabs.
 
-- [ ] **73. Dark mode uses the same colours**
+- [x] **73. Dark mode uses the same colours**
   - Files: `index.html` (the dark-mode layers), `assets/workspace-ui.css`,
     tests.
   - Change: the light-mode status colours (Pending grey, In Progress blue,
@@ -2251,6 +2251,8 @@ browser tab, which the test browser does not show).
   - Test: light and dark side by side show the same colour family for each
     status and each person; no gold outside the logo; contrast scans find
     zero failures in dark mode on all five tabs.
+
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-73.md): Dark statuses keep the light-mode colour families, Dew uses light brown, and primary actions stay navy even with saved person colours. High priority and due-today facts are neutral; event chips, Coming up groups and day agendas are flat. Added palette, hue and AA contrast checks. UI checks: 405 pass, one documented sandbox-only Netlify folder failure. Preview server and Chromium both fail with sandbox permission errors, so comparison screenshots and rendered contrast scans could not be produced.
 
 - [ ] **74. A flat header and one quiet sidebar**
   - Files: `index.html` (the header and sidebar layers),

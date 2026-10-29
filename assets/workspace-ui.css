@@ -1678,3 +1678,55 @@ html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]:
 html:not(.dark) .task-card .story-email-btn:hover{
   color:#34445c!important;background:#e5e7eb!important;filter:none;
 }
+
+/* Step 73: dark mode keeps the light mode colour meanings */
+html.dark{--st-pending:#a3b1c4;--st-progress:#93b4f5;--st-waiting:#f0b86e;--st-hold:#c0a5f0;--st-done:#86d9a0;--st-cancel:#fda4a4;--st-overdue:#fda4a4;--st-archived:#a3b1c4;}
+html.dark body.theme-overview{--accent:#93b4d5;--accent-ink:#93b4d5;--accent-ondark:#93b4d5;}
+html.dark body.theme-boss{--accent:#93b4d5;--accent-ink:#93b4d5;--accent-ondark:#93b4d5;}
+html.dark body.theme-dew{--accent:#e8ad80;--accent-ink:#e8ad80;--accent-ondark:#e8ad80;--accent-shadow:rgba(232,173,128,.3);}
+html.dark body.theme-o{--accent:#f4a080;--accent-ink:#f4a080;--accent-ondark:#f4a080;}
+html.dark body.theme-junior{--accent:#8ad4a4;--accent-ink:#8ad4a4;--accent-ondark:#8ad4a4;}
+html.dark .tab-nav .tab-btn#tab-overview:not(.a-active),html.dark .tab-nav .tab-btn#tab-boss:not(.a-active){color:#93b4d5!important;}
+html.dark .tab-nav .tab-btn#tab-dew:not(.a-active){color:#e8ad80!important;}
+html.dark .tab-nav .tab-btn#tab-o:not(.a-active){color:#f4a080!important;}
+html.dark .tab-nav .tab-btn#tab-junior:not(.a-active){color:#8ad4a4!important;}
+/* Extra specificity keeps saved person colours on identities, away from actions. */
+html.dark body :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent,
+html.dark body .tab-panel .filter-tabs .fpill:is(.act-accent,.act-navy){background:#10243a!important;border-color:#647e9a!important;color:#fff!important;box-shadow:none!important;}
+html.dark .kb-col[data-status="pending"]{border-top-color:var(--st-pending);}
+html.dark .kb-col[data-status="in-progress"]{border-top-color:var(--st-progress);}
+html.dark .kb-col[data-status="waiting"]{border-top-color:var(--st-waiting);}
+html.dark .kb-col[data-status="on-hold"]{border-top-color:var(--st-hold);}
+html.dark .kb-col[data-status="done"]{border-top-color:var(--st-done);}
+html.dark .kb-col[data-status="canceled"]{border-top-color:var(--st-cancel);}
+html.dark .task-card .mb-high,html.dark #panel-overview .ov-pri.high{background:transparent!important;color:#bdc7d5!important;}
+html.dark .myday-chip.warn,html.dark .myday-chip.warn b,html.dark .mh-stat-soon i,html.dark .mh-stat-soon b,
+html.dark .rq-due.soon,html.dark .evc-cd.u-amber,html.dark .myday-row.warn i,
+html.dark #panel-overview .ov-cdn.soon .ov-cdn-tag{color:#bdc7d5!important;}
+html.dark .myday-chip.warn{background:#293343;border-color:transparent;}
+html.dark .cal-day.today,html.dark #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#93b4d5!important;}
+html.dark .pin-widget .widget-title>i,html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
+html.dark .tab-panel,html.dark .salary-dock,html.dark #lunch-banner,html.dark #lunch-cfg{--gold:#93b4d5;--gold2:#bdc7d5;--gold-light:#293343;}
+html.dark .uxp-undo{color:#fff;}
+html.dark .cd-urgent{background:transparent!important;border:1.5px solid #93b4d5;box-sizing:border-box;}
+html.dark .evhub .ev-chip,html.dark #evb-card .evb-g,html.dark #evb-card .evb-row,
+html.dark #ov-cal-card .ov-cal-detail,html.dark .cal-detail{border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+html.dark .evhub .ev-chip.ev-chip-filled{color:var(--text)!important;}
+html.dark .evhub .ev-chip.ev-chip-filled :is(.ev-chip-date,.ev-chip-name,.ev-chip-cd){color:var(--text)!important;}
+html.dark #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title),
+html.dark #panel-o :is(#o-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title),
+html.dark #panel-junior :is(#junior-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:var(--accent-ondark)!important;}
+html.dark body.theme-overview .tab-nav{--tab-disc:#93b4d5;}
+html.dark .salary-dock .salary-days-big,html.dark .uxp-chip.warn .uxp-chip-n,
+html.dark #panel-overview .ov-cdn-tag,html.dark #evb-card .evb-g.unassigned .evb-g-h,
+html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#bdc7d5!important;}
+html.dark #lunch-banner{background:#1b2c44;color:#bdc7d5;border-color:var(--border);}
+html.dark #lunch-banner .lb-close{color:#bdc7d5;}
+html.dark .cal-grid,html.dark .cal-detail,html.dark .cal-legend{--sick:#bdc7d5;--sick-light:#293343;--teal:#bdc7d5;--teal-light:#293343;}
+html.dark .cal-day.sick-day,html.dark .cal-day.dayoff{background:#293343;color:#bdc7d5;}
+html.dark #panel-overview .ov-st-sick,html.dark #panel-overview .ov-st-leave{color:#bdc7d5!important;}
+html.dark .tab-nav .tab-btn.a-active{border-bottom-color:#93b4d5!important;}
+html.dark .uxp-sal-mini>span,html.dark #lunch-banner .lb-ico{background:#93b4d5;}
+html.dark .sal-cell-label i{color:#bdc7d5;-webkit-text-fill-color:#bdc7d5;}
+html.dark .salary-badge,html.dark .salary-dock .salary-badge.sb-pay,
+html.dark .meet-cd.urgent,html.dark #lunch-cfg .lc-day.on{background:#293343;color:#bdc7d5;border-color:#bdc7d5;}
