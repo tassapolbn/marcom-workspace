@@ -1548,7 +1548,7 @@ test('iPhone: Upcoming Deadlines keeps its title, and its four filters get a row
 });
 
 test('deadline rows are buttons: Tab reaches them and Enter or Space opens the task',()=>{
-  assert.match(source,/<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey\(event\)" onclick="ovShowTask\(/);
+  assert.match(source,/<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey\(event\)" onclick="/);
   const c=vm.createContext({window:{}});
   vm.runInContext(slice('  window.ovRowKey=function(e){','\n')+'\n',c);
   let clicks=0,prevented=0;

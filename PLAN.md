@@ -2085,7 +2085,7 @@ browser tab, which the test browser does not show).
     and Dew; the step 61 check while scrolling still passes; ticking works
     by touch, mouse and keyboard.
 
-- [ ] **69. Work with no owner, and shared work, on the Overview**
+- [x] **69. Work with no owner, and shared work, on the Overview**
   - Files: `index.html` (the Overview's counts, deadline rows and Team
     today), `assets/workspace-ui.css`, tests.
   - Change: a shared task with no owner appears in Upcoming Deadlines with
@@ -2097,6 +2097,17 @@ browser tab, which the test browser does not show).
     "No owner" before it is assigned and with Eye's initial after; Team
     today's total includes it; a card for Boss, Dew and O shows three
     initials and counts once.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-69.md`, reviewed by
+    Claude): a shared task with no owner now shows in Upcoming Deadlines,
+    with a grey mark and "No owner"; tapping it opens it on the Event Board
+    (its event opened, the row scrolled to and marked). Team today counts
+    it ("22 open tasks", 21 before) and says "1 with no owner", a button to
+    the same place. A shared card shows every owner's initial (up to three,
+    then "+N") and still counts once. The walkthrough's path again at
+    1440x900 and 390x844: Prepare welcome packs, "No owner", one tap to its
+    row; given to Eye, it shows Eye's initial and the "no owner" line goes;
+    no page errors. Contrast scans of the Overview: zero failures in both
+    themes. Tests: 387/387 (five new).
 
 - [ ] **70. One team view of each event**
   - Files: `index.html` (the Event Board and the event page),

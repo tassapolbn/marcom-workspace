@@ -5287,7 +5287,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
   function renderTeam(){
     var el=document.getElementById('team-list'); if(!el)return;
-    var total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },0);
+    var unowned=(typeof eventTasks==='undefined'?[]:eventTasks).filter(function(t){return t.__src==='event'&&isActive(t)&&!taskAssignees(t).length;}).sort(function(a,b){return (a.dueDate||'9999-12-31').localeCompare(b.dueDate||'9999-12-31');});
+    var total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },unowned.length);
     /* Work finished in the last 7 days, kept from the old "Due today" tile. */
     var doneWk=0,wkAgo=new Date(Date.now()-7*86400000);
     MORDER.forEach(function(w){ tOf(w).forEach(function(x){ if(x.status!=='done')return; var dd=tsToDate(x.doneAt); if(dd&&dd>=wkAgo)doneWk++; }); });
@@ -5315,7 +5316,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
         +(leave?'<span class="tm-lv">'+esc(leave)+'</span>':'')+'</span></button>';
     }).join(''));
     MarcomUI.setHTML(document.getElementById('team-sum'),' · '+total+' open<span class="ov-team-sum-w"> tasks</span>'
-      +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':''));
+      +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':'')
+      +(unowned.length?' <button type="button" class="ov-no-owner-btn evb-warn" onclick="evbShowTask('+esc(JSON.stringify(unowned[0].id))+')">'+unowned.length+' with no owner</button>':''));
     var nx=nextMeeting(new Date()),nxEl=document.getElementById('ov-team-next');
     /* "Next meeting: 14:00 Title", which opens Google Calendar as the old
        Meetings tile did; a phone keeps the time and as much title as fits. */
@@ -5416,6 +5418,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     MORDER.forEach(function(w){ tOf(w).forEach(function(t){
       if(isActive(t)&&t.dueDate){ var d=dU(t.dueDate); if(d===null)return; if(d<=14)items.push({w:w,t:t,d:d}); }
     }); });
+    (typeof eventTasks==='undefined'?[]:eventTasks).forEach(function(t){
+      if(t.__src==='event'&&isActive(t)&&!taskAssignees(t).length&&t.dueDate){
+        var d=dU(t.dueDate); if(d!==null&&d<=14)items.push({w:'',t:t,d:d});
+      }
+    });
     var fl=document.getElementById('ov-dl-filters');
     if(fl)MarcomUI.setHTML(fl,[['all','All'],['overdue','Overdue'],['today','Today'],['week','7 days']].map(function(o){
       var on=ovDl===o[0];
@@ -5423,10 +5430,17 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     }).join(''));
     function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
     function row(it){
-      /* Step 52: the owner as their initial in their colour, as in Team today and the
-         tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
-      var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
-      return '<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey(event)" onclick="ovShowTask(\''+it.w+'\',\''+esc(it.t.id)+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      var owners=it.t.__src==='event'?taskAssignees(it.t):[it.w];
+      var who=owners.length?owners.map(nm).join(', '):'No owner';
+      var marks=owners.slice(0,3).map(function(w){
+        var name=nm(w),ini=(Array.from(String(name).trim())[0]||'').toLocaleUpperCase();
+        return '<span class="ov-dl-who" data-member="'+esc(w)+'" title="'+esc(name)+'" aria-hidden="true">'+esc(ini)+'</span>';
+      }).join('');
+      if(owners.length>3)marks+='<span class="ov-dl-who ov-dl-extra" aria-hidden="true">+'+(owners.length-3)+'</span>';
+      if(owners.length>1)marks='<span class="ov-dl-owners">'+marks+'</span>';
+      if(!owners.length)marks='<span class="ov-dl-who ov-dl-unowned" aria-hidden="true"><i class="ti ti-user-question"></i></span>';
+      var action=owners.length?"ovShowTask('"+it.w+"','"+it.t.id+"')":'evbShowTask('+JSON.stringify(it.t.id)+')';
+      return '<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey(event)" onclick="'+esc(action)+'">'+marks+'<div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="'+(owners.length?'ov-dl-wn':'ov-dl-no-owner evb-warn')+'">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;
@@ -12091,6 +12105,23 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
       wrapper.querySelector('.evb-g-h').setAttribute('aria-expanded',String(open));
     });
   };
+  window.evbShowTask=function(id){
+    var task=evtList().find(function(t){return String(t.id)===String(id);});
+    if(!task)return;
+    var label=MarcomEventBoard.labelOf(task)||'Other';
+    evbOpen[label]=true;evbMore[label]=true;
+    if(flt&&flt!==MarcomEventBoard.labelOf(task))flt='';
+    var panel=document.getElementById('panel-overview');
+    if(panel&&!panel.classList.contains('active'))switchTab('overview');
+    window.evbRender();
+    var body=document.getElementById('evb-body'); if(!body)return;
+    Array.prototype.forEach.call(body.querySelectorAll('.evb-row[data-id]'),function(row){
+      if(row.getAttribute('data-id')!==String(id))return;
+      try{row.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){row.scrollIntoView();}
+      row.classList.remove('tc-found');void row.offsetWidth;row.classList.add('tc-found');
+      setTimeout(function(){row.classList.remove('tc-found');},2400);
+    });
+  };
   window.evbShowMore=function(label){evbMore[label]=true;evbRender();};
   window.evbFilter=function(v){flt=v;evbRender();};
   window.evbAssign=function(id,owner){
@@ -12170,7 +12201,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
           var ownHtml=asg.length
             ? '<span class="evb-own has"'+(asg.length>1?' title="Shared card"':'')+'>'+esc(asg.map(function(w){return nm(w);}).join(', '))+'</span>'
             : '<button type="button" class="evb-claim" onclick="evbClaim(\''+t.id+'\')"><i class="ti ti-hand-click"></i> Claim</button>';
-          return '<div class="evb-row'+(t.status==='done'||t.status==='canceled'?' evb-row-done':'')+'">'
+          return '<div class="evb-row'+(t.status==='done'||t.status==='canceled'?' evb-row-done':'')+'" data-id="'+esc(t.id)+'">'
             +'<div class="evb-row-main"><div class="evb-t">'+esc(t.topic||t.title||'Task')+'</div>'
             +'<div class="evb-s">'+(t.dueDate?'<span><i class="ti ti-calendar" style="font-size:11px;"></i> '+esc(fdt(t.dueDate))+'</span>':'')
             +'<span>'+esc((SC[t.status||'pending']||{l:'Pending'}).l)+'</span></div></div>'
