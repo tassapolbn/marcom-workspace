@@ -1668,7 +1668,7 @@ test('a task ticked done stays in its column for a moment, at its height, then m
   assert.match(source,/function act\(w\)\{try\{return \(tasksOf\(w\)\|\|\[\]\)\.filter\(function\(t\)\{return \(t\.status!=='done'&&t\.status!=='canceled'\)\|\|\(typeof tcLingerFrom==='function'&&!!tcLingerFrom\(t,w\)\);\}\);/,'"Today" above the board waits too');
 });
 
-test('the app opens on its themed frame: the font and icon style sheets no longer hold back the first paint',()=>{
+test('the app opens on navy: the font and icon style sheets no longer hold back the first paint',()=>{
   const head=source.slice(0,source.indexOf('<body>'));
   for(const url of ['fonts.googleapis.com/css2?family=Plus+Jakarta+Sans','fonts.googleapis.com/css2?family=Sarabun','tabler-icons.min.css']){
     const tags=head.match(new RegExp('<link[^>]*'+url.replace(/[.?+]/g,'\\$&')+'[^>]*>','g'));
@@ -1676,7 +1676,7 @@ test('the app opens on its themed frame: the font and icon style sheets no longe
     assert.match(tags[0],/media="print" onload="this\.media='all'"/,url+' does not block the first paint');
   }
   assert.match(head,/<noscript><link href="https:\/\/fonts\.googleapis\.com/);
-  assert.match(head,/html:not\(\.booted\)\{background:#f4f6f9;\}/,'the first paint has the light page colour');
+  assert.match(head,/html:not\(\.booted\),html.dark:not\(\.booted\)\{background:#00223C;\}/,'the first paint is navy in both themes');
   assert.match(source,/function liftCover\(\)\{ var c=el\('boot-cover'\); if\(!c\|\|c\.classList\.contains\('done'\)\)return; try\{document\.documentElement\.classList\.add\('booted'\);\}catch\(e\)\{\}/);
 });
 
@@ -1819,7 +1819,7 @@ test('desktop Add Task follows the filters and Today dates follow task names',()
 });
 
 
-test('step 72b keeps gold on the logo and high priority in readable quiet ink',()=>{
+test('step 72b keeps high priority in readable quiet ink; step 78 restores the gold payday ring',()=>{
   const block=stepBlock('72b');
   for(const [ink,bg] of [['#34445c','#ffffff'],['#34445c','#e5e7eb'],['#4b5563','#ffffff'],['#003057','#ffffff'],['#ffffff','#003057']]){
     assert.ok(contrast(ink,bg)>=4.5,ink+' on '+bg);
