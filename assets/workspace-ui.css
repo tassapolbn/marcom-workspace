@@ -1572,3 +1572,15 @@ html.dark #panel-overview .ov-pri.low{color:#a3adba!important;}
 #panel-overview .ov-cal-grid .cal-day:not(.empty):hover{border-color:transparent;background:var(--gray-light);}
 #panel-overview .ov-cal-grid .cal-day.today{background:var(--navy);}
 html.dark .cal-day.today{color:#fff;}
+
+/* Step 67: a finished task keeps its Today row */
+.myday-row.done{color:var(--muted);}
+.myday-row.done .md-title{text-decoration:line-through;}
+.myday-row.done i{color:#166534;}
+.myday-chip.ok{background:#dcfce7;border-color:transparent;color:#166534;}
+.myday-chip.ok b{color:inherit;}
+html.dark .myday-row.done{color:var(--muted);}
+html.dark .myday-row.done .md-title{text-decoration:line-through;}
+html.dark .myday-row.done i{color:#86efac;}
+html.dark .myday-chip.ok{background:#143523;color:#86efac;}
+html.dark .myday-chip.ok b{color:inherit;}

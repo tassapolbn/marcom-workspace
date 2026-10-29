@@ -2038,7 +2038,7 @@ browser tab, which the test browser does not show).
 
 ## Steps
 
-- [ ] **67. Ticking a task done: Undo, the status kept, nothing above the board moves**
+- [x] **67. Ticking a task done: Undo, the status kept, nothing above the board moves**
   - Files: `index.html` (ticking, the Today panel, messages),
     `assets/workspace-ui.css`, tests.
   - Change: a ticked card stays put for a moment as now, then folds away,
@@ -2051,6 +2051,17 @@ browser tab, which the test browser does not show).
   - Test: tick a Waiting card, then Undo: it is back in Waiting, in the same
     place; tick it again and un-tick it from Done: Waiting again; the top of
     the board stays within 2px throughout, at 1440 and 390.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-67.md`, reviewed by
+    Claude): a task marked done, by its tick or by moving it to Done, now
+    remembers the status it had and the day it was finished; un-ticking it,
+    or Undo in the "Done: <task>" message (6 seconds), puts it back in that
+    status (Pending only for tasks finished before this change). A task
+    finished today keeps its Today row, struck through with a green tick and
+    "done", and a "N done today" count joins the others, so the panel keeps
+    its size. Checked in a browser at 1440x900 and 390x844: Review
+    photography (Waiting) ticked, then Undo, is back in Waiting; the top of
+    the board stayed at the same pixel through the tick, the Undo and an
+    overdue task's tick; no page errors. Tests: 381/381 (five new).
 
 - [ ] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
   - Files: `index.html` (the card markup), `assets/workspace-ui.css`, tests.

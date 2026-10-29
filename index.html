@@ -2269,7 +2269,7 @@ function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--
    column immediately instead of waiting for a click elsewhere. */
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({status:val,done:(val==='done')},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign(val==='done'?taskDoneFields((tasksOf(who)||[]).find(x=>x.id===id)||{},true):{status:val,done:false},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
 function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);ref.doc(id).update(Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
@@ -3019,14 +3019,27 @@ function moveTask(who,id,dir){
   if(ra)ra.doc(a.id).update(Object.assign({sortOrder:taskOrder(b)},stampEdit())).catch(_mtFail);
   if(rb)rb.doc(b.id).update(Object.assign({sortOrder:taskOrder(a)},stampEdit())).catch(_mtFail);
 }
+function taskDoneFields(t,done){
+  if(done&&t.status==='done')return {status:'done',done:true};
+  if(done)return {status:'done',done:true,statusBefore:t.status||'pending',doneOn:todayStr()};
+  return {status:['pending','in-progress','waiting','on-hold'].includes(t.statusBefore)?t.statusBefore:'pending',done:false,doneOn:null};
+}
 function toggleTaskDone(who,id){
   const t=(tasksOf(who)).find(x=>x.id===id);
   if(!t)return;
-  const newStatus=(t.status==='done')?'pending':'done';
+  const completing=t.status!=='done',fields=taskDoneFields(t,completing);
   const rf=taskRef(t,who); if(!rf)return;
   tcLinger(who,id,t.status||'pending');
-  rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()))
-    .catch(function(e){dbSaveFailed(e,newStatus==='done'?'the completed task':'the reopened task');});
+  rf.doc(id).update(Object.assign({},fields,stampEdit()))
+    .catch(function(e){dbSaveFailed(e,completing?'the completed task':'the reopened task');});
+  if(completing){
+    const title=t.topic||t.title||'Task',previous={statusBefore:fields.statusBefore};
+    uiToast('Done: '+(title.length>40?title.slice(0,40)+'…':title),{undo:function(){
+      tcLinger(who,id,'done');
+      rf.doc(id).update(Object.assign(taskDoneFields(previous,false),stampEdit()))
+        .catch(function(e){dbSaveFailed(e,'the reopened task');});
+    },duration:6000});
+  }
 }
 /* Step 65: a task ticked done (or reopened) stays in its column for a moment,
    ticked, so the next card does not jump under the thumb; then it moves. */
@@ -11696,12 +11709,18 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     }catch(e){}
     return null;
   }
+  function myDayTasks(w,today){
+    try{return (tasksOf(w)||[]).filter(function(t){return (t.status!=='done'&&t.status!=='canceled')||(t.status==='done'&&t.doneOn===today&&t.dueDate&&t.dueDate<=today);});}catch(e){return [];}
+  }
   function myDayHTML(w){
     var today=tdy(),tomorrow=tmr();
-    var t=act(w);
+    var t=myDayTasks(w,today);
     var overdue=t.filter(function(x){return x.dueDate&&x.dueDate<today;});
     var dueToday=t.filter(function(x){return x.dueDate===today;});
     var dueTmr=t.filter(function(x){return x.dueDate===tomorrow;});
+    var openOverdue=overdue.filter(function(x){return x.status!=='done';}).length;
+    var openToday=dueToday.filter(function(x){return x.status!=='done';}).length;
+    var finished=t.filter(function(x){return x.status==='done';}).length;
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
     /* Step 64: the Overview says good morning; here the card says what it holds. */
@@ -11713,15 +11732,16 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
     /* A count of zero is not drawn: only what is there takes room. */
     var chips=''
-      +(overdue.length?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+overdue.length+'</b> overdue</button>':'')
-      +(dueToday.length?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+dueToday.length+'</b> due today</button>':'')
+      +(openOverdue?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openOverdue+'</b> overdue</button>':'')
+      +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openToday+'</b> due today</button>':'')
+      +(finished?'<button type="button" class="myday-chip ok" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+finished+'</b> done today</button>':'')
       +((w==='dew'||w==='o')&&myNew?'<button type="button" class="myday-chip info" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new request'+(myNew>1?'s':'')+'</button>':'');
     var rows='';
     overdue.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row bad" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti ti-alert-triangle"></i>'+esc(x.topic||x.title||'Task')+'<span class="md-sub">was due '+esc(fdt(x.dueDate))+'</span></button>';
+      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'bad')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-alert-triangle')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'was due '+esc(fdt(x.dueDate)))+'</span></button>';
     });
     dueToday.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row warn" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti ti-calendar-due"></i>'+esc(x.topic||x.title||'Task')+'<span class="md-sub">due today</span></button>';
+      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-calendar-due')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
     });
     evToday.slice(0,1).forEach(function(e){
       rows+='<button type="button" class="myday-row info" onclick="uxpGoto(\'#'+w+'-evhub-body\')"><i class="ti ti-confetti"></i>'+esc(e.name||'Event')+'<span class="md-sub">event today</span></button>';
