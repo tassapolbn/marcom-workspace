@@ -1608,3 +1608,12 @@ html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 @media(max-width:640px){
   .task-card{--tc-name-inset:50px;}
 }
+
+/* Step 71: desktop work on the first screen */
+@media(min-width:981px){
+  .tab-panel .filter-tabs{align-items:center;}
+  .tab-panel .filter-tabs .addtask-bar{margin-left:auto;flex:0 0 auto;}
+  html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;min-height:36px;padding:8px 14px;background:#10243a!important;border:1px solid #10243a!important;color:#fff!important;box-shadow:none!important;white-space:nowrap;}
+  .tab-panel .myday-row .md-title{flex:0 1 auto;min-width:0;}
+  .tab-panel .myday-row .md-sub{margin-left:0;flex:0 0 auto;}
+}

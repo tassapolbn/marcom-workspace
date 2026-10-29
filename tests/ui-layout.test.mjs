@@ -1358,8 +1358,8 @@ test('step 68a: Today mounts immediately after the name card, ahead of the main 
 });
 
 test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose counters are still heard',()=>{
-  assert.match(source,/<div class="addtask-bar" style="margin-bottom:0\.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd\('boss'\)">/);
-  assert.match(source,/'<div class="addtask-bar" style="margin-bottom:0\.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd\(\\''\+w\+'\\'\)">/);
+  assert.match(source,/<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd\('boss'\)">/);
+  assert.match(source,/'<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd\(\\''\+w\+'\\'\)">/);
   const phone=media(step62,'max-width:600px');
   assert.match(phone,/\.tab-panel \.addtask-bar\{display:none;\}/,'the round "+" opens the same sheet');
   assert.match(phone,/\.tab-panel \.filter-tabs\{flex-wrap:nowrap;overflow-x:auto;/);
@@ -1537,7 +1537,8 @@ test('one greeting: My day on your own tab is "Today"',()=>{
   assert.match(own,/<span class="myday-greet">Today<\/span>/);
   assert.doesNotMatch(own,/Good (morning|afternoon|evening)/);
   assert.match(myDay('dew',{tasks:[]}),/<span class="myday-greet">Dew's day<\/span>/,'someone else\'s tab keeps its name');
-  assert.match(source,/var greeting=g\+', '\+myName\(\);/,'the Overview keeps "Good morning, Boss"');
+  assert.doesNotMatch(shell,/id="ov-greet"/,'the Overview greeting is removed');
+  assert.match(shell,/id="ov-datesub"/,'the date stays');
 });
 
 test('an empty status column is its header and its 0, with a drop area only while a card is dragged over it',()=>{
@@ -1797,4 +1798,22 @@ test('facts and footer align under the name at desktop and phone tick widths',()
   assert.match(block,/--tc-name-inset:35px/,'25px tick plus 10px gap');
   assert.match(media(block,'max-width:640px'),/--tc-name-inset:50px/,'40px touch tick plus 10px gap');
   assert.match(block,/\.tc-bar\{margin-left:var\(--tc-name-inset\);justify-content:flex-start;/);
+});
+
+/* Step 71: the date and work lead the desktop screen. */
+test('desktop Add Task follows the filters and Today dates follow task names',()=>{
+  const boss=slice('<div class="sub-panel" id="boss-sub-tasks">','<!-- Links sub-panel -->');
+  const member=slice("'<div class=\"sub-panel\" id=\"'+w+'-sub-tasks\">'","'<div class=\"sub-panel\" id=\"'+w+'-sub-links\"");
+  for(const markup of [boss,member]){
+    assert.ok(markup.indexOf('class="addtask-bar"')>markup.indexOf('data-f="canceled"'));
+    assert.match(markup,/class="addtask-bar"><button[^>]+onclick="openAdd\(/);
+    assert.doesNotMatch(markup.slice(markup.indexOf('class="addtask-bar"')),/setFilter\(/);
+  }
+  const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8').split('/* Step 71:')[1];
+  assert.match(css,/@media\(min-width:981px\)/);
+  assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:auto;flex:0 0 auto;/);
+  assert.match(css,/background:#10243a!important;.*color:#fff!important/);
+  assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
+  assert.match(source,/dateLabel=DOW\[n.getDay\(\)\]/);
+  assert.doesNotMatch(slice('window.ovDaily=function(){','/* quick actions */'),/Good morning|Good afternoon|Good evening|ov-greet/);
 });

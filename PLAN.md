@@ -2195,7 +2195,7 @@ browser tab, which the test browser does not show).
     gold (dark) to that purple at once; with no colour picked nothing
     changes. Tests: 393/393 (two new).
 
-- [ ] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
+- [x] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: on computers the Payday line moves into the header beside the
     tabs (if chosen), so the team announcement is the Overview's first row,
@@ -2208,6 +2208,8 @@ browser tab, which the test browser does not show).
     first row of cards (name, date and labels) is fully above the fold; in
     the reviewer's masked 480px thumbnail the heaviest shape below the
     header is the work.
+
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-71.md): removed the Overview greeting and kept its date; Payday stays in place. Add Task now follows the person filters and uses the same form, with a compact navy button on computers; Today dates sit beside task names on computers. The iPhone round button and Today layout retain their existing rules. Checked 396 passing tests; the one known sandbox Netlify failure concerns .aws and .codex. Screenshot capture and the first card row bottom measurement remain unverified: the sandbox blocks the preview port and Chromium launch.
 
 - [ ] **72. Colour means one thing (light mode)**
   - Files: `assets/workspace-ui.css`, `index.html` (the colour picker's

@@ -947,7 +947,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="bs-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>
           <div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="bs-done">0</div><div class="stat-lbl">Done</div></div></div>
         </div>
-        <div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         <div class="filter-tabs">
           <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
@@ -955,6 +954,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <button class="fpill" data-who="boss" data-f="soon" onclick="setFilter('boss','soon',this)"><span class="pill-dot"></span>Due Soon</button>
           <button class="fpill" data-who="boss" data-f="done" onclick="setFilter('boss','done',this)">Done</button>
           <button class="fpill" data-who="boss" data-f="canceled" onclick="setFilter('boss','canceled',this)">Canceled</button>
+          <div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         </div>
         <div id="boss-list"></div>
         <div class="empty-state" id="boss-empty" style="display:none;"><i class="ti ti-clipboard-list"></i><p>No tasks here.</p></div>
@@ -1742,7 +1742,6 @@ function memberPanelHTML(w){
   +        '<div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="'+w+'-s-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>'
   +        '<div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="'+w+'-s-done">0</div><div class="stat-lbl">Done</div></div></div>'
   +      '</div>'
-  +      '<div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '<div class="filter-tabs">'
   +        '<button class="fpill act-accent" data-who="'+w+'" data-f="all" onclick="setFilter(\''+w+'\',\'all\',this)">All Tasks</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="pending" onclick="setFilter(\''+w+'\',\'pending\',this)">Pending</button>'
@@ -1750,6 +1749,7 @@ function memberPanelHTML(w){
   +        '<button class="fpill" data-who="'+w+'" data-f="soon" onclick="setFilter(\''+w+'\',\'soon\',this)"><span class="pill-dot"></span>Due Soon</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="done" onclick="setFilter(\''+w+'\',\'done\',this)">Done</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="canceled" onclick="setFilter(\''+w+'\',\'canceled\',this)">Canceled</button>'
+  +        '<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '</div>'
   +      '<div id="'+w+'-list"></div>'
   +      '<div class="empty-state" id="'+w+'-empty" style="display:none;"><i class="ti ti-clipboard-list"></i><p>No tasks yet.</p></div>'
@@ -5033,7 +5033,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '</div>'
    +'</div>'
    +'<div class="ov-topbar">'
-   +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
+   +  '<div class="ov-hello"><div class="ov-hello-sub" id="ov-datesub"></div></div>'
    +'</div>'
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
    +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
@@ -9469,12 +9469,6 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   };
   window.ovDaily=function(){
     var now=new Date();
-    /* greeting */
-    var g=now.getHours()<12?'Good morning':(now.getHours()<17?'Good afternoon':'Good evening');
-    var greet=document.getElementById('ov-greet');
-    if(greet){var greeting=g+', '+myName();if(greet.textContent!==greeting)greet.textContent=greeting;}
-    /* The today numbers live in the Overview tiles and Upcoming Deadlines now;
-       the greeting line and the Today's Focus card no longer repeat them. */
     /* quick actions */
     var qa=document.getElementById('ov-qa');
     if(qa&&!qa.getAttribute('data-built')){
@@ -11745,7 +11739,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var finished=t.filter(function(x){return x.status==='done';}).length;
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
-    /* Step 64: the Overview says good morning; here the card says what it holds. */
+    /* The card says what it holds. */
     var title=isOwn(w)?'Today':(esc(nm(w))+"'s day");
     /* Before 5pm the chips and rows speak for today; after 5pm one line looks
        ahead to tomorrow. */
