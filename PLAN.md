@@ -2109,7 +2109,7 @@ browser tab, which the test browser does not show).
     no page errors. Contrast scans of the Overview: zero failures in both
     themes. Tests: 387/387 (five new).
 
-- [ ] **70. One team view of each event**
+- [x] **70. One team view of each event**
   - Files: `index.html` (the Event Board and the event page),
     `assets/event-board.js`, tests.
   - Change: tapping an event under "Coming up" opens that event's tasks on
@@ -2124,6 +2124,20 @@ browser tab, which the test browser does not show).
     "Coming up" to the School Open Day tasks; assigning shows the owner at
     once and the row does not move; the event page and the Event Board show
     the same number of open tasks.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-70.md`, reviewed by
+    Claude): tapping an event under "Coming up" now opens its tasks on the
+    Event Board (opened, scrolled to and marked); an event with no shared
+    tasks still opens its tab, as before. Each row shows the task's full
+    name and its priority, and tapping it opens the task (a task with no
+    owner too; saving it updates the shared task). An unowned task's menu
+    reads "Assign to…", Claim is a quiet secondary button, and choosing an
+    owner shows at once without the row moving (the board sorts by due
+    date, then name). An event's own page now counts the team's shared
+    tasks for it as well as the person's own: School Open Day shows 5 open
+    (the Event Board's 4 plus Boss's own planning task), where it showed 1.
+    Checked at 1440x900 and 390x844 with the walkthrough's path; no page
+    errors. Tests: 391/391 (four new; the Event Board sort test follows the
+    new order).
 
 - [ ] **72a. Bug: a new person colour reaches the name and role (part of 72, approved now)**
   - Files: `index.html` (the colour picker), tests.

@@ -40,7 +40,7 @@
     });
     result.forEach(function(group){
       group.tasks.sort(function(a, b){
-        return Number(assigned(a)) - Number(assigned(b)) || due(a.dueDate, b.dueDate) ||
+        return due(a.dueDate, b.dueDate) ||
           compare(a.title || a.topic || '', b.title || b.topic || '');
       });
     });

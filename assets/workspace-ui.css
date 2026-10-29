@@ -1598,3 +1598,13 @@ html.dark #panel-overview .ov-dl .ov-dl-extra{background:#374151;color:#f3f4f6;}
 #panel-overview .ov-no-owner-btn:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
 #evb-card .evb-row.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
 @media(prefers-reduced-motion:reduce){#evb-card .evb-row.tc-found{animation:none;outline-color:var(--focus-ink);}}
+
+/* Step 70: one team view of each event */
+#evb-card .evb-t{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;}
+#evb-card .evb-priority{color:#4b5563;font-weight:400;}
+#evb-card .evb-claim{background:transparent;color:#34445c;border:1px solid currentColor;font-weight:500;}
+#evb-card .evb-claim:hover{filter:none;text-decoration:underline;}
+html.dark #evb-card .evb-priority{color:#bdc7d5;}
+html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
+#evb-card .evb-g.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
+@media(prefers-reduced-motion:reduce){#evb-card .evb-g.tc-found{animation:none;outline-color:var(--focus-ink);}}

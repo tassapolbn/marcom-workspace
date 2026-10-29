@@ -2673,7 +2673,7 @@ function openAdd(who){
 }
 function openEdit(who,id){
   if(window.MarcomDraft)MarcomDraft.hideOffer();
-  const task=(tasksOf(who)).find(t=>t.id===id);
+  const task=(tasksOf(who)).find(t=>t.id===id)||(eventTasks||[]).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
   taskForFill(who);
@@ -2799,7 +2799,7 @@ function closeModal(){document.getElementById('modal').classList.remove('open');
 function saveTask(){
   const topic=document.getElementById('m-topic').value.trim();
   if(!topic){document.getElementById('m-topic').focus();return;}
-  const _prev=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
+  const _prev=modalState.editId?((tasksOf(modalState.who)).find(t=>t.id===modalState.editId)||(eventTasks||[]).find(t=>t.id===modalState.editId)):null;
   const designRole=modalState.who==='dew'&&modalState.taskType==='role';
   const stage=document.getElementById('m-dz-status').value;
   const paused=stage==='__on-hold'||stage==='__canceled';
@@ -5466,7 +5466,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       /* Step 64: the big number says how many days; a word only where it adds one. */
       var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':'');
       var urg=it.d<=7?' soon':'';
-      return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
+      return '<div class="ov-cdn'+urg+'" onclick="if(!window.evbShowEvent||!evbShowEvent('+esc(JSON.stringify(it.e.name||''))+'))ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
         +(lbl?'<div class="ov-cdn-tag">'+lbl+'</div>':'')+evDeleteButtonHTML(it.e,'boss')+'</div>';
     }).join(''));
@@ -8748,7 +8748,9 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   function evById(w,id){return evArr(w).find(function(e){return e.id===id;})||null;}
   function tasksFor(w,id){
     try{
-      var out=[], seen={};
+      var out=[], seen=Object.create(null);
+      var event=evById(w,id);
+      function norm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();}
       WS.forEach(function(m){
         (tasksOf(m)||[]).forEach(function(t){
           if(t.eventId!==id)return;
@@ -8763,6 +8765,12 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
           }
           var c=Object.assign({},t);c.__own=m;out.push(c);
         });
+      });
+      (eventTasks||[]).forEach(function(t){
+        var label=window.MarcomEventBoard?MarcomEventBoard.labelOf(t):(t.eventLabel||t.eventName||'');
+        if(t.eventId!==id&&!(event&&norm(event.name)&&norm(label)===norm(event.name)))return;
+        if(seen[t.id])return;seen[t.id]=1;
+        var c=Object.assign({},t);c.__own=(typeof taskCanonicalWs==='function'&&taskCanonicalWs(t))||w;out.push(c);
       });
       return out;
     }catch(e){return [];}
@@ -12105,6 +12113,29 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
       wrapper.querySelector('.evb-g-h').setAttribute('aria-expanded',String(open));
     });
   };
+  window.evbShowEvent=function(name){
+    if(!window.MarcomEventBoard)return false;
+    function norm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();}
+    if(!norm(name))return false;
+    var group=MarcomEventBoard.groups(evtList(),{showDone:true,assignees:taskAssignees}).groups.find(function(g){return norm(g.label)===norm(name);});
+    if(!group)return false;
+    var label=group.label;
+    evbOpen[label]=true;
+    if(flt&&flt!==label)flt='';
+    if(!group.open)evbShowDone=true;
+    var focused=document.activeElement;
+    if(focused&&focused.tagName==='SELECT'&&focused.blur)focused.blur();
+    window.evbRender();
+    var toggle=document.getElementById('evb-show-done');if(toggle)toggle.checked=evbShowDone;
+    var body=document.getElementById('evb-body');
+    if(body)Array.prototype.forEach.call(body.querySelectorAll('.evb-g[data-label]'),function(row){
+      if(row.getAttribute('data-label')!==label)return;
+      try{row.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){row.scrollIntoView();}
+      row.classList.remove('tc-found');void row.offsetWidth;row.classList.add('tc-found');
+      setTimeout(function(){row.classList.remove('tc-found');},2400);
+    });
+    return true;
+  };
   window.evbShowTask=function(id){
     var task=evtList().find(function(t){return String(t.id)===String(id);});
     if(!task)return;
@@ -12195,18 +12226,19 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         +(evbMore[k]?items:items.slice(0,5)).map(function(t){
           var asg=taskAssignees(t);
           var owner=asg[0]||'';
-          var opts=['<option value="">Unassigned</option>'].concat(order().map(function(w){
+          var opts=['<option value="">'+(owner?'Unassigned':'Assign to…')+'</option>'].concat(order().map(function(w){
             return '<option value="'+w+'"'+(w===owner?' selected':'')+'>'+esc(nm(w))+'</option>';
           })).join('');
           var ownHtml=asg.length
             ? '<span class="evb-own has"'+(asg.length>1?' title="Shared card"':'')+'>'+esc(asg.map(function(w){return nm(w);}).join(', '))+'</span>'
             : '<button type="button" class="evb-claim" onclick="evbClaim(\''+t.id+'\')"><i class="ti ti-hand-click"></i> Claim</button>';
-          return '<div class="evb-row'+(t.status==='done'||t.status==='canceled'?' evb-row-done':'')+'" data-id="'+esc(t.id)+'">'
+          return '<div class="evb-row'+(t.status==='done'||t.status==='canceled'?' evb-row-done':'')+'" data-id="'+esc(t.id)+'" onclick="'+esc('taskCardClick(event,'+JSON.stringify(owner||'boss')+','+JSON.stringify(t.id)+')')+'">'
             +'<div class="evb-row-main"><div class="evb-t">'+esc(t.topic||t.title||'Task')+'</div>'
             +'<div class="evb-s">'+(t.dueDate?'<span><i class="ti ti-calendar" style="font-size:11px;"></i> '+esc(fdt(t.dueDate))+'</span>':'')
+            +(/^(high|medium|low)$/i.test(t.priority||'')?'<span class="evb-priority">'+esc(t.priority.charAt(0).toUpperCase()+t.priority.slice(1).toLowerCase())+'</span>':'')
             +'<span>'+esc((SC[t.status||'pending']||{l:'Pending'}).l)+'</span></div></div>'
             +ownHtml
-            +'<select class="evb-sel" aria-label="Assign this task" onchange="evbAssign(\''+t.id+'\',this.value)">'+opts+'</select>'
+            +'<select class="evb-sel" aria-label="Assign this task" onchange="evbAssign(\''+t.id+'\',this.value);this.blur();evbRender()">'+opts+'</select>'
             +'</div>';
         }).join('')
         +(!evbMore[k]&&items.length>5?'<button type="button" class="evb-more" onclick="evbShowMore('+labelArg+')">Show '+(items.length-5)+' more</button>':'')

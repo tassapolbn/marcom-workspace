@@ -37,7 +37,7 @@ test('owned shared deadlines keep their initial and shared deadlines show every 
   assert.match(deadlines(['boss','dew','o','junior']),/ov-dl-extra" aria-hidden="true">\+1/);
 });
 test('Event Board rows expose task ids and opening a task expands, scrolls and marks it',()=>{
-  assert.match(source,/data-id="'\+esc\(t.id\)\+'">'/);
+  assert.match(source,/data-id="'\+esc\(t.id\)\+'" onclick="/);
   const classes=new Set();let scrolled=false,delay,cleanup;
   const row={getAttribute:()=> 'shared',classList:{remove:c=>classes.delete(c),add:c=>classes.add(c)},scrollIntoView:()=>{scrolled=true;}};
   const ctx=vm.createContext({window:{evbRender:()=>{}},evtList:()=>[{id:'shared'}],MarcomEventBoard:{labelOf:()=>''},
