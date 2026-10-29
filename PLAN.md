@@ -2063,6 +2063,15 @@ browser tab, which the test browser does not show).
     the board stayed at the same pixel through the tick, the Undo and an
     overdue task's tick; no page errors. Tests: 381/381 (five new).
 
+- [x] **67a. Bug (found by Boss, 29 Oct): a folded Overview card stays tall and blank**
+  - Files: `assets/workspace-ui.css`, tests.
+  - Cause: on computers, a step 65 rule makes the last card of each Overview
+    column grow so both columns end level; it also applied to a folded card,
+    so a folded Upcoming Deadlines stayed 974px tall with nothing in it.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-67a.md`, reviewed by
+    Claude): a folded card no longer grows; it shrinks to its header (78px
+    at 1490x900), and open cards still end level. Tests: 382/382 (one new).
+
 - [ ] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
   - Files: `index.html` (the card markup), `assets/workspace-ui.css`, tests.
   - Change, A (recommended): each card's tick moves to the left of its

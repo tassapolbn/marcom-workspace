@@ -1574,7 +1574,15 @@ test("a widget's name keeps its place when it unfolds; the Overview columns end 
   assert.match(source,/titleEl\.insertAdjacentHTML\('afterbegin',\s*'<span class="wmove">'/,'they are still the first element, moved by order only');
   const desk=media(step65,'min-width:981px');
   assert.match(desk,/#panel-overview \.ov-grid\{align-items:stretch;\}/);
-  assert.match(desk,/#panel-overview :is\(\.ov-col-main,\.ov-col-side\)>\.ov-card:last-child\{flex-grow:1;\}/);
+  assert.match(desk,/#panel-overview :is\(\.ov-col-main,\.ov-col-side\)>\.ov-card:last-child:not\(\.uxp-collapsed\)\{flex-grow:1;\}/);
+});
+
+test('folded Overview cards are excluded from the last-card grow rule',()=>{
+  const desk=media(step65,'min-width:981px');
+  const growRules=desk.match(/[^{}]+\{flex-grow:1;\}/g)||[];
+  assert.equal(growRules.length,1);
+  assert.match(growRules[0],/\.ov-card:last-child:not\(\.uxp-collapsed\)/,'folded cards shrink to their header');
+  assert.doesNotMatch(desk,/>\.ov-card:last-child\{flex-grow:1;\}/);
 });
 
 test('"⋯" never sits alone on a row: beside Details, or in the corner of the facts',()=>{

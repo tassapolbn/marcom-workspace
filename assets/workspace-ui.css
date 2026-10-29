@@ -1530,7 +1530,7 @@ html:not(.dark) #evb-card .evb-more{margin-left:-10px;}
 @media(min-width:981px){
   #panel-overview .ov-grid{align-items:stretch;}
   #panel-overview :is(.ov-col-main,.ov-col-side){display:flex;flex-direction:column;}
-  #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child{flex-grow:1;}
+  #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child:not(.uxp-collapsed){flex-grow:1;}
 }
 /* A card without details has no footer row: "⋯" sits in the corner of its facts,
    which keep room for it, so it never wraps onto a line of its own. Either way
