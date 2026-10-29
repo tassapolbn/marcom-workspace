@@ -3198,15 +3198,15 @@ function taskCardHTML(task,who){
   const actsBtn='<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>';
   return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
-      +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
       +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+doneLbl+'" aria-label="'+doneLbl+'"><i class="ti ti-check"></i></button>'
+      +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
     +'</div>'
     +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
-      +(detHtml?'':actsBtn) /* Step 65: without details, "⋯" ends the facts line instead of a row of its own */
+      +(detHtml?'':'<span class="tc-facts-end">'+actsBtn+'</span>') /* Step 68: actions sit beneath the tick without adding a facts row */
     +'</div>'+roleHtml
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
-    /* Step 50: at rest one bar, Details on the left and "⋯" on the right; "⋯"
+    /* Step 68: at rest one bar, Details and "⋯" together on the left; "⋯"
        opens the action row under it. A click on the card still opens the task. */
     +(detHtml?'<div class="tc-bar">'
       +'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>'

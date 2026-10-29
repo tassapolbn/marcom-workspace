@@ -2080,7 +2080,7 @@ browser tab, which the test browser does not show).
     Claude): a folded card no longer grows; it shrinks to its header (78px
     at 1490x900), and open cards still end level. Tests: 382/382 (one new).
 
-- [ ] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
+- [x] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
   - Files: `index.html` (the card markup), `assets/workspace-ui.css`, tests.
   - Change, A (recommended): each card's tick moves to the left of its
     name, as in Apple Reminders and Things, and its "⋯" moves beside
@@ -2092,6 +2092,19 @@ browser tab, which the test browser does not show).
     "⋯" under the round buttons at 390x844 and 390x664 on the Overview, Boss
     and Dew; the step 61 check while scrolling still passes; ticking works
     by touch, mouse and keyboard.
+  - Done (29 Oct 2026, built by Codex from .codex-tasks/step-68.md):
+    each card now starts with its done tick, then its name, with the facts
+    aligned under the name. More actions sits beside Details on the left,
+    or in the tick column beneath the tick when there are no details,
+    without adding a row or increasing the card height.
+    The round buttons and their scroll behaviour are unchanged. Updated
+    card tests for both Details cases, no lone actions row, keyboard order
+    and alignment. Tests: npm run test:ui passed 26 of 27 test files; the
+    only failure is the known sandbox-only Netlify check for .aws and
+    .codex. All 126 layout tests passed when run directly.
+    Browser checks at 390x844 and 390x664 and the requested screenshots
+    could not run: the sandbox denies the preview server port (EPERM)
+    and Chromium launch (Operation not permitted). Occlusion is unverified.
 
 - [x] **69. Work with no owner, and shared work, on the Overview**
   - Files: `index.html` (the Overview's counts, deadline rows and Team

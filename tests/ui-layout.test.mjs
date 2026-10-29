@@ -716,10 +716,10 @@ function card(task,{who='dew',admin=true,soon=false,acts=false,du=-1,events=null
 }
 const sample={id:'t1',topic:'Plan the open day',status:'pending',dueDate:'2026-10-25',priority:'high',eventName:'Open Day',description:'More',links:[]};
 
-test('a task card opens with its name, the done tick beside it, then one line of facts',()=>{
+test('a task card opens with its done tick, then its name and facts',()=>{
   const html=card(sample);
-  assert.match(html,/^<div class="task-card tc-pending" draggable="true" data-id="t1" onclick="taskCardClick\(event,'dew','t1'\)" ondragstart="taskDragStart\(event,'dew','t1'\)" ondragend="taskDragEnd\(event\)"><div class="task-head"><div class="task-topic [^"]*" title="Plan the open day">Plan the open day<\/div><button class="task-check /,
-    'the name is the first thing inside the card, and drag and drop is unchanged');
+  assert.match(html,/^<div class="task-card tc-pending" draggable="true" data-id="t1" onclick="taskCardClick\(event,'dew','t1'\)" ondragstart="taskDragStart\(event,'dew','t1'\)" ondragend="taskDragEnd\(event\)"><div class="task-head"><button class="task-check [^]*?<\/button><div class="task-topic [^"]*" title="Plan the open day">Plan the open day<\/div>/,
+    'the tick precedes the name, and drag and drop is unchanged');
   assert.match(html,/aria-label="Mark as done"/);
   const meta=html.slice(html.indexOf('<div class="task-meta">'),html.indexOf('<div class="role-x">'));
   assert.match(meta,/^<div class="task-meta"><select class="tcard-sel" title="Task status"/,'the status leads the facts, as its menu');
@@ -1030,7 +1030,7 @@ test('at rest a card ends in one bar, Details and "⋯"; the action row and the 
   const html=card(sample);
   const bar=html.slice(html.indexOf('<div class="tc-bar">'),html.indexOf('<div class="task-foot">'));
   assert.match(bar,/^<div class="tc-bar"><button type="button" class="tc-more" aria-expanded="false" onclick="event\.stopPropagation\(\);tcToggleDetails\(this,'dew_t1'\)">/,'Details on the left');
-  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" on the right');
+  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" beside Details');
   const foot=html.slice(html.indexOf('<div class="task-foot">'),html.indexOf('<div class="tc-details'));
   assert.match(foot,/^<div class="task-foot"><select class="tcard-sel tc-row-sel" title="Task status"/,'the row can carry the status menu for a status column');
   for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
@@ -1064,7 +1064,7 @@ test('the row stays hidden until "⋯"; in a status column the status menu waits
   assert.match(step50,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
   assert.match(step50,/\.kb-col \.task-card \.task-foot \.tc-row-sel\{display:inline-flex;\}/);
   assert.match(media(step50,'max-width:600px'),/\.task-card \.tc-acts-btn\{width:40px;height:40px;\}/,'a full touch target on iPhone');
-  assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:auto;/,'"⋯" at the right end of the bar');
+  assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:0;/,'"⋯" beside Details on the left');
 });
 
 
@@ -1585,18 +1585,22 @@ test('folded Overview cards are excluded from the last-card grow rule',()=>{
   assert.doesNotMatch(desk,/>\.ov-card:last-child\{flex-grow:1;\}/);
 });
 
-test('"⋯" never sits alone on a row: beside Details, or in the corner of the facts',()=>{
+test('"⋯" sits beside Details or below the tick without adding a row',()=>{
   const withDetails=card(sample);
   assert.match(withDetails,/<div class="tc-bar"><button type="button" class="tc-more"[^]*?<\/button><button type="button" class="tc-acts-btn"/,'Details and "⋯" share the bar');
   assert.doesNotMatch(withDetails.slice(withDetails.indexOf('<div class="task-meta">'),withDetails.indexOf('tc-open-hint')),/tc-acts-btn/);
   const bare=card({...sample,description:'',links:[]});
   assert.doesNotMatch(bare,/class="tc-bar"/,'no footer row without details');
   const meta=bare.slice(bare.indexOf('<div class="task-meta">'),bare.indexOf('<i class="ti ti-arrow-up-right tc-open-hint"'));
-  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div><div class="role-x">/,'it ends the facts line');
+  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/span><\/div><div class="role-x">/,'its keyboard position follows the facts');
   assert.equal((bare.match(/tc-acts-btn/g)||[]).length,1);
-  assert.match(step65,/\.task-card \.task-meta:has\(>\.tc-acts-btn\)\{position:relative;padding-right:40px;\}/,'the facts keep room for it');
-  assert.match(step65,/\.task-card \.task-meta>\.tc-acts-btn\{position:absolute;right:-4px;bottom:-3px;margin:0;\}/);
-  assert.match(step65,/@media\(max-width:600px\)\{\n  \.task-card \.task-meta:has\(>\.tc-acts-btn\)\{padding-right:44px;\}/,'more room for the 40px target on a phone');
+  const step68=stepBlock(68);
+  assert.match(meta,/<span class="tc-facts-end"><button/,'the bare card has an actions group in the tick column');
+  assert.match(step68,/\.task-card \.tc-facts-end\{position:absolute;top:0;left:calc\(-1 \* var\(--tc-name-inset\)\);width:calc\(var\(--tc-name-inset\) - 10px\);display:flex;justify-content:center;\}/);
+  assert.match(step68,/\.task-card \.task-meta\{position:relative;margin-left:var\(--tc-name-inset\);\}/);
+  assert.doesNotMatch(step68,/flex-basis:100%/,'actions add no row of their own');
+  assert.doesNotMatch(step65,/task-meta>\.tc-acts-btn\{position:absolute/);
+
 });
 
 test('the Director request is one quote and one action',()=>{
@@ -1760,4 +1764,23 @@ test('chosen colours override member identity shades with readable light and dar
 });
 test('without a chosen colour the picker writes no identity overrides',()=>{
   assert.equal(pickerIdentityFixture({}).css,'');
+});
+
+/* ===== Step 68: the tick and actions stay on the left ===== */
+test('the tick is the first keyboard control, then the existing card controls',()=>{
+  for(const details of [true,false]){
+    const html=card({...sample,description:details?'More':'',links:[]});
+    const controls=[...html.matchAll(/<(button|select|a)\b[^>]*>/g)].map(m=>m[0]);
+    assert.match(controls[0],/class="task-check /);
+    assert.match(controls[1],/class="tcard-sel"/);
+    assert.ok(html.indexOf('task-check')<html.indexOf('task-topic'));
+    assert.doesNotMatch(html,/tabindex=/,'native keyboard order');
+  }
+});
+
+test('facts and footer align under the name at desktop and phone tick widths',()=>{
+  const block=stepBlock(68);
+  assert.match(block,/--tc-name-inset:35px/,'25px tick plus 10px gap');
+  assert.match(media(block,'max-width:640px'),/--tc-name-inset:50px/,'40px touch tick plus 10px gap');
+  assert.match(block,/\.tc-bar\{margin-left:var\(--tc-name-inset\);justify-content:flex-start;/);
 });

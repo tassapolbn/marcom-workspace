@@ -1284,13 +1284,13 @@ html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:h
 html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
 
 /* Step 50: task cards are calm at rest */
-/* At rest a card is its name and tick, one line of facts, and one bar: Details
-   on the left, "⋯" on the right. "⋯" opens the action row under it, the same way
+/* At rest a card is its tick and name, one line of facts, and one bar: Details
+   and "⋯" together on the left. "⋯" opens the action row under it, the same way
    with a mouse, a finger or the keyboard; a click on the card still opens it. A
    row that appeared on hover would make the cards below jump under the pointer. */
 .task-card .tc-bar{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px;}
 .task-card .tc-bar .tc-more{margin:0;}
-.task-card .tc-acts-btn{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
+.task-card .tc-acts-btn{margin-left:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
 .task-card .tc-acts-btn:hover,.task-card .tc-acts-btn:focus-visible,.task-card.acts-open .tc-acts-btn{background:var(--surface-3,rgba(16,24,40,.06));color:var(--text);}
 .task-card:not(.acts-open) .task-foot{display:none;}
 /* The status menu sits on the facts line, except in a status column: the column
@@ -1532,15 +1532,6 @@ html:not(.dark) #evb-card .evb-more{margin-left:-10px;}
   #panel-overview :is(.ov-col-main,.ov-col-side){display:flex;flex-direction:column;}
   #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child:not(.uxp-collapsed){flex-grow:1;}
 }
-/* A card without details has no footer row: "⋯" sits in the corner of its facts,
-   which keep room for it, so it never wraps onto a line of its own. Either way
-   "⋯" is in the card's bottom right corner. */
-.task-card .task-meta:has(>.tc-acts-btn){position:relative;padding-right:40px;}
-.task-card .task-meta>.tc-acts-btn{position:absolute;right:-4px;bottom:-3px;margin:0;}
-@media(max-width:600px){
-  .task-card .task-meta:has(>.tc-acts-btn){padding-right:44px;}
-  .task-card .task-meta>.tc-acts-btn{right:-6px;bottom:-9px;}
-}
 /* The Director request: one quote and one action. The amber rule marks it; the
    rest is plain text and one quiet button. */
 html:not(.dark) .task-card .dirq,html.dark .task-card .dirq{margin-top:10px;padding:0 0 0 12px;border:0!important;
@@ -1608,3 +1599,12 @@ html.dark #evb-card .evb-priority{color:#bdc7d5;}
 html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 #evb-card .evb-g.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
 @media(prefers-reduced-motion:reduce){#evb-card .evb-g.tc-found{animation:none;outline-color:var(--focus-ink);}}
+
+/* Step 68: the tick leads the name; actions stay on the left */
+.task-card{--tc-name-inset:35px;}
+.task-card .task-meta{position:relative;margin-left:var(--tc-name-inset);}
+.task-card .tc-bar{margin-left:var(--tc-name-inset);justify-content:flex-start;}
+.task-card .tc-facts-end{position:absolute;top:0;left:calc(-1 * var(--tc-name-inset));width:calc(var(--tc-name-inset) - 10px);display:flex;justify-content:center;}
+@media(max-width:640px){
+  .task-card{--tc-name-inset:50px;}
+}
