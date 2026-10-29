@@ -13740,6 +13740,10 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
       css+=':root{--member-'+w+':'+ink+';}';
       css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
+      /* Match the fixed identity shades so a chosen colour wins in both modes. */
+      var identity='#panel-'+w+' :is(#'+w+'-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title)';
+      css+='html:not(.dark) '+identity+'{color:'+ink+'!important;}';
+      css+='html.dark '+identity+'{color:'+bright+'!important;}';
       /* Custom colour decorates inactive labels only. Selection keeps the same
          white label, filled background and gold indicator for every workspace. */
       css+='html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'

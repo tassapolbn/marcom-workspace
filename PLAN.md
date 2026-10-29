@@ -2139,7 +2139,7 @@ browser tab, which the test browser does not show).
     errors. Tests: 391/391 (four new; the Event Board sort test follows the
     new order).
 
-- [ ] **72a. Bug: a new person colour reaches the name and role (part of 72, approved now)**
+- [x] **72a. Bug: a new person colour reaches the name and role (part of 72, approved now)**
   - Files: `index.html` (the colour picker), tests.
   - Change: when a person picks a colour, their name, role, greeting line
     and Event Hub title take the readable shade of that colour, as their
@@ -2148,6 +2148,13 @@ browser tab, which the test browser does not show).
   - Test: pick a colour on Boss's, Dew's and O's tabs: the name and role
     change at once, in both themes, and read at 4.5:1 or better; with no
     colour picked the page looks exactly as before.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-72a.md`, reviewed
+    by Claude): a chosen colour now also sets the person's name, role,
+    greeting and Event Hub title, at the readable shade the picker already
+    works out (one for light mode, one for dark). Checked on Dew's tab:
+    picking Future Dusk turned her name and role from brown (light) and
+    gold (dark) to that purple at once; with no colour picked nothing
+    changes. Tests: 393/393 (two new).
 
 - [ ] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.

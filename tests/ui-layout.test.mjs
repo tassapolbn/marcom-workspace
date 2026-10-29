@@ -1732,3 +1732,32 @@ test('finished Today styles strike the title and green chips meet contrast in bo
     assert.ok(contrast(ink,bg)>=4.5);
   }
 });
+
+/* Step 72a: chosen member colours reach identity text in both modes. */
+function pickerIdentityFixture(chosen){
+  const sheet={textContent:''};
+  const c=vm.createContext({document:{getElementById:id=>id==='tc-themes'?sheet:null,
+    body:{lastElementChild:sheet}}});
+  const picker=slice('<script id="theme-picker-2026">','</script>');
+  vm.runInContext(picker.slice(picker.indexOf('  var PAL='),picker.indexOf('  function getDb(')),c);
+  c.chosen=chosen;
+  c.apply();
+  return {css:sheet.textContent,c};
+}
+test('chosen colours override member identity shades with readable light and dark ink',()=>{
+  for(const w of ['boss','best','dew','o','junior']){
+    const color='#12A4A0';
+    const {css,c}=pickerIdentityFixture({[w]:color});
+    const ink=c.readable(color,'#EFF3F9',4.5);
+    const bright=c.readable(color,'#26374b',4.5);
+    const identity='#panel-'+w+' :is(#'+w+'-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title)';
+    assert.ok(css.includes('html:not(.dark) '+identity+'{color:'+ink+'!important;}'),w+' light identity');
+    assert.ok(css.includes('html.dark '+identity+'{color:'+bright+'!important;}'),w+' dark identity');
+    assert.ok(contrast(ink,'#ffffff')>=4.5,w+' ink reads on white');
+    assert.ok(contrast(bright,'#26374b')>=4.5,w+' bright reads on dark cards');
+    assert.ok(!css.includes('#panel-'+(w==='dew'?'boss':'dew')+' '),'unchosen identities keep their defaults');
+  }
+});
+test('without a chosen colour the picker writes no identity overrides',()=>{
+  assert.equal(pickerIdentityFixture({}).css,'');
+});
