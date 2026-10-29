@@ -2254,7 +2254,7 @@ browser tab, which the test browser does not show).
 
   - Done (2026-10-29, built by Codex from .codex-tasks/step-73.md): Dark statuses keep the light-mode colour families, Dew uses light brown, and primary actions stay navy even with saved person colours. High priority and due-today facts are neutral; event chips, Coming up groups and day agendas are flat. Added palette, hue and AA contrast checks. UI checks: 405 pass, one documented sandbox-only Netlify folder failure. Preview server and Chromium both fail with sandbox permission errors, so comparison screenshots and rendered contrast scans could not be produced.
 
-- [ ] **74. A flat header and one quiet sidebar**
+- [x] **74. A flat header and one quiet sidebar**
   - Files: `index.html` (the header and sidebar layers),
     `assets/workspace-ui.css`, tests.
   - Change: the header is flat navy, without glows, gradients or the gold
@@ -2264,6 +2264,8 @@ browser tab, which the test browser does not show).
   - Test: no gradient or glow in the header at 1440 and 390; one sidebar
     panel with at most one visible button per folded row; reordering and
     folding widgets still work by mouse, touch and keyboard.
+
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-74.md): Both themes use a flat navy header and floating buttons, a flat gold logo and avatars without halos. Removed the original gradient, glow and gold-line declarations from the early and late inline style layers, including the more specific light and dark selectors, so they cannot restore the old appearance. Person widgets share one divided panel, folded rows keep at most one quiet action, and Petty Cash hides its nested settings cog until opened. Dark Add and New actions are outlines. Reorder handles appear on computer hover or keyboard focus and remain visible on touch, with pointer capture for touch reordering. Added source-rule regression checks for the header, pseudo-element, logo, avatars and round buttons, folded Petty Cash checks, and touch move, save, focus and cancellation tests; existing mouse and keyboard handlers remain intact. UI checks: 410 pass, one documented sandbox-only Netlify folder failure (.aws and .codex). Localhost binding and Chromium launch both fail with permission errors, so desktop and iPhone previews, screenshots and browser interaction checks could not be completed.
 
 - [ ] **75. Smaller fixes and cuts**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.

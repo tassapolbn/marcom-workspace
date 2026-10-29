@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-const block=css.slice(css.indexOf('/* Step 73:'));
+const block=css.slice(css.indexOf('/* Step 73:')).split('/* Step 74:')[0];
 const palette={pending:'#a3b1c4',progress:'#93b4f5',waiting:'#f0b86e',hold:'#c0a5f0',done:'#86d9a0',cancel:'#fda4a4',overdue:'#fda4a4'};
 function lum(hex){const a=hex.match(/[a-f\d]{2}/gi).map(v=>{const s=parseInt(v,16)/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4;});return a[0]*.2126+a[1]*.7152+a[2]*.0722;}
 test('Step 73 is scoped to dark mode and defines one semantic status palette',()=>{

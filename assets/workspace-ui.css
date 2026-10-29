@@ -896,7 +896,7 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
   .tab-nav .rc-tabbadge{position:absolute;top:2px;left:calc(50% + 7px);z-index:2;height:16px;min-width:16px;padding:0 4px;font-size:10px;
     box-shadow:0 0 0 2px var(--dock-bg);}
   /* A blurred header would hold the dock inside itself instead of the screen. */
-  html.dark .app-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(180deg,#0b111c,#090d16);}
+  html.dark .app-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:#003057;}
 }
 
 /* Step 37: the Overview's first screen puts the work first */
@@ -1730,3 +1730,30 @@ html.dark .uxp-sal-mini>span,html.dark #lunch-banner .lb-ico{background:#93b4d5;
 html.dark .sal-cell-label i{color:#bdc7d5;-webkit-text-fill-color:#bdc7d5;}
 html.dark .salary-badge,html.dark .salary-dock .salary-badge.sb-pay,
 html.dark .meet-cd.urgent,html.dark #lunch-cfg .lc-day.on{background:#293343;color:#bdc7d5;border-color:#bdc7d5;}
+
+/* Step 74: a flat header and one quiet sidebar */
+html body .app-header{background:#003057!important;border-bottom:0!important;box-shadow:none!important;}
+html body .app-header::after{content:none!important;display:none!important;background:none!important;}
+html body .logo-icon{background:#f0b323!important;box-shadow:none!important;}
+html body .member-head .member-avatar{box-shadow:none!important;filter:none!important;}
+html body #quickadd-fab,html body #tc-fab{background:#003057!important;box-shadow:0 2px 6px #0003!important;}
+html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;gap:0;}
+html body .tab-panel .side-col>.widget,
+html body .tab-panel .side-col>.widget:hover{background:transparent!important;border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;box-shadow:none!important;margin:0;}
+html body .tab-panel .side-col>.widget:first-child{border-top:0!important;}
+html body .tab-panel .side-col .widget-head{background:transparent;border-bottom:0;}
+html body .tab-panel .side-col .widget.collapsed .widget-head>button:not(.uxp-wh-drag){display:none;}
+html body .tab-panel .side-col .widget.collapsed .widget-head>.btn:last-of-type{display:inline-flex;}
+html body .tab-panel .side-col .pc-widget.collapsed .widget-head button[onclick="openPcSettings()"]{display:none;}
+html body .tab-panel .side-col .uxp-wh-drag{display:inline-flex;opacity:1;touch-action:none;color:var(--muted);}
+@media(hover:hover) and (pointer:fine){
+  html body .tab-panel .side-col .uxp-wh-drag{opacity:0;}
+  html body .tab-panel .side-col .widget-head:hover .uxp-wh-drag,
+  html body .tab-panel .side-col .widget-head:focus-within .uxp-wh-drag{opacity:1;}
+}
+html body .tab-panel .side-col>.widget.uxp-drop-above{border-top:2px solid var(--focus-ink)!important;}
+html body .tab-panel .side-col>.widget.uxp-drop-below{border-bottom:2px solid var(--focus-ink)!important;}
+html.dark body .tab-panel .side-col .widget-head .btn,
+html.dark body .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
+html.dark body .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]{background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important;box-shadow:none!important;}
+html.dark body .tab-panel .side-col .widget-head .btn:hover{background:#293343!important;filter:none;}

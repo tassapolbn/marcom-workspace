@@ -68,7 +68,7 @@ html:not(.booted){background:#003057;}
   --shadow-brand:0 10px 28px -10px rgba(0,48,87,.42);
   --shadow-yellow:0 8px 22px -8px rgba(240,179,35,.5);
   --ring:0 0 0 3px rgba(0,48,87,.16);
-  --grad-header:linear-gradient(135deg,#00263f 0%,#003057 52%,#0a4b7d 100%);
+  --grad-header:#003057;
   --grad-brand:linear-gradient(135deg,#003057,#0a4b7d);
   --st-pending:#64748b;--st-progress:#2563eb;--st-waiting:#e8850c;--st-hold:#7c3aed;
   --st-done:#16a34a;--st-cancel:#dc2626;--st-overdue:#dc2626;--st-archived:#94a3b8;
@@ -89,11 +89,11 @@ html.dark{
 body{font-family:'Plus Jakarta Sans','Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:var(--dm-trans);-webkit-font-smoothing:antialiased;}
 
 /* HEADER */
-.app-header{background:linear-gradient(135deg,#16273f 0%,#1f3a5f 55%,#2b5286 100%);color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 8px 30px -10px rgba(15,30,52,0.5);}
+.app-header{background:#003057!important;color:#fff;position:sticky;top:0;z-index:200;box-shadow:none;}
 .header-inner{max-width:min(98vw,2560px);margin:0 auto;}
 .header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;gap:10px;}
 .app-logo{display:flex;align-items:center;gap:11px;}
-.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06));border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.16);}
+.logo-icon{width:38px;height:38px;background:#f0b323!important;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.16);}
 .app-name{font-size:17px;font-weight:800;letter-spacing:-0.4px;}
 .app-tagline{font-size:10px;opacity:0.55;font-weight:500;letter-spacing:0.2px;}
 .header-right{display:flex;align-items:center;gap:8px;}
@@ -461,7 +461,7 @@ html.dark .lieu-tag-use{color:#93b4f5;}
 .confirm-btns{display:flex;gap:8px;justify-content:flex-end;}
 
 /* CHAT */
-.chat-fab{position:fixed;bottom:22px;right:22px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--navy2),var(--navy));color:#fff;border:none;cursor:pointer;box-shadow:0 10px 28px -6px rgba(15,30,52,0.6);font-size:22px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.15s;}
+.chat-fab{position:fixed;bottom:22px;right:22px;width:56px;height:56px;border-radius:50%;background:#003057!important;color:#fff;border:none;cursor:pointer;box-shadow:none;font-size:22px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.15s;}
 .chat-fab:hover{transform:scale(1.07);}
 .chat-unread{position:absolute;top:-2px;right:-2px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;min-width:19px;height:19px;border-radius:99px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--surface);}
 .chat-panel{position:fixed;bottom:22px;right:22px;width:366px;max-width:calc(100vw - 24px);height:520px;max-height:calc(100vh - 90px);background:var(--surface);border-radius:20px;box-shadow:0 24px 60px -10px rgba(0,0,0,0.4);z-index:450;display:none;flex-direction:column;overflow:hidden;animation:pop 0.2s ease;border:1px solid var(--border);}
@@ -495,7 +495,7 @@ body.theme-boss{background:linear-gradient(170deg,#e7edf6 0%,#f2f4f9 30%,#f4f6f9
 body.theme-best{background:linear-gradient(170deg,#fcebe4 0%,#f8f2ef 30%,#f7f4f3 100%);background-attachment:fixed;}
 html.dark body.theme-boss{background:linear-gradient(170deg,#0c1422 0%,#0e1521 55%,#0e1521 100%);}
 html.dark body.theme-best{background:linear-gradient(170deg,#1c1215 0%,#130f10 55%,#110f0f 100%);}
-body.theme-best .app-header{background:linear-gradient(135deg,#1d2840 0%,#373a5c 52%,#4a3d5e 100%);}
+body.theme-best .app-header{background:#003057!important;}
 #panel-best .widget-title>i{color:var(--coral);}
 #panel-best .widget-title{color:var(--coral2);}
 html.dark #panel-best .widget-title{color:#f0a08c;}
@@ -619,8 +619,8 @@ html.dark .cob-close{background:rgba(255,255,255,0.08);}
 @keyframes skel{0%{background-position:100% 0;}100%{background-position:-100% 0;}}
 
 /* ===== QUICK ADD FAB ===== */
-.quickadd-fab{position:fixed;bottom:88px;right:22px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--navy2),var(--navy));color:#fff;border:none;cursor:pointer;box-shadow:0 10px 26px -6px rgba(15,30,52,0.55);font-size:25px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.18s ease,box-shadow 0.2s ease;}
-.quickadd-fab:hover{transform:scale(1.08) rotate(90deg);box-shadow:0 12px 32px -6px rgba(15,30,52,0.72);}
+.quickadd-fab{position:fixed;bottom:88px;right:22px;width:52px;height:52px;border-radius:50%;background:#003057!important;color:#fff;border:none;cursor:pointer;box-shadow:none;font-size:25px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.18s ease,box-shadow 0.2s ease;}
+.quickadd-fab:hover{transform:scale(1.08) rotate(90deg);box-shadow:none;}
 .quickadd-fab:active{transform:scale(1) rotate(90deg);}
 
 /* ===== MEETING COUNTDOWN ===== */
@@ -751,7 +751,7 @@ html.dark body.theme-junior .member-role,html.dark body.theme-junior .stat-box.s
 .stat-box.stat-accent .stat-num{color:var(--accent);}
 .tab-btn.a-active{color:#fff;border-bottom-color:var(--accent);}
 .member-head{display:flex;align-items:center;gap:14px;margin-bottom:1.1rem;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--r);box-shadow:var(--shadow);}
-.member-avatar{width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;box-shadow:0 4px 12px -4px var(--accent-shadow);}
+.member-avatar{width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;box-shadow:none;}
 .member-head-text{min-width:0;}
 .member-name{font-size:18px;font-weight:800;letter-spacing:-0.4px;color:var(--text);line-height:1.1;}
 .member-role{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:2px;}
@@ -5688,7 +5688,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    Deepens each member's own theme colour on the Dew / O / Junior tabs:
    Add Task button, avatar icon circle, and the role text under the name. */
 .member-head{border-left-width:5px;background-image:linear-gradient(90deg,var(--accent-light),transparent 62%);}
-.member-avatar{box-shadow:0 0 0 3px var(--accent-light),0 7px 16px -4px var(--accent-shadow);}
+.member-avatar{box-shadow:none;}
 .member-name{color:var(--text);}
 .member-role{font-weight:800;letter-spacing:.2px;}
 .btn-accent{background-color:var(--accent);background-image:linear-gradient(135deg,rgba(255,255,255,0.16),rgba(0,0,0,0.12));box-shadow:0 7px 20px -5px var(--accent-shadow);font-weight:800;}
@@ -8007,7 +8007,7 @@ html.dark .stat-box.sb-navy .stat-watermark{color:#8fb4dc;}
 /* Uniform flat name-bar background in dark for every tab (removes the
    near-white accent streak the team tabs showed in dark mode). */
 html.dark .member-head{background:var(--surface);background-image:none;}
-html.dark .member-avatar{box-shadow:0 4px 12px -5px rgba(0,0,0,.55);}
+html.dark .member-avatar{box-shadow:none;}
 /* Boss identity coloured like the other tabs, readable in both modes. */
 #panel-boss .member-name,#panel-boss .member-role,#panel-boss .member-role i{color:var(--accent-ink,var(--navy));}
 html.dark #panel-boss .member-name,
@@ -11362,7 +11362,7 @@ html{scroll-padding-top:118px;}
 body.hdr-scrolled .header-top{padding:8px 18px 7px;}
 body.hdr-scrolled .app-tagline{display:none;}
 body.hdr-scrolled .app-logo .logo-icon{transform:scale(.92);}
-body.hdr-scrolled .app-header{box-shadow:0 10px 34px -12px rgba(10,22,40,.62);}
+body.hdr-scrolled .app-header{box-shadow:none;}
 .hdr-context{display:inline-flex;align-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.3px;border-radius:99px;padding:5px 12px;margin-left:10px;white-space:nowrap;}
 /* salary strip lives BELOW the sticky header now, inside a collapsible dock */
 .salary-dock{max-width:min(98vw,2560px);margin:10px auto 0;padding:0 14px;}
@@ -11614,7 +11614,7 @@ html.dark #panel-boss .member-role{color:var(--accent-ondark,#8fb4dc) !important
 @supports (background: color-mix(in srgb, red 10%, transparent)){
   .member-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent,#1f3a5f) 12%,transparent),transparent 62%);}
   .evhub-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent,#1f3a5f) 12%,transparent),transparent 62%);}
-  .member-avatar{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#1f3a5f) 22%,transparent),0 7px 16px -4px var(--accent-shadow,rgba(20,30,50,.35));}
+  .member-avatar{box-shadow:none;}
   html.dark .member-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent-ondark,#8fb4dc) 14%,transparent),transparent 62%);}
   html.dark .evhub-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent-ondark,#8fb4dc) 14%,transparent),transparent 62%);}
 }
@@ -11841,6 +11841,30 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
         saveOrder(col); h.focus();
         try{if(typeof window.uxpSbToggle==='function'&&document.body.classList.contains('uxp-sb-collapsed'))document.querySelectorAll('.side-col').forEach(function(c){});}catch(e2){}
       });
+      /* Pointer capture keeps touch reordering on the handle while the drawer scrolls elsewhere. */
+      var touchTarget=null,touchAbove=false;
+      h.addEventListener('pointerdown',function(e){
+        if(e.pointerType==='mouse')return;
+        e.preventDefault(); touchTarget=null; h.setPointerCapture(e.pointerId);
+        wd.classList.add('uxp-dragging');
+      });
+      h.addEventListener('pointermove',function(e){
+        if(!h.hasPointerCapture(e.pointerId))return;
+        var hit=document.elementFromPoint(e.clientX,e.clientY);
+        var row=hit&&hit.closest('.widget');
+        clearMarks(col); touchTarget=null;
+        if(!row||row===wd||row.parentNode!==col)return;
+        touchTarget=row;
+        var rect=row.getBoundingClientRect(); touchAbove=e.clientY<rect.top+rect.height/2;
+        row.classList.add(touchAbove?'uxp-drop-above':'uxp-drop-below');
+      });
+      h.addEventListener('pointerup',function(e){
+        if(!h.hasPointerCapture(e.pointerId))return;
+        if(touchTarget){col.insertBefore(wd,touchAbove?touchTarget:touchTarget.nextSibling);saveOrder(col);}
+        h.releasePointerCapture(e.pointerId); touchTarget=null;
+        wd.classList.remove('uxp-dragging'); clearMarks(col); h.focus();
+      });
+      h.addEventListener('pointercancel',function(){touchTarget=null;wd.classList.remove('uxp-dragging');clearMarks(col);});
       head.insertBefore(h,head.firstChild);
       wd.addEventListener('dragstart',function(e){dragEl=wd;wd.classList.add('uxp-dragging');try{e.dataTransfer.setData('text/plain','w');e.dataTransfer.effectAllowed='move';}catch(err){}});
       wd.addEventListener('dragend',function(){wd.classList.remove('uxp-dragging');wd.draggable=false;clearMarks(col);dragEl=null;});
@@ -12965,10 +12989,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .ov-card,.card,.task-card,.kb-col,.widget,.stat-box,.note-card,.link-card,.meet-card,.evc-card,.ews-card,.rc-card,.rc-type-card,.rq-card,.rcp,.tc-pop,.auth-card,.chat-panel,.ov-res-card,.clockoff-banner,.sub-nav,.rov-banner,.salary-strip,.myday{border-radius:20px!important;}
 .modal{border-radius:24px!important;}
 
-/* ---- 4. Header: premium navy with a fine yellow accent ---- */
-.app-header{background:var(--grad-header);position:sticky;top:0;z-index:200;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 34px -12px rgba(0,35,63,.55);}
-.app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accentY) 18%,var(--accentY) 82%,transparent);opacity:.9;}
-.logo-icon{background:linear-gradient(135deg,rgba(240,179,35,.30),rgba(255,255,255,.05));border:1px solid rgba(240,179,35,.4);box-shadow:0 6px 16px -8px rgba(240,179,35,.6);border-radius:13px;}
+/* ---- 4. Header: flat navy and gold logo ---- */
+.app-header{background:#003057!important;position:sticky;top:0;z-index:200;box-shadow:none;}
+.app-header::after{content:none;display:none;background:none!important;}
+.logo-icon{background:#f0b323!important;border:1px solid rgba(240,179,35,.4);box-shadow:none;border-radius:13px;}
 .tab-nav{gap:2px;padding:0 6px;border-top:1px solid rgba(255,255,255,.08);}
 .tab-btn{border-radius:12px 12px 0 0;border-bottom-width:3px;transition:color .18s var(--ease),background .18s var(--ease),border-color .18s var(--ease);}
 .tab-btn:hover{color:#fff;background:rgba(255,255,255,.07);}
@@ -13101,11 +13125,11 @@ html.dark .widget-head{background:rgba(255,255,255,.03);border-bottom:1px solid 
 html.dark .widget-head:hover{background:rgba(255,255,255,.06);}
 html.dark .widget:hover,html.dark .link-card:hover,html.dark .note-card:hover{box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.10);}
 
-/* ---- 4. Header: dark glass with a fine brand edge ---- */
-html.dark .app-header{background:linear-gradient(180deg,rgba(10,16,26,.88),rgba(7,11,18,.72));
-  -webkit-backdrop-filter:blur(24px) saturate(1.4);backdrop-filter:blur(24px) saturate(1.4);
-  box-shadow:0 10px 40px -18px rgba(0,0,0,.9);}
-html.dark .app-header::after{background:linear-gradient(90deg,transparent,rgba(240,179,35,.85) 22%,rgba(45,212,191,.55) 78%,transparent);height:1px;opacity:1;}
+/* ---- 4. Header: flat navy ---- */
+html.dark .app-header{background:#003057!important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  box-shadow:none;}
+html.dark .app-header::after{content:none;display:none;background:none!important;}
 html.dark .sync-pill{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);}
 html.dark .dm-toggle{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);}
 html.dark .dm-toggle:hover{background:rgba(255,255,255,.16);}
@@ -13324,7 +13348,7 @@ html.dark body::before{inset:-15%;filter:blur(60px);background:
   radial-gradient(46rem 34rem at 4% 4%, rgba(99,102,241,.15), transparent 60%),
   radial-gradient(40rem 30rem at 98% 72%, rgba(176,124,255,.12), transparent 62%);}
 html.dark body::after{background:radial-gradient(140% 100% at 50% 30%, transparent 62%, rgba(6,9,16,.55) 100%);}
-html.dark .app-header{background:linear-gradient(180deg,rgba(12,17,28,.92),rgba(10,14,24,.78));}
+html.dark .app-header{background:#003057!important;}
 
 /* ---- 2. Light canvas: warm Cloud Dancer with a calm colour drift ---- */
 html:not(.dark){
@@ -13414,8 +13438,8 @@ html:not(.dark) body::before{inset:-15%;filter:blur(70px);opacity:1;background:
   radial-gradient(52rem 36rem at 90% -8%, rgba(14,116,144,.13), transparent 62%),
   radial-gradient(46rem 34rem at 0% 2%, rgba(59,79,207,.10), transparent 60%),
   radial-gradient(40rem 30rem at 98% 78%, rgba(139,63,199,.07), transparent 62%);}
-html:not(.dark) .app-header{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,250,253,.80));
-  box-shadow:0 8px 30px -20px rgba(20,35,60,.4);}
+html:not(.dark) .app-header{background:#003057!important;
+  box-shadow:none;}
 html:not(.dark) .app-name,html:not(.dark) .app-tagline{color:#101A2B;}
 html:not(.dark) .app-tagline{color:#55637A;opacity:1;}
 html:not(.dark) .tab-btn{color:#55637A;}
@@ -13468,9 +13492,9 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
 
 /* ---- 1. A header you can actually see ---- */
 html:not(.dark) .app-header{
-  background:linear-gradient(180deg,#FFFFFF 0%,#F7F9FC 100%)!important;
-  border-bottom:1px solid rgba(20,35,60,.12);
-  box-shadow:0 6px 24px -14px rgba(20,35,60,.35)!important;}
+  background:#003057!important;
+  border-bottom:0!important;
+  box-shadow:none;}
 html:not(.dark) .app-name{color:#0E1A2B!important;}
 html:not(.dark) .app-tagline{color:#5A6879!important;opacity:1!important;}
 html:not(.dark) .tab-nav{border-top:1px solid rgba(20,35,60,.09);}
@@ -13486,7 +13510,7 @@ html:not(.dark) .tab-btn.a-junior{color:#14532D!important;border-bottom-color:#1
 /* the active tab follows whatever colour that tab is set to */
 html:not(.dark) .tab-btn.a-active{color:var(--accent-ink,#003057)!important;
   border-bottom-color:var(--accent-ink,#003057)!important;background:rgba(20,35,60,.04);}
-html:not(.dark) .logo-icon{background:linear-gradient(135deg,rgba(240,179,35,.30),rgba(255,255,255,.7))!important;
+html:not(.dark) .logo-icon{background:#f0b323!important;
   border-color:rgba(240,179,35,.55)!important;}
 html:not(.dark) .sync-pill,html:not(.dark) .dm-toggle{background:rgba(20,35,60,.05)!important;
   border-color:rgba(20,35,60,.12)!important;color:#5A6879!important;}
@@ -13603,10 +13627,10 @@ html:not(.dark) .widget:hover,html:not(.dark) .link-card:hover,
 html:not(.dark) .note-card:hover,html:not(.dark) .task-card:hover{box-shadow:var(--shadow-lg)!important;}
 html:not(.dark) .modal,html:not(.dark) .chat-panel,html:not(.dark) .auth-card{box-shadow:var(--shadow-lg)!important;}
 
-/* header sits on white, so it needs its own edge */
-html:not(.dark) .app-header{background:#FFFFFF!important;
-  border-bottom:1px solid rgba(16,24,40,.10);
-  box-shadow:0 4px 18px -10px rgba(16,24,40,.28)!important;}
+/* Flat navy header in light mode */
+html:not(.dark) .app-header{background:#003057!important;
+  border-bottom:0!important;
+  box-shadow:none;}
 
 /* the board stays frameless; cards carry the elevation */
 html:not(.dark) .kb-col,html:not(.dark) .kb-col[data-status]{background:transparent!important;box-shadow:none!important;}
@@ -13623,27 +13647,18 @@ html:not(.dark) .tcp-pop{background:#FFFFFF!important;box-shadow:var(--shadow-lg
 </style>
 <style id="navy-header-2026">
 /* ============================================================
-   NAVY HEADER 2026 — #003057 with a #F0B323 bloom
-   Blending gold straight into navy makes olive mud, so the gold
-   is layered as a soft bloom over a navy base plus a crisp gold
-   rule, keeping both brand colours without dirtying either.
-   Bloom is held at 22% and the right end darkened to #04406B so
-   every label clears AA over the whole gradient (worst 5.11:1).
+   NAVY HEADER 2026: flat brand navy with a flat gold logo
    ============================================================ */
 html:not(.dark) .app-header{
-  background:
-    radial-gradient(120% 200% at 92% -25%, rgba(240,179,35,.22), transparent 60%),
-    radial-gradient(90% 170% at 3% 125%, rgba(9,86,140,.42), transparent 62%),
-    linear-gradient(100deg,#00223C 0%,#003057 52%,#04406B 100%)!important;
-  border-bottom:none!important;color:#fff;
-  box-shadow:0 10px 30px -14px rgba(0,34,60,.60)!important;}
-html:not(.dark) .app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;opacity:1;
-  background:linear-gradient(90deg,rgba(240,179,35,0),#F0B323 18%,#F6D06A 50%,#F0B323 82%,rgba(240,179,35,0))!important;}
+  background:#003057!important;
+  border-bottom:0!important;color:#fff;
+  box-shadow:none;}
+html:not(.dark) .app-header::after{content:none;display:none;background:none!important;}
 html:not(.dark) .app-name{color:#FFFFFF!important;}
 html:not(.dark) .app-tagline{color:rgba(255,255,255,.80)!important;opacity:1!important;}
-html:not(.dark) .logo-icon{background:linear-gradient(135deg,#F6D06A,#F0B323)!important;
+html:not(.dark) .logo-icon{background:#f0b323!important;
   border:1px solid rgba(240,179,35,.60)!important;color:#00243F!important;
-  box-shadow:0 6px 18px -6px rgba(240,179,35,.65)!important;}
+  box-shadow:none;}
 html:not(.dark) .sync-pill,html:not(.dark) .dm-toggle{background:rgba(255,255,255,.12)!important;
   border-color:rgba(255,255,255,.20)!important;color:rgba(255,255,255,.92)!important;}
 html:not(.dark) .dm-toggle:hover{background:rgba(255,255,255,.22)!important;}
