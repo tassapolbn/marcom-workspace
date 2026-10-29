@@ -1832,3 +1832,52 @@ test('step 72b keeps gold on the logo and high priority in readable quiet ink',(
   assert.match(source,/<span class="mb mb-high"><i class="ti ti-arrow-up"/);
   assert.doesNotMatch(block,/html\.dark/,'colour overrides only apply in light mode');
 });
+
+/* Step 72c: quiet widgets without changing member identity colours. */
+test('step 72c palette omits brand swatches while saved colours still apply',()=>{
+  const {css,c}=pickerIdentityFixture({boss:'#D99A0F',o:'#003057'});
+  assert.equal(c.PAL.length,8);
+  for(const entry of c.PAL) assert.ok(!['#003057','#D99A0F'].includes(entry.c.toUpperCase()));
+  assert.ok(css.includes('--accent:#D99A0F;'));
+  assert.ok(css.includes('--accent:#003057;'));
+  for(const [w,color] of [['boss','#D99A0F'],['o','#003057']]){
+    const ink=c.readable(color,'#EFF3F9',4.5);
+    assert.ok(css.includes('#'+w+'-headname,.member-name,.member-role'));
+    assert.ok(contrast(ink,'#EFF3F9')>=4.5);
+  }
+});
+
+test('Reset Year lives in the open widget body for Boss and the member template',()=>{
+  const widgets=[...source.matchAll(/<div class="widget sick-widget">([\s\S]*?)Reset Year<\/button>/g)];
+  assert.equal(widgets.length,2);
+  for(const [,markup] of widgets){
+    assert.ok(markup.indexOf('widget-body')<markup.indexOf('confirmReset('));
+    assert.ok(markup.includes('widget-body'));
+    assert.doesNotMatch(markup.slice(0,markup.indexOf('widget-body')),/confirmReset/);
+  }
+});
+
+test('Reset Year asks before deleting sick records',()=>{
+  const nodes=Object.fromEntries(['confirm-title','confirm-msg','confirm-ok','confirm-overlay'].map(id=>[id,{textContent:'',classList:{add(value){this.value=value;}}}]));
+  let deletions=0;
+  const c=vm.createContext({document:{getElementById:id=>nodes[id]},sickOf:()=>[{id:'sample'}],memberName:()=> 'Boss',doReset:()=>{deletions++;}});
+  vm.runInContext(slice("let resetWho='boss';",'function closeConfirm()'),c);
+  c.confirmReset('boss');
+  assert.equal(deletions,0);
+  assert.equal(nodes['confirm-overlay'].classList.value,'open');
+  assert.match(nodes['confirm-msg'].textContent,/delete all 1 sick day/);
+  nodes['confirm-ok'].onclick();
+  assert.equal(deletions,1);
+});
+
+test('step 72c quiet widget tiles and outline actions meet AA contrast',()=>{
+  const block=stepBlock('72c');
+  assert.match(block,/\.side-col \.widget-title>i\.ti:first-of-type/);
+  assert.match(block,/color:#34445c!important;background:#e5e7eb!important/);
+  assert.match(block,/\.widget-head \.btn/);
+  assert.match(block,/\.task-card \.story-email-btn/);
+  assert.match(block,/background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important/);
+  assert.doesNotMatch(block,/member-name|member-role|headname/);
+  for(const bg of ['#ffffff','#e5e7eb','#EFF3F9']) assert.ok(contrast('#34445c',bg)>=4.5);
+  assert.match(source,/class="task-link role-btn story-email-btn" onclick="openStoryEmail/);
+});

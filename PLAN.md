@@ -2211,7 +2211,10 @@ browser tab, which the test browser does not show).
 
   - Done (2026-10-29, built by Codex from .codex-tasks/step-71.md): removed the Overview greeting and kept its date; Payday stays in place. Add Task now follows the person filters and uses the same form, with a compact navy button on computers; Today dates sit beside task names on computers. The iPhone round button and Today layout retain their existing rules. Checked 396 passing tests; the one known sandbox Netlify failure concerns .aws and .codex. Screenshot capture and the first card row bottom measurement remain unverified: the sandbox blocks the preview port and Chromium launch.
 
-- [ ] **72. Colour means one thing (light mode)** (72b done; 72c next)
+- [x] **72. Colour means one thing (light mode)** (built as 72b and 72c, 29 Oct)
+  - Left out on purpose: turning names and roles to dark text, because step
+    72a (approved by Boss) keeps a person's chosen colour on their name.
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-72c.md): Person sidebar icons now use quiet ink on grey tiles; widget Add and New actions and Story email use quiet outlines without glows. Reset Year is inside the open Sick Leave widget and still asks before deletion. Removed the two HeadStart picker swatches; saved brand colours and personal name and role colours still apply, as requested in 72a. Checked palette compatibility, placement, confirmation and AA contrast with tests: 401/402 pass, with only the documented sandbox Netlify folder check failing. Preview server and Chromium both fail with sandbox EPERM, so Boss and O screenshots and rendered checks could not be produced.
   - Done (2026-10-29, built by Codex from .codex-tasks/step-72b.md): Light-mode Overview labels, calendar rings, message actions and pinned icons use white, navy or quiet ink. High priority has an up arrow and dark text; approaching deadlines use clocks and neutral colours; sick and leave calendar marks are grey. Added contrast and icon checks. UI suite: 397 of 398 tests pass; the only failure is the documented sandbox-only Netlify folder check. Preview server and Chromium are blocked by sandbox EPERM, so the requested rendered scans and screenshots could not be produced. Header line and glows retained.
   - Files: `assets/workspace-ui.css`, `index.html` (the colour picker's
     list and inline colours), tests.

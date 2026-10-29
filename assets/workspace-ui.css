@@ -1660,3 +1660,21 @@ html:not(.dark) .app-header button:focus-visible{outline-color:#fff;}
 html:not(.dark) .sal-cell-label i{-webkit-text-fill-color:#4b5563;color:#4b5563;}
 html:not(.dark) .salary-badge,html:not(.dark) .salary-dock .salary-badge.sb-pay,
 html:not(.dark) .meet-cd.urgent,html:not(.dark) #lunch-cfg .lc-day.on{background:#e5e7eb;color:#34445c;border-color:#4b5563;}
+
+
+/* Step 72c: quiet person widgets and Story email actions in light mode */
+html:not(.dark) .tab-panel .side-col .widget-title>i.ti:first-of-type{
+  color:#34445c!important;background:#e5e7eb!important;box-shadow:none!important;
+}
+html:not(.dark) .tab-panel .side-col .widget-head .btn,
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"],
+html:not(.dark) .task-card .story-email-btn{
+  color:#34445c!important;background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important;
+}
+html:not(.dark) .tab-panel .side-col .widget-head .btn:hover,
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"]:hover,
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]:hover,
+html:not(.dark) .task-card .story-email-btn:hover{
+  color:#34445c!important;background:#e5e7eb!important;filter:none;
+}
