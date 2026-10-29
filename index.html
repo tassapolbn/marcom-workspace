@@ -15,28 +15,32 @@ if(m&&m.content.indexOf('maximum-scale')<0)m.content+=', maximum-scale=1';})();<
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-180.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="theme-color" content="#003057">
+<script>try{if(localStorage.getItem('bb_dark')!=='0')document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}</script>
 <style id="boot-cover-style">
 /* Step 36: one calm screen while the workspace opens. It covers the page as the
    HTML first draws it, and the sign-in check behind it, until the person is
    signed in and their first tab is set (see liftCover in the sign-in script). */
 .boot-cover{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  background:#003057;color:#fff;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
+  background:linear-gradient(#003057 0 88px,#f4f6f9 88px);color:#0e1726;font:600 14px/1.4 'Plus Jakarta Sans','Sarabun',system-ui,-apple-system,sans-serif;
   transition:opacity .25s ease,visibility 0s linear .25s;}
 .boot-cover.done{opacity:0;visibility:hidden;pointer-events:none;}
-/* Step 65: until the cover lifts, the page itself is navy, so nothing white shows first. */
-html:not(.booted){background:#003057;}
+/* Step 76 preserves step 65: the first paint has the saved theme and never a blank white page. */
+html:not(.booted){background:#f4f6f9;}
+html.dark:not(.booted){background:#0e1521;}
+html.dark .boot-cover{background:linear-gradient(#003057 0 88px,#0e1521 88px);color:#e9edf3;}
+html.dark .boot-cover-sub{color:#bdc7d5;}
 .boot-cover-mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
   background:linear-gradient(135deg,#f6c64a,#f0b323);box-shadow:0 12px 30px -12px rgba(240,179,35,.65);}
 .boot-cover-mark svg{width:28px;height:28px;fill:none;stroke:#003057;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .boot-cover-name{margin-top:4px;font-size:17px;font-weight:800;letter-spacing:-.01em;}
-.boot-cover-sub{font-size:13px;color:rgba(255,255,255,.74);}
-.boot-cover-bar{width:72px;height:3px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;}
+.boot-cover-sub{font-size:13px;color:#5b6674;}
+.boot-cover-bar{width:72px;height:3px;border-radius:3px;background:#64748b;overflow:hidden;}
 .boot-cover-bar::after{content:'';display:block;width:40%;height:100%;border-radius:inherit;background:rgba(255,255,255,.75);animation:boot-cover-slide 1.1s ease-in-out infinite;}
 @keyframes boot-cover-slide{from{transform:translateX(-100%);}to{transform:translateX(250%);}}
 @media(prefers-reduced-motion:reduce){.boot-cover{transition:none;}.boot-cover-bar::after{animation:none;transform:translateX(75%);}}
 </style>
 <!-- Step 65: the fonts and icons load beside the page instead of before its first
-     paint, so the app opens on the navy cover, not on a blank white page. -->
+     paint, so the themed frame can draw immediately. -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css" media="print" onload="this.media='all'">
@@ -68,7 +72,7 @@ html:not(.booted){background:#003057;}
   --shadow-brand:0 10px 28px -10px rgba(0,48,87,.42);
   --shadow-yellow:0 8px 22px -8px rgba(240,179,35,.5);
   --ring:0 0 0 3px rgba(0,48,87,.16);
-  --grad-header:linear-gradient(135deg,#00263f 0%,#003057 52%,#0a4b7d 100%);
+  --grad-header:#003057;
   --grad-brand:linear-gradient(135deg,#003057,#0a4b7d);
   --st-pending:#64748b;--st-progress:#2563eb;--st-waiting:#e8850c;--st-hold:#7c3aed;
   --st-done:#16a34a;--st-cancel:#dc2626;--st-overdue:#dc2626;--st-archived:#94a3b8;
@@ -89,11 +93,11 @@ html.dark{
 body{font-family:'Plus Jakarta Sans','Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:var(--dm-trans);-webkit-font-smoothing:antialiased;}
 
 /* HEADER */
-.app-header{background:linear-gradient(135deg,#16273f 0%,#1f3a5f 55%,#2b5286 100%);color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 8px 30px -10px rgba(15,30,52,0.5);}
+.app-header{background:#003057!important;color:#fff;position:sticky;top:0;z-index:200;box-shadow:none;}
 .header-inner{max-width:min(98vw,2560px);margin:0 auto;}
 .header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;gap:10px;}
 .app-logo{display:flex;align-items:center;gap:11px;}
-.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06));border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.16);}
+.logo-icon{width:38px;height:38px;background:#f0b323!important;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.16);}
 .app-name{font-size:17px;font-weight:800;letter-spacing:-0.4px;}
 .app-tagline{font-size:10px;opacity:0.55;font-weight:500;letter-spacing:0.2px;}
 .header-right{display:flex;align-items:center;gap:8px;}
@@ -461,7 +465,7 @@ html.dark .lieu-tag-use{color:#93b4f5;}
 .confirm-btns{display:flex;gap:8px;justify-content:flex-end;}
 
 /* CHAT */
-.chat-fab{position:fixed;bottom:22px;right:22px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--navy2),var(--navy));color:#fff;border:none;cursor:pointer;box-shadow:0 10px 28px -6px rgba(15,30,52,0.6);font-size:22px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.15s;}
+.chat-fab{position:fixed;bottom:22px;right:22px;width:56px;height:56px;border-radius:50%;background:#003057!important;color:#fff;border:none;cursor:pointer;box-shadow:none;font-size:22px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.15s;}
 .chat-fab:hover{transform:scale(1.07);}
 .chat-unread{position:absolute;top:-2px;right:-2px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;min-width:19px;height:19px;border-radius:99px;display:none;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--surface);}
 .chat-panel{position:fixed;bottom:22px;right:22px;width:366px;max-width:calc(100vw - 24px);height:520px;max-height:calc(100vh - 90px);background:var(--surface);border-radius:20px;box-shadow:0 24px 60px -10px rgba(0,0,0,0.4);z-index:450;display:none;flex-direction:column;overflow:hidden;animation:pop 0.2s ease;border:1px solid var(--border);}
@@ -495,7 +499,7 @@ body.theme-boss{background:linear-gradient(170deg,#e7edf6 0%,#f2f4f9 30%,#f4f6f9
 body.theme-best{background:linear-gradient(170deg,#fcebe4 0%,#f8f2ef 30%,#f7f4f3 100%);background-attachment:fixed;}
 html.dark body.theme-boss{background:linear-gradient(170deg,#0c1422 0%,#0e1521 55%,#0e1521 100%);}
 html.dark body.theme-best{background:linear-gradient(170deg,#1c1215 0%,#130f10 55%,#110f0f 100%);}
-body.theme-best .app-header{background:linear-gradient(135deg,#1d2840 0%,#373a5c 52%,#4a3d5e 100%);}
+body.theme-best .app-header{background:#003057!important;}
 #panel-best .widget-title>i{color:var(--coral);}
 #panel-best .widget-title{color:var(--coral2);}
 html.dark #panel-best .widget-title{color:#f0a08c;}
@@ -619,8 +623,8 @@ html.dark .cob-close{background:rgba(255,255,255,0.08);}
 @keyframes skel{0%{background-position:100% 0;}100%{background-position:-100% 0;}}
 
 /* ===== QUICK ADD FAB ===== */
-.quickadd-fab{position:fixed;bottom:88px;right:22px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--navy2),var(--navy));color:#fff;border:none;cursor:pointer;box-shadow:0 10px 26px -6px rgba(15,30,52,0.55);font-size:25px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.18s ease,box-shadow 0.2s ease;}
-.quickadd-fab:hover{transform:scale(1.08) rotate(90deg);box-shadow:0 12px 32px -6px rgba(15,30,52,0.72);}
+.quickadd-fab{position:fixed;bottom:88px;right:22px;width:52px;height:52px;border-radius:50%;background:#003057!important;color:#fff;border:none;cursor:pointer;box-shadow:none;font-size:25px;display:flex;align-items:center;justify-content:center;z-index:400;transition:transform 0.18s ease,box-shadow 0.2s ease;}
+.quickadd-fab:hover{transform:scale(1.08) rotate(90deg);box-shadow:none;}
 .quickadd-fab:active{transform:scale(1) rotate(90deg);}
 
 /* ===== MEETING COUNTDOWN ===== */
@@ -751,7 +755,7 @@ html.dark body.theme-junior .member-role,html.dark body.theme-junior .stat-box.s
 .stat-box.stat-accent .stat-num{color:var(--accent);}
 .tab-btn.a-active{color:#fff;border-bottom-color:var(--accent);}
 .member-head{display:flex;align-items:center;gap:14px;margin-bottom:1.1rem;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--r);box-shadow:var(--shadow);}
-.member-avatar{width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;box-shadow:0 4px 12px -4px var(--accent-shadow);}
+.member-avatar{width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto;box-shadow:none;}
 .member-head-text{min-width:0;}
 .member-name{font-size:18px;font-weight:800;letter-spacing:-0.4px;color:var(--text);line-height:1.1;}
 .member-role{font-size:12.5px;color:var(--accent);font-weight:600;margin-top:2px;}
@@ -910,6 +914,18 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   </div>
   <div class="two-col">
     <div class="main-col">
+      <!-- Event Hub: under Today, before the sub-tabs (step 68a) -->
+      <div class="evhub" id="evhub">
+        <div class="evhub-head">
+          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
+          <div class="evhub-tools">
+            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
+            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
+            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
+          </div>
+        </div>
+        <div class="evhub-body" id="boss-evhub-body"></div>
+      </div>
       <!-- Meeting Countdown -->
       <div class="meet-card none" id="boss-meet-card" onclick="openMeetingCal()">
         <div class="meet-ico"><i class="ti ti-calendar-time"></i></div>
@@ -924,7 +940,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <button class="sub-tab act-boss st-events" onclick="switchSub('boss','events',this)"><i class="ti ti-confetti"></i> Events</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','links',this)"><i class="ti ti-link"></i> Links</button>
         <button class="sub-tab act-boss" onclick="switchSub('boss','notes',this)"><i class="ti ti-notes"></i> Notes</button>
-        <button class="sub-tab act-boss" onclick="switchSub('boss','sop',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>
+        <button class="sub-tab act-boss" onclick="switchSub('boss','sop',this)"><i class="ti ti-clipboard-check"></i> Templates</button>
       </div>
       <!-- Events sub-panel (event-first workspace) -->
       <div class="sub-panel" id="boss-sub-events" style="display:none;"></div>
@@ -935,7 +951,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="bs-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>
           <div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="bs-done">0</div><div class="stat-lbl">Done</div></div></div>
         </div>
-        <div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         <div class="filter-tabs">
           <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
@@ -943,6 +958,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <button class="fpill" data-who="boss" data-f="soon" onclick="setFilter('boss','soon',this)"><span class="pill-dot"></span>Due Soon</button>
           <button class="fpill" data-who="boss" data-f="done" onclick="setFilter('boss','done',this)">Done</button>
           <button class="fpill" data-who="boss" data-f="canceled" onclick="setFilter('boss','canceled',this)">Canceled</button>
+          <div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         </div>
         <div id="boss-list"></div>
         <div class="empty-state" id="boss-empty" style="display:none;"><i class="ti ti-clipboard-list"></i><p>No tasks here.</p></div>
@@ -969,18 +985,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="empty-state" id="boss-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>
       </div>
       <div class="sub-panel" id="boss-sub-sop" style="display:none;"></div>
-      <!-- Event Hub: after the tasks, so the tab opens on the work (step 62) -->
-      <div class="evhub" id="evhub">
-        <div class="evhub-head">
-          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
-          <div class="evhub-tools">
-            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
-            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
-            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
-          </div>
-        </div>
-        <div class="evhub-body" id="boss-evhub-body"></div>
-      </div>
     </div>
     <!-- BOSS SIDEBAR -->
     <div class="side-col">
@@ -1057,9 +1061,9 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       <div class="widget sick-widget">
         <div class="widget-head">
           <div class="widget-title"><i class="ti ti-heart-broken"></i> Sick Leave</div>
-          <button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset('boss')"><i class="ti ti-refresh"></i> Reset Year</button>
         </div>
         <div class="widget-body">
+          <button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset('boss')"><i class="ti ti-refresh"></i> Reset Year</button>
           <div class="sick-balance">
             <div class="sick-num" id="boss-sick-count">0</div>
             <div class="sick-num-lbl" id="boss-sick-year-label">days this year</div>
@@ -1086,7 +1090,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="cal-grid" id="boss-cal-grid"></div>
           <div class="cal-legend">
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div>
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot cd-urgent"></div>Due soon</div>
             <div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div>
           </div>
           <div class="cal-detail" id="boss-cal-detail" style="display:none;">
@@ -1726,13 +1730,14 @@ function memberPanelHTML(w){
   +    '<div class="member-head-text"><div class="member-name" id="'+w+'-headname"></div><div class="member-role">'+M.role+'</div></div>'
   +  '</div>'
   +  '<div class="two-col"><div class="main-col">'
+  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="meet-card none" id="'+w+'-meet-card" onclick="openMeetingCal()"><div class="meet-ico"><i class="ti ti-calendar-time"></i></div><div class="meet-body"><div class="meet-label">Next Meeting</div><div class="meet-title">No upcoming meetings</div></div><div class="meet-sub"></div></div>'
   +    '<div class="sub-nav">'
-  +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
+  +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> All Tasks</button>'
   +      '<button class="sub-tab st-events" onclick="switchSub(\''+w+'\',\'events\',this)"><i class="ti ti-confetti"></i> Events</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'links\',this)"><i class="ti ti-link"></i> Links</button>'
   +      '<button class="sub-tab" onclick="switchSub(\''+w+'\',\'notes\',this)"><i class="ti ti-notes"></i> Notes</button>'
-  +      (w==='junior'?'<button class="sub-tab" onclick="switchSub(\''+w+'\',\'sop\',this)"><i class="ti ti-clipboard-check"></i> SOP Task Templates</button>':'')
+  +      (w==='junior'?'<button class="sub-tab" onclick="switchSub(\''+w+'\',\'sop\',this)"><i class="ti ti-clipboard-check"></i> Templates</button>':'')
   +    '</div>'
   +    '<div class="sub-panel" id="'+w+'-sub-events" style="display:none;"></div>'
   +    '<div class="sub-panel" id="'+w+'-sub-tasks">'
@@ -1741,7 +1746,6 @@ function memberPanelHTML(w){
   +        '<div class="stat-box sb-red"><span class="stat-ic"><i class="ti ti-alarm"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--danger);" id="'+w+'-s-soon">0</div><div class="stat-lbl">Due Soon</div></div></div>'
   +        '<div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="'+w+'-s-done">0</div><div class="stat-lbl">Done</div></div></div>'
   +      '</div>'
-  +      '<div class="addtask-bar" style="margin-bottom:0.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '<div class="filter-tabs">'
   +        '<button class="fpill act-accent" data-who="'+w+'" data-f="all" onclick="setFilter(\''+w+'\',\'all\',this)">All Tasks</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="pending" onclick="setFilter(\''+w+'\',\'pending\',this)">Pending</button>'
@@ -1749,6 +1753,7 @@ function memberPanelHTML(w){
   +        '<button class="fpill" data-who="'+w+'" data-f="soon" onclick="setFilter(\''+w+'\',\'soon\',this)"><span class="pill-dot"></span>Due Soon</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="done" onclick="setFilter(\''+w+'\',\'done\',this)">Done</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="canceled" onclick="setFilter(\''+w+'\',\'canceled\',this)">Canceled</button>'
+  +        '<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '</div>'
   +      '<div id="'+w+'-list"></div>'
   +      '<div class="empty-state" id="'+w+'-empty" style="display:none;"><i class="ti ti-clipboard-list"></i><p>No tasks yet.</p></div>'
@@ -1768,7 +1773,6 @@ function memberPanelHTML(w){
   +      '<div class="empty-state" id="'+w+'-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>'
   +    '</div>'
   +    (w==='junior'?'<div class="sub-panel" id="'+w+'-sub-sop" style="display:none;"></div>':'')
-  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +  '</div>'
   +  '<div class="side-col">'
   +    '<div id="'+w+'-role-extra"></div>'
@@ -1776,9 +1780,9 @@ function memberPanelHTML(w){
   +    '<div class="widget gcal-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-event"></i> Google Calendar</div><button class="gcal-refresh" id="'+w+'-gcal-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-gcal-body"></div></div></div>'
   +    '<div class="widget upcoming-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-clock-hour-4"></i> Upcoming Events</div><button class="gcal-refresh" id="'+w+'-upcoming-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-upcoming-body"></div></div></div>'
   +    '<div class="widget pin-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-pin"></i> Pinned Notes</div></div><div class="widget-body"><input class="pin-search pin-search-input" placeholder="Search pinned notes..." oninput="pinSearchInput(this.value)" /><div class="pin-slot"></div></div></div>'
-  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div><div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
+  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot cd-urgent"></div>Due soon</div><div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
   +    '<div class="widget lieu-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-beach"></i> Day-off in Lieu</div><button class="btn btn-teal btn-sm" onclick="openLieu(\''+w+'\')"><i class="ti ti-plus"></i> Add</button></div><div class="widget-body"><div class="lieu-balance"><div class="lieu-num" id="'+w+'-lieu-balance">0</div><div class="lieu-num-lbl">days available</div><div class="lieu-split"><span>Earned: <b id="'+w+'-lieu-earned">0</b></span><span>Used: <b id="'+w+'-lieu-used">0</b></span></div></div><div class="lieu-records" id="'+w+'-lieu-records"></div></div></div>'
-  +    '<div class="widget sick-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-heart-broken"></i> Sick Leave</div><button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset(\''+w+'\')"><i class="ti ti-refresh"></i> Reset Year</button></div><div class="widget-body"><div class="sick-balance"><div class="sick-num" id="'+w+'-sick-count">0</div><div class="sick-num-lbl" id="'+w+'-sick-year-label">days this year</div></div><div style="display:flex;gap:6px;margin:10px 0 4px;"><input type="date" id="'+w+'-sick-date-input" class="form-input" style="flex:1;padding:7px 10px;font-size:12px;" /><button onclick="addSickDay(\''+w+'\')" style="background:var(--sick);color:white;border:none;border-radius:var(--rsm);padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><i class="ti ti-plus"></i> Add</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pick any date to mark as sick leave</div><div class="sick-list" id="'+w+'-sick-list"></div></div></div>'
+  +    '<div class="widget sick-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-heart-broken"></i> Sick Leave</div></div><div class="widget-body"><button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset(\''+w+'\')"><i class="ti ti-refresh"></i> Reset Year</button><div class="sick-balance"><div class="sick-num" id="'+w+'-sick-count">0</div><div class="sick-num-lbl" id="'+w+'-sick-year-label">days this year</div></div><div style="display:flex;gap:6px;margin:10px 0 4px;"><input type="date" id="'+w+'-sick-date-input" class="form-input" style="flex:1;padding:7px 10px;font-size:12px;" /><button onclick="addSickDay(\''+w+'\')" style="background:var(--sick);color:white;border:none;border-radius:var(--rsm);padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><i class="ti ti-plus"></i> Add</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pick any date to mark as sick leave</div><div class="sick-list" id="'+w+'-sick-list"></div></div></div>'
   +  '</div>'
   +  '</div>'
   +'</div>';
@@ -1823,7 +1827,7 @@ function renderOWidgets(){
     else wq.innerHTML=items.map(t=>{
       const dr=daysUntil(t.mdWatermark);
       const cls=dr<0?'wmq-overdue':(dr===0?'wmq-today':(dr<=7?'wmq-soon':'wmq-ok'));
-      const lbl=dr<0?('Overdue by '+Math.abs(dr)+'d'):(dr===0?'Due today':dr+' days left');
+      const lbl=fmtDue(t.mdWatermark);
       return '<div class="wmq-item '+cls+'"><div class="wmq-name">'+escHtml(t.topic||t.title||'Untitled')+'</div>'
         +'<div class="wmq-meta">Uploaded '+(t.mdUpload?fmtDate(t.mdUpload):'-')+' &middot; Delete '+fmtDate(t.mdWatermark)+'</div>'
         +'<div class="wmq-days">'+lbl+'</div></div>';
@@ -1900,7 +1904,7 @@ function saveAssets(){
   if(assetsRef){
     assetsRef.set(deptAssets,{merge:true}).then(function(){closeAssets();}).catch(function(e){
       syncErr(e);
-      alert('Could not save the Asset Library to the shared workspace. Your links are shown for now but were not stored online, so they will not appear after a reload.\n\nPlease let Boss know so the workspace access settings can be checked.\n\nDetails: '+((e&&e.message)?e.message:e));
+      uiToast('Could not save the Asset Library to the shared workspace. Your links are shown for now but were not stored online, so they will not appear after a reload.\n\nPlease let Boss know so the workspace access settings can be checked.\n\nDetails: '+((e&&e.message)?e.message:e));
     });
   }else{closeAssets();}
 }
@@ -2139,8 +2143,7 @@ function initSalary(){
   _setH('sal-note',pd.adjusted?('<i class="ti ti-info-circle-filled"></i> '+pd.note):'Last working day of the month');
   _setT('sal-month',MONTHS[pd.date.getMonth()]+' '+pd.date.getFullYear());
   /* Step 64: the ring says the days left and fills as the period passes, so the
-     panel no longer repeats it as a count and a second bar. The compact line's
-     small bar reads the same share from here. */
+     panel no longer repeats it as a count and a second bar. */
   var _card=document.getElementById('salary-card');if(_card)_card.setAttribute('data-pct',_pct+'%');
   var _ring=document.getElementById('sal-ring-fg');
   if(_ring){var _C=2*Math.PI*34;_ring.style.strokeDasharray=_C.toFixed(1);_ring.style.strokeDashoffset=(_C*(1-_pct/100)).toFixed(1);}
@@ -2221,7 +2224,18 @@ function switchSub(who,panel,btn){
 }
 
 // DATES
-function fmtDate(d){if(!d)return'';const x=new Date(d+'T00:00:00');return x.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+function fmtDate(d){
+  if(!d)return '';
+  const x=d instanceof Date?d:new Date(String(d).slice(0,10)+'T00:00:00');
+  if(isNaN(x.getTime()))return '';
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return x.getDate()+' '+months[x.getMonth()]+(x.getFullYear()===new Date().getFullYear()?'':' '+x.getFullYear());
+}
+function fmtDue(d){
+  const days=daysUntil(d);
+  if(days===null)return '';
+  return days<0?'Overdue':days===0?'Due today':days+' day'+(days===1?'':'s')+' left';
+}
 function daysUntil(d){if(!d)return null;const t=new Date(d+'T00:00:00');const today=new Date(new Date().toDateString());return Math.ceil((t-today)/86400000);}
 function todayStr(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
 function isSoon(task){
@@ -2670,6 +2684,7 @@ function openAdd(who){
   autoGrowDesc();
   tfSync();
   if(window.MarcomDraft)MarcomDraft.offer(who);
+  document.getElementById('m-topic').focus({preventScroll:true});
 }
 function openEdit(who,id){
   if(window.MarcomDraft)MarcomDraft.hideOffer();
@@ -2896,7 +2911,7 @@ function saveTask(){
     /* Step 60: say what was added and for whom, with a way to see it. */
     try{
       var _ppl2=evtOn?(data.assignees||[]):[whoNow];
-      var _due=data.dueDate?(' \u00b7 due '+new Date(data.dueDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})):'';
+      var _due=data.dueDate?(' \u00b7 due '+fmtDate(data.dueDate)):'';
       var _msg=(evtOn&&!_ppl2.length)?('Added to the Event Board'+_due):('Added for '+_ppl2.map(memberName).join(', ')+_due);
       var _nid=newRef.id;
       uiToast(_msg,{actionLabel:'Show',action:function(){
@@ -3158,18 +3173,18 @@ function taskCardHTML(task,who){
   const overdue=!finished&&du!==null&&du<0,soon=isSoon(task);
   const catClass=task.category==='Together'?'mb mb-together':(who==='best'?'mb mb-cat-coral':'mb mb-cat');
   let prv=task.priority||'medium';if(prv==='normal')prv='medium';
-  const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-flag-3-filled" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
+  const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-arrow-up" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
   let evBadge='';
   if(isEventTask(task)){
     const _evLbl=(task.eventLabel||task.eventName||'').trim();
     if(_evLbl)evBadge+=evTagHTML(_evLbl,task,who);
     const _asg=taskAssignees(task);
-    if(_asg.length){
+    if(_asg.length && !(_asg.length===1 && _asg[0]===who)){
       const _names=_asg.map(function(w){return memberName(w)||w;}).join(', ');
       /* Step 63: each person's initial in their colour; the names in ink. */
       const _ini=_asg.map(function(w){return '<span class="mb-who" data-member="'+escHtml(w)+'" aria-hidden="true">'+escHtml((Array.from(String(memberName(w)||w).trim())[0]||'').toLocaleUpperCase())+'</span>';}).join('');
       evBadge+='<span class="mb mb-shared" title="Shared card. A status change by anyone updates it for everyone.">'+_ini+' '+escHtml(_asg.length>1?('Shared · '+_names):_names)+'</span>';
-    } else {
+    } else if(!_asg.length) {
       evBadge+='<span class="mb mb-shared"><i class="ti ti-users-group" style="font-size:11px;"></i> Unassigned</span>';
     }
   } else if(task.eventId||task.eventName){
@@ -3179,8 +3194,8 @@ function taskCardHTML(task,who){
   const byBadge=task.assignedBy?'<span class="mb mb-assign"><i class="ti ti-user-check" style="font-size:11px;"></i> '+escHtml(task.assignedBy)+'</span>':'';
   let dueLabel='';
   if(task.dueDate){
-    if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue '+fmtDate(task.dueDate)+'</span>';
-    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-clock" style="font-size:11px;"></i> '+(du===0?'Due today':du+'d left')+' ('+fmtDate(task.dueDate)+')</span>';
+    if(overdue)dueLabel='<span class="mb mb-overdue"><i class="ti ti-calendar" style="font-size:11px;"></i> Overdue · was due '+fmtDate(task.dueDate)+'</span>';
+    else if(soon)dueLabel='<span class="mb mb-soon"><i class="ti ti-clock" style="font-size:11px;"></i> '+fmtDue(task.dueDate)+'</span>';
     else dueLabel='<span class="mb mb-date"><i class="ti ti-calendar" style="font-size:11px;"></i> '+fmtDate(task.dueDate)+'</span>';
   }
   const linksHtml=(task.links&&task.links.length)?
@@ -3198,15 +3213,15 @@ function taskCardHTML(task,who){
   const actsBtn='<button type="button" class="tc-acts-btn" aria-expanded="'+(actsOpen?'true':'false')+'" aria-label="More actions for this task" title="More actions" onclick="event.stopPropagation();tcToggleActs(this,\''+who+'_'+task.id+'\')"><i class="ti ti-dots"></i></button>';
   return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
-      +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
       +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+doneLbl+'" aria-label="'+doneLbl+'"><i class="ti ti-check"></i></button>'
+      +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
     +'</div>'
     +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
-      +(detHtml?'':actsBtn) /* Step 65: without details, "⋯" ends the facts line instead of a row of its own */
+      +(detHtml?'':'<span class="tc-facts-end">'+actsBtn+'</span>') /* Step 68: actions sit beneath the tick without adding a facts row */
     +'</div>'+roleHtml
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
-    /* Step 50: at rest one bar, Details on the left and "⋯" on the right; "⋯"
+    /* Step 68: at rest one bar, Details and "⋯" together on the left; "⋯"
        opens the action row under it. A click on the card still opens the task. */
     +(detHtml?'<div class="tc-bar">'
       +'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>'
@@ -3227,6 +3242,7 @@ function kanbanHTML(tasks,who,filter){
   return '<div class="kanban-board">'+KB_STATUS_ORDER.map(function(S){
     var sc=SC[S];var col=scColors(S);
     var cards=tasks.filter(function(t){return (tcLingerFrom(t,who)||t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return !!tcLingerFrom(t,who)||kbFilterPass(t,filter);});
+    if(S==='canceled'&&!cards.length)return '';
     cards.sort(function(a,b){return dueSortValue(a)-dueSortValue(b);});
     var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span></div>';
     var body=cards.map(function(t){var h=taskCardHTML(t,who),L=tcLingerRec(t,who);
@@ -3255,8 +3271,16 @@ function boardBusy(list){
 function setBoardHTML(list,html){
   /* Keep existing controls and animation state when a snapshot changes nothing. */
   if(list.__boardHTML===html)return;
+  var counts={};
+  list.querySelectorAll('.kb-col').forEach(function(col){
+    counts[col.dataset.status]=Number(col.querySelector('.kb-col-count').textContent);
+  });
   list.innerHTML=html;
   list.__boardHTML=html;
+  list.querySelectorAll('.kb-col').forEach(function(col){
+    var count=col.querySelector('.kb-col-count'),old=counts[col.dataset.status];
+    if(old!==undefined&&Number(count.textContent)>old)count.classList.add('kb-count-tick');
+  });
 }
 function drawBoard(listId){
   __boardTimer[listId]=null;
@@ -3280,16 +3304,17 @@ function renderList(tasks,who,listId,emptyId,filter){
 }
 function isUrl(s){return s&&/^https?:\/\//i.test(s);}
 function oCardExtra(task){
+  const finished=task.status==='done'||task.status==='canceled';
   let h='<div class="role-row">';
   if(task.mdStart)h+='<span class="mb mb-time"><i class="ti ti-clock" style="font-size:11px;"></i> '+escHtml(task.mdStart)+(task.mdEnd?('-'+escHtml(task.mdEnd)):'')+'</span>';
   if(task.mdCategory)h+='<span class="mb mb-media"><i class="ti ti-photo" style="font-size:11px;"></i> '+escHtml(task.mdCategory)+'</span>';
   if(task.mdUpload)h+='<span class="mb mb-uploaded"><i class="ti ti-cloud-check" style="font-size:11px;"></i> Uploaded '+fmtDate(task.mdUpload)+'</span>';
-  else h+='<span class="mb mb-pending"><i class="ti ti-cloud-up" style="font-size:11px;"></i> Pending upload</span>';
-  if(task.mdWatermark){const dr=daysUntil(task.mdWatermark);const cls=dr<0?'mb-overdue':(dr<=7?'mb-wmsoon':'mb-wm');const lbl=dr<0?('overdue '+Math.abs(dr)+'d'):(dr===0?'due today':dr+'d left');h+='<span class="mb '+cls+'"><i class="ti ti-eraser" style="font-size:11px;"></i> Watermark '+lbl+'</span>';}
+  else if(!finished)h+='<span class="mb mb-pending"><i class="ti ti-cloud-up" style="font-size:11px;"></i> Pending upload</span>';
+  if(task.mdWatermark){const dr=daysUntil(task.mdWatermark);const cls=dr<0?'mb-overdue':(dr<=7?'mb-wmsoon':'mb-wm');const lbl=fmtDue(task.mdWatermark);h+='<span class="mb '+cls+'"><i class="ti ti-eraser" style="font-size:11px;"></i> Watermark '+lbl+'</span>';}
   if(task.mdMailSent)h+='<span class="mb mb-mailsent"><i class="ti ti-mail-check" style="font-size:11px;"></i> Mail sent</span>';
   h+='</div><div class="role-actions">';
   if(task.mdFile){if(isUrl(task.mdFile))h+='<a class="task-link" href="'+escHtml(safeUrl(task.mdFile))+'" target="_blank" rel="noopener"><i class="ti ti-folder" style="font-size:11px;"></i> File location</a>';else h+='<span class="task-link" style="cursor:default;"><i class="ti ti-folder" style="font-size:11px;"></i> '+escHtml(task.mdFile)+'</span>';}
-  h+='<button class="task-link role-btn" onclick="openStoryEmail(\''+task.id+'\')"><i class="ti ti-mail" style="font-size:11px;"></i> Story email</button>';
+  if(!finished)h+='<button class="task-link role-btn story-email-btn" onclick="openStoryEmail(\''+task.id+'\')"><i class="ti ti-mail" style="font-size:11px;"></i> Story email</button>';
   h+='</div>';
   return h;
 }
@@ -3298,7 +3323,7 @@ function dzStatusClass(s){
 }
 function dewCardExtra(task){
   let h='<div class="role-row">';
-  h+='<span class="dzsel-wrap"><span class="dzsel-tag"><i class="ti ti-palette" style="font-size:11px;vertical-align:-1px;"></i> Design</span>'+designSelectHTML('dew',task)+'</span>';
+  if(task.status!=='done'&&task.status!=='canceled')h+='<span class="dzsel-wrap"><span class="dzsel-tag"><i class="ti ti-palette" style="font-size:11px;vertical-align:-1px;"></i> Design</span>'+designSelectHTML('dew',task)+'</span>';
   if(task.dzType)h+='<span class="mb mb-cat"><i class="ti ti-shape" style="font-size:11px;"></i> '+escHtml(task.dzType)+'</span>';
   if(task.dzBrand)h+='<span class="mb mb-media"><i class="ti ti-flag" style="font-size:11px;"></i> '+escHtml(task.dzBrand)+'</span>';
   if(typeof task.dzRevisions==='number'&&task.dzRevisions>0)h+='<span class="mb mb-rev"><i class="ti ti-rotate" style="font-size:11px;"></i> '+task.dzRevisions+' revision'+(task.dzRevisions>1?'s':'')+'</span>';
@@ -3446,7 +3471,7 @@ function renderNotes(who){
   if(!filtered.length){grid.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   grid.innerHTML=filtered.map(n=>{
-    const ts=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+    const ts=n.createdAt&&n.createdAt.toDate?fmtDate(n.createdAt.toDate()):'';
     const bid='btn-note-'+n.id;
     return `<div class="note-card nc-${who}">
       <div class="note-card-top">
@@ -3502,7 +3527,7 @@ function addSickDay(who){
   const ds=inp?inp.value:'';
   if(!ds){if(inp)inp.focus();return;}
   const existing=sickOf(who).find(s=>s.date===ds);
-  if(existing){alert('This date is already marked as a sick day.');return;}
+  if(existing){uiToast('This date is already marked as a sick day.');return;}
   toggleSickDate(ds,who);
   if(inp)inp.value='';
 }
@@ -3526,7 +3551,7 @@ let resetWho='boss';
 function confirmReset(who){
   who=who||'boss';resetWho=who;
   const count=sickOf(who).length;
-  if(!count){alert('No sick leave records to reset.');return;}
+  if(!count){uiToast('No sick leave records to reset.');return;}
   document.getElementById('confirm-title').textContent='Reset All Sick Leave';
   document.getElementById('confirm-msg').textContent='This will delete all '+count+' sick day record(s) for '+(memberName(who)||who)+'. Use this when your school resets the sick leave allowance for a new academic year. This cannot be undone.';
   document.getElementById('confirm-ok').onclick=doReset;
@@ -3684,7 +3709,7 @@ function renderWidgets(tasks,who){
   const upcoming=tasks.filter(t=>{if(t.status==='done'||t.status==='canceled'||!t.dueDate)return false;const d=daysUntil(t.dueDate);return d!==null&&d>=0&&d<=7;}).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
   const upEl=document.getElementById(who+'-upcoming');
   upEl.innerHTML=!upcoming.length?'<div class="widget-empty">No deadlines in the next 7 days</div>':
-    upcoming.map(t=>{const d=daysUntil(t.dueDate);const lbl=d===0?'Today':d===1?'Tomorrow':'in '+d+' days';const urgent=d<=3;
+    upcoming.map(t=>{const d=daysUntil(t.dueDate);const lbl=fmtDue(t.dueDate);const urgent=d<=3;
       return '<div class="wlist-item"><div class="wlist-dot" style="background:'+(urgent?'var(--danger)':(who==='best'?'var(--coral)':'var(--navy)'))+';"></div><div><div class="wlist-topic">'+(t.topic||t.title||'')+'</div><div class="wlist-sub">'+fmtDate(t.dueDate)+' &middot; '+lbl+'</div></div></div>';
     }).join('');
   const active=tasks.filter(t=>t.status!=='canceled');
@@ -4117,7 +4142,7 @@ function renderGCal(who){
   if(selInMonth){
     const sd=new Date(sel+'T00:00:00');
     html+='<div class="cal-detail"><div class="cal-detail-title">'+(sel===tStr?'Today \u00b7 ':'')
-      +sd.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'short'})+'</div>';
+      +fmtDate(sd)+'</div>';
     const evs=map[sel]||[];
     if(!evs.length){
       html+='<div class="gcal-msg" style="padding:12px 0;"><i class="ti ti-calendar-off" style="font-size:22px;"></i>No events this day.</div>';
@@ -4158,7 +4183,7 @@ function renderUpcoming(who){
     const s=new Date(ev.start);
     const key=s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0');
     const col=GCAL_COLORS[ev.color]||'var(--blue)';
-    const dlabel=key===tStr?'Today':(key===tmwStr?'Tomorrow':s.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}));
+    const dlabel=key===tStr?'Today':(key===tmwStr?'Tomorrow':fmtDate(s));
     const tlabel=ev.allDay?'All day':s.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     return '<div class="upc-item"><div class="upc-bar" style="background:'+col+';"></div>'
       +'<div class="upc-info"><div class="upc-title">'+escHtml(ev.title||'Untitled')+'</div>'
@@ -4316,9 +4341,9 @@ function renderMeeting(who){
     let cd;
     if(mins<60)cd=mins<1?'Starting now':'in '+mins+' min';
     else if(mins<1440){const h=Math.floor(mins/60),m=mins%60;cd='in '+h+'h'+(m?' '+m+'m':'');}
-    else{const dys=Math.floor(mins/1440);cd='in '+dys+' day'+(dys>1?'s':'');}
+    else{const dys=Math.floor(mins/1440);cd=dys+' day'+(dys===1?'':'s')+' left';}
     const tstr=start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    const dstr=start.toDateString()===now.toDateString()?'Today':start.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const dstr=start.toDateString()===now.toDateString()?'Today':fmtDate(start);
     titleTxt=next.title||'Meeting';
     subHtml='<span class="meet-countdown">Starts '+cd+'</span><span>'+dstr+' '+tstr+'</span>'+(next.location?'<span><i class="ti ti-map-pin" style="font-size:11px;"></i> '+escHtml(next.location)+'</span>':'');
   }
@@ -4349,11 +4374,11 @@ function evCountLabel(ms){
 function evProgress(ms){if(ms<0)return 100;const d=ms/86400000;return Math.max(3,Math.min(100,Math.round(100-(d/60*100))));}
 function evDateLabel(ev){
   const d=new Date(ev.date+'T00:00:00');
-  let s=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  let s=fmtDate(d);
   if(ev.time)s+=' \u00b7 '+ev.time;
   return s;
 }
-function evChipDate(ev){return new Date(ev.date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});}
+function evChipDate(ev){return fmtDate(ev.date);}
 function evShort(ms){
   if(ms<0)return 'Done';
   const days=Math.floor(ms/86400000);
@@ -4590,7 +4615,7 @@ function closeEventModal(){document.getElementById('event-modal').classList.remo
 function saveEvent(){
   const name=document.getElementById('ev-name').value.trim();
   const date=document.getElementById('ev-date').value;
-  if(!name||!date){alert('Please enter an event name and a date.');return;}
+  if(!name||!date){uiToast('Please enter an event name and a date.');return;}
   const data={name:name,date:date,time:document.getElementById('ev-time').value||'',category:document.getElementById('ev-category').value||'',notes:document.getElementById('ev-notes').value.trim(),color:((document.getElementById('ev-color')||{value:''}).value||''),textColor:((document.getElementById('ev-tcolor')||{value:''}).value||'')};
   const ref=eventsRefOf(eventModalWho);if(!ref){closeEventModal();return;}
   if(eventEditId)(eventRefById(eventEditId)||eventsRefOf(eventModalWho)).doc(eventEditId).update(data);
@@ -5033,7 +5058,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +    '</div>'
    +'</div>'
    +'<div class="ov-topbar">'
-   +  '<div class="ov-hello"><div class="ov-hello-title" id="ov-greet">MARCOM Command Center</div><div class="ov-hello-sub" id="ov-datesub"></div></div>'
+   +  '<div class="ov-hello"><div class="ov-hello-sub" id="ov-datesub"></div></div>'
    +'</div>'
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
    +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
@@ -5428,7 +5453,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var on=ovDl===o[0];
       return '<button type="button" class="ov-fpill'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="ovDlFilter(\''+o[0]+'\')">'+o[1]+'</button>';
     }).join(''));
-    function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
+    function pri(t){ return t.priority==='high'?'<span class="ov-pri high"><i class="ti ti-arrow-up" aria-hidden="true"></i>High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
     function row(it){
       var owners=it.t.__src==='event'?taskAssignees(it.t):[it.w];
       var who=owners.length?owners.map(nm).join(', '):'No owner';
@@ -5484,7 +5509,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     acts.sort(function(a,b){ return b.dt-a.dt; });
     if(!acts.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No recent activity.</div>'); return; }
     MarcomUI.setHTML(el,acts.slice(0,ovActAll?10:5).map(function(a){
-      var when=a.dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+a.dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      var when=fmtDate(a.dt)+' · '+a.dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       return '<div class="ov-act"><div class="ov-act-ic"><i class="ti '+a.i+'"></i></div><div class="ov-act-b"><div class="ov-act-txt">'+a.txt+'</div><div class="ov-act-t">'+when+'</div></div></div>';
     }).join('')+(acts.length>5?'<button type="button" class="ov-more-link" onclick="ovActMore()">'+(ovActAll?'Show fewer':'Show more')+'</button>':''));
   }
@@ -5500,7 +5525,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     MarcomUI.setHTML(el,items.map(function(t){
       var dr=dU(t.mdWatermark);
       var cls=dr<0?'od':(dr===0?'today':(dr<=7?'soon':'ok'));
-      var lbl=dr<0?('Overdue by '+Math.abs(dr)+'d'):(dr===0?'Delete today':dr+' days left');
+      var lbl=fmtDue(t.mdWatermark);
       return '<div class="ov-wm '+cls+'"><div class="ov-wm-name">'+esc(topicOf(t))+'</div><div class="ov-wm-meta">Uploaded '+(t.mdUpload?fdt(t.mdUpload):'-')+' · Delete '+fdt(t.mdWatermark)+'</div><div class="ov-wm-days">'+lbl+'</div></div>';
     }).join(''));
   }
@@ -5569,7 +5594,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     if(annCard)annCard.classList.toggle('ov-ann-all',!!ovAnnAll);
     el.innerHTML=(ovAnnAll?items:items.slice(0,1)).map(function(a){
       var dt=a.createdAt?new Date(a.createdAt):null;
-      var when=(dt&&!isNaN(dt.getTime()))?dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+      var when=(dt&&!isNaN(dt.getTime()))?fmtDate(dt)+' · '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
       var text=esc(a.text).replace(/\n/g,'<br>');
       return '<div class="ov-ann-item'+(a.pinned?' pinned':'')+'">'
         +(a.pinned?'<div class="ov-ann-pinbadge"><i class="ti ti-pin-filled"></i> Pinned</div>':'')
@@ -5688,7 +5713,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    Deepens each member's own theme colour on the Dew / O / Junior tabs:
    Add Task button, avatar icon circle, and the role text under the name. */
 .member-head{border-left-width:5px;background-image:linear-gradient(90deg,var(--accent-light),transparent 62%);}
-.member-avatar{box-shadow:0 0 0 3px var(--accent-light),0 7px 16px -4px var(--accent-shadow);}
+.member-avatar{box-shadow:none;}
 .member-name{color:var(--text);}
 .member-role{font-weight:800;letter-spacing:.2px;}
 .btn-accent{background-color:var(--accent);background-image:linear-gradient(135deg,rgba(255,255,255,0.16),rgba(0,0,0,0.12));box-shadow:0 7px 20px -5px var(--accent-shadow);font-weight:800;}
@@ -5904,7 +5929,7 @@ html.dark .l2-hint b{color:#2bb3a5;}
   window.lieu2Save=function(){
     var date=(document.getElementById('l2-date')||{}).value;
     if(!date){ var d=document.getElementById('l2-date'); if(d)d.focus(); return; }
-    var hours=currentHours(); if(!hours||hours<=0){ alert('Please enter how many hours.'); return; }
+    var hours=currentHours(); if(!hours||hours<=0){ uiToast('Please enter how many hours.'); return; }
     var ref=refOfL(who2); if(!ref){ lieu2Close(); return; }
     var rec={type:l2type,date:date,event:((document.getElementById('l2-event')||{}).value||'').trim(),note:((document.getElementById('l2-note')||{}).value||'').trim(),hours:hours,days:Math.round((hours/HPD)*10000)/10000};
     if(l2type==='earned'){ rec.timeFrom=(document.getElementById('l2-from')||{}).value||''; rec.timeTo=(document.getElementById('l2-to')||{}).value||''; }
@@ -6111,8 +6136,8 @@ body.auth-locked{overflow:hidden;}
     }).join('');
   }
   window.usersSave=function(){ var f=FS(); if(!f)return; var em=((el('u-email')||{}).value||'').trim().toLowerCase(); var role=(el('u-role')||{}).value;
-    if(!em){ alert('Enter an email address.'); return; }
-    f.collection('acl').doc(em).set({role:role,workspace:(ROLE_WS[role]||null),disabled:false},{merge:true}).then(function(){ var i=el('u-email'); if(i)i.value=''; }).catch(function(e){ alert('Could not save (admin only): '+((e&&e.message)||e)); }); };
+    if(!em){ uiToast('Enter an email address.'); return; }
+    f.collection('acl').doc(em).set({role:role,workspace:(ROLE_WS[role]||null),disabled:false},{merge:true}).then(function(){ var i=el('u-email'); if(i)i.value=''; }).catch(function(e){ uiToast('Could not save (admin only): '+((e&&e.message)||e)); }); };
   window.usersToggle=function(em,dis){ var f=FS(); if(!f)return; f.collection('acl').doc(em).set({disabled:(dis===true||dis==='true')},{merge:true}).catch(function(e){ console.error(e); }); };
   window.usersDel=function(em){ uiConfirm({title:'Remove access',message:em+' will no longer be able to sign in to the workspace.',okLabel:'Remove access',danger:true}).then(function(ok){ if(!ok)return; var f=FS(); if(!f)return; f.collection('acl').doc(em).delete().then(function(){uiToast('Access removed for '+em);}).catch(function(e){ console.error(e); uiToast('Could not remove access.'); }); }); };
 
@@ -6203,7 +6228,7 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
   function lRef(w){ try{return lieuRefOf(w);}catch(e){return null;} }
   function ts(){ try{return firebase.firestore.FieldValue.serverTimestamp();}catch(e){return null;} }
   function normUrl(u){ if(!u)return ''; return (/^https?:\/\//i.test(u)||u.charAt(0)==='/')?u:'https://'+u; }
-  function editedMark(t){ if(!t)return''; var d=null; if(t.toDate)d=t.toDate(); else if(t.seconds)d=new Date(t.seconds*1000); else {d=new Date(t); if(isNaN(d.getTime()))return'';} return 'edited '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); }
+  function editedMark(t){ if(!t)return''; var d=null; if(t.toDate)d=t.toDate(); else if(t.seconds)d=new Date(t.seconds*1000); else {d=new Date(t); if(isNaN(d.getTime()))return'';} return 'edited '+fmtDate(d); }
 
   window.ovCopy=function(text,btn){ try{ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text); }catch(e){}
     if(btn){ var old=btn.innerHTML; btn.classList.add('done'); btn.innerHTML='<i class="ti ti-check"></i>'; setTimeout(function(){ btn.classList.remove('done'); btn.innerHTML=old; },1200); } };
@@ -6297,8 +6322,8 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     el('editrec-modal').classList.add('open'); };
   window.editRecSave=function(){ if(!editCtx)return; var c=editCtx;
     if(c.kind==='sick'){ var d=(el('er-date')||{}).value; if(!d)return; var ref=sRef(c.who); if(ref)ref.doc(c.id).update({date:d,updatedAt:ts()}); }
-    else if(c.kind==='lieu'){ var h=parseFloat((el('er-hours')||{}).value)||0; if(h<=0){ alert('Enter the number of hours.'); return; } var etype=(el('er-type')||{}).value; var tf=(etype==='used')?'':((el('er-from')||{}).value||''); var tt=(etype==='used')?'':((el('er-to')||{}).value||''); var ref=lRef(c.who); if(ref)ref.doc(c.id).update({type:etype,date:(el('er-date')||{}).value,event:((el('er-event')||{}).value||'').trim(),note:((el('er-note')||{}).value||'').trim(),hours:h,days:Math.round((h/HPD)*10000)/10000,timeFrom:tf,timeTo:tt,updatedAt:ts()}); }
-    else if(c.kind==='ann'){ var txt=((el('er-text')||{}).value||'').trim(); var pin=(el('er-pin')||{}).checked; var f=FS(); if(f&&txt){ f.collection('dept_settings').doc('announcements').get().then(function(doc){ var items=((doc&&doc.data())||{}).items||[]; items=items.map(function(a){ return a.id===c.id?Object.assign({},a,{text:txt,pinned:pin,editedAt:new Date().toISOString()}):a; }); f.collection('dept_settings').doc('announcements').set({items:items},{merge:true}).catch(function(e){ alert('Could not save: '+((e&&e.message)||e)); }); }); } }
+    else if(c.kind==='lieu'){ var h=parseFloat((el('er-hours')||{}).value)||0; if(h<=0){ uiToast('Enter the number of hours.'); return; } var etype=(el('er-type')||{}).value; var tf=(etype==='used')?'':((el('er-from')||{}).value||''); var tt=(etype==='used')?'':((el('er-to')||{}).value||''); var ref=lRef(c.who); if(ref)ref.doc(c.id).update({type:etype,date:(el('er-date')||{}).value,event:((el('er-event')||{}).value||'').trim(),note:((el('er-note')||{}).value||'').trim(),hours:h,days:Math.round((h/HPD)*10000)/10000,timeFrom:tf,timeTo:tt,updatedAt:ts()}); }
+    else if(c.kind==='ann'){ var txt=((el('er-text')||{}).value||'').trim(); var pin=(el('er-pin')||{}).checked; var f=FS(); if(f&&txt){ f.collection('dept_settings').doc('announcements').get().then(function(doc){ var items=((doc&&doc.data())||{}).items||[]; items=items.map(function(a){ return a.id===c.id?Object.assign({},a,{text:txt,pinned:pin,editedAt:new Date().toISOString()}):a; }); f.collection('dept_settings').doc('announcements').set({items:items},{merge:true}).catch(function(e){ uiToast('Could not save: '+((e&&e.message)||e)); }); }); } }
     closeEditRec();
   };
 
@@ -6351,7 +6376,7 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     document.querySelectorAll('#be-colors .be-row').forEach(function(r){ var ins=r.querySelectorAll('input'); var name=ins[1]?ins[1].value.trim():''; var hexEl=r.querySelector('.be-hex'); var hex=hexEl?hexEl.value.trim():''; if(name||hex)colors.push({name:name,hex:hex||'#000000'}); });
     var assets=[]; document.querySelectorAll('#be-assets .be-row').forEach(function(r){ var ins=r.querySelectorAll('input'); var label=ins[0]?ins[0].value.trim():''; var url=ins[1]?ins[1].value.trim():''; if(label||url)assets.push({label:label,url:url}); });
     var fonts={primary:((el('be-font1')||{}).value||'').trim(),secondary:((el('be-font2')||{}).value||'').trim(),notes:((el('be-fontnotes')||{}).value||'').trim()};
-    var f=FS(); if(f){var _p=f.collection('dept_settings').doc('brand').set({colors:colors,fonts:fonts,assets:assets},{merge:true}); if(_p&&_p.catch)_p.catch(function(e){ alert('Could not save (admin only once rules are live): '+((e&&e.message)||e)); });} closeBrandEdit(); };
+    var f=FS(); if(f){var _p=f.collection('dept_settings').doc('brand').set({colors:colors,fonts:fonts,assets:assets},{merge:true}); if(_p&&_p.catch)_p.catch(function(e){ uiToast('Could not save (admin only once rules are live): '+((e&&e.message)||e)); });} closeBrandEdit(); };
 
   /* ---------- listeners + init ---------- */
   function startListeners(){ var f=FS(); if(!f){ setTimeout(startListeners,800); return; }
@@ -6457,17 +6482,17 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
   window.tplEdit=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; buildTplModal(); tplEditId=id; el('tpl-title').textContent='Edit Template'; fillTpl(t); el('tpl-modal').classList.add('open'); };
   window.tplDup=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; buildTplModal(); tplEditId=null; el('tpl-title').textContent='Duplicate Template'; fillTpl(Object.assign({},t,{name:(t.name||'')+' (copy)'})); el('tpl-modal').classList.add('open'); };
   window.tplDel=function(id){ var t=(templates||[]).find(function(x){return x.id===id;}); uiConfirm({title:'Delete template',message:'"'+((t&&t.name)||'This recurring template')+'" will be deleted.',okLabel:'Delete',danger:true}).then(function(ok){ if(!ok)return; var f=FS(); if(f)deleteWithUndo(f.collection('o_templates'),id,t,'Template deleted'); }); };
-  window.tplSave=function(){ var name=((el('tpl-name')||{}).value||'').trim(); if(!name){ alert('Enter an event / task name.'); return; }
+  window.tplSave=function(){ var name=((el('tpl-name')||{}).value||'').trim(); if(!name){ uiToast('Enter an event / task name.'); return; }
     var rec=(el('tpl-recur')||{}).value||'once';
     var data={name:name,category:((el('tpl-cat')||{}).value||'').trim(),recurType:rec,days:(rec==='weekly'?getDays():[]),dayOfMonth:(rec==='monthly'?(parseInt((el('tpl-dom')||{}).value)||1):null),notes:((el('tpl-notes')||{}).value||'').trim()};
     var f=FS(); if(!f){ tplClose(); return; }
-    if(tplEditId){ var p=f.collection('o_templates').doc(tplEditId).set(data,{merge:true}); if(p&&p.catch)p.catch(function(e){alert('Could not save: '+((e&&e.message)||e));}); }
-    else { data.createdAt=ts(); var p2=f.collection('o_templates').add(data); if(p2&&p2.catch)p2.catch(function(e){alert('Could not save (O or admin only): '+((e&&e.message)||e));}); }
+    if(tplEditId){ var p=f.collection('o_templates').doc(tplEditId).set(data,{merge:true}); if(p&&p.catch)p.catch(function(e){uiToast('Could not save: '+((e&&e.message)||e));}); }
+    else { data.createdAt=ts(); var p2=f.collection('o_templates').add(data); if(p2&&p2.catch)p2.catch(function(e){uiToast('Could not save (O or admin only): '+((e&&e.message)||e));}); }
     tplClose();
   };
   window.tplUse=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; var ref=refOfT('o'); if(!ref)return;
     var p=ref.add({topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:tdy(),createdAt:ts()});
-    if(p&&p.catch)p.catch(function(e){alert('Could not create task (O or admin only): '+((e&&e.message)||e));});
+    if(p&&p.catch)p.catch(function(e){uiToast('Could not create task (O or admin only): '+((e&&e.message)||e));});
   };
 
   /* ---------- open-app auto-create ---------- */
@@ -6837,7 +6862,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   function isAdmin(){ var c=me(); return !!(c&&c.role==='admin'); }
   function myName(){ var c=me(); if(!c)return 'You'; if(c.role==='admin')return (mn('boss')||'Boss'); if(c.workspace)return (mn(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
   function myWs(){ var c=me(); if(!c)return ''; return c.role==='admin'?'boss':(c.workspace||''); }
-  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; var now=new Date(); var sd=d.toDateString()===now.toDateString(); return (sd?'':d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' ')+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
+  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; var now=new Date(); var sd=d.toDateString()===now.toDateString(); return (sd?'':fmtDate(d)+' ')+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
   /* ---- presence + read receipts ----
      Each member writes a small heartbeat to their OWN {workspace}_settings
      document (a doc every member is already allowed to write), so no extra
@@ -6867,7 +6892,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     var diff=Date.now()-ms; if(diff<ONLINE_MS)return 'online now';
     var m=Math.round(diff/60000); if(m<60)return 'last seen '+m+'m ago';
     var h=Math.round(m/60); if(h<24)return 'last seen '+h+'h ago';
-    return 'last seen '+Math.round(h/24)+'d ago';
+    return 'last seen '+Math.round(h/24)+' days ago';
   }
   function readersOf(msg){
     var mt=tsMs(msg.createdAt); if(!mt)return [];
@@ -6999,7 +7024,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       seen=msgs.length; localStorage.setItem('tc_seen',seen); var b=document.getElementById('tc-unread'); if(b)b.style.display='none'; beat(true); setTimeout(function(){ var m=document.getElementById('tc-messages'); if(m)m.scrollTop=m.scrollHeight; var i=document.getElementById('tc-input'); if(i)i.focus(); },40); render(); }
   }
   function send(){ var i=document.getElementById('tc-input'); if(!i)return; var t=i.value.trim(); if(!t)return;
-    if(!me()){ alert('Please sign in to chat.'); return; } if(!ref){ var f=FS(); if(f)ref=f.collection('chat_messages'); } if(!ref)return;
+    if(!me()){ uiToast('Please sign in to chat.'); return; } if(!ref){ var f=FS(); if(f)ref=f.collection('chat_messages'); } if(!ref)return;
     ref.add({ text:t, authorEmail:myEmail(), authorName:myName(), authorWs:myWs(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); try{uiToast('Message could not be sent: '+((e&&e.message)||'unknown error'));}catch(_){ alert('Message could not be sent.'); } });
     i.value=''; closePops(); i.focus();
   }
@@ -7267,6 +7292,11 @@ html.dark .dirq-ok{color:#f0b95f;}
   function myEmail(){ var c=me(); return c?(c.email||''):''; }
   function mn(w){ try{ return (typeof memberName==='function')?(memberName(w)||w):w; }catch(e){ return w; } }
   function day(iso){ try{ return iso?fmtDate(String(iso).slice(0,10)):''; }catch(e){ return ''; } }
+  function requestText(n){
+    return n.action==='deadline'&&/^\d{4}-\d{2}-\d{2}$/.test(n.value||'')
+      ?(n.actionLabel||'Needs to be done by')+' '+fmtDate(n.value)
+      :(n.sentence||n.actionLabel||'Request');
+  }
   /* The admin sees every request; a member sees only the ones addressed to them. */
   function visible(n){ if(isAdmin())return true; var w=myWs(); return !!(w&&(n.owners||[]).indexOf(w)>=0); }
   function keyOf(task,who){
@@ -7280,7 +7310,7 @@ html.dark .dirq-ok{color:#f0b95f;}
     return NOTES.filter(visible).map(function(n){
       var owners=(n.owners||[]).map(mn).join(', ');
       return { g:'Director requests', cls:'warn', ic:'ti-user-star',
-        t:n.sentence||n.actionLabel||'Request',
+        t:requestText(n),
         s:(n.taskTopic||'Task')+' \u00b7 from '+(n.from||'the Director')+(owners?' \u00b7 for '+owners:''),
         go:((n.owners||[])[0]||myWs()||'boss') };
     });
@@ -7298,7 +7328,7 @@ html.dark .dirq-ok{color:#f0b95f;}
   function panelHTML(list){
     if(!list.length)return '';
     var rows=list.map(function(n){
-      return '<div class="dirq-i"><div class="dirq-s">'+esc(n.sentence||n.actionLabel||'Request')+'</div>'
+      return '<div class="dirq-i"><div class="dirq-s">'+esc(requestText(n))+'</div>'
         +'<div class="dirq-m">'+esc([n.from||'Director',day(n.createdAtIso)].filter(Boolean).join(' \u00b7 '))+'</div>'
         +(n.note?'<div class="dirq-note">'+esc(n.note)+'</div>':'')
         +'<button type="button" class="dirq-ok" onclick="event.stopPropagation();dirqHandled(&quot;'+esc(n.id)+'&quot;)">'
@@ -7411,7 +7441,7 @@ html.dark :is(#panel-overview,#settings-modal) .trq-status.s-reject{color:#f4a3a
   function myEmail(){ var c=me(); return c?(c.email||''):''; }
   function isAdmin(){ var c=me(); return !!(c&&c.role==='admin'); }
   function myName(){ var c=me(); if(!c)return 'Member'; if(c.role==='admin')return (mn('boss')||'Boss'); if(c.workspace)return (mn(c.workspace)||c.workspace); return (c.email||'').split('@')[0]; }
-  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
+  function fmt(t){ try{ var d=t&&t.toDate?t.toDate():(t&&t.seconds?new Date(t.seconds*1000):null); if(!d)return ''; return fmtDate(d)+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }catch(e){return '';} }
   function ensureCard(){
     /* App feedback lives in Settings, so the Overview stays about the team's work. */
     var main=document.querySelector('#settings-modal .modal-body'); if(!main)return false;
@@ -7436,9 +7466,9 @@ html.dark :is(#panel-overview,#settings-modal) .trq-status.s-reject{color:#f4a3a
     try{ unsub=ref.orderBy('createdAt','desc').onSnapshot(function(s){ items=s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); render(); },function(e){console.error(e);}); }catch(e){console.error(e);}
   }
   function submit(){ var i=document.getElementById('trq-input'); if(!i)return; var t=i.value.trim(); if(!t){i.focus();return;}
-    if(!me()){ alert('Please sign in to submit a request.'); return; } if(!ref){ var f=FS(); if(f)ref=f.collection('team_requests'); } if(!ref)return;
+    if(!me()){ uiToast('Please sign in to submit a request.'); return; } if(!ref){ var f=FS(); if(f)ref=f.collection('team_requests'); } if(!ref)return;
     var cat=(document.getElementById('trq-cat')||{}).value||'Other';
-    ref.add({ text:t, category:cat, status:'open', authorEmail:myEmail(), authorName:myName(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); alert('Request could not be submitted.'); });
+    ref.add({ text:t, category:cat, status:'open', authorEmail:myEmail(), authorName:myName(), createdAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(e){ console.error(e); uiToast('Request could not be submitted.'); });
     i.value='';
   }
   window.trqEdit=function(id){ var m=items.filter(function(x){return x.id===id;})[0]; if(!m||!ref)return; if(m.authorEmail!==myEmail()&&!isAdmin())return;
@@ -8007,7 +8037,7 @@ html.dark .stat-box.sb-navy .stat-watermark{color:#8fb4dc;}
 /* Uniform flat name-bar background in dark for every tab (removes the
    near-white accent streak the team tabs showed in dark mode). */
 html.dark .member-head{background:var(--surface);background-image:none;}
-html.dark .member-avatar{box-shadow:0 4px 12px -5px rgba(0,0,0,.55);}
+html.dark .member-avatar{box-shadow:none;}
 /* Boss identity coloured like the other tabs, readable in both modes. */
 #panel-boss .member-name,#panel-boss .member-role,#panel-boss .member-role i{color:var(--accent-ink,var(--navy));}
 html.dark #panel-boss .member-name,
@@ -8071,9 +8101,9 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
       var cd;
       if(mins<60) cd=mins<1?'Now':'in '+mins+'m';
       else if(mins<1440){var h=Math.floor(mins/60),m=mins%60; cd='in '+h+'h'+(m?' '+m+'m':'');}
-      else{var dys=Math.floor(mins/1440); cd='in '+dys+'d';}
+      else{var dys=Math.floor(mins/1440); cd=dys+' day'+(dys===1?'':'s')+' left';}
       var tstr=start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      var dstr=sameDay?'Today':start.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+      var dstr=sameDay?'Today':fmtDate(start);
       return '<div class="meet-item'+(sameDay?' today':'')+'">'
         +'<div class="meet-item-row"><span class="meet-cd'+(sameDay?' urgent':'')+'">'+(sameDay?'<span class="meet-cd-dot"></span>':'')+cd+'</span><span class="meet-item-time">'+dstr+' &middot; '+tstr+'</span></div>'
         +'<div class="meet-item-title">'+esc(ev.title||'Meeting')+'</div>'
@@ -8094,9 +8124,9 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
            o:{role:'Photographer & Video Editor',icon:'ti-camera'},
            junior:{role:'Junior Events Coordinator',icon:'ti-user-plus'}};
   /* The header numbers are also the quickest filters for the board below. */
-  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">Active</span></button>'
-                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> <span class="mh-l">Due Soon</span></button>'
-                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">Done</span></button>';
+  var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">active</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-clock"></i> <b>0</b> <span class="mh-l">due soon</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">done</span></button>';
   document.addEventListener('click',function(e){
     var chip=e.target&&e.target.closest?e.target.closest('.member-head .mh-stat[data-f]'):null; if(!chip)return;
     var panel=chip.closest('.tab-panel'); if(!panel)return;
@@ -9001,7 +9031,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     var sup=(ev.suppliers||[]),supOk=sup.filter(function(s){return s.status==='Confirmed'||s.status==='Paid';}).length;
     var d=dU(ev.date);
     var h='<div class="ews-ov-grid">'
-      +'<div class="ews-mini"><div class="ews-mini-num">'+(d===null?'–':(d<0?'Done':d+'d'))+'</div><div class="ews-mini-lbl"><i class="ti ti-hourglass-high"></i>'+(d!==null&&d>=0?'Until event day':'Event finished')+'</div></div>'
+      +'<div class="ews-mini"><div class="ews-mini-num">'+(d===null?'–':(d<0?'Done':d+' day'+(d===1?'':'s')))+'</div><div class="ews-mini-lbl"><i class="ti ti-hourglass-high"></i>'+(d!==null&&d>=0?'Until event day':'Event finished')+'</div></div>'
       +'<div class="ews-mini"><div class="ews-mini-num">'+open+'</div><div class="ews-mini-lbl"><i class="ti ti-clipboard-list"></i>Open tasks</div></div>'
       +'<div class="ews-mini"><div class="ews-mini-num" style="color:'+(soon?'var(--st-overdue)':'inherit')+';">'+soon+'</div><div class="ews-mini-lbl"><i class="ti ti-alarm"></i>Due soon</div></div>'
       +'<div class="ews-mini"><div class="ews-mini-num">'+supOk+'/'+sup.length+'</div><div class="ews-mini-lbl"><i class="ti ti-building-store"></i>Suppliers confirmed</div></div>'
@@ -9049,7 +9079,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       var overdue=!finished&&du!==null&&du<0;
       var dot=finished?(t.status==='done'?'var(--st-done)':'var(--st-cancel)'):(overdue?'var(--st-overdue)':(du!==null&&du<=3?'var(--st-waiting)':'var(--st-progress)'));
       h+='<div class="ews-tl-item" style="--dotc:'+dot+';" onclick="openEdit(\''+(t.__own||w)+'\',\''+t.id+'\')">'
-        +'<div class="ews-tl-date">'+esc(fdt(t.dueDate))+(du!==null&&!finished?'<br><span style="color:'+(overdue?'var(--st-overdue)':'var(--muted)')+';">'+(overdue?Math.abs(du)+'d late':(du===0?'today':'in '+du+'d'))+'</span>':'')+'</div>'
+        +'<div class="ews-tl-date">'+esc(fdt(t.dueDate))+(du!==null&&!finished?'<br><span style="color:'+(overdue?'var(--st-overdue)':'var(--muted)')+';">'+fmtDue(t.dueDate)+'</span>':'')+'</div>'
         +'<div class="ews-tl-topic'+(t.status==='done'?' struck':'')+'">'+esc(t.topic||t.title||'Untitled')+'</div>'
         +tlStatusChip(t,overdue)+'</div>';
     });
@@ -9148,7 +9178,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     }else{
       nts.forEach(function(n){
         var d=n.ts?new Date(n.ts):null;
-        var ds=d?d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+        var ds=d?fmtDate(d)+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
         h+='<div class="ews-row"><div class="ews-row-ic"><i class="ti ti-note"></i></div>'
           +'<div class="ews-row-main"><div class="ews-row-s" style="margin-top:0;color:var(--text);">'+esc(n.text)+'</div>'
           +(ds?'<div class="ews-note-ts" style="margin-top:4px;">'+ds+'</div>':'')
@@ -9248,7 +9278,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
       a.href=URL.createObjectURL(blob); a.download=fn;
       document.body.appendChild(a); a.click();
       setTimeout(function(){try{URL.revokeObjectURL(a.href);a.remove();}catch(e){}},400);
-    }catch(e){console.error(e);alert('Export failed. Please try again.');}
+    }catch(e){console.error(e);uiToast('Export failed. Please try again.');}
   };
   window.evwsCopyBudget=function(w,id,c,btn){
     var ev=evById(w,id); if(!ev)return;
@@ -9336,6 +9366,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
     return '<div class="kanban-board">'+KB_STATUS_ORDER.map(function(S){
       var sc=SC[S],col=scColors(S);
       var cards=tasks.filter(function(t){return (t.status||'pending')===S;}).filter(function(t){try{return !isAutoArchived(t);}catch(e){return true;}});
+      if(S==='canceled'&&!cards.length)return '';
       cards.sort(function(a,b){try{return dueSortValue(a)-dueSortValue(b);}catch(e){return 0;}});
       var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span></div>';
       var body=cards.length?cards.map(function(t){
@@ -9469,12 +9500,6 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   };
   window.ovDaily=function(){
     var now=new Date();
-    /* greeting */
-    var g=now.getHours()<12?'Good morning':(now.getHours()<17?'Good afternoon':'Good evening');
-    var greet=document.getElementById('ov-greet');
-    if(greet){var greeting=g+', '+myName();if(greet.textContent!==greeting)greet.textContent=greeting;}
-    /* The today numbers live in the Overview tiles and Upcoming Deadlines now;
-       the greeting line and the Today's Focus card no longer repeat them. */
     /* quick actions */
     var qa=document.getElementById('ov-qa');
     if(qa&&!qa.getAttribute('data-built')){
@@ -10328,6 +10353,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
           if(f.type==='links')return;
           var v=d[f.k];
           if(Array.isArray(v))v=v.join(', ');
+          if(f.type==='date'&&v)v=fmtDate(v);
           if(v)items+='<div class="rq-dl-item"><b>'+esc(f.l.replace(/ \(.*?\)/,''))+'</b>'+esc(String(v))+'</div>';
         });
       });
@@ -10380,7 +10406,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
   function rcHistRow(r){
     return '<div class="rc-hist-row"><span class="rq-ref">'+esc(r.refNo||'')+'</span>'
       +'<span style="font-weight:700;font-size:12.5px;flex:1;min-width:140px;">'+esc(r.eventName||'Request')+'<span style="color:var(--muted);font-weight:600;"> &middot; '+esc(LT(r.typeLabel||''))+'</span></span>'
-      +'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+(r.createdAtIso?new Date(r.createdAtIso).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'')+'</span>'
+      +'<span style="font-size:11px;color:var(--muted);font-weight:600;">'+(r.createdAtIso?fmtDate(new Date(r.createdAtIso)):'')+'</span>'
       +stChip(r.status||'Submitted')+'</div>';
   }
   window.rcTrackOne=function(){
@@ -10459,7 +10485,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       uiConfirm({
         title:'Possible double booking',
         icon:'ti-alert-triangle',
-        message:'There is already something booked on '+(r.eventDate||r.deadline||'that date')+': "'+clash+'".'
+        message:'There is already something booked on '+(fmtDate(r.eventDate||r.deadline)||'that date')+': "'+clash+'".'
           +'\n\nThis request is for "'+(r.eventName||'the event')+'"'+(when?' at '+when:'')+'.'
           +'\n\nThe shoots may still both be possible if the venues are close or one is short. Please message the requester to agree the timing, then decide whether to accept.',
         okLabel:'Add anyway',
@@ -10535,6 +10561,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
         if(f.type==='links')return;
         var v=(r.data||{})[f.k];
         if(Array.isArray(v))v=v.join(', ');
+        if(f.type==='date'&&v)v=fmtDate(v);
         if(v)items.push('<div class="rq-dl-item"><b>'+esc(f.l.replace(/ \(.*?\)/,''))+'</b>'+esc(String(v))+'</div>');
       });
     });
@@ -10556,7 +10583,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     var autoNote='';
     if(r.status==='Completed'&&r.completedAtIso){
       var _rm=Date.parse(r.completedAtIso);
-      if(isFinite(_rm))autoNote='<span style="color:var(--muted);"><i class="ti ti-trash-x"></i>Auto-removes '+new Date(_rm+RC_KEEP_MS).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'</span>';
+      if(isFinite(_rm))autoNote='<span style="color:var(--muted);"><i class="ti ti-trash-x"></i>Auto-removes '+fmtDate(new Date(_rm+RC_KEEP_MS))+'</span>';
     }
     var stOpts=RC_STATUSES.map(function(s){return '<option'+(s===(r.status||'Submitted')?' selected':'')+'>'+s+'</option>';}).join('');
     var c=RC_ST[r.status||'Submitted']||RC_ST.Submitted;
@@ -10566,7 +10593,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       +'<div class="rq-main"><div class="rq-title">'+esc(r.eventName||'Request')+(isNew?'<span class="rq-newtag">New</span>':'')+'</div>'
       +'<div class="rq-sub">'
       +'<span><i class="ti ti-user"></i>'+esc((r.requester&&r.requester.name)||'Unknown')+(r.requester&&r.requester.department?' · '+esc(r.requester.department):'')+'</span>'
-      +'<span><i class="ti ti-clock"></i>'+(r.createdAtIso?new Date(r.createdAtIso).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'')+'</span>'
+      +'<span><i class="ti ti-clock"></i>'+(r.createdAtIso?fmtDate(new Date(r.createdAtIso)):'')+'</span>'
       +dueChip+autoNote
       +'</div></div>'
       +'<span class="rq-ref">'+esc(r.refNo||'')+'</span>'
@@ -10639,9 +10666,9 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
     card.classList.toggle('rc-quiet',quiet);
     if(quiet){
       card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
-        +'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines</span>'
-        +'<button class="btn btn-ghost btn-sm" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open</button>'
-        +'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy Link</button></div>';
+        +'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests</span>'
+        +'<button class="btn btn-ghost btn-sm" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open request form</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy form link</button></div>';
       return;
     }
     card.innerHTML='<div class="ov-card-head"><div class="ov-card-title"><i class="ti ti-send"></i> Request Centre</div></div>'
@@ -10650,8 +10677,8 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       +row('ti-hourglass-high','var(--purple-light)','var(--st-hold)','Awaiting approval',await_)
       +row('ti-calendar-week','var(--amber-light)','var(--st-waiting)','Due this week',dueWk)
       +row('ti-alert-triangle','var(--danger-light)','var(--st-overdue)','Overdue',over,1)
-      +'<div class="ov-rc-btns"><button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open</button>'
-      +'<button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy Link</button></div>';
+      +'<div class="ov-rc-btns"><button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcOpenCentre()"><i class="ti ti-external-link"></i> Open request form</button>'
+      +'<button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="rcCopyLink(this)"><i class="ti ti-link"></i> Copy form link</button></div>';
   }
   function injectTabs(){
     ['dew','o'].forEach(function(w){
@@ -11368,7 +11395,7 @@ html{scroll-padding-top:118px;}
 body.hdr-scrolled .header-top{padding:8px 18px 7px;}
 body.hdr-scrolled .app-tagline{display:none;}
 body.hdr-scrolled .app-logo .logo-icon{transform:scale(.92);}
-body.hdr-scrolled .app-header{box-shadow:0 10px 34px -12px rgba(10,22,40,.62);}
+body.hdr-scrolled .app-header{box-shadow:none;}
 .hdr-context{display:inline-flex;align-items:center;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.3px;border-radius:99px;padding:5px 12px;margin-left:10px;white-space:nowrap;}
 /* salary strip lives BELOW the sticky header now, inside a collapsible dock */
 .salary-dock{max-width:min(98vw,2560px);margin:10px auto 0;padding:0 14px;}
@@ -11452,7 +11479,7 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');
       b.innerHTML=c
-        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+esc(days)+' days<span class="uxp-sal-left"> left</span></span>'+(function(){ var sc=document.getElementById('salary-card'),pc=((sc&&sc.getAttribute('data-pct'))||'').trim(); return /^[0-9]{1,3}%$/.test(pc)?' <span class="uxp-sal-mini" aria-hidden="true"><span style="width:'+pc+'"></span></span>':''; })()+' <i class="ti ti-chevron-down"></i>'
+        ?'<i class="ti ti-cash-banknote"></i> <span class="uxp-sal-word">Payday</span> <b class="uxp-sal-date">'+esc(((document.getElementById('sal-date')||{}).textContent||'').trim()||'soon')+'</b> <span class="uxp-sal-rest"><span class="uxp-sal-sep">&middot; </span>'+(days==='0'?'Today':esc(days)+(days==='1'?' day':' days')+'<span class="uxp-sal-left"> left</span>')+'</span>'+' <i class="ti ti-chevron-down"></i>'
         :'<i class="ti ti-chevron-up"></i> Hide salary period';
     }
     /* The payday strip starts as one compact line; Show salary period opens it. */
@@ -11620,7 +11647,7 @@ html.dark #panel-boss .member-role{color:var(--accent-ondark,#8fb4dc) !important
 @supports (background: color-mix(in srgb, red 10%, transparent)){
   .member-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent,#1f3a5f) 12%,transparent),transparent 62%);}
   .evhub-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent,#1f3a5f) 12%,transparent),transparent 62%);}
-  .member-avatar{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#1f3a5f) 22%,transparent),0 7px 16px -4px var(--accent-shadow,rgba(20,30,50,.35));}
+  .member-avatar{box-shadow:none;}
   html.dark .member-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent-ondark,#8fb4dc) 14%,transparent),transparent 62%);}
   html.dark .evhub-head{background-image:linear-gradient(90deg,color-mix(in srgb,var(--accent-ondark,#8fb4dc) 14%,transparent),transparent 62%);}
 }
@@ -11722,7 +11749,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
       }
       if(w==='junior'){
         var up=evs('junior').filter(function(e){return e.date&&e.date>=tdy();}).sort(function(a,b){return a.date<b.date?-1:1;});
-        if(up.length){var du=daysUntil(up[0].date);return {cls:'info',ic:'ti-confetti',txt:'Next event: '+(up[0].name||'Event')+(du===0?' today':' in '+du+'d')};}
+        if(up.length){var du=daysUntil(up[0].date);return {cls:'info',ic:'ti-confetti',txt:'Next event: '+(up[0].name||'Event')+' · '+fmtDue(up[0].date)};}
       }
       if(w==='boss'){
         var rc=window.__rcCounts||{};
@@ -11745,7 +11772,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var finished=t.filter(function(x){return x.status==='done';}).length;
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
-    /* Step 64: the Overview says good morning; here the card says what it holds. */
+    /* The card says what it holds. */
     var title=isOwn(w)?'Today':(esc(nm(w))+"'s day");
     /* Before 5pm the chips and rows speak for today; after 5pm one line looks
        ahead to tomorrow. */
@@ -11755,7 +11782,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     /* A count of zero is not drawn: only what is there takes room. */
     var chips=''
       +(openOverdue?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openOverdue+'</b> overdue</button>':'')
-      +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openToday+'</b> due today</button>':'')
+      +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><i class="ti ti-clock" aria-hidden="true"></i><b>'+openToday+'</b> due today</button>':'')
       +(finished?'<button type="button" class="myday-chip ok" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+finished+'</b> done today</button>':'')
       +((w==='dew'||w==='o')&&myNew?'<button type="button" class="myday-chip info" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new request'+(myNew>1?'s':'')+'</button>':'');
     var rows='';
@@ -11763,7 +11790,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
       rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'bad')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-alert-triangle')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'was due '+esc(fdt(x.dueDate)))+'</span></button>';
     });
     dueToday.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-calendar-due')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
+      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-clock')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
     });
     evToday.slice(0,1).forEach(function(e){
       rows+='<button type="button" class="myday-row info" onclick="uxpGoto(\'#'+w+'-evhub-body\')"><i class="ti ti-confetti"></i>'+esc(e.name||'Event')+'<span class="md-sub">event today</span></button>';
@@ -11847,6 +11874,30 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
         saveOrder(col); h.focus();
         try{if(typeof window.uxpSbToggle==='function'&&document.body.classList.contains('uxp-sb-collapsed'))document.querySelectorAll('.side-col').forEach(function(c){});}catch(e2){}
       });
+      /* Pointer capture keeps touch reordering on the handle while the drawer scrolls elsewhere. */
+      var touchTarget=null,touchAbove=false;
+      h.addEventListener('pointerdown',function(e){
+        if(e.pointerType==='mouse')return;
+        e.preventDefault(); touchTarget=null; h.setPointerCapture(e.pointerId);
+        wd.classList.add('uxp-dragging');
+      });
+      h.addEventListener('pointermove',function(e){
+        if(!h.hasPointerCapture(e.pointerId))return;
+        var hit=document.elementFromPoint(e.clientX,e.clientY);
+        var row=hit&&hit.closest('.widget');
+        clearMarks(col); touchTarget=null;
+        if(!row||row===wd||row.parentNode!==col)return;
+        touchTarget=row;
+        var rect=row.getBoundingClientRect(); touchAbove=e.clientY<rect.top+rect.height/2;
+        row.classList.add(touchAbove?'uxp-drop-above':'uxp-drop-below');
+      });
+      h.addEventListener('pointerup',function(e){
+        if(!h.hasPointerCapture(e.pointerId))return;
+        if(touchTarget){col.insertBefore(wd,touchAbove?touchTarget:touchTarget.nextSibling);saveOrder(col);}
+        h.releasePointerCapture(e.pointerId); touchTarget=null;
+        wd.classList.remove('uxp-dragging'); clearMarks(col); h.focus();
+      });
+      h.addEventListener('pointercancel',function(){touchTarget=null;wd.classList.remove('uxp-dragging');clearMarks(col);});
       head.insertBefore(h,head.firstChild);
       wd.addEventListener('dragstart',function(e){dragEl=wd;wd.classList.add('uxp-dragging');try{e.dataTransfer.setData('text/plain','w');e.dataTransfer.effectAllowed='move';}catch(err){}});
       wd.addEventListener('dragend',function(){wd.classList.remove('uxp-dragging');wd.draggable=false;clearMarks(col);dragEl=null;});
@@ -12027,7 +12078,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     var who=t.lastEditedByName||String(t.lastEditedBy).split('@')[0];
     var d=null,v=t.lastEditedAt;
     try{ d=v&&v.toDate?v.toDate():(v&&v.seconds?new Date(v.seconds*1000):null); }catch(e){}
-    return 'Last edited by '+who+(d?(' · '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})):'');
+    return 'Last edited by '+who+(d?(' · '+fmtDate(d)+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})):'');
   }
   /* known event names: from the shared board plus each member's Event Hub */
   function knownEvents(){
@@ -12971,10 +13022,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .ov-card,.card,.task-card,.kb-col,.widget,.stat-box,.note-card,.link-card,.meet-card,.evc-card,.ews-card,.rc-card,.rc-type-card,.rq-card,.rcp,.tc-pop,.auth-card,.chat-panel,.ov-res-card,.clockoff-banner,.sub-nav,.rov-banner,.salary-strip,.myday{border-radius:20px!important;}
 .modal{border-radius:24px!important;}
 
-/* ---- 4. Header: premium navy with a fine yellow accent ---- */
-.app-header{background:var(--grad-header);position:sticky;top:0;z-index:200;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 34px -12px rgba(0,35,63,.55);}
-.app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--accentY) 18%,var(--accentY) 82%,transparent);opacity:.9;}
-.logo-icon{background:linear-gradient(135deg,rgba(240,179,35,.30),rgba(255,255,255,.05));border:1px solid rgba(240,179,35,.4);box-shadow:0 6px 16px -8px rgba(240,179,35,.6);border-radius:13px;}
+/* ---- 4. Header: flat navy and gold logo ---- */
+.app-header{background:#003057!important;position:sticky;top:0;z-index:200;box-shadow:none;}
+.app-header::after{content:none;display:none;background:none!important;}
+.logo-icon{background:#f0b323!important;border:1px solid rgba(240,179,35,.4);box-shadow:none;border-radius:13px;}
 .tab-nav{gap:2px;padding:0 6px;border-top:1px solid rgba(255,255,255,.08);}
 .tab-btn{border-radius:12px 12px 0 0;border-bottom-width:3px;transition:color .18s var(--ease),background .18s var(--ease),border-color .18s var(--ease);}
 .tab-btn:hover{color:#fff;background:rgba(255,255,255,.07);}
@@ -13107,11 +13158,11 @@ html.dark .widget-head{background:rgba(255,255,255,.03);border-bottom:1px solid 
 html.dark .widget-head:hover{background:rgba(255,255,255,.06);}
 html.dark .widget:hover,html.dark .link-card:hover,html.dark .note-card:hover{box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.10);}
 
-/* ---- 4. Header: dark glass with a fine brand edge ---- */
-html.dark .app-header{background:linear-gradient(180deg,rgba(10,16,26,.88),rgba(7,11,18,.72));
-  -webkit-backdrop-filter:blur(24px) saturate(1.4);backdrop-filter:blur(24px) saturate(1.4);
-  box-shadow:0 10px 40px -18px rgba(0,0,0,.9);}
-html.dark .app-header::after{background:linear-gradient(90deg,transparent,rgba(240,179,35,.85) 22%,rgba(45,212,191,.55) 78%,transparent);height:1px;opacity:1;}
+/* ---- 4. Header: flat navy ---- */
+html.dark .app-header{background:#003057!important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  box-shadow:none;}
+html.dark .app-header::after{content:none;display:none;background:none!important;}
 html.dark .sync-pill{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);}
 html.dark .dm-toggle{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);}
 html.dark .dm-toggle:hover{background:rgba(255,255,255,.16);}
@@ -13330,7 +13381,7 @@ html.dark body::before{inset:-15%;filter:blur(60px);background:
   radial-gradient(46rem 34rem at 4% 4%, rgba(99,102,241,.15), transparent 60%),
   radial-gradient(40rem 30rem at 98% 72%, rgba(176,124,255,.12), transparent 62%);}
 html.dark body::after{background:radial-gradient(140% 100% at 50% 30%, transparent 62%, rgba(6,9,16,.55) 100%);}
-html.dark .app-header{background:linear-gradient(180deg,rgba(12,17,28,.92),rgba(10,14,24,.78));}
+html.dark .app-header{background:#003057!important;}
 
 /* ---- 2. Light canvas: warm Cloud Dancer with a calm colour drift ---- */
 html:not(.dark){
@@ -13420,8 +13471,8 @@ html:not(.dark) body::before{inset:-15%;filter:blur(70px);opacity:1;background:
   radial-gradient(52rem 36rem at 90% -8%, rgba(14,116,144,.13), transparent 62%),
   radial-gradient(46rem 34rem at 0% 2%, rgba(59,79,207,.10), transparent 60%),
   radial-gradient(40rem 30rem at 98% 78%, rgba(139,63,199,.07), transparent 62%);}
-html:not(.dark) .app-header{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(248,250,253,.80));
-  box-shadow:0 8px 30px -20px rgba(20,35,60,.4);}
+html:not(.dark) .app-header{background:#003057!important;
+  box-shadow:none;}
 html:not(.dark) .app-name,html:not(.dark) .app-tagline{color:#101A2B;}
 html:not(.dark) .app-tagline{color:#55637A;opacity:1;}
 html:not(.dark) .tab-btn{color:#55637A;}
@@ -13474,9 +13525,9 @@ html.dark .fpill.act-accent,html:not(.dark) .fpill.act-accent{color:var(--accent
 
 /* ---- 1. A header you can actually see ---- */
 html:not(.dark) .app-header{
-  background:linear-gradient(180deg,#FFFFFF 0%,#F7F9FC 100%)!important;
-  border-bottom:1px solid rgba(20,35,60,.12);
-  box-shadow:0 6px 24px -14px rgba(20,35,60,.35)!important;}
+  background:#003057!important;
+  border-bottom:0!important;
+  box-shadow:none;}
 html:not(.dark) .app-name{color:#0E1A2B!important;}
 html:not(.dark) .app-tagline{color:#5A6879!important;opacity:1!important;}
 html:not(.dark) .tab-nav{border-top:1px solid rgba(20,35,60,.09);}
@@ -13492,7 +13543,7 @@ html:not(.dark) .tab-btn.a-junior{color:#14532D!important;border-bottom-color:#1
 /* the active tab follows whatever colour that tab is set to */
 html:not(.dark) .tab-btn.a-active{color:var(--accent-ink,#003057)!important;
   border-bottom-color:var(--accent-ink,#003057)!important;background:rgba(20,35,60,.04);}
-html:not(.dark) .logo-icon{background:linear-gradient(135deg,rgba(240,179,35,.30),rgba(255,255,255,.7))!important;
+html:not(.dark) .logo-icon{background:#f0b323!important;
   border-color:rgba(240,179,35,.55)!important;}
 html:not(.dark) .sync-pill,html:not(.dark) .dm-toggle{background:rgba(20,35,60,.05)!important;
   border-color:rgba(20,35,60,.12)!important;color:#5A6879!important;}
@@ -13609,10 +13660,10 @@ html:not(.dark) .widget:hover,html:not(.dark) .link-card:hover,
 html:not(.dark) .note-card:hover,html:not(.dark) .task-card:hover{box-shadow:var(--shadow-lg)!important;}
 html:not(.dark) .modal,html:not(.dark) .chat-panel,html:not(.dark) .auth-card{box-shadow:var(--shadow-lg)!important;}
 
-/* header sits on white, so it needs its own edge */
-html:not(.dark) .app-header{background:#FFFFFF!important;
-  border-bottom:1px solid rgba(16,24,40,.10);
-  box-shadow:0 4px 18px -10px rgba(16,24,40,.28)!important;}
+/* Flat navy header in light mode */
+html:not(.dark) .app-header{background:#003057!important;
+  border-bottom:0!important;
+  box-shadow:none;}
 
 /* the board stays frameless; cards carry the elevation */
 html:not(.dark) .kb-col,html:not(.dark) .kb-col[data-status]{background:transparent!important;box-shadow:none!important;}
@@ -13629,27 +13680,18 @@ html:not(.dark) .tcp-pop{background:#FFFFFF!important;box-shadow:var(--shadow-lg
 </style>
 <style id="navy-header-2026">
 /* ============================================================
-   NAVY HEADER 2026 — #003057 with a #F0B323 bloom
-   Blending gold straight into navy makes olive mud, so the gold
-   is layered as a soft bloom over a navy base plus a crisp gold
-   rule, keeping both brand colours without dirtying either.
-   Bloom is held at 22% and the right end darkened to #04406B so
-   every label clears AA over the whole gradient (worst 5.11:1).
+   NAVY HEADER 2026: flat brand navy with a flat gold logo
    ============================================================ */
 html:not(.dark) .app-header{
-  background:
-    radial-gradient(120% 200% at 92% -25%, rgba(240,179,35,.22), transparent 60%),
-    radial-gradient(90% 170% at 3% 125%, rgba(9,86,140,.42), transparent 62%),
-    linear-gradient(100deg,#00223C 0%,#003057 52%,#04406B 100%)!important;
-  border-bottom:none!important;color:#fff;
-  box-shadow:0 10px 30px -14px rgba(0,34,60,.60)!important;}
-html:not(.dark) .app-header::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;opacity:1;
-  background:linear-gradient(90deg,rgba(240,179,35,0),#F0B323 18%,#F6D06A 50%,#F0B323 82%,rgba(240,179,35,0))!important;}
+  background:#003057!important;
+  border-bottom:0!important;color:#fff;
+  box-shadow:none;}
+html:not(.dark) .app-header::after{content:none;display:none;background:none!important;}
 html:not(.dark) .app-name{color:#FFFFFF!important;}
 html:not(.dark) .app-tagline{color:rgba(255,255,255,.80)!important;opacity:1!important;}
-html:not(.dark) .logo-icon{background:linear-gradient(135deg,#F6D06A,#F0B323)!important;
+html:not(.dark) .logo-icon{background:#f0b323!important;
   border:1px solid rgba(240,179,35,.60)!important;color:#00243F!important;
-  box-shadow:0 6px 18px -6px rgba(240,179,35,.65)!important;}
+  box-shadow:none;}
 html:not(.dark) .sync-pill,html:not(.dark) .dm-toggle{background:rgba(255,255,255,.12)!important;
   border-color:rgba(255,255,255,.20)!important;color:rgba(255,255,255,.92)!important;}
 html:not(.dark) .dm-toggle:hover{background:rgba(255,255,255,.22)!important;}
@@ -13659,7 +13701,7 @@ html:not(.dark) .tab-btn:hover{color:#FFFFFF!important;background:rgba(255,255,2
 
 /* member labels as light tints that read on navy */
 html:not(.dark) .tab-nav .tab-btn#tab-overview,
-html:not(.dark) .tab-nav .tab-btn#tab-overview:not(.a-active){color:#F7CF6A!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-overview:not(.a-active){color:rgba(255,255,255,.72)!important;}
 html:not(.dark) .tab-nav .tab-btn#tab-boss,
 html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active),
 html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active):not(.a-boss){color:#B3D8FF!important;}
@@ -13701,8 +13743,6 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
     {n:'Future Dusk',c:'#6A55D0'},
     {n:'Electric Fuchsia',c:'#C6389B'},
     {n:'Cherry Lacquer',c:'#B4243F'},
-    {n:'HeadStart Navy',c:'#003057'},
-    {n:'HeadStart Yellow',c:'#D99A0F'},
     {n:'Graphite',c:'#4A5563'}
   ];
   var WS=['boss','best','dew','o','junior'];
@@ -13760,7 +13800,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
         barsD='background:color-mix(in srgb,'+bright+' 14%,transparent)!important;border-color:color-mix(in srgb,'+bright+' 52%,transparent)!important;color:'+onDark+'!important;';
         barsL='background:'+ink+'!important;border-color:'+ink+'!important;color:'+onLight+'!important;';
       }
-      css+='html.dark body.theme-'+w+' .btn-accent.btn-full,html.dark body.theme-'+w+' .fpill.act-accent{'+barsD+'}';
+      css+='html.dark body.theme-'+w+' .btn-accent.btn-full,html.dark body.theme-'+w+' .fpill.act-accent{background:#10243a!important;border-color:#647e9a!important;color:#fff!important;}';
       css+='html:not(.dark) body.theme-'+w+' .btn-accent.btn-full,html:not(.dark) body.theme-'+w+' .fpill.act-accent{'+barsL+'}';
     });
     var st=document.getElementById('tc-themes');

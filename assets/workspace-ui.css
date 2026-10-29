@@ -896,7 +896,7 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
   .tab-nav .rc-tabbadge{position:absolute;top:2px;left:calc(50% + 7px);z-index:2;height:16px;min-width:16px;padding:0 4px;font-size:10px;
     box-shadow:0 0 0 2px var(--dock-bg);}
   /* A blurred header would hold the dock inside itself instead of the screen. */
-  html.dark .app-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(180deg,#0b111c,#090d16);}
+  html.dark .app-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:#003057;}
 }
 
 /* Step 37: the Overview's first screen puts the work first */
@@ -1284,13 +1284,13 @@ html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:h
 html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
 
 /* Step 50: task cards are calm at rest */
-/* At rest a card is its name and tick, one line of facts, and one bar: Details
-   on the left, "⋯" on the right. "⋯" opens the action row under it, the same way
+/* At rest a card is its tick and name, one line of facts, and one bar: Details
+   and "⋯" together on the left. "⋯" opens the action row under it, the same way
    with a mouse, a finger or the keyboard; a click on the card still opens it. A
    row that appeared on hover would make the cards below jump under the pointer. */
 .task-card .tc-bar{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px;}
 .task-card .tc-bar .tc-more{margin:0;}
-.task-card .tc-acts-btn{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
+.task-card .tc-acts-btn{margin-left:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
 .task-card .tc-acts-btn:hover,.task-card .tc-acts-btn:focus-visible,.task-card.acts-open .tc-acts-btn{background:var(--surface-3,rgba(16,24,40,.06));color:var(--text);}
 .task-card:not(.acts-open) .task-foot{display:none;}
 /* The status menu sits on the facts line, except in a status column: the column
@@ -1532,15 +1532,6 @@ html:not(.dark) #evb-card .evb-more{margin-left:-10px;}
   #panel-overview :is(.ov-col-main,.ov-col-side){display:flex;flex-direction:column;}
   #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child:not(.uxp-collapsed){flex-grow:1;}
 }
-/* A card without details has no footer row: "⋯" sits in the corner of its facts,
-   which keep room for it, so it never wraps onto a line of its own. Either way
-   "⋯" is in the card's bottom right corner. */
-.task-card .task-meta:has(>.tc-acts-btn){position:relative;padding-right:40px;}
-.task-card .task-meta>.tc-acts-btn{position:absolute;right:-4px;bottom:-3px;margin:0;}
-@media(max-width:600px){
-  .task-card .task-meta:has(>.tc-acts-btn){padding-right:44px;}
-  .task-card .task-meta>.tc-acts-btn{right:-6px;bottom:-9px;}
-}
 /* The Director request: one quote and one action. The amber rule marks it; the
    rest is plain text and one quiet button. */
 html:not(.dark) .task-card .dirq,html.dark .task-card .dirq{margin-top:10px;padding:0 0 0 12px;border:0!important;
@@ -1608,3 +1599,195 @@ html.dark #evb-card .evb-priority{color:#bdc7d5;}
 html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 #evb-card .evb-g.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
 @media(prefers-reduced-motion:reduce){#evb-card .evb-g.tc-found{animation:none;outline-color:var(--focus-ink);}}
+
+/* Step 68: the tick leads the name; actions stay on the left */
+.task-card{--tc-name-inset:35px;}
+.task-card .task-meta{position:relative;margin-left:var(--tc-name-inset);}
+.task-card .tc-bar{margin-left:var(--tc-name-inset);justify-content:flex-start;}
+.task-card .tc-facts-end{position:absolute;top:0;left:calc(-1 * var(--tc-name-inset));width:calc(var(--tc-name-inset) - 10px);display:flex;justify-content:center;}
+@media(max-width:640px){
+  .task-card{--tc-name-inset:50px;}
+}
+
+/* Step 71: desktop work on the first screen */
+@media(min-width:981px){
+  .tab-panel .filter-tabs{align-items:center;}
+  .tab-panel .filter-tabs .addtask-bar{margin-left:auto;flex:0 0 auto;}
+  html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;min-height:36px;padding:8px 14px;background:#10243a!important;border:1px solid #10243a!important;color:#fff!important;box-shadow:none!important;white-space:nowrap;}
+  .tab-panel .myday-row .md-title{flex:0 1 auto;min-width:0;}
+  .tab-panel .myday-row .md-sub{margin-left:0;flex:0 0 auto;}
+}
+
+/* Step 72b: gold belongs to the logo; red means overdue or canceled in light mode */
+html:not(.dark) body.theme-overview .tab-nav{--tab-ink:#003057;--tab-disc:#003057;--tab-on:#fff;}
+html:not(.dark) .tab-nav .tab-btn#tab-overview{color:rgba(255,255,255,.72)!important;}
+html:not(.dark) .cal-day.today,
+html:not(.dark) #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#003057!important;}
+html:not(.dark) .uxp-undo{color:#fff;font-weight:800;text-decoration:underline;}
+html:not(.dark) .pin-widget .widget-title>i,
+html:not(.dark) .note-pin-btn.pinned{color:#4b5563!important;}
+html:not(.dark) .pin-search:focus{border-color:#003057;box-shadow:0 0 0 3px rgba(0,48,87,.12);}
+html:not(.dark) .pin-act:hover{background:#003057;border-color:#003057;color:#fff;}
+html:not(.dark) .task-card .mb-high,
+html:not(.dark) #panel-overview .ov-pri.high{background:transparent!important;color:#34445c!important;font-weight:800;}
+html:not(.dark) .myday-chip.warn{background:#e5e7eb;border-color:transparent;}
+html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b,
+html:not(.dark) .mh-stat-soon i,html:not(.dark) .mh-stat-soon b,
+html:not(.dark) .rq-due.soon,html:not(.dark) .evc-cd.u-amber{color:#34445c!important;}
+html:not(.dark) #panel-overview .ov-cdn.soon .ov-cdn-tag{background:#e5e7eb;color:#34445c;}
+html:not(.dark) .cd-urgent{background:transparent!important;border:1.5px solid #003057;box-sizing:border-box;}
+html:not(.dark) .cal-day.today .cd-urgent{border-color:#fff;}
+html:not(.dark) .cal-day.sick-day,html:not(.dark) .cal-day.dayoff{background:#e5e7eb;color:#34445c;}
+html:not(.dark) .cal-day.sick-day.today{background:#003057;color:#fff;}
+html:not(.dark) .cal-leg-sick{background:#e5e7eb;box-shadow:inset 0 0 0 1px #4b5563;}
+html:not(.dark) .cal-off-mark{color:#4b5563;}
+html:not(.dark) #panel-overview .ov-cd-sick{background:#4b5563;}
+html:not(.dark) #panel-overview .ov-cd-leave{background:transparent;border:1.5px solid #4b5563;box-sizing:border-box;}
+html:not(.dark) #panel-overview .ov-ann-item.pinned{border-color:#003057;background:#fff;box-shadow:none;}
+html:not(.dark) #panel-overview .ov-ann-pinbadge{color:#4b5563!important;}
+html:not(.dark) .uxp-sal-mini>span,html:not(.dark) #lunch-banner .lb-ico{background:#003057;}
+html:not(.dark) .myday-row.warn i{color:#34445c;}
+html:not(.dark) .cal-grid,html:not(.dark) .cal-detail,html:not(.dark) .cal-legend{--sick:#4b5563;--sick-light:#e5e7eb;--teal:#4b5563;--teal-light:#e5e7eb;}
+html:not(.dark) #panel-overview .ov-dl-no-owner,html:not(.dark) #panel-overview .ov-no-owner-btn{color:#4b5563;}
+/* Older widgets still refer to the brand tokens. Keep those facts neutral,
+   without changing the logo or the header's line and glows. */
+html:not(.dark) .tab-panel,
+html:not(.dark) .salary-dock,
+html:not(.dark) #lunch-banner,
+html:not(.dark) #lunch-cfg{--gold:#003057;--gold2:#4b5563;--gold-light:#e5e7eb;}
+html:not(.dark) #panel-overview .ov-ann-item.pinned{border-left-color:#003057!important;}
+html:not(.dark) .app-header button:focus-visible{outline-color:#fff;}
+html:not(.dark) .sal-cell-label i{-webkit-text-fill-color:#4b5563;color:#4b5563;}
+html:not(.dark) .salary-badge,html:not(.dark) .salary-dock .salary-badge.sb-pay,
+html:not(.dark) .meet-cd.urgent,html:not(.dark) #lunch-cfg .lc-day.on{background:#e5e7eb;color:#34445c;border-color:#4b5563;}
+
+
+/* Step 72c: quiet person widgets and Story email actions in light mode */
+html:not(.dark) .tab-panel .side-col .widget-title>i.ti:first-of-type{
+  color:#34445c!important;background:#e5e7eb!important;box-shadow:none!important;
+}
+html:not(.dark) .tab-panel .side-col .widget-head .btn,
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"],
+html:not(.dark) .task-card .story-email-btn{
+  color:#34445c!important;background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important;
+}
+html:not(.dark) .tab-panel .side-col .widget-head .btn:hover,
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"]:hover,
+html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]:hover,
+html:not(.dark) .task-card .story-email-btn:hover{
+  color:#34445c!important;background:#e5e7eb!important;filter:none;
+}
+
+/* Step 73: dark mode keeps the light mode colour meanings */
+html.dark{--st-pending:#a3b1c4;--st-progress:#93b4f5;--st-waiting:#f0b86e;--st-hold:#c0a5f0;--st-done:#86d9a0;--st-cancel:#fda4a4;--st-overdue:#fda4a4;--st-archived:#a3b1c4;}
+html.dark body.theme-overview{--accent:#93b4d5;--accent-ink:#93b4d5;--accent-ondark:#93b4d5;}
+html.dark body.theme-boss{--accent:#93b4d5;--accent-ink:#93b4d5;--accent-ondark:#93b4d5;}
+html.dark body.theme-dew{--accent:#e8ad80;--accent-ink:#e8ad80;--accent-ondark:#e8ad80;--accent-shadow:rgba(232,173,128,.3);}
+html.dark body.theme-o{--accent:#f4a080;--accent-ink:#f4a080;--accent-ondark:#f4a080;}
+html.dark body.theme-junior{--accent:#8ad4a4;--accent-ink:#8ad4a4;--accent-ondark:#8ad4a4;}
+html.dark .tab-nav .tab-btn#tab-overview:not(.a-active),html.dark .tab-nav .tab-btn#tab-boss:not(.a-active){color:#93b4d5!important;}
+html.dark .tab-nav .tab-btn#tab-dew:not(.a-active){color:#e8ad80!important;}
+html.dark .tab-nav .tab-btn#tab-o:not(.a-active){color:#f4a080!important;}
+html.dark .tab-nav .tab-btn#tab-junior:not(.a-active){color:#8ad4a4!important;}
+/* Extra specificity keeps saved person colours on identities, away from actions. */
+html.dark body :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent,
+html.dark body .tab-panel .filter-tabs .fpill:is(.act-accent,.act-navy){background:#10243a!important;border-color:#647e9a!important;color:#fff!important;box-shadow:none!important;}
+html.dark .kb-col[data-status="pending"]{border-top-color:var(--st-pending);}
+html.dark .kb-col[data-status="in-progress"]{border-top-color:var(--st-progress);}
+html.dark .kb-col[data-status="waiting"]{border-top-color:var(--st-waiting);}
+html.dark .kb-col[data-status="on-hold"]{border-top-color:var(--st-hold);}
+html.dark .kb-col[data-status="done"]{border-top-color:var(--st-done);}
+html.dark .kb-col[data-status="canceled"]{border-top-color:var(--st-cancel);}
+html.dark .task-card .mb-high,html.dark #panel-overview .ov-pri.high{background:transparent!important;color:#bdc7d5!important;}
+html.dark .myday-chip.warn,html.dark .myday-chip.warn b,html.dark .mh-stat-soon i,html.dark .mh-stat-soon b,
+html.dark .rq-due.soon,html.dark .evc-cd.u-amber,html.dark .myday-row.warn i,
+html.dark #panel-overview .ov-cdn.soon .ov-cdn-tag{color:#bdc7d5!important;}
+html.dark .myday-chip.warn{background:#293343;border-color:transparent;}
+html.dark .cal-day.today,html.dark #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#93b4d5!important;}
+html.dark .pin-widget .widget-title>i,html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
+html.dark .tab-panel,html.dark .salary-dock,html.dark #lunch-banner,html.dark #lunch-cfg{--gold:#93b4d5;--gold2:#bdc7d5;--gold-light:#293343;}
+html.dark .uxp-undo{color:#fff;}
+html.dark .cd-urgent{background:transparent!important;border:1.5px solid #93b4d5;box-sizing:border-box;}
+html.dark .evhub .ev-chip,html.dark #evb-card .evb-g,html.dark #evb-card .evb-row,
+html.dark #ov-cal-card .ov-cal-detail,html.dark .cal-detail{border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+html.dark .evhub .ev-chip.ev-chip-filled{color:var(--text)!important;}
+html.dark .evhub .ev-chip.ev-chip-filled :is(.ev-chip-date,.ev-chip-name,.ev-chip-cd){color:var(--text)!important;}
+html.dark #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title),
+html.dark #panel-o :is(#o-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title),
+html.dark #panel-junior :is(#junior-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:var(--accent-ondark)!important;}
+html.dark body.theme-overview .tab-nav{--tab-disc:#93b4d5;}
+html.dark .salary-dock .salary-days-big,html.dark .uxp-chip.warn .uxp-chip-n,
+html.dark #panel-overview .ov-cdn-tag,html.dark #evb-card .evb-g.unassigned .evb-g-h,
+html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#bdc7d5!important;}
+html.dark #lunch-banner{background:#1b2c44;color:#bdc7d5;border-color:var(--border);}
+html.dark #lunch-banner .lb-close{color:#bdc7d5;}
+html.dark .cal-grid,html.dark .cal-detail,html.dark .cal-legend{--sick:#bdc7d5;--sick-light:#293343;--teal:#bdc7d5;--teal-light:#293343;}
+html.dark .cal-day.sick-day,html.dark .cal-day.dayoff{background:#293343;color:#bdc7d5;}
+html.dark #panel-overview .ov-st-sick,html.dark #panel-overview .ov-st-leave{color:#bdc7d5!important;}
+html.dark .tab-nav .tab-btn.a-active{border-bottom-color:#93b4d5!important;}
+html.dark .uxp-sal-mini>span,html.dark #lunch-banner .lb-ico{background:#93b4d5;}
+html.dark .sal-cell-label i{color:#bdc7d5;-webkit-text-fill-color:#bdc7d5;}
+html.dark .salary-badge,html.dark .salary-dock .salary-badge.sb-pay,
+html.dark .meet-cd.urgent,html.dark #lunch-cfg .lc-day.on{background:#293343;color:#bdc7d5;border-color:#bdc7d5;}
+
+/* Step 74: a flat header and one quiet sidebar */
+html body .app-header{background:#003057!important;border-bottom:0!important;box-shadow:none!important;}
+html body .app-header::after{content:none!important;display:none!important;background:none!important;}
+html body .logo-icon{background:#f0b323!important;box-shadow:none!important;}
+html body .member-head .member-avatar{box-shadow:none!important;filter:none!important;}
+html body #quickadd-fab,html body #tc-fab{background:#003057!important;box-shadow:0 2px 6px #0003!important;}
+html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;gap:0;}
+html body .tab-panel .side-col>.widget,
+html body .tab-panel .side-col>.widget:hover{background:transparent!important;border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;box-shadow:none!important;margin:0;}
+html body .tab-panel .side-col>.widget:first-child{border-top:0!important;}
+html body .tab-panel .side-col .widget-head{background:transparent;border-bottom:0;}
+html body .tab-panel .side-col .widget.collapsed .widget-head>button:not(.uxp-wh-drag){display:none;}
+html body .tab-panel .side-col .widget.collapsed .widget-head>.btn:last-of-type{display:inline-flex;}
+html body .tab-panel .side-col .pc-widget.collapsed .widget-head button[onclick="openPcSettings()"]{display:none;}
+html body .tab-panel .side-col .uxp-wh-drag{display:inline-flex;opacity:1;touch-action:none;color:var(--muted);}
+@media(hover:hover) and (pointer:fine){
+  html body .tab-panel .side-col .uxp-wh-drag{opacity:0;}
+  html body .tab-panel .side-col .widget-head:hover .uxp-wh-drag,
+  html body .tab-panel .side-col .widget-head:focus-within .uxp-wh-drag{opacity:1;}
+}
+html body .tab-panel .side-col>.widget.uxp-drop-above{border-top:2px solid var(--focus-ink)!important;}
+html body .tab-panel .side-col>.widget.uxp-drop-below{border-bottom:2px solid var(--focus-ink)!important;}
+html.dark body .tab-panel .side-col .widget-head .btn,
+html.dark body .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
+html.dark body .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]{background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important;box-shadow:none!important;}
+html.dark body .tab-panel .side-col .widget-head .btn:hover{background:#293343!important;filter:none;}
+
+/* Step 75: quiet card controls and fewer repeated signals. */
+html body .task-card .tcard-move{flex:0 0 auto;min-width:100px;width:auto;max-width:150px;}
+html body .task-card .tc-more:is(.open,:hover){background:var(--gray-light);color:var(--muted);border-color:var(--border);box-shadow:none;}
+html body .fpill[data-f="soon"] .pill-dot{background:var(--muted);}
+#ov-rc-card .ov-rc-btns{flex-wrap:wrap;}
+#ov-rc-card .ov-rc-btns>.btn{min-width:max-content;}
+
+/* Step 76: consistent dates, quiet links and responsive polish with gentle motion. */
+.task-card .task-topic{text-wrap:pretty;}
+html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .ov-more-link){
+  display:inline-flex;align-items:center;width:auto;min-height:0;height:auto;padding:3px 0;margin:4px 0;
+  border:0;background:transparent;font-size:12px;font-weight:600;color:var(--muted);line-height:1.5;box-shadow:none;
+}
+html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .ov-more-link):hover{text-decoration:underline;background:transparent;}
+.kb-count-tick{animation:kb-count-tick .4s ease-out;}
+@keyframes kb-count-tick{0%{transform:translateY(5px) scale(.85);opacity:.35;}55%{transform:translateY(-2px) scale(1.18);}100%{transform:none;opacity:1;}}
+@media(prefers-reduced-motion:reduce){.kb-count-tick{animation:none;}}
+@media(max-width:600px){
+  .member-head .member-head-stats{order:3;flex:1 1 100%;margin:0;gap:0;}
+  .member-head .mh-stat{background:transparent;border:0;padding:2px 0;gap:4px;min-height:0;font-size:11px;}
+  .member-head .mh-stat+.mh-stat::before{content:'·';margin:0 7px;color:var(--muted);}
+  .member-head .mh-stat i{display:none;}
+  .member-head .mh-stat .mh-l{position:static;width:auto;height:auto;margin:0;padding:0;overflow:visible;clip:auto;white-space:nowrap;}
+  .tab-panel .sub-nav{gap:0;padding:4px 0;overflow:visible;justify-content:space-between;}
+  .tab-panel .sub-nav::after{content:none;}
+  .tab-panel .sub-nav :is(.sub-tab,.uxp-drawer-btn){font-size:10px;padding:7px 4px;gap:2px;margin:0;min-width:0;}
+  .tab-panel .sub-nav .sub-tab i,.tab-panel .sub-nav .uxp-drawer-btn i{display:none;}
+  body::after{content:'';position:fixed;z-index:389;left:0;right:0;bottom:0;height:115px;pointer-events:none;
+    background:linear-gradient(transparent,var(--bg) 65%);}
+  html #panel-overview #ov-ann-card.ov-ann-all .ov-ann-list{display:flex;flex-direction:column;gap:6px;}
+  html #panel-overview #ov-ann-card.ov-ann-all .ov-ann-item{margin:0;}
+  html #panel-overview #ov-ann-card.ov-ann-all .ov-more-link{align-self:flex-start;margin:0;}
+}

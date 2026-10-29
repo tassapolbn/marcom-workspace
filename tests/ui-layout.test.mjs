@@ -114,7 +114,7 @@ test('the Overview watermark card shows only deletions due within three days',()
   let tasks=[];
   const days={'2026-10-26':2,'2026-11-10':17,'2026-10-20':-4};
   const context=vm.createContext({document:{getElementById:id=>nodes[id]||null},
-    tOf:()=>tasks,dU:d=>days[d],esc:s=>s,fdt:s=>s,topicOf:t=>t.topic,
+    fmtDue:d=>days[d]<0?'Overdue':days[d]+' days left',tOf:()=>tasks,dU:d=>days[d],esc:s=>s,fdt:s=>s,topicOf:t=>t.topic,
     MarcomUI:{setHTML:(el,html)=>{el.innerHTML=html;}}});
   vm.runInContext(slice('  function renderWM(){','  /* ---------- department resources ---------- */')+'\nthis.renderWM=renderWM;',context);
   tasks=[{topic:'Later',mdWatermark:'2026-11-10'}];
@@ -707,7 +707,7 @@ function card(task,{who='dew',admin=true,soon=false,acts=false,du=-1,events=null
     SC:{pending:{l:'Pending',i:'ti-circle'},waiting:{l:'Waiting',i:'ti-clock'},done:{l:'Done',i:'ti-check'}},
     DZ_STATUSES:['Brief Received'],MEMBER_ORDER:['boss','dew','o','junior'],
     daysUntil:()=>du,isSoon:()=>soon,eventsOf:()=>events||[],evOkClr:()=>false,evTint:()=>'',isEventTask:t=>t.__src==='event',taskAssignees:t=>t.assignees||[],
-    memberName:w=>(names&&names[w])||w,escHtml:esc,fmtDate:d=>d,safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
+    memberName:w=>(names&&names[w])||w,escHtml:esc,fmtDate:d=>d,fmtDue:()=>du===0?'Due today':du+' days left',safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
   /* With events, the real colour helpers (step 63: the card draws the event's own tag). */
   if(events)vm.runInContext(slice('function evOkClr(','const EV_TEXT_COLORS'),context);
   vm.runInContext(slice('function scColors(s){','function setTaskStatus(')+slice('function moveSelectHTML(who,task){','function moveCardTo(')
@@ -716,10 +716,10 @@ function card(task,{who='dew',admin=true,soon=false,acts=false,du=-1,events=null
 }
 const sample={id:'t1',topic:'Plan the open day',status:'pending',dueDate:'2026-10-25',priority:'high',eventName:'Open Day',description:'More',links:[]};
 
-test('a task card opens with its name, the done tick beside it, then one line of facts',()=>{
+test('a task card opens with its done tick, then its name and facts',()=>{
   const html=card(sample);
-  assert.match(html,/^<div class="task-card tc-pending" draggable="true" data-id="t1" onclick="taskCardClick\(event,'dew','t1'\)" ondragstart="taskDragStart\(event,'dew','t1'\)" ondragend="taskDragEnd\(event\)"><div class="task-head"><div class="task-topic [^"]*" title="Plan the open day">Plan the open day<\/div><button class="task-check /,
-    'the name is the first thing inside the card, and drag and drop is unchanged');
+  assert.match(html,/^<div class="task-card tc-pending" draggable="true" data-id="t1" onclick="taskCardClick\(event,'dew','t1'\)" ondragstart="taskDragStart\(event,'dew','t1'\)" ondragend="taskDragEnd\(event\)"><div class="task-head"><button class="task-check [^]*?<\/button><div class="task-topic [^"]*" title="Plan the open day">Plan the open day<\/div>/,
+    'the tick precedes the name, and drag and drop is unchanged');
   assert.match(html,/aria-label="Mark as done"/);
   const meta=html.slice(html.indexOf('<div class="task-meta">'),html.indexOf('<div class="role-x">'));
   assert.match(meta,/^<div class="task-meta"><select class="tcard-sel" title="Task status"/,'the status leads the facts, as its menu');
@@ -851,7 +851,7 @@ test('an event with its own text colour keeps its coloured tile in light mode',(
     .filter(([,sel,decl])=>chipSel.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
   assert.ok(clears.length>=1,'plain chips are still flat rows (step 32)');
   for(const [,sel] of clears)for(const part of sel.split(/,(?![^()]*\))/))
-    if(chipSel.test(part))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone');
+    if(chipSel.test(part)&&!part.trim().startsWith('html.dark'))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone in light mode');
   assert.match(step44,/html:not\(\.dark\) \.evhub \.ev-chip\.ev-chip-filled\{border:0;border-radius:12px;\}/,'a filled chip is a neat tile');
   assert.match(source,/\(tc\?' ev-chip-filled':''\)/,'only an event with a text colour is marked filled');
 });
@@ -943,7 +943,7 @@ test('the payday line moves into the header on phones and back under it on wider
   assert.equal(toggle.parentNode,bar);assert.equal(bar.children[0],toggle,'back before the lunch notice');
   assert.match(source,/watchSal\(\); placeSal\(\);/,'placed as soon as the line exists');
   assert.match(source,/<span class="uxp-sal-word">Payday<\/span> <b class="uxp-sal-date">/,'the same words, in pieces a phone can shorten');
-  assert.match(source,/' days<span class="uxp-sal-left"> left<\/span><\/span>'/);
+  assert.match(source,/days==='1'\?' day':' days'/);
   assert.match(source,/if\(!v&&b\.parentNode&&b\.parentNode\.classList\.contains\('header-right'\)&&\(window\.scrollY\|\|0\)>0\)/,'opening it from the pinned row scrolls up to show the details');
   assert.match(source,/'<div class="uxp-mi-who"><i class="ti ti-user-circle"><\/i><span class="uxp-mi-name">'/,'the menu says who is signed in');
 });
@@ -1030,7 +1030,7 @@ test('at rest a card ends in one bar, Details and "⋯"; the action row and the 
   const html=card(sample);
   const bar=html.slice(html.indexOf('<div class="tc-bar">'),html.indexOf('<div class="task-foot">'));
   assert.match(bar,/^<div class="tc-bar"><button type="button" class="tc-more" aria-expanded="false" onclick="event\.stopPropagation\(\);tcToggleDetails\(this,'dew_t1'\)">/,'Details on the left');
-  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" on the right');
+  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" beside Details');
   const foot=html.slice(html.indexOf('<div class="task-foot">'),html.indexOf('<div class="tc-details'));
   assert.match(foot,/^<div class="task-foot"><select class="tcard-sel tc-row-sel" title="Task status"/,'the row can carry the status menu for a status column');
   for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
@@ -1064,7 +1064,7 @@ test('the row stays hidden until "⋯"; in a status column the status menu waits
   assert.match(step50,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
   assert.match(step50,/\.kb-col \.task-card \.task-foot \.tc-row-sel\{display:inline-flex;\}/);
   assert.match(media(step50,'max-width:600px'),/\.task-card \.tc-acts-btn\{width:40px;height:40px;\}/,'a full touch target on iPhone');
-  assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:auto;/,'"⋯" at the right end of the bar');
+  assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:0;/,'"⋯" beside Details on the left');
 });
 
 
@@ -1103,8 +1103,8 @@ test('with two columns the Event Board runs full width under them; in one column
 
 test('the Request Centre is one quiet line when nothing is new or due',()=>{
   assert.match(source,/var quiet=!\(newD\|\|newP\|\|await_\|\|dueWk\|\|over\);\n    card\.classList\.toggle\('rc-quiet',quiet\);/);
-  assert.match(source,/'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines<\/span>'/);
-  assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
+  assert.match(source,/'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests<\/span>'/);
+  assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open request form<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
   assert.match(step51,/#ov-rc-card\.rc-quiet \.ov-rc-none\{grid-column:1 \/ -1;/);
 });
 
@@ -1208,11 +1208,11 @@ test('picking an event fills a shared card\'s "Event name", unless someone typed
 test('every Deadlines legend tells a deadline, one due soon and a sick day apart',()=>{
   const boss=slice('<div class="cal-grid" id="boss-cal-grid"></div>','<div class="cal-detail" id="boss-cal-detail"');
   assert.match(boss,/style="background:var\(--navy\);"><\/div>Deadline<\/div>/);
-  assert.match(boss,/style="background:var\(--danger\);"><\/div>Due soon<\/div>/,'the red dot the calendar draws for a deadline due soon');
+  assert.match(boss,/class="cal-leg-dot cd-urgent"><\/div>Due soon<\/div>/,'the legend shares the calendar due-soon ring');
   assert.match(boss,/<div class="cal-leg-sick"><\/div>Sick day<\/div>/);
   assert.doesNotMatch(boss,/var\(--sick\);"><\/div>Sick</,'no red dot that reads like a deadline');
   assert.match(source,/Due soon<\/div><div class="cal-leg-item"><div class="cal-leg-sick"><\/div>Sick day<\/div><\/div>/,'the member tabs\' calendars say the same');
-  assert.match(source,/const dc=info\.urgent\?'cd-urgent':/,'red dots still mean due soon or overdue');
+  assert.match(source,/const dc=info\.urgent\?'cd-urgent':/,'urgent dates share the due-soon marker');
   assert.match(step58,/\.cal-leg-sick\{width:10px;height:10px;border-radius:3px;background:var\(--sick-light\);box-shadow:inset 0 0 0 1px var\(--sick\);\}/,'the same tint a sick day gets');
 });
 
@@ -1334,22 +1334,36 @@ test('the slide uses the page\'s motion and becomes a plain fade with Reduce Mot
 /* ===== Step 62: person tabs open on the person's work ===== */
 const step62=stepBlock(62);
 
-test('every person tab puts the tasks before the Event Hub',()=>{
+test('step 68a: every person tab puts the Event Hub before the sub-tabs and board',()=>{
   const boss=slice('<div class="two-col">\n    <div class="main-col">','<div class="side-col">');
-  assert.ok(boss.indexOf('id="boss-sub-tasks"')<boss.indexOf('<div class="evhub" id="evhub">'),'Boss: the tasks first');
-  assert.ok(boss.indexOf('id="boss-sub-sop"')<boss.indexOf('<div class="evhub" id="evhub">'),'the Event Hub after every pane');
-  const tpl=slice("  +  '<div class=\"two-col\"><div class=\"main-col\">'","  +  '<div class=\"side-col\">'");
-  assert.ok(tpl.indexOf("-sub-tasks\">'")<tpl.indexOf("'<div class=\"evhub\">"),'the others: the tasks first');
-  assert.ok(tpl.indexOf("-sub-sop\" style=\"display:none;\"></div>':'')")<tpl.indexOf("'<div class=\"evhub\">"),'and the Event Hub last');
+  const tpl=source.slice(source.indexOf("function memberPanelHTML(w){"));
+  const context=vm.createContext({MEMBERS:{dew:{},o:{},junior:{}}});
+  vm.runInContext(tpl.slice(0,tpl.indexOf('\n}',tpl.indexOf('return'))+2),context);
+  for(const [w,html] of [['boss',boss],...['dew','o','junior'].map(w=>[w,context.memberPanelHTML(w)])]){
+    const hub=html.indexOf('class="evhub"'),nav=html.indexOf('class="sub-nav"');
+    assert.ok(hub>=0&&nav>hub,w+': Event Hub before sub-tabs');
+    assert.ok(nav<html.indexOf('id="'+w+'-sub-tasks"'),w+': sub-tabs before tasks');
+    assert.ok(html.indexOf('class="filter-tabs"')<html.indexOf('id="'+w+'-list"'),w+': filters before board');
+    assert.equal((html.match(/class="evhub"/g)||[]).length,1,w+': only one Event Hub');
+    for(const action of ['toggleEvTimeline()','openEventModal()','toggleEvHub()'])assert.ok(html.includes(action),w+': keeps '+action);
+  }
+});
+
+test('step 68a: Today mounts immediately after the name card, ahead of the main column',()=>{
+  const mount=slice('  function mountMyDay(){','  function renderAllMyDay()');
+  assert.match(mount,/slot.id=w\+'-myday'/);
+  assert.match(mount,/head.parentNode.insertBefore\(slot,head.nextSibling\)/);
+  assert.match(source,/<\/div>\n  <div class="two-col">\n    <div class="main-col">\n      <!-- Event Hub: under Today/);
+  assert.match(source,/\+  '<\/div>'\n  \+  '<div class="two-col"><div class="main-col">'\n  \+    '<div class="evhub">/);
 });
 
 test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose counters are still heard',()=>{
-  assert.match(source,/<div class="addtask-bar" style="margin-bottom:0\.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd\('boss'\)">/);
-  assert.match(source,/'<div class="addtask-bar" style="margin-bottom:0\.9rem;"><button class="btn btn-accent btn-full" onclick="openAdd\(\\''\+w\+'\\'\)">/);
+  assert.match(source,/<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd\('boss'\)">/);
+  assert.match(source,/'<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd\(\\''\+w\+'\\'\)">/);
   const phone=media(step62,'max-width:600px');
   assert.match(phone,/\.tab-panel \.addtask-bar\{display:none;\}/,'the round "+" opens the same sheet');
   assert.match(phone,/\.tab-panel \.filter-tabs\{flex-wrap:nowrap;overflow-x:auto;/);
-  for(const l of ['Active','Due Soon','Done'])assert.match(source,new RegExp('<b>0</b> <span class="mh-l">'+l+'</span></button>'));
+  for(const l of ['active','due soon','done'])assert.match(source,new RegExp('<b>0</b> <span class="mh-l">'+l+'</span></button>'));
   const one=media(step62,'min-width:361px) and (max-width:600px');
   assert.match(one,/\.member-head \.member-head-stats\{order:1;flex:0 0 auto;margin-left:auto;gap:5px;\}/);
   assert.match(one,/\.member-head \.mh-stat \.mh-l\{position:absolute;width:1px;height:1px;[^}]*clip:rect\(0 0 0 0\);/,'hidden from sight, not from screen readers');
@@ -1414,9 +1428,9 @@ test("a shared card names its people in ink, each with their initial in their co
 
 test('due soon reads in ink with a clock, overdue stays red, and medium priority is quiet',()=>{
   const soon=meta(card({...sample,dueDate:'2026-10-30',priority:'medium'},{soon:true,du:2}));
-  assert.match(soon,/<span class="mb mb-soon"><i class="ti ti-clock"[^>]*><\/i> 2d left \(2026-10-30\)<\/span>/);
+  assert.match(soon,/<span class="mb mb-soon"><i class="ti ti-clock"[^>]*><\/i> 2 days left<\/span>/);
   assert.match(soon,/<span class="mb mb-med">/);
-  assert.match(meta(card(sample)),/<span class="mb mb-overdue"><i class="ti ti-calendar"[^>]*><\/i> Overdue 2026-10-25<\/span>/);
+  assert.match(meta(card(sample)),/<span class="mb mb-overdue"><i class="ti ti-calendar"[^>]*><\/i> Overdue · was due 2026-10-25<\/span>/);
   assert.match(step63,/\.mb-soon,\.mb-wmsoon\{background:var\(--gray-light\);color:var\(--text\);\}/,'a watermark due this week reads the same');
   assert.match(step63,/\.task-card \.task-meta \.mb-soon\{color:var\(--text\);font-weight:700;\}/);
   assert.match(step63,/\.mb-med,\.mb-pending,\.mb-time,\.mb-rev\{background:var\(--gray-light\);color:var\(--muted\);\}/,'medium priority, a pending upload, a shoot time and a revision count are facts');
@@ -1490,7 +1504,7 @@ test('the payday panel says the days left once: the ring, with no count of days 
   assert.match(source,/_setH\('sal-badge',days===0\?'<span class="salary-badge sb-pay">Payday!<\/span>':''\);/,'"Payday!" on the day itself, no "Soon" or "On track"');
   assert.match(step64,/#sal-badge:empty\{display:none;\}/);
   assert.match(source,/var _card=document\.getElementById\('salary-card'\);if\(_card\)_card\.setAttribute\('data-pct',_pct\+'%'\);/);
-  assert.match(source,/var sc=document\.getElementById\('salary-card'\),pc=\(\(sc&&sc\.getAttribute\('data-pct'\)\)\|\|''\)\.trim\(\);/,'the compact line keeps its small bar');
+  assert.doesNotMatch(source,/class="uxp-sal-mini"/,'the compact line keeps only the words');
 });
 
 test('the calendar setup note lives in Settings: Boss sees who is missing, everyone else their own calendar',()=>{
@@ -1523,7 +1537,8 @@ test('one greeting: My day on your own tab is "Today"',()=>{
   assert.match(own,/<span class="myday-greet">Today<\/span>/);
   assert.doesNotMatch(own,/Good (morning|afternoon|evening)/);
   assert.match(myDay('dew',{tasks:[]}),/<span class="myday-greet">Dew's day<\/span>/,'someone else\'s tab keeps its name');
-  assert.match(source,/var greeting=g\+', '\+myName\(\);/,'the Overview keeps "Good morning, Boss"');
+  assert.doesNotMatch(shell,/id="ov-greet"/,'the Overview greeting is removed');
+  assert.match(shell,/id="ov-datesub"/,'the date stays');
 });
 
 test('an empty status column is its header and its 0, with a drop area only while a card is dragged over it',()=>{
@@ -1585,18 +1600,22 @@ test('folded Overview cards are excluded from the last-card grow rule',()=>{
   assert.doesNotMatch(desk,/>\.ov-card:last-child\{flex-grow:1;\}/);
 });
 
-test('"⋯" never sits alone on a row: beside Details, or in the corner of the facts',()=>{
+test('"⋯" sits beside Details or below the tick without adding a row',()=>{
   const withDetails=card(sample);
   assert.match(withDetails,/<div class="tc-bar"><button type="button" class="tc-more"[^]*?<\/button><button type="button" class="tc-acts-btn"/,'Details and "⋯" share the bar');
   assert.doesNotMatch(withDetails.slice(withDetails.indexOf('<div class="task-meta">'),withDetails.indexOf('tc-open-hint')),/tc-acts-btn/);
   const bare=card({...sample,description:'',links:[]});
   assert.doesNotMatch(bare,/class="tc-bar"/,'no footer row without details');
   const meta=bare.slice(bare.indexOf('<div class="task-meta">'),bare.indexOf('<i class="ti ti-arrow-up-right tc-open-hint"'));
-  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div><div class="role-x">/,'it ends the facts line');
+  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/span><\/div><div class="role-x">/,'its keyboard position follows the facts');
   assert.equal((bare.match(/tc-acts-btn/g)||[]).length,1);
-  assert.match(step65,/\.task-card \.task-meta:has\(>\.tc-acts-btn\)\{position:relative;padding-right:40px;\}/,'the facts keep room for it');
-  assert.match(step65,/\.task-card \.task-meta>\.tc-acts-btn\{position:absolute;right:-4px;bottom:-3px;margin:0;\}/);
-  assert.match(step65,/@media\(max-width:600px\)\{\n  \.task-card \.task-meta:has\(>\.tc-acts-btn\)\{padding-right:44px;\}/,'more room for the 40px target on a phone');
+  const step68=stepBlock(68);
+  assert.match(meta,/<span class="tc-facts-end"><button/,'the bare card has an actions group in the tick column');
+  assert.match(step68,/\.task-card \.tc-facts-end\{position:absolute;top:0;left:calc\(-1 \* var\(--tc-name-inset\)\);width:calc\(var\(--tc-name-inset\) - 10px\);display:flex;justify-content:center;\}/);
+  assert.match(step68,/\.task-card \.task-meta\{position:relative;margin-left:var\(--tc-name-inset\);\}/);
+  assert.doesNotMatch(step68,/flex-basis:100%/,'actions add no row of their own');
+  assert.doesNotMatch(step65,/task-meta>\.tc-acts-btn\{position:absolute/);
+
 });
 
 test('the Director request is one quote and one action',()=>{
@@ -1649,7 +1668,7 @@ test('a task ticked done stays in its column for a moment, at its height, then m
   assert.match(source,/function act\(w\)\{try\{return \(tasksOf\(w\)\|\|\[\]\)\.filter\(function\(t\)\{return \(t\.status!=='done'&&t\.status!=='canceled'\)\|\|\(typeof tcLingerFrom==='function'&&!!tcLingerFrom\(t,w\)\);\}\);/,'"Today" above the board waits too');
 });
 
-test('the app opens on the navy cover: the font and icon style sheets no longer hold back the first paint',()=>{
+test('the app opens on its themed frame: the font and icon style sheets no longer hold back the first paint',()=>{
   const head=source.slice(0,source.indexOf('<body>'));
   for(const url of ['fonts.googleapis.com/css2?family=Plus+Jakarta+Sans','fonts.googleapis.com/css2?family=Sarabun','tabler-icons.min.css']){
     const tags=head.match(new RegExp('<link[^>]*'+url.replace(/[.?+]/g,'\\$&')+'[^>]*>','g'));
@@ -1657,7 +1676,7 @@ test('the app opens on the navy cover: the font and icon style sheets no longer 
     assert.match(tags[0],/media="print" onload="this\.media='all'"/,url+' does not block the first paint');
   }
   assert.match(head,/<noscript><link href="https:\/\/fonts\.googleapis\.com/);
-  assert.match(head,/html:not\(\.booted\)\{background:#003057;\}/,'until the cover lifts, the page itself is navy');
+  assert.match(head,/html:not\(\.booted\)\{background:#f4f6f9;\}/,'the first paint has the light page colour');
   assert.match(source,/function liftCover\(\)\{ var c=el\('boot-cover'\); if\(!c\|\|c\.classList\.contains\('done'\)\)return; try\{document\.documentElement\.classList\.add\('booted'\);\}catch\(e\)\{\}/);
 });
 
@@ -1760,4 +1779,105 @@ test('chosen colours override member identity shades with readable light and dar
 });
 test('without a chosen colour the picker writes no identity overrides',()=>{
   assert.equal(pickerIdentityFixture({}).css,'');
+});
+
+/* ===== Step 68: the tick and actions stay on the left ===== */
+test('the tick is the first keyboard control, then the existing card controls',()=>{
+  for(const details of [true,false]){
+    const html=card({...sample,description:details?'More':'',links:[]});
+    const controls=[...html.matchAll(/<(button|select|a)\b[^>]*>/g)].map(m=>m[0]);
+    assert.match(controls[0],/class="task-check /);
+    assert.match(controls[1],/class="tcard-sel"/);
+    assert.ok(html.indexOf('task-check')<html.indexOf('task-topic'));
+    assert.doesNotMatch(html,/tabindex=/,'native keyboard order');
+  }
+});
+
+test('facts and footer align under the name at desktop and phone tick widths',()=>{
+  const block=stepBlock(68);
+  assert.match(block,/--tc-name-inset:35px/,'25px tick plus 10px gap');
+  assert.match(media(block,'max-width:640px'),/--tc-name-inset:50px/,'40px touch tick plus 10px gap');
+  assert.match(block,/\.tc-bar\{margin-left:var\(--tc-name-inset\);justify-content:flex-start;/);
+});
+
+/* Step 71: the date and work lead the desktop screen. */
+test('desktop Add Task follows the filters and Today dates follow task names',()=>{
+  const boss=slice('<div class="sub-panel" id="boss-sub-tasks">','<!-- Links sub-panel -->');
+  const member=slice("'<div class=\"sub-panel\" id=\"'+w+'-sub-tasks\">'","'<div class=\"sub-panel\" id=\"'+w+'-sub-links\"");
+  for(const markup of [boss,member]){
+    assert.ok(markup.indexOf('class="addtask-bar"')>markup.indexOf('data-f="canceled"'));
+    assert.match(markup,/class="addtask-bar"><button[^>]+onclick="openAdd\(/);
+    assert.doesNotMatch(markup.slice(markup.indexOf('class="addtask-bar"')),/setFilter\(/);
+  }
+  const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8').split('/* Step 71:')[1];
+  assert.match(css,/@media\(min-width:981px\)/);
+  assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:auto;flex:0 0 auto;/);
+  assert.match(css,/background:#10243a!important;.*color:#fff!important/);
+  assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
+  assert.match(source,/dateLabel=DOW\[n.getDay\(\)\]/);
+  assert.doesNotMatch(slice('window.ovDaily=function(){','/* quick actions */'),/Good morning|Good afternoon|Good evening|ov-greet/);
+});
+
+
+test('step 72b keeps gold on the logo and high priority in readable quiet ink',()=>{
+  const block=stepBlock('72b');
+  for(const [ink,bg] of [['#34445c','#ffffff'],['#34445c','#e5e7eb'],['#4b5563','#ffffff'],['#003057','#ffffff'],['#ffffff','#003057']]){
+    assert.ok(contrast(ink,bg)>=4.5,ink+' on '+bg);
+  }
+  assert.match(block,/html:not\(\.dark\) \.uxp-undo\{color:#fff;font-weight:800;text-decoration:underline;/);
+  assert.match(block,/\.ov-pri\.high\{background:transparent!important;color:#34445c!important;font-weight:800;/);
+  assert.match(block,/\.cd-urgent\{background:transparent!important;border:1.5px solid #003057/);
+  assert.match(block,/\.myday-chip\.warn\{background:#e5e7eb/);
+  assert.match(source,/<span class="ov-pri high"><i class="ti ti-arrow-up" aria-hidden="true"><\/i>High/);
+  assert.match(source,/<span class="mb mb-high"><i class="ti ti-arrow-up"/);
+  assert.doesNotMatch(block,/html\.dark/,'colour overrides only apply in light mode');
+});
+
+/* Step 72c: quiet widgets without changing member identity colours. */
+test('step 72c palette omits brand swatches while saved colours still apply',()=>{
+  const {css,c}=pickerIdentityFixture({boss:'#D99A0F',o:'#003057'});
+  assert.equal(c.PAL.length,8);
+  for(const entry of c.PAL) assert.ok(!['#003057','#D99A0F'].includes(entry.c.toUpperCase()));
+  assert.ok(css.includes('--accent:#D99A0F;'));
+  assert.ok(css.includes('--accent:#003057;'));
+  for(const [w,color] of [['boss','#D99A0F'],['o','#003057']]){
+    const ink=c.readable(color,'#EFF3F9',4.5);
+    assert.ok(css.includes('#'+w+'-headname,.member-name,.member-role'));
+    assert.ok(contrast(ink,'#EFF3F9')>=4.5);
+  }
+});
+
+test('Reset Year lives in the open widget body for Boss and the member template',()=>{
+  const widgets=[...source.matchAll(/<div class="widget sick-widget">([\s\S]*?)Reset Year<\/button>/g)];
+  assert.equal(widgets.length,2);
+  for(const [,markup] of widgets){
+    assert.ok(markup.indexOf('widget-body')<markup.indexOf('confirmReset('));
+    assert.ok(markup.includes('widget-body'));
+    assert.doesNotMatch(markup.slice(0,markup.indexOf('widget-body')),/confirmReset/);
+  }
+});
+
+test('Reset Year asks before deleting sick records',()=>{
+  const nodes=Object.fromEntries(['confirm-title','confirm-msg','confirm-ok','confirm-overlay'].map(id=>[id,{textContent:'',classList:{add(value){this.value=value;}}}]));
+  let deletions=0;
+  const c=vm.createContext({document:{getElementById:id=>nodes[id]},sickOf:()=>[{id:'sample'}],memberName:()=> 'Boss',doReset:()=>{deletions++;}});
+  vm.runInContext(slice("let resetWho='boss';",'function closeConfirm()'),c);
+  c.confirmReset('boss');
+  assert.equal(deletions,0);
+  assert.equal(nodes['confirm-overlay'].classList.value,'open');
+  assert.match(nodes['confirm-msg'].textContent,/delete all 1 sick day/);
+  nodes['confirm-ok'].onclick();
+  assert.equal(deletions,1);
+});
+
+test('step 72c quiet widget tiles and outline actions meet AA contrast',()=>{
+  const block=stepBlock('72c');
+  assert.match(block,/\.side-col \.widget-title>i\.ti:first-of-type/);
+  assert.match(block,/color:#34445c!important;background:#e5e7eb!important/);
+  assert.match(block,/\.widget-head \.btn/);
+  assert.match(block,/\.task-card \.story-email-btn/);
+  assert.match(block,/background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important/);
+  assert.doesNotMatch(block,/member-name|member-role|headname/);
+  for(const bg of ['#ffffff','#e5e7eb','#EFF3F9']) assert.ok(contrast('#34445c',bg)>=4.5);
+  assert.match(source,/class="task-link role-btn story-email-btn" onclick="openStoryEmail/);
 });

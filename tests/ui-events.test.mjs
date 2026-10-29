@@ -33,7 +33,7 @@ function fixture() {
       add: data => { state.adds.push({ name, data }); return Promise.resolve(); },
     };
   }
-  const context = vm.createContext({
+  const context = vm.createContext({fmtDate:String,
     schoolEvents: [], eventsRef: collection('school_events'),
     DATA: Object.fromEntries(['dew', 'o', 'junior'].map(w => [w, { events: [], eventsRef: collection(w + '_events') }])),
     MEMBER_ORDER: ['boss', 'dew', 'o', 'junior'],

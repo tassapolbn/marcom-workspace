@@ -2080,7 +2080,7 @@ browser tab, which the test browser does not show).
     Claude): a folded card no longer grows; it shrinks to its header (78px
     at 1490x900), and open cards still end level. Tests: 382/382 (one new).
 
-- [ ] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
+- [x] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
   - Files: `index.html` (the card markup), `assets/workspace-ui.css`, tests.
   - Change, A (recommended): each card's tick moves to the left of its
     name, as in Apple Reminders and Things, and its "⋯" moves beside
@@ -2092,6 +2092,37 @@ browser tab, which the test browser does not show).
     "⋯" under the round buttons at 390x844 and 390x664 on the Overview, Boss
     and Dew; the step 61 check while scrolling still passes; ticking works
     by touch, mouse and keyboard.
+  - Done (29 Oct 2026, built by Codex from .codex-tasks/step-68.md):
+    each card now starts with its done tick, then its name, with the facts
+    aligned under the name. More actions sits beside Details on the left,
+    or in the tick column beneath the tick when there are no details,
+    without adding a row or increasing the card height.
+    The round buttons and their scroll behaviour are unchanged. Updated
+    card tests for both Details cases, no lone actions row, keyboard order
+    and alignment. Tests: npm run test:ui passed 26 of 27 test files; the
+    only failure is the known sandbox-only Netlify check for .aws and
+    .codex. All 126 layout tests passed when run directly.
+    Browser checks at 390x844 and 390x664 and the requested screenshots
+    could not run: the sandbox denies the preview server port (EPERM)
+    and Chromium launch (Operation not permitted). Occlusion is unverified.
+
+- [x] **68a. Person tabs: the Event Hub under Today (Boss's request, 29 Oct)**
+  - Files: `index.html`, `tests/ui-layout.test.mjs`, `PLAN.md`.
+  - Change: reverse the order chosen in step 62, at Boss's request. On
+    Boss, Dew, O and Eye, on computers and iPhone, show the name card,
+    Today panel, Event Hub, sub-tabs and filters, then the task board.
+    Keep the Event Hub's appearance, folding, Add Event and tiles as they are.
+  - Test: check the new order on all four person tabs and the Today mount
+    position; run `npm run test:ui`; check computer and iPhone previews.
+  - Done (29 Oct 2026, built by Codex from .codex-tasks/step-68a.md):
+    the Event Hub now comes under Today and before the sub-tabs and tasks
+    on all four person tabs. Only its position changed. Updated the step 62
+    order test for all four tabs and added a Today placement check.
+    All 127 layout tests passed directly. `npm run test:ui` passed 26 of
+    27 test files; the only failure is the documented sandbox-only Netlify
+    check for `.aws` and `.codex`. Computer and iPhone visual checks and
+    screenshots could not run: the sandbox denied the preview port (EPERM)
+    and Chromium launch. No screenshots were produced.
 
 - [x] **69. Work with no owner, and shared work, on the Overview**
   - Files: `index.html` (the Overview's counts, deadline rows and Team
@@ -2164,7 +2195,7 @@ browser tab, which the test browser does not show).
     gold (dark) to that purple at once; with no colour picked nothing
     changes. Tests: 393/393 (two new).
 
-- [ ] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
+- [x] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: on computers the Payday line moves into the header beside the
     tabs (if chosen), so the team announcement is the Overview's first row,
@@ -2178,7 +2209,13 @@ browser tab, which the test browser does not show).
     the reviewer's masked 480px thumbnail the heaviest shape below the
     header is the work.
 
-- [ ] **72. Colour means one thing (light mode)**
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-71.md): removed the Overview greeting and kept its date; Payday stays in place. Add Task now follows the person filters and uses the same form, with a compact navy button on computers; Today dates sit beside task names on computers. The iPhone round button and Today layout retain their existing rules. Checked 396 passing tests; the one known sandbox Netlify failure concerns .aws and .codex. Screenshot capture and the first card row bottom measurement remain unverified: the sandbox blocks the preview port and Chromium launch.
+
+- [x] **72. Colour means one thing (light mode)** (built as 72b and 72c, 29 Oct)
+  - Left out on purpose: turning names and roles to dark text, because step
+    72a (approved by Boss) keeps a person's chosen colour on their name.
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-72c.md): Person sidebar icons now use quiet ink on grey tiles; widget Add and New actions and Story email use quiet outlines without glows. Reset Year is inside the open Sick Leave widget and still asks before deletion. Removed the two HeadStart picker swatches; saved brand colours and personal name and role colours still apply, as requested in 72a. Checked palette compatibility, placement, confirmation and AA contrast with tests: 401/402 pass, with only the documented sandbox Netlify folder check failing. Preview server and Chromium both fail with sandbox EPERM, so Boss and O screenshots and rendered checks could not be produced.
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-72b.md): Light-mode Overview labels, calendar rings, message actions and pinned icons use white, navy or quiet ink. High priority has an up arrow and dark text; approaching deadlines use clocks and neutral colours; sick and leave calendar marks are grey. Added contrast and icon checks. UI suite: 397 of 398 tests pass; the only failure is the documented sandbox-only Netlify folder check. Preview server and Chromium are blocked by sandbox EPERM, so the requested rendered scans and screenshots could not be produced. Header line and glows retained.
   - Files: `assets/workspace-ui.css`, `index.html` (the colour picker's
     list and inline colours), tests.
   - Change:
@@ -2203,7 +2240,7 @@ browser tab, which the test browser does not show).
     the person's initials and tab; contrast scans find zero failures on all
     five tabs.
 
-- [ ] **73. Dark mode uses the same colours**
+- [x] **73. Dark mode uses the same colours**
   - Files: `index.html` (the dark-mode layers), `assets/workspace-ui.css`,
     tests.
   - Change: the light-mode status colours (Pending grey, In Progress blue,
@@ -2215,7 +2252,9 @@ browser tab, which the test browser does not show).
     status and each person; no gold outside the logo; contrast scans find
     zero failures in dark mode on all five tabs.
 
-- [ ] **74. A flat header and one quiet sidebar**
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-73.md): Dark statuses keep the light-mode colour families, Dew uses light brown, and primary actions stay navy even with saved person colours. High priority and due-today facts are neutral; event chips, Coming up groups and day agendas are flat. Added palette, hue and AA contrast checks. UI checks: 405 pass, one documented sandbox-only Netlify folder failure. Preview server and Chromium both fail with sandbox permission errors, so comparison screenshots and rendered contrast scans could not be produced.
+
+- [x] **74. A flat header and one quiet sidebar**
   - Files: `index.html` (the header and sidebar layers),
     `assets/workspace-ui.css`, tests.
   - Change: the header is flat navy, without glows, gradients or the gold
@@ -2226,7 +2265,9 @@ browser tab, which the test browser does not show).
     panel with at most one visible button per folded row; reordering and
     folding widgets still work by mouse, touch and keyboard.
 
-- [ ] **75. Smaller fixes and cuts**
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-74.md): Both themes use a flat navy header and floating buttons, a flat gold logo and avatars without halos. Removed the original gradient, glow and gold-line declarations from the early and late inline style layers, including the more specific light and dark selectors, so they cannot restore the old appearance. Person widgets share one divided panel, folded rows keep at most one quiet action, and Petty Cash hides its nested settings cog until opened. Dark Add and New actions are outlines. Reorder handles appear on computer hover or keyboard focus and remain visible on touch, with pointer capture for touch reordering. Added source-rule regression checks for the header, pseudo-element, logo, avatars and round buttons, folded Petty Cash checks, and touch move, save, focus and cancellation tests; existing mouse and keyboard handlers remain intact. UI checks: 410 pass, one documented sandbox-only Netlify folder failure (.aws and .codex). Localhost binding and Chromium launch both fail with permission errors, so desktop and iPhone previews, screenshots and browser interaction checks could not be completed.
+
+- [x] **75. Smaller fixes and cuts**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: the browser pop-ups become the app's own messages (or a note
     beside the field); "Move to…" fits; an opened Details stays quiet;
@@ -2239,7 +2280,9 @@ browser tab, which the test browser does not show).
   - Test: no browser pop-up left except as a last fallback; each cut checked
     on its tab at 1440 and 390.
 
-- [ ] **76. Polish and motion**
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-75.md): Browser pop-ups now use app messages, keeping five existing emergency fallbacks. Card controls stay quiet and Move to has room; Request Centre uses clearer button labels. Removed repeated payday and owner signals, finished-card controls and empty Canceled columns; fixed Today and 1 day and made the Due Soon dot quiet ink. Checked rendered card and payday output with regression tests: 416 passed, with only the documented sandbox Netlify failure for .aws and .codex. Preview at 1440x900 and 390x844 and screenshots could not be completed because this environment blocks both the local server socket and Chromium launch (Operation not permitted). No screenshots were produced.
+
+- [x] **76. Polish and motion**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: one date format ("29 Oct", with the year only when it is not
     this year, and "2 days left"); no lone last word in card names; one set
@@ -2251,13 +2294,20 @@ browser tab, which the test browser does not show).
     its own light frame instead of a full navy screen.
   - Test: a text scan finds one date pattern; screenshots at 1440 and 390 in
     both themes; the opening recorded with slow style sheets.
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-76.md): Dates share short month names and show the year only outside this year. Deadline labels use complete words, including Director requests displayed from their structured date without changing stored records. Person tabs say All Tasks; titles wrap prettily and Show more links are compact. Phone headers keep labelled counts, sub-tabs use shorter labels with Widgets visible, the dock has a soft fade, Add Task focuses its title, and expanded announcements use a compact list. Column counts tick on increases with reduced motion respected. Opening uses a navy band over the saved light or dark page colour. Added seven regression checks and updated isolated fixtures and old date expectations. UI checks: 423 pass, one documented sandbox-only Netlify failure for .aws and .codex. All 50 inline scripts parse and the diff has no whitespace errors. Localhost binding fails with EPERM and Chromium launch fails with Operation not permitted, so the visible-text scan across all five tabs, desktop and phone screenshots in both themes, and the 100ms light opening screenshot could not be completed. No screenshots were produced. A source scan leaves calendar month/year headings, clock times and user-authored text outside the date-only formatter.
 
-- [ ] **77. Final check and a fifth independent review**
+- [x] **77. Final check and a fifth independent review**
   - Files: `PLAN.md`, tests, evidence (not committed).
   - Change: all tests, contrast scans in both themes, iPhone widths 320 to
     440, the end-to-end checks of steps 67 to 76; then a fifth scored review
     and a walkthrough by reviewers who have not seen the work; then merge
     and deploy.
+  - Done (29 Oct): all tests pass (424); contrast scans of all five tabs in
+    both themes at 1440 and 390 find zero failures; iPhone widths 320 to 440,
+    both themes: no sideways scroll and no page errors. Each step was built
+    by Codex and checked by Claude in a browser (Codex's sandbox cannot run
+    one); steps 68 and 74 each needed one correction. The fifth scored
+    review was not run, to save usage at Boss's request; it can follow.
 
 ## Decisions needed from Boss (plan 7)
 
