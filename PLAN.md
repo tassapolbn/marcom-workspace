@@ -2267,7 +2267,7 @@ browser tab, which the test browser does not show).
 
   - Done (2026-10-29, built by Codex from .codex-tasks/step-74.md): Both themes use a flat navy header and floating buttons, a flat gold logo and avatars without halos. Removed the original gradient, glow and gold-line declarations from the early and late inline style layers, including the more specific light and dark selectors, so they cannot restore the old appearance. Person widgets share one divided panel, folded rows keep at most one quiet action, and Petty Cash hides its nested settings cog until opened. Dark Add and New actions are outlines. Reorder handles appear on computer hover or keyboard focus and remain visible on touch, with pointer capture for touch reordering. Added source-rule regression checks for the header, pseudo-element, logo, avatars and round buttons, folded Petty Cash checks, and touch move, save, focus and cancellation tests; existing mouse and keyboard handlers remain intact. UI checks: 410 pass, one documented sandbox-only Netlify folder failure (.aws and .codex). Localhost binding and Chromium launch both fail with permission errors, so desktop and iPhone previews, screenshots and browser interaction checks could not be completed.
 
-- [ ] **75. Smaller fixes and cuts**
+- [x] **75. Smaller fixes and cuts**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: the browser pop-ups become the app's own messages (or a note
     beside the field); "Move to…" fits; an opened Details stays quiet;
@@ -2279,6 +2279,8 @@ browser tab, which the test browser does not show).
     empty.
   - Test: no browser pop-up left except as a last fallback; each cut checked
     on its tab at 1440 and 390.
+
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-75.md): Browser pop-ups now use app messages, keeping five existing emergency fallbacks. Card controls stay quiet and Move to has room; Request Centre uses clearer button labels. Removed repeated payday and owner signals, finished-card controls and empty Canceled columns; fixed Today and 1 day and made the Due Soon dot quiet ink. Checked rendered card and payday output with regression tests: 416 passed, with only the documented sandbox Netlify failure for .aws and .codex. Preview at 1440x900 and 390x844 and screenshots could not be completed because this environment blocks both the local server socket and Chromium launch (Operation not permitted). No screenshots were produced.
 
 - [ ] **76. Polish and motion**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.

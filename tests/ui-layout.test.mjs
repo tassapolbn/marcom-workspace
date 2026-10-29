@@ -943,7 +943,7 @@ test('the payday line moves into the header on phones and back under it on wider
   assert.equal(toggle.parentNode,bar);assert.equal(bar.children[0],toggle,'back before the lunch notice');
   assert.match(source,/watchSal\(\); placeSal\(\);/,'placed as soon as the line exists');
   assert.match(source,/<span class="uxp-sal-word">Payday<\/span> <b class="uxp-sal-date">/,'the same words, in pieces a phone can shorten');
-  assert.match(source,/' days<span class="uxp-sal-left"> left<\/span><\/span>'/);
+  assert.match(source,/days==='1'\?' day':' days'/);
   assert.match(source,/if\(!v&&b\.parentNode&&b\.parentNode\.classList\.contains\('header-right'\)&&\(window\.scrollY\|\|0\)>0\)/,'opening it from the pinned row scrolls up to show the details');
   assert.match(source,/'<div class="uxp-mi-who"><i class="ti ti-user-circle"><\/i><span class="uxp-mi-name">'/,'the menu says who is signed in');
 });
@@ -1103,8 +1103,8 @@ test('with two columns the Event Board runs full width under them; in one column
 
 test('the Request Centre is one quiet line when nothing is new or due',()=>{
   assert.match(source,/var quiet=!\(newD\|\|newP\|\|await_\|\|dueWk\|\|over\);\n    card\.classList\.toggle\('rc-quiet',quiet\);/);
-  assert.match(source,/'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests or deadlines<\/span>'/);
-  assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
+  assert.match(source,/'<div class="ov-rc-none"><span class="ov-rc-none-t">No new requests<\/span>'/);
+  assert.match(source,/rcOpenCentre\(\)"><i class="ti ti-external-link"><\/i> Open request form<\/button>'\n\s*\+'<button class="btn btn-ghost btn-sm" onclick="rcCopyLink\(this\)">/,'Open and Copy Link stay');
   assert.match(step51,/#ov-rc-card\.rc-quiet \.ov-rc-none\{grid-column:1 \/ -1;/);
 });
 
@@ -1504,7 +1504,7 @@ test('the payday panel says the days left once: the ring, with no count of days 
   assert.match(source,/_setH\('sal-badge',days===0\?'<span class="salary-badge sb-pay">Payday!<\/span>':''\);/,'"Payday!" on the day itself, no "Soon" or "On track"');
   assert.match(step64,/#sal-badge:empty\{display:none;\}/);
   assert.match(source,/var _card=document\.getElementById\('salary-card'\);if\(_card\)_card\.setAttribute\('data-pct',_pct\+'%'\);/);
-  assert.match(source,/var sc=document\.getElementById\('salary-card'\),pc=\(\(sc&&sc\.getAttribute\('data-pct'\)\)\|\|''\)\.trim\(\);/,'the compact line keeps its small bar');
+  assert.doesNotMatch(source,/class="uxp-sal-mini"/,'the compact line keeps only the words');
 });
 
 test('the calendar setup note lives in Settings: Boss sees who is missing, everyone else their own calendar',()=>{

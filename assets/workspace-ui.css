@@ -1757,3 +1757,10 @@ html.dark body .tab-panel .side-col .widget-head .btn,
 html.dark body .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
 html.dark body .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]{background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important;box-shadow:none!important;}
 html.dark body .tab-panel .side-col .widget-head .btn:hover{background:#293343!important;filter:none;}
+
+/* Step 75: quiet card controls and fewer repeated signals. */
+html body .task-card .tcard-move{flex:0 0 auto;min-width:100px;width:auto;max-width:150px;}
+html body .task-card .tc-more:is(.open,:hover){background:var(--gray-light);color:var(--muted);border-color:var(--border);box-shadow:none;}
+html body .fpill[data-f="soon"] .pill-dot{background:var(--muted);}
+#ov-rc-card .ov-rc-btns{flex-wrap:wrap;}
+#ov-rc-card .ov-rc-btns>.btn{min-width:max-content;}
