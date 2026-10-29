@@ -910,6 +910,18 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
   </div>
   <div class="two-col">
     <div class="main-col">
+      <!-- Event Hub: under Today, before the sub-tabs (step 68a) -->
+      <div class="evhub" id="evhub">
+        <div class="evhub-head">
+          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
+          <div class="evhub-tools">
+            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
+            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
+            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
+          </div>
+        </div>
+        <div class="evhub-body" id="boss-evhub-body"></div>
+      </div>
       <!-- Meeting Countdown -->
       <div class="meet-card none" id="boss-meet-card" onclick="openMeetingCal()">
         <div class="meet-ico"><i class="ti ti-calendar-time"></i></div>
@@ -969,18 +981,6 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="empty-state" id="boss-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>
       </div>
       <div class="sub-panel" id="boss-sub-sop" style="display:none;"></div>
-      <!-- Event Hub: after the tasks, so the tab opens on the work (step 62) -->
-      <div class="evhub" id="evhub">
-        <div class="evhub-head">
-          <div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div>
-          <div class="evhub-tools">
-            <button class="evhub-btn eh-tl-btn" id="evhub-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button>
-            <button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button>
-            <button class="evhub-btn icon-only eh-collapse-btn" id="evhub-collapse" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button>
-          </div>
-        </div>
-        <div class="evhub-body" id="boss-evhub-body"></div>
-      </div>
     </div>
     <!-- BOSS SIDEBAR -->
     <div class="side-col">
@@ -1726,6 +1726,7 @@ function memberPanelHTML(w){
   +    '<div class="member-head-text"><div class="member-name" id="'+w+'-headname"></div><div class="member-role">'+M.role+'</div></div>'
   +  '</div>'
   +  '<div class="two-col"><div class="main-col">'
+  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +    '<div class="meet-card none" id="'+w+'-meet-card" onclick="openMeetingCal()"><div class="meet-ico"><i class="ti ti-calendar-time"></i></div><div class="meet-body"><div class="meet-label">Next Meeting</div><div class="meet-title">No upcoming meetings</div></div><div class="meet-sub"></div></div>'
   +    '<div class="sub-nav">'
   +      '<button class="sub-tab act st-tasks" onclick="switchSub(\''+w+'\',\'tasks\',this)"><i class="ti ti-clipboard-list"></i> '+(w==='junior'?'All Tasks':'Tasks')+'</button>'
@@ -1768,7 +1769,6 @@ function memberPanelHTML(w){
   +      '<div class="empty-state" id="'+w+'-notes-empty" style="display:none;"><i class="ti ti-notes"></i><p>No notes yet.</p></div>'
   +    '</div>'
   +    (w==='junior'?'<div class="sub-panel" id="'+w+'-sub-sop" style="display:none;"></div>':'')
-  +    '<div class="evhub"><div class="evhub-head"><div class="evhub-title"><i class="ti ti-confetti"></i> Event Hub</div><div class="evhub-tools"><button class="evhub-btn eh-tl-btn" onclick="toggleEvTimeline()"><i class="ti ti-timeline"></i> Timeline</button><button class="evhub-btn icon-only" onclick="openEventModal()" title="Add event"><i class="ti ti-plus"></i></button><button class="evhub-btn icon-only eh-collapse-btn" onclick="toggleEvHub()" title="Collapse"><i class="ti ti-chevron-up"></i></button></div></div><div class="evhub-body" id="'+w+'-evhub-body"></div></div>'
   +  '</div>'
   +  '<div class="side-col">'
   +    '<div id="'+w+'-role-extra"></div>'

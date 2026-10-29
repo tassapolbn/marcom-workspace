@@ -1334,13 +1334,27 @@ test('the slide uses the page\'s motion and becomes a plain fade with Reduce Mot
 /* ===== Step 62: person tabs open on the person's work ===== */
 const step62=stepBlock(62);
 
-test('every person tab puts the tasks before the Event Hub',()=>{
+test('step 68a: every person tab puts the Event Hub before the sub-tabs and board',()=>{
   const boss=slice('<div class="two-col">\n    <div class="main-col">','<div class="side-col">');
-  assert.ok(boss.indexOf('id="boss-sub-tasks"')<boss.indexOf('<div class="evhub" id="evhub">'),'Boss: the tasks first');
-  assert.ok(boss.indexOf('id="boss-sub-sop"')<boss.indexOf('<div class="evhub" id="evhub">'),'the Event Hub after every pane');
-  const tpl=slice("  +  '<div class=\"two-col\"><div class=\"main-col\">'","  +  '<div class=\"side-col\">'");
-  assert.ok(tpl.indexOf("-sub-tasks\">'")<tpl.indexOf("'<div class=\"evhub\">"),'the others: the tasks first');
-  assert.ok(tpl.indexOf("-sub-sop\" style=\"display:none;\"></div>':'')")<tpl.indexOf("'<div class=\"evhub\">"),'and the Event Hub last');
+  const tpl=source.slice(source.indexOf("function memberPanelHTML(w){"));
+  const context=vm.createContext({MEMBERS:{dew:{},o:{},junior:{}}});
+  vm.runInContext(tpl.slice(0,tpl.indexOf('\n}',tpl.indexOf('return'))+2),context);
+  for(const [w,html] of [['boss',boss],...['dew','o','junior'].map(w=>[w,context.memberPanelHTML(w)])]){
+    const hub=html.indexOf('class="evhub"'),nav=html.indexOf('class="sub-nav"');
+    assert.ok(hub>=0&&nav>hub,w+': Event Hub before sub-tabs');
+    assert.ok(nav<html.indexOf('id="'+w+'-sub-tasks"'),w+': sub-tabs before tasks');
+    assert.ok(html.indexOf('class="filter-tabs"')<html.indexOf('id="'+w+'-list"'),w+': filters before board');
+    assert.equal((html.match(/class="evhub"/g)||[]).length,1,w+': only one Event Hub');
+    for(const action of ['toggleEvTimeline()','openEventModal()','toggleEvHub()'])assert.ok(html.includes(action),w+': keeps '+action);
+  }
+});
+
+test('step 68a: Today mounts immediately after the name card, ahead of the main column',()=>{
+  const mount=slice('  function mountMyDay(){','  function renderAllMyDay()');
+  assert.match(mount,/slot.id=w\+'-myday'/);
+  assert.match(mount,/head.parentNode.insertBefore\(slot,head.nextSibling\)/);
+  assert.match(source,/<\/div>\n  <div class="two-col">\n    <div class="main-col">\n      <!-- Event Hub: under Today/);
+  assert.match(source,/\+  '<\/div>'\n  \+  '<div class="two-col"><div class="main-col">'\n  \+    '<div class="evhub">/);
 });
 
 test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose counters are still heard',()=>{

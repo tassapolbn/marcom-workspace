@@ -2106,6 +2106,24 @@ browser tab, which the test browser does not show).
     could not run: the sandbox denies the preview server port (EPERM)
     and Chromium launch (Operation not permitted). Occlusion is unverified.
 
+- [x] **68a. Person tabs: the Event Hub under Today (Boss's request, 29 Oct)**
+  - Files: `index.html`, `tests/ui-layout.test.mjs`, `PLAN.md`.
+  - Change: reverse the order chosen in step 62, at Boss's request. On
+    Boss, Dew, O and Eye, on computers and iPhone, show the name card,
+    Today panel, Event Hub, sub-tabs and filters, then the task board.
+    Keep the Event Hub's appearance, folding, Add Event and tiles as they are.
+  - Test: check the new order on all four person tabs and the Today mount
+    position; run `npm run test:ui`; check computer and iPhone previews.
+  - Done (29 Oct 2026, built by Codex from .codex-tasks/step-68a.md):
+    the Event Hub now comes under Today and before the sub-tabs and tasks
+    on all four person tabs. Only its position changed. Updated the step 62
+    order test for all four tabs and added a Today placement check.
+    All 127 layout tests passed directly. `npm run test:ui` passed 26 of
+    27 test files; the only failure is the documented sandbox-only Netlify
+    check for `.aws` and `.codex`. Computer and iPhone visual checks and
+    screenshots could not run: the sandbox denied the preview port (EPERM)
+    and Chromium launch. No screenshots were produced.
+
 - [x] **69. Work with no owner, and shared work, on the Overview**
   - Files: `index.html` (the Overview's counts, deadline rows and Team
     today), `assets/workspace-ui.css`, tests.
