@@ -1966,6 +1966,14 @@ each card's name and both round buttons stay (step 68, A); the Payday line
 stays where it is (step 71); the greeting goes and the date stays (step 71).
 Steps 68, 71 to 76 and the fifth review (77) wait.
 
+Built on 29 Oct by Codex from instructions in `.codex-tasks/` (after Boss
+installed and signed in Codex), each reviewed, tested in a browser and
+committed by Claude: steps 67, 67a (a bug Boss found that day), 69, 70 and
+72a. Final check of the round: 393/393 tests; contrast scans of the
+Overview, Boss and Dew in both themes at 1440 and 390 find zero failures.
+Noticed on the way, older, for a later step: the iPhone header says
+"Payday · 1 days".
+
 ## What the checks found
 
 1. **Bug (older): un-ticking a finished task loses its status.** Ticking
