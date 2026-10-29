@@ -1530,7 +1530,7 @@ html:not(.dark) #evb-card .evb-more{margin-left:-10px;}
 @media(min-width:981px){
   #panel-overview .ov-grid{align-items:stretch;}
   #panel-overview :is(.ov-col-main,.ov-col-side){display:flex;flex-direction:column;}
-  #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child{flex-grow:1;}
+  #panel-overview :is(.ov-col-main,.ov-col-side)>.ov-card:last-child:not(.uxp-collapsed){flex-grow:1;}
 }
 /* A card without details has no footer row: "⋯" sits in the corner of its facts,
    which keep room for it, so it never wraps onto a line of its own. Either way
@@ -1572,3 +1572,39 @@ html.dark #panel-overview .ov-pri.low{color:#a3adba!important;}
 #panel-overview .ov-cal-grid .cal-day:not(.empty):hover{border-color:transparent;background:var(--gray-light);}
 #panel-overview .ov-cal-grid .cal-day.today{background:var(--navy);}
 html.dark .cal-day.today{color:#fff;}
+
+/* Step 67: a finished task keeps its Today row */
+.myday-row.done{color:var(--muted);}
+.myday-row.done .md-title{text-decoration:line-through;}
+.myday-row.done i{color:#166534;}
+.myday-chip.ok{background:#dcfce7;border-color:transparent;color:#166534;}
+.myday-chip.ok b{color:inherit;}
+html.dark .myday-row.done{color:var(--muted);}
+html.dark .myday-row.done .md-title{text-decoration:line-through;}
+html.dark .myday-row.done i{color:#86efac;}
+html.dark .myday-chip.ok{background:#143523;color:#86efac;}
+html.dark .myday-chip.ok b{color:inherit;}
+
+/* Step 69: work with no owner on the Overview */
+#panel-overview .ov-dl .ov-dl-unowned,
+#panel-overview .ov-dl .ov-dl-extra{background:#e5e7eb;color:#4b5563;}
+html.dark #panel-overview .ov-dl .ov-dl-unowned,
+html.dark #panel-overview .ov-dl .ov-dl-extra{background:#374151;color:#f3f4f6;}
+#panel-overview .ov-dl-owners{display:inline-flex;flex:0 0 auto;align-items:center;}
+#panel-overview .ov-dl-owners .ov-dl-who+.ov-dl-who{margin-left:-5px;box-shadow:0 0 0 2px var(--surface);}
+#panel-overview .ov-dl-no-owner,#panel-overview .ov-no-owner-btn{color:var(--amber);font-weight:700;}
+#panel-overview .ov-no-owner-btn{background:none;border:0;padding:3px 5px;font:inherit;font-weight:700;cursor:pointer;}
+#panel-overview .ov-no-owner-btn:hover{text-decoration:underline;}
+#panel-overview .ov-no-owner-btn:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+#evb-card .evb-row.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
+@media(prefers-reduced-motion:reduce){#evb-card .evb-row.tc-found{animation:none;outline-color:var(--focus-ink);}}
+
+/* Step 70: one team view of each event */
+#evb-card .evb-t{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;}
+#evb-card .evb-priority{color:#4b5563;font-weight:400;}
+#evb-card .evb-claim{background:transparent;color:#34445c;border:1px solid currentColor;font-weight:500;}
+#evb-card .evb-claim:hover{filter:none;text-decoration:underline;}
+html.dark #evb-card .evb-priority{color:#bdc7d5;}
+html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
+#evb-card .evb-g.tc-found{outline:3px solid transparent;outline-offset:2px;animation:tc-found 2.4s ease-in forwards;}
+@media(prefers-reduced-motion:reduce){#evb-card .evb-g.tc-found{animation:none;outline-color:var(--focus-ink);}}

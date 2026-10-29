@@ -20,7 +20,7 @@ const sample = [
 test('finished tasks and finished-only events are hidden by default, but counted', () => {
   const result = groups(sample);
   assert.deepEqual(result.groups.map(g => g.label), ['School Open Day']);
-  assert.deepEqual(result.groups[0].tasks.map(t => t.title), ['Welcome packs', 'Campaign']);
+  assert.deepEqual(result.groups[0].tasks.map(t => t.title), ['Campaign', 'Welcome packs']);
   assert.equal(result.groups[0].open, 2);
   assert.equal(result.groups[0].done, 2);
   assert.equal(result.groups[0].nextDue, '2026-11-01');
@@ -49,7 +49,7 @@ test('groups sort by next unfinished due date, then label, with undated groups l
   assert.deepEqual(result.groups.map(g => g.label), ['Apple', 'Bravo', 'Alpha', 'Other', 'Zebra']);
 });
 
-test('unassigned tasks sort first, then due date and title; only open tasks count as unassigned', () => {
+test('tasks sort by due date and title regardless of owner; only open tasks count as unassigned', () => {
   const tasks = [
     task('Undated', 'Event'), task('B', 'Event', 'waiting', '2026-11-01'),
     task('A', 'Event', 'on-hold', '2026-11-01'),
@@ -59,11 +59,13 @@ test('unassigned tasks sort first, then due date and title; only open tasks coun
   ];
   const before = JSON.stringify(tasks);
   const result = groups(tasks, {showDone: true}).groups[0];
-  assert.deepEqual(result.tasks.map(t => t.title), ['Canceled', 'Unassigned', 'A', 'B', 'Array owner', 'Undated']);
+  assert.deepEqual(result.tasks.map(t => t.title), ['Canceled', 'A', 'B', 'Array owner', 'Unassigned', 'Undated']);
   assert.equal(result.unassigned, 1);
   assert.equal(JSON.stringify(tasks), before, 'input order and tasks stay untouched');
   const override = groups(tasks, {assignees: t => t.title === 'A' ? [] : ['junior']}).groups[0];
-  assert.equal(override.tasks[0].title, 'A');
+  assert.deepEqual(override.tasks.map(t => t.title), ['A', 'B', 'Array owner', 'Unassigned', 'Undated']);
+  tasks[3].owner = 'dew';
+  assert.deepEqual(groups(tasks, {showDone: true}).groups[0].tasks.map(t => t.title), result.tasks.map(t => t.title));
   assert.equal(override.unassigned, 1);
 });
 
@@ -222,4 +224,81 @@ test('a card with only the picked event\'s name is filed under that event, and f
   assert.equal(groups([{...picked, eventLabel: 'Open Day prep'}]).groups[0].label, 'Open Day prep', 'a typed label still wins');
   assert.equal(groups([{title: 'Loose', status: 'pending'}]).groups[0].label, 'Other', 'no event at all is still "Other"');
   assert.equal(context.window.MarcomEventBoard.labelOf(picked), 'School Open Day');
+});
+
+
+test('team rows keep the full title, show priority, open the shared editor and blur assignment', () => {
+  const h = boardFixture();
+  const title = 'A complete task name that remains visible when it wraps onto another line';
+  h.c.eventTasks = [{id: 'unowned', title, eventLabel: 'School Open Day', priority: 'high', status: 'pending'}];
+  h.c.evbRender();
+  assert.ok(h.body.innerHTML.includes(title));
+  assert.match(h.body.innerHTML, /class="evb-priority">High<\/span>/);
+  assert.match(h.body.innerHTML, />Assign to…<\/option>/);
+  const clicks = [];
+  h.c.taskCardClick = (...args) => clicks.push(args);
+  h.c.event = {target: {}};
+  const rowHandler = decode(h.body.innerHTML.match(/data-id="unowned" onclick="([^"]+)"/)[1]);
+  vm.runInContext(rowHandler, h.c);
+  assert.equal(clicks[0][2], 'unowned');
+  const selectHandler = decode(h.body.innerHTML.match(/aria-label="Assign this task" onchange="([^"]+)"/)[1]);
+  let blurred = false;
+  h.c.evbAssign = (id, owner) => { assert.equal(id, 'unowned'); h.c.eventTasks[0].owner = owner; };
+  vm.runInContext('(function(){'+selectHandler+'})', h.c).call({value: 'dew', blur() { blurred = true; }});
+  assert.equal(blurred, true);
+  assert.match(h.body.innerHTML, />Unassigned<\/option>/);
+  assert.match(h.body.innerHTML, /class="evb-own has">dew/);
+});
+
+test('event navigation matches normalized names, clears a hiding filter and highlights the group', () => {
+  const h = boardFixture();
+  h.c.evbRender();
+  h.c.evbFilter('Christmas Fair');
+  const wrapper = h.node();
+  wrapper.attributes['data-label'] = 'School Open Day';
+  const classes = new Set();
+  wrapper.classList = {add: v => classes.add(v), remove: v => classes.delete(v)};
+  let scrolled = false;
+  wrapper.scrollIntoView = () => { scrolled = true; };
+  h.body.children = [wrapper];
+  assert.equal(h.c.evbShowEvent('  SCHOOL   Open Day  '), true);
+  assert.match(h.body.innerHTML, /data-label="School Open Day"/);
+  assert.doesNotMatch(h.body.innerHTML, /evb-g-closed/);
+  assert.equal(scrolled, true);
+  assert.equal(classes.has('tc-found'), true);
+  h.flush();
+  assert.equal(classes.has('tc-found'), false);
+  assert.equal(h.c.evbShowEvent('No tasks'), false);
+});
+
+test('Coming up tries the event group and falls back to the person only without a group', () => {
+  const countdown = page.slice(page.indexOf('  function renderCountdown(){'), page.indexOf('  /* ---------- recent activity'));
+  const el = {innerHTML: ''};
+  const calls = [];
+  const c = vm.createContext({document: {getElementById: () => el}, MORDER: ['boss'],
+    eOf: () => [{name: 'School Open Day', date: '2026-11-02'}], dU: () => 4,
+    esc: escapeHTML, fdt: d => d, evTextAttrs: () => '', evDeleteButtonHTML: () => '',
+    MarcomUI: {setHTML: (node, html) => {node.innerHTML = html;}},
+    evbShowEvent: name => {calls.push(name); return true;}, ovGoto: who => calls.push(who)});
+  c.window = c;
+  vm.runInContext(countdown+';renderCountdown();', c);
+  const handler = decode(el.innerHTML.match(/onclick="([^"]+)"/)[1]);
+  vm.runInContext(handler, c);
+  assert.deepEqual(calls, ['School Open Day']);
+  c.evbShowEvent = () => false;
+  vm.runInContext(handler, c);
+  assert.deepEqual(calls, ['School Open Day', 'boss']);
+});
+
+test('event page includes unowned name-linked shared tasks once along with id-linked tasks', () => {
+  const fn = page.slice(page.indexOf('  function tasksFor(w,id){'), page.indexOf('  function nmW'));
+  const shared = {id: 'shared', __src: 'event', eventName: '  SCHOOL   Open Day ', assignees: []};
+  const assigned = {id: 'assigned', __src: 'event', eventId: 'ev1', assignees: ['dew', 'boss']};
+  const c = vm.createContext({WS: ['boss', 'dew', 'o', 'junior'], eventTasks: [shared, assigned],
+    tasksOf: w => ['boss', 'dew'].includes(w) ? [assigned] : [],
+    evById: () => ({name: 'School Open Day'}), taskCanonicalWs: t => t.assignees[0] || '',
+    MarcomEventBoard: context.window.MarcomEventBoard});
+  c.window = c;
+  vm.runInContext(fn, c);
+  assert.deepEqual(Array.from(c.tasksFor('boss', 'ev1'), t => t.id), ['assigned', 'shared']);
 });

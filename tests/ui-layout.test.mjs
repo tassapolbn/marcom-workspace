@@ -1548,7 +1548,7 @@ test('iPhone: Upcoming Deadlines keeps its title, and its four filters get a row
 });
 
 test('deadline rows are buttons: Tab reaches them and Enter or Space opens the task',()=>{
-  assert.match(source,/<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey\(event\)" onclick="ovShowTask\(/);
+  assert.match(source,/<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey\(event\)" onclick="/);
   const c=vm.createContext({window:{}});
   vm.runInContext(slice('  window.ovRowKey=function(e){','\n')+'\n',c);
   let clicks=0,prevented=0;
@@ -1574,7 +1574,15 @@ test("a widget's name keeps its place when it unfolds; the Overview columns end 
   assert.match(source,/titleEl\.insertAdjacentHTML\('afterbegin',\s*'<span class="wmove">'/,'they are still the first element, moved by order only');
   const desk=media(step65,'min-width:981px');
   assert.match(desk,/#panel-overview \.ov-grid\{align-items:stretch;\}/);
-  assert.match(desk,/#panel-overview :is\(\.ov-col-main,\.ov-col-side\)>\.ov-card:last-child\{flex-grow:1;\}/);
+  assert.match(desk,/#panel-overview :is\(\.ov-col-main,\.ov-col-side\)>\.ov-card:last-child:not\(\.uxp-collapsed\)\{flex-grow:1;\}/);
+});
+
+test('folded Overview cards are excluded from the last-card grow rule',()=>{
+  const desk=media(step65,'min-width:981px');
+  const growRules=desk.match(/[^{}]+\{flex-grow:1;\}/g)||[];
+  assert.equal(growRules.length,1);
+  assert.match(growRules[0],/\.ov-card:last-child:not\(\.uxp-collapsed\)/,'folded cards shrink to their header');
+  assert.doesNotMatch(desk,/>\.ov-card:last-child\{flex-grow:1;\}/);
 });
 
 test('"⋯" never sits alone on a row: beside Details, or in the corner of the facts',()=>{
@@ -1651,4 +1659,105 @@ test('the app opens on the navy cover: the font and icon style sheets no longer 
   assert.match(head,/<noscript><link href="https:\/\/fonts\.googleapis\.com/);
   assert.match(head,/html:not\(\.booted\)\{background:#003057;\}/,'until the cover lifts, the page itself is navy');
   assert.match(source,/function liftCover\(\)\{ var c=el\('boot-cover'\); if\(!c\|\|c\.classList\.contains\('done'\)\)return; try\{document\.documentElement\.classList\.add\('booted'\);\}catch\(e\)\{\}/);
+});
+
+/* Step 67: completion remembers the status and leaves Today rows in place. */
+function doneFixture(task){
+  const writes=[],toasts=[],lingers=[];
+  const c=vm.createContext({tasksOf:()=>[task],taskRef:()=>({doc:()=>({update:fields=>{writes.push({...fields});return Promise.resolve();}})}),
+    todayStr:()=> '2026-10-26',stampEdit:()=>({edited:true}),dbSaveFailed:()=>{},
+    tcLinger:(...args)=>lingers.push(args),uiToast:(msg,opts)=>toasts.push({msg,...opts})});
+  vm.runInContext(slice('function taskDoneFields(','/* Step 65: a task ticked done')+'\n'+slice('function setTaskStatus(','\n'),c);
+  return {c,writes,toasts,lingers};
+}
+test('completion saves the earlier status and Undo restores it before or after the snapshot arrives',()=>{
+  const task={id:'a',status:'waiting',topic:'x'.repeat(41)};
+  const {c,writes,toasts,lingers}=doneFixture(task);
+  c.toggleTaskDone('dew','a');
+  assert.deepEqual(writes[0],{status:'done',done:true,statusBefore:'waiting',doneOn:'2026-10-26',edited:true});
+  assert.equal(toasts[0].msg,'Done: '+'x'.repeat(40)+'…');
+  assert.equal(toasts[0].duration,6000);
+  toasts[0].undo();
+  assert.deepEqual(writes[1],{status:'waiting',done:false,doneOn:null,edited:true});
+  Object.assign(task,writes[0]);
+  toasts[0].undo();
+  assert.deepEqual(writes[2],writes[1]);
+  assert.equal(lingers.length,3,'Undo also preserves the lingering card');
+});
+test('un-ticking restores a valid earlier status or pending without a toast',()=>{
+  for(const statusBefore of ['pending','in-progress','waiting','on-hold',undefined,'canceled','done']){
+    const {c,writes,toasts}=doneFixture({id:'a',status:'done',statusBefore});
+    c.toggleTaskDone('dew','a');
+    assert.deepEqual(writes[0],{status:['pending','in-progress','waiting','on-hold'].includes(statusBefore)?statusBefore:'pending',done:false,doneOn:null,edited:true});
+    assert.equal(toasts.length,0);
+  }
+});
+test('the status menu saves completion metadata from in-progress',()=>{
+  const {c,writes}=doneFixture({id:'a',status:'in-progress'});
+  c.setTaskStatus('dew','a','done');
+  assert.deepEqual(writes[0],{status:'done',done:true,statusBefore:'in-progress',doneOn:'2026-10-26',edited:true});
+  const already=doneFixture({id:'a',status:'done'});
+  already.c.setTaskStatus('dew','a','done');
+  assert.deepEqual(already.writes[0],{status:'done',done:true,edited:true},'selecting done again keeps existing completion metadata');
+});
+test('Today keeps completed rows in their original groups and positions with open counts only',()=>{
+  const tasks=[
+    {id:'a',status:'waiting',topic:'First late',dueDate:'2026-10-24'},
+    {id:'b',status:'pending',topic:'Second late',dueDate:'2026-10-25'},
+    {id:'c',status:'pending',topic:'Third late',dueDate:'2026-10-25'},
+    {id:'d',status:'pending',topic:'Today task',dueDate:'2026-10-26'}
+  ];
+  const before=myDay('dew',{tasks});
+  Object.assign(tasks[0],{status:'done',doneOn:'2026-10-26'});
+  const after=myDay('dew',{tasks});
+  assert.match(after,/class="myday-row done"[^>]*><i class="ti ti-circle-check"><\/i><span class="md-title">First late<\/span><span class="md-sub">done/);
+  assert.match(after,/<b>2<\/b> overdue/);
+  assert.match(after,/class="myday-chip ok"[^>]*><b>1<\/b> done today/);
+  assert.equal((before.match(/class="myday-row /g)||[]).length,(after.match(/class="myday-row /g)||[]).length);
+  assert.ok(after.indexOf('First late')<after.indexOf('Second late'));
+  assert.doesNotMatch(after,/Third late/);
+  Object.assign(tasks[3],{status:'done',doneOn:'2026-10-26'});
+  const allDone=myDay('dew',{tasks:[tasks[0],tasks[3]]});
+  assert.equal((allDone.match(/class="myday-row done"/g)||[]).length,2);
+  assert.match(allDone,/<b>2<\/b> done today/);
+  assert.doesNotMatch(allDone,/myday-chip (bad|warn)/);
+  assert.doesNotMatch(myDay('dew',{tasks:[{...tasks[0],doneOn:'2026-10-25'}]}),/First late|done today/);
+});
+test('finished Today styles strike the title and green chips meet contrast in both themes',()=>{
+  const css=stepBlock(67);
+  assert.match(css,/\.myday-row\.done \.md-title\{text-decoration:line-through;/);
+  for(const [selector,ink,bg] of [['.myday-chip.ok','#166534','#dcfce7'],['html.dark .myday-chip.ok','#86efac','#143523']]){
+    assert.ok(css.includes(selector+'{background:'+bg));
+    assert.ok(css.includes('color:'+ink));
+    assert.ok(contrast(ink,bg)>=4.5);
+  }
+});
+
+/* Step 72a: chosen member colours reach identity text in both modes. */
+function pickerIdentityFixture(chosen){
+  const sheet={textContent:''};
+  const c=vm.createContext({document:{getElementById:id=>id==='tc-themes'?sheet:null,
+    body:{lastElementChild:sheet}}});
+  const picker=slice('<script id="theme-picker-2026">','</script>');
+  vm.runInContext(picker.slice(picker.indexOf('  var PAL='),picker.indexOf('  function getDb(')),c);
+  c.chosen=chosen;
+  c.apply();
+  return {css:sheet.textContent,c};
+}
+test('chosen colours override member identity shades with readable light and dark ink',()=>{
+  for(const w of ['boss','best','dew','o','junior']){
+    const color='#12A4A0';
+    const {css,c}=pickerIdentityFixture({[w]:color});
+    const ink=c.readable(color,'#EFF3F9',4.5);
+    const bright=c.readable(color,'#26374b',4.5);
+    const identity='#panel-'+w+' :is(#'+w+'-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title)';
+    assert.ok(css.includes('html:not(.dark) '+identity+'{color:'+ink+'!important;}'),w+' light identity');
+    assert.ok(css.includes('html.dark '+identity+'{color:'+bright+'!important;}'),w+' dark identity');
+    assert.ok(contrast(ink,'#ffffff')>=4.5,w+' ink reads on white');
+    assert.ok(contrast(bright,'#26374b')>=4.5,w+' bright reads on dark cards');
+    assert.ok(!css.includes('#panel-'+(w==='dew'?'boss':'dew')+' '),'unchosen identities keep their defaults');
+  }
+});
+test('without a chosen colour the picker writes no identity overrides',()=>{
+  assert.equal(pickerIdentityFixture({}).css,'');
 });

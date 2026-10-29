@@ -1914,8 +1914,9 @@ their colour (step 49 kept these marks on purpose).
         priority.
       These go to Boss as a proposed follow-up plan. The repeated task names
       it saw are the preview's demo data.
-    - Scored visual review: still running when Boss asked to go live; its
-      score and findings follow separately.
+    - Scored visual review (returned after the merge): 7/10, the same as
+      rounds two and three, for new reasons; its findings are in follow-up
+      plan 7 below.
     - Notes and evidence: `.oil-ui/workspace-redesign/evidence66/`, `ux66/`
       and `review66/` (not committed).
 
@@ -1935,3 +1936,340 @@ their colour (step 49 kept these marks on purpose).
    keep today's form.
 4. **Person tabs:** recommended, the tasks first and the Event Hub after
    them; or the Event Hub stays first but starts folded on iPhone.
+
+# Follow-up plan 7 (28 Oct 2026): what the fourth review and walkthrough found, for Boss to approve
+
+Plan 6 went live on 28 Oct (PR #10) before the scored review returned, at
+Boss's request. Both independent checks are now back:
+
+- **Scored visual review: 7/10**, the same as rounds two and three, for new
+  reasons. Keep: Team today, the jump from a deadline row to its card with a
+  ring, and the colour picker's darkening of light picks. What holds the
+  score at 7: ticking a task done has no Undo and can lose the task's status;
+  on a computer the work is not the heaviest thing on the first screen; red
+  and gold no longer mean one thing each. Next after those: dark mode has
+  its own colours, and the header glows and boxed sidebar read as a template.
+- **Walkthrough:** a reviewer who had not seen the work, as the lead on an
+  iPhone, found a School Open Day task with no owner and gave it to Eye. It
+  worked, with three hesitations and one wrong turn, all in older Overview
+  and Event Board behaviour.
+
+Each finding below was checked in the code and on the preview before this
+plan was written. The reports, scripts and screenshots are in
+`.oil-ui/workspace-redesign/review66/` and `ux66/` (not committed).
+
+Approved by Boss on 28 Oct: **only the bugs for now**: steps 67, 69 and 70,
+and the colour picker bug from step 72 (step 72a below), with nothing
+visual changed; this round ends with a final check of those fixes. Decisions
+recorded for when the other steps are built: the tick moves to the left of
+each card's name and both round buttons stay (step 68, A); the Payday line
+stays where it is (step 71); the greeting goes and the date stays (step 71).
+Steps 68, 71 to 76 and the fifth review (77) wait.
+
+Built on 29 Oct by Codex from instructions in `.codex-tasks/` (after Boss
+installed and signed in Codex), each reviewed, tested in a browser and
+committed by Claude: steps 67, 67a (a bug Boss found that day), 69, 70 and
+72a. Final check of the round: 393/393 tests; contrast scans of the
+Overview, Boss and Dew in both themes at 1440 and 390 find zero failures.
+Noticed on the way, older, for a later step: the iPhone header says
+"Payday · 1 days".
+
+## What the checks found
+
+1. **Bug (older): un-ticking a finished task loses its status.** Ticking
+   sets Done; un-ticking always sets Pending, so a task that was Waiting or
+   In Progress comes back as Pending (`toggleTaskDone`). Nothing offers an
+   Undo after a tick.
+2. **The board moves after a tick.** The finished card waits 1.4 seconds,
+   then leaves. If it was overdue or due today, the Today panel above the
+   board loses a row and the whole board jumps up (36px on a computer, 45px
+   on iPhone).
+3. **iPhone, at the top of a page, the round buttons cover card controls.**
+   At 390x844 on Boss's tab they cover the middle of the first card's "⋯"
+   and of the second card's tick; on Dew's tab the first card's "⋯"; at
+   390x664 part of a tick. While scrolling they slide away, as decided in
+   plan 6.
+4. **Bug (older): work with no owner is missing from the Overview.** The
+   Overview counts a shared card under its first owner only, and a shared
+   card with no owner under nobody, so it is left out of Upcoming Deadlines
+   and Team today. The only sign is "1 unassigned" on the Event Board, about
+   2.4 screens down on an iPhone. A card shared by three people shows one
+   initial.
+5. **Event Board (older):** tapping an event under "Coming up" opens the
+   Boss tab, not the event. An event's own page shows only the tasks on that
+   person's board, so School Open Day reads "1 open" there and "4 open" on
+   the Event Board. A shared task's row cuts its name, shows no priority and
+   opens nothing when tapped. After choosing an owner on a computer the row
+   looks unchanged until you click elsewhere, then jumps to another place.
+6. **Desktop first screen (1440x900):** the Payday line comes before the
+   team announcement; "Good afternoon, Boss" is the largest text on the
+   Overview; on a person tab the full-width navy Add Task bar is the
+   heaviest shape and the first card starts at 623px of 900; the Today rows
+   put their dates about 1,000px right of the task names.
+7. **Colour in light mode:** gold appears outside the logo (the Overview tab
+   label and iPhone icon, the ring around today on the calendar, "Show" in
+   messages, the Pinned Notes pin, a glow and a line in the header). "High"
+   priority is red, beside overdue red, and "due today" uses the Waiting
+   amber. Other colours mean nothing in particular: the teal "Add" with a
+   glow, a red "Reset Year", multicoloured widget icons, a teal, green and
+   red calendar legend, blue "Story email" buttons. A person's colour also
+   tints names, roles and titles.
+8. **Bug (older): a new person colour does not reach the name and role** on
+   Boss's, Dew's and O's tabs: a light-mode readability rule from step 21
+   fixes their old shades. The picker also offers HeadStart Yellow and
+   HeadStart Navy as person colours.
+9. **Dark mode has its own colours:** Pending is cyan (grey in light mode),
+   Dew turns gold (the dark Waiting colour) on her tab, the selected filter
+   is a gold gradient, Add Task takes each person's colour, and some lists
+   are still boxes inside cards.
+10. **Decoration:** the header has gold and blue glows over a gradient; the
+    logo tile, avatars and round buttons glow or use gradients; on person
+    tabs the sidebar is six to nine separate cards, each with a handle, an
+    arrow, a tinted icon and one or two buttons.
+11. **Smaller:** about 20 browser pop-ups remain (for example "No sick leave
+    records to reset."); "Move to…" is cut off on a card; an opened Details
+    turns into a navy pill; Request Centre's "Open" and "Copy Link" do not
+    say what they open or copy.
+12. **Polish:** dates in seven patterns ("1d left (29 Oct 2026)", "Due today
+    (28 Oct 2026)", "in 4d", "was due 27 Oct 2026" and others); lone last
+    words in cards; extra left edges; "All" and "All Tasks", "All Tasks" and
+    "Tasks" for the same things; "Show 1 more" as tall as a row. On iPhone:
+    the header numbers have no labels, content runs under the tab bar with
+    no fade, Widgets sits at the end of a scrolling row, the quick-add title
+    is not focused, and the opened announcement has an empty band. The app
+    opens on a full navy screen before the light page.
+
+From the preview's demo data, not the product: the same task names once per
+person (every demo member has the same sample tasks), Boss's light blue
+colour, and Request Centre "Open" seeming to do nothing (it opens a new
+browser tab, which the test browser does not show).
+
+## Steps
+
+- [x] **67. Ticking a task done: Undo, the status kept, nothing above the board moves**
+  - Files: `index.html` (ticking, the Today panel, messages),
+    `assets/workspace-ui.css`, tests.
+  - Change: a ticked card stays put for a moment as now, then folds away,
+    and a message says "Done: <task>" with Undo for a few seconds. Undo, or
+    un-ticking later, returns the task to the status it had, in its old
+    place (the status is saved with the task when it is ticked; tasks
+    finished before this change go back to Pending, as now). A task
+    finished today stays in the Today panel, ticked and struck through,
+    until tomorrow, so the panel keeps its size and the board stays still.
+  - Test: tick a Waiting card, then Undo: it is back in Waiting, in the same
+    place; tick it again and un-tick it from Done: Waiting again; the top of
+    the board stays within 2px throughout, at 1440 and 390.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-67.md`, reviewed by
+    Claude): a task marked done, by its tick or by moving it to Done, now
+    remembers the status it had and the day it was finished; un-ticking it,
+    or Undo in the "Done: <task>" message (6 seconds), puts it back in that
+    status (Pending only for tasks finished before this change). A task
+    finished today keeps its Today row, struck through with a green tick and
+    "done", and a "N done today" count joins the others, so the panel keeps
+    its size. Checked in a browser at 1440x900 and 390x844: Review
+    photography (Waiting) ticked, then Undo, is back in Waiting; the top of
+    the board stayed at the same pixel through the tick, the Undo and an
+    overdue task's tick; no page errors. Tests: 381/381 (five new).
+
+- [x] **67a. Bug (found by Boss, 29 Oct): a folded Overview card stays tall and blank**
+  - Files: `assets/workspace-ui.css`, tests.
+  - Cause: on computers, a step 65 rule makes the last card of each Overview
+    column grow so both columns end level; it also applied to a folded card,
+    so a folded Upcoming Deadlines stayed 974px tall with nothing in it.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-67a.md`, reviewed by
+    Claude): a folded card no longer grows; it shrinks to its header (78px
+    at 1490x900), and open cards still end level. Tests: 382/382 (one new).
+
+- [ ] **68. iPhone: nothing under the round buttons at the top of a page (decision 2)**
+  - Files: `index.html` (the card markup), `assets/workspace-ui.css`, tests.
+  - Change, A (recommended): each card's tick moves to the left of its
+    name, as in Apple Reminders and Things, and its "⋯" moves beside
+    Details, so no control sits at a card's right edge, where the round
+    buttons rest. Both buttons stay and still slide away while scrolling.
+    B instead: "+" joins the tab bar and Team Chat moves beside the bell, so
+    nothing floats at all (this changes Boss's 27 Oct decision).
+  - Test: the reviewer's check (`s28-occlusion.mjs`) finds no tick and no
+    "⋯" under the round buttons at 390x844 and 390x664 on the Overview, Boss
+    and Dew; the step 61 check while scrolling still passes; ticking works
+    by touch, mouse and keyboard.
+
+- [x] **69. Work with no owner, and shared work, on the Overview**
+  - Files: `index.html` (the Overview's counts, deadline rows and Team
+    today), `assets/workspace-ui.css`, tests.
+  - Change: a shared task with no owner appears in Upcoming Deadlines with
+    a "No owner" mark; tapping it opens its event on the Event Board with
+    the task marked, ready to assign. Team today says how many tasks have no
+    owner. A shared card is one row with every owner's initial, counted
+    once.
+  - Test: with the demo data, "Prepare welcome packs" shows in This week as
+    "No owner" before it is assigned and with Eye's initial after; Team
+    today's total includes it; a card for Boss, Dew and O shows three
+    initials and counts once.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-69.md`, reviewed by
+    Claude): a shared task with no owner now shows in Upcoming Deadlines,
+    with a grey mark and "No owner"; tapping it opens it on the Event Board
+    (its event opened, the row scrolled to and marked). Team today counts
+    it ("22 open tasks", 21 before) and says "1 with no owner", a button to
+    the same place. A shared card shows every owner's initial (up to three,
+    then "+N") and still counts once. The walkthrough's path again at
+    1440x900 and 390x844: Prepare welcome packs, "No owner", one tap to its
+    row; given to Eye, it shows Eye's initial and the "no owner" line goes;
+    no page errors. Contrast scans of the Overview: zero failures in both
+    themes. Tests: 387/387 (five new).
+
+- [x] **70. One team view of each event**
+  - Files: `index.html` (the Event Board and the event page),
+    `assets/event-board.js`, tests.
+  - Change: tapping an event under "Coming up" opens that event's tasks on
+    the Event Board (opened, scrolled to and marked) instead of the Boss
+    tab. A shared task's row shows its full name, its priority and its
+    owner, and tapping it opens the task. Choosing an owner is the row's
+    main control (Claim stays, for taking a task yourself); the row shows
+    the new owner at once and keeps its place. An event's own page on a
+    person's tab also lists the team's shared tasks for that event, with
+    their owners, so its numbers agree with the Event Board.
+  - Test: the walkthrough's path again at 390x844 and 1440x900: one tap from
+    "Coming up" to the School Open Day tasks; assigning shows the owner at
+    once and the row does not move; the event page and the Event Board show
+    the same number of open tasks.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-70.md`, reviewed by
+    Claude): tapping an event under "Coming up" now opens its tasks on the
+    Event Board (opened, scrolled to and marked); an event with no shared
+    tasks still opens its tab, as before. Each row shows the task's full
+    name and its priority, and tapping it opens the task (a task with no
+    owner too; saving it updates the shared task). An unowned task's menu
+    reads "Assign to…", Claim is a quiet secondary button, and choosing an
+    owner shows at once without the row moving (the board sorts by due
+    date, then name). An event's own page now counts the team's shared
+    tasks for it as well as the person's own: School Open Day shows 5 open
+    (the Event Board's 4 plus Boss's own planning task), where it showed 1.
+    Checked at 1440x900 and 390x844 with the walkthrough's path; no page
+    errors. Tests: 391/391 (four new; the Event Board sort test follows the
+    new order).
+
+- [x] **72a. Bug: a new person colour reaches the name and role (part of 72, approved now)**
+  - Files: `index.html` (the colour picker), tests.
+  - Change: when a person picks a colour, their name, role, greeting line
+    and Event Hub title take the readable shade of that colour, as their
+    initials and tab label already do. With no colour picked, nothing
+    changes. The step 21 rule keeps the default shades readable.
+  - Test: pick a colour on Boss's, Dew's and O's tabs: the name and role
+    change at once, in both themes, and read at 4.5:1 or better; with no
+    colour picked the page looks exactly as before.
+  - Done (29 Oct, built by Codex from `.codex-tasks/step-72a.md`, reviewed
+    by Claude): a chosen colour now also sets the person's name, role,
+    greeting and Event Hub title, at the readable shade the picker already
+    works out (one for light mode, one for dark). Checked on Dew's tab:
+    picking Future Dusk turned her name and role from brown (light) and
+    gold (dark) to that purple at once; with no colour picked nothing
+    changes. Tests: 393/393 (two new).
+
+- [ ] **71. Desktop: the work first on the first screen (decisions 3 and 4)**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: on computers the Payday line moves into the header beside the
+    tabs (if chosen), so the team announcement is the Overview's first row,
+    as Boss decided on 24 Oct; the greeting goes and the date stays (if
+    chosen); on person tabs Add Task becomes a normal navy button at the end
+    of the filter row instead of a full-width bar; the Today rows show their
+    date beside the task name. iPhone is unchanged.
+  - Test: at 1440x900 the announcement is the Overview's first row; the
+    largest text on the Overview is not a greeting; on a person tab the
+    first row of cards (name, date and labels) is fully above the fold; in
+    the reviewer's masked 480px thumbnail the heaviest shape below the
+    header is the work.
+
+- [ ] **72. Colour means one thing (light mode)**
+  - Files: `assets/workspace-ui.css`, `index.html` (the colour picker's
+    list and inline colours), tests.
+  - Change:
+    - Gold only on the logo: the Overview tab label and iPhone icon, today
+      on the calendar and the buttons in messages turn white or navy (the
+      header's gold line goes in step 74).
+    - Red means overdue (and canceled) only: "High" priority becomes bold
+      dark text with an arrow; "due soon" and "due today" use dark text with
+      a clock, as cards have since step 63, so amber means Waiting only;
+      sick and leave days keep their own marks, in grey.
+    - Widget icons and their buttons in one quiet ink; "Reset Year" moves
+      inside the Sick Leave widget; the teal "Add" and the blue "Story
+      email" become quiet buttons.
+    - A person's name and role in dark text; their colour stays on their
+      initials, picture and tab label (step 49 kept it on names too). The
+      step 21 rule that froze the old name colours goes, and the picker no
+      longer offers the brand's gold and navy (a colour already chosen keeps
+      working).
+  - Test: a rendered scan finds gold only in the logo, red only on overdue
+    and canceled, and every other colour on a status, an event, or a
+    person's initial or tab label; a newly picked colour shows at once on
+    the person's initials and tab; contrast scans find zero failures on all
+    five tabs.
+
+- [ ] **73. Dark mode uses the same colours**
+  - Files: `index.html` (the dark-mode layers), `assets/workspace-ui.css`,
+    tests.
+  - Change: the light-mode status colours (Pending grey, In Progress blue,
+    Waiting amber, On Hold purple, Done green) and person colours, in
+    lighter shades; Dew is not gold; the selected filter and Add Task look
+    the same on every tab; the Event Hub chips, the Coming up rows and the
+    calendar's day list become flat rows, as in light mode.
+  - Test: light and dark side by side show the same colour family for each
+    status and each person; no gold outside the logo; contrast scans find
+    zero failures in dark mode on all five tabs.
+
+- [ ] **74. A flat header and one quiet sidebar**
+  - Files: `index.html` (the header and sidebar layers),
+    `assets/workspace-ui.css`, tests.
+  - Change: the header is flat navy, without glows, gradients or the gold
+    line; the logo tile, avatars and round buttons lose their glows; on
+    person tabs the sidebar becomes one panel of rows, and each folded row
+    shows at most one quiet action (the drag handle on hover only).
+  - Test: no gradient or glow in the header at 1440 and 390; one sidebar
+    panel with at most one visible button per folded row; reordering and
+    folding widgets still work by mouse, touch and keyboard.
+
+- [ ] **75. Smaller fixes and cuts**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: the browser pop-ups become the app's own messages (or a note
+    beside the field); "Move to…" fits; an opened Details stays quiet;
+    Request Centre's buttons say "Open request form" and "Copy form link".
+    Cuts: "or deadlines" in "No new requests or deadlines"; the payday bar
+    that repeats the days left; the "D Dew" label on Dew's own board; O's
+    "Pending upload" and "Story email" on Done and Canceled cards; Dew's
+    design menu on Done and Canceled cards; the Canceled column while it is
+    empty.
+  - Test: no browser pop-up left except as a last fallback; each cut checked
+    on its tab at 1440 and 390.
+
+- [ ] **76. Polish and motion**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: one date format ("29 Oct", with the year only when it is not
+    this year, and "2 days left"); no lone last word in card names; one set
+    of left edges; one name for one control ("All Tasks" on every tab); a
+    smaller "Show N more". On iPhone: labels on the header numbers, a fade
+    behind the tab bar, Widgets reachable without scrolling the row, the
+    quick-add title focused, no empty band in the opened announcement. A
+    column's Done count ticks up when a card arrives, and the app opens on
+    its own light frame instead of a full navy screen.
+  - Test: a text scan finds one date pattern; screenshots at 1440 and 390 in
+    both themes; the opening recorded with slow style sheets.
+
+- [ ] **77. Final check and a fifth independent review**
+  - Files: `PLAN.md`, tests, evidence (not committed).
+  - Change: all tests, contrast scans in both themes, iPhone widths 320 to
+    440, the end-to-end checks of steps 67 to 76; then a fifth scored review
+    and a walkthrough by reviewers who have not seen the work; then merge
+    and deploy.
+
+## Decisions needed from Boss (plan 7)
+
+1. **The plan:** recommended, approve steps 67 to 77; or the gap to 8 and
+   the lead's bugs first (67 to 72), leaving dark mode, the header and
+   sidebar, the cuts and the polish for later.
+2. **iPhone round buttons at the top of a page:** A (recommended), the tick
+   moves to the left of each card's name and "⋯" beside Details, and both
+   buttons stay; or B, "+" joins the tab bar and Team Chat moves beside the
+   bell, so nothing floats (this changes the 27 Oct decision).
+3. **The Payday line on computers:** recommended, in the header beside the
+   tabs, so the announcement is the Overview's first row; or keep it where
+   it is.
+4. **"Good afternoon, Boss" on the Overview:** recommended, remove it and
+   keep the date; or keep it, smaller.

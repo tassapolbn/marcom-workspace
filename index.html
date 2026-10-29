@@ -2269,7 +2269,7 @@ function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--
    column immediately instead of waiting for a click elsewhere. */
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign({status:val,done:(val==='done')},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign(val==='done'?taskDoneFields((tasksOf(who)||[]).find(x=>x.id===id)||{},true):{status:val,done:false},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
 function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);ref.doc(id).update(Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
@@ -2673,7 +2673,7 @@ function openAdd(who){
 }
 function openEdit(who,id){
   if(window.MarcomDraft)MarcomDraft.hideOffer();
-  const task=(tasksOf(who)).find(t=>t.id===id);
+  const task=(tasksOf(who)).find(t=>t.id===id)||(eventTasks||[]).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
   taskForFill(who);
@@ -2799,7 +2799,7 @@ function closeModal(){document.getElementById('modal').classList.remove('open');
 function saveTask(){
   const topic=document.getElementById('m-topic').value.trim();
   if(!topic){document.getElementById('m-topic').focus();return;}
-  const _prev=modalState.editId?(tasksOf(modalState.who)).find(t=>t.id===modalState.editId):null;
+  const _prev=modalState.editId?((tasksOf(modalState.who)).find(t=>t.id===modalState.editId)||(eventTasks||[]).find(t=>t.id===modalState.editId)):null;
   const designRole=modalState.who==='dew'&&modalState.taskType==='role';
   const stage=document.getElementById('m-dz-status').value;
   const paused=stage==='__on-hold'||stage==='__canceled';
@@ -3019,14 +3019,27 @@ function moveTask(who,id,dir){
   if(ra)ra.doc(a.id).update(Object.assign({sortOrder:taskOrder(b)},stampEdit())).catch(_mtFail);
   if(rb)rb.doc(b.id).update(Object.assign({sortOrder:taskOrder(a)},stampEdit())).catch(_mtFail);
 }
+function taskDoneFields(t,done){
+  if(done&&t.status==='done')return {status:'done',done:true};
+  if(done)return {status:'done',done:true,statusBefore:t.status||'pending',doneOn:todayStr()};
+  return {status:['pending','in-progress','waiting','on-hold'].includes(t.statusBefore)?t.statusBefore:'pending',done:false,doneOn:null};
+}
 function toggleTaskDone(who,id){
   const t=(tasksOf(who)).find(x=>x.id===id);
   if(!t)return;
-  const newStatus=(t.status==='done')?'pending':'done';
+  const completing=t.status!=='done',fields=taskDoneFields(t,completing);
   const rf=taskRef(t,who); if(!rf)return;
   tcLinger(who,id,t.status||'pending');
-  rf.doc(id).update(Object.assign({status:newStatus,done:newStatus==='done'},stampEdit()))
-    .catch(function(e){dbSaveFailed(e,newStatus==='done'?'the completed task':'the reopened task');});
+  rf.doc(id).update(Object.assign({},fields,stampEdit()))
+    .catch(function(e){dbSaveFailed(e,completing?'the completed task':'the reopened task');});
+  if(completing){
+    const title=t.topic||t.title||'Task',previous={statusBefore:fields.statusBefore};
+    uiToast('Done: '+(title.length>40?title.slice(0,40)+'…':title),{undo:function(){
+      tcLinger(who,id,'done');
+      rf.doc(id).update(Object.assign(taskDoneFields(previous,false),stampEdit()))
+        .catch(function(e){dbSaveFailed(e,'the reopened task');});
+    },duration:6000});
+  }
 }
 /* Step 65: a task ticked done (or reopened) stays in its column for a moment,
    ticked, so the next card does not jump under the thumb; then it moves. */
@@ -5274,7 +5287,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   }
   function renderTeam(){
     var el=document.getElementById('team-list'); if(!el)return;
-    var total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },0);
+    var unowned=(typeof eventTasks==='undefined'?[]:eventTasks).filter(function(t){return t.__src==='event'&&isActive(t)&&!taskAssignees(t).length;}).sort(function(a,b){return (a.dueDate||'9999-12-31').localeCompare(b.dueDate||'9999-12-31');});
+    var total=MORDER.reduce(function(s,w){ return s+tOf(w).filter(isActive).length; },unowned.length);
     /* Work finished in the last 7 days, kept from the old "Due today" tile. */
     var doneWk=0,wkAgo=new Date(Date.now()-7*86400000);
     MORDER.forEach(function(w){ tOf(w).forEach(function(x){ if(x.status!=='done')return; var dd=tsToDate(x.doneAt); if(dd&&dd>=wkAgo)doneWk++; }); });
@@ -5302,7 +5316,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
         +(leave?'<span class="tm-lv">'+esc(leave)+'</span>':'')+'</span></button>';
     }).join(''));
     MarcomUI.setHTML(document.getElementById('team-sum'),' · '+total+' open<span class="ov-team-sum-w"> tasks</span>'
-      +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':''));
+      +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':'')
+      +(unowned.length?' <button type="button" class="ov-no-owner-btn evb-warn" onclick="evbShowTask('+esc(JSON.stringify(unowned[0].id))+')">'+unowned.length+' with no owner</button>':''));
     var nx=nextMeeting(new Date()),nxEl=document.getElementById('ov-team-next');
     /* "Next meeting: 14:00 Title", which opens Google Calendar as the old
        Meetings tile did; a phone keeps the time and as much title as fits. */
@@ -5403,6 +5418,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     MORDER.forEach(function(w){ tOf(w).forEach(function(t){
       if(isActive(t)&&t.dueDate){ var d=dU(t.dueDate); if(d===null)return; if(d<=14)items.push({w:w,t:t,d:d}); }
     }); });
+    (typeof eventTasks==='undefined'?[]:eventTasks).forEach(function(t){
+      if(t.__src==='event'&&isActive(t)&&!taskAssignees(t).length&&t.dueDate){
+        var d=dU(t.dueDate); if(d!==null&&d<=14)items.push({w:'',t:t,d:d});
+      }
+    });
     var fl=document.getElementById('ov-dl-filters');
     if(fl)MarcomUI.setHTML(fl,[['all','All'],['overdue','Overdue'],['today','Today'],['week','7 days']].map(function(o){
       var on=ovDl===o[0];
@@ -5410,10 +5430,17 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     }).join(''));
     function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
     function row(it){
-      /* Step 52: the owner as their initial in their colour, as in Team today and the
-         tab bar, so who owns each deadline reads at a glance; screen readers hear the name. */
-      var who=nm(it.w),ini=(Array.from(String(who).trim())[0]||'').toLocaleUpperCase();
-      return '<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey(event)" onclick="ovShowTask(\''+it.w+'\',\''+esc(it.t.id)+'\')"><span class="ov-dl-who" data-member="'+esc(it.w)+'" title="'+esc(who)+'" aria-hidden="true">'+esc(ini)+'</span><div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="ov-dl-wn">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
+      var owners=it.t.__src==='event'?taskAssignees(it.t):[it.w];
+      var who=owners.length?owners.map(nm).join(', '):'No owner';
+      var marks=owners.slice(0,3).map(function(w){
+        var name=nm(w),ini=(Array.from(String(name).trim())[0]||'').toLocaleUpperCase();
+        return '<span class="ov-dl-who" data-member="'+esc(w)+'" title="'+esc(name)+'" aria-hidden="true">'+esc(ini)+'</span>';
+      }).join('');
+      if(owners.length>3)marks+='<span class="ov-dl-who ov-dl-extra" aria-hidden="true">+'+(owners.length-3)+'</span>';
+      if(owners.length>1)marks='<span class="ov-dl-owners">'+marks+'</span>';
+      if(!owners.length)marks='<span class="ov-dl-who ov-dl-unowned" aria-hidden="true"><i class="ti ti-user-question"></i></span>';
+      var action=owners.length?"ovShowTask('"+it.w+"','"+it.t.id+"')":'evbShowTask('+JSON.stringify(it.t.id)+')';
+      return '<div class="ov-dl" role="button" tabindex="0" onkeydown="ovRowKey(event)" onclick="'+esc(action)+'">'+marks+'<div class="ov-dl-main"><div class="ov-dl-topic">'+esc(topicOf(it.t))+'</div><div class="ov-dl-sub"><span class="'+(owners.length?'ov-dl-wn':'ov-dl-no-owner evb-warn')+'">'+esc(who)+' &middot; </span>'+fdt(it.t.dueDate)+'</div></div>'+pri(it.t)+'</div>';
     }
     /* The All view shows three per group so the list stays short; a filter shows five. */
     var cap=ovDl==='all'?3:5;
@@ -5439,7 +5466,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       /* Step 64: the big number says how many days; a word only where it adds one. */
       var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':'');
       var urg=it.d<=7?' soon':'';
-      return '<div class="ov-cdn'+urg+'" onclick="ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
+      return '<div class="ov-cdn'+urg+'" onclick="if(!window.evbShowEvent||!evbShowEvent('+esc(JSON.stringify(it.e.name||''))+'))ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
         +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
         +(lbl?'<div class="ov-cdn-tag">'+lbl+'</div>':'')+evDeleteButtonHTML(it.e,'boss')+'</div>';
     }).join(''));
@@ -8721,7 +8748,9 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   function evById(w,id){return evArr(w).find(function(e){return e.id===id;})||null;}
   function tasksFor(w,id){
     try{
-      var out=[], seen={};
+      var out=[], seen=Object.create(null);
+      var event=evById(w,id);
+      function norm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();}
       WS.forEach(function(m){
         (tasksOf(m)||[]).forEach(function(t){
           if(t.eventId!==id)return;
@@ -8736,6 +8765,12 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
           }
           var c=Object.assign({},t);c.__own=m;out.push(c);
         });
+      });
+      (eventTasks||[]).forEach(function(t){
+        var label=window.MarcomEventBoard?MarcomEventBoard.labelOf(t):(t.eventLabel||t.eventName||'');
+        if(t.eventId!==id&&!(event&&norm(event.name)&&norm(label)===norm(event.name)))return;
+        if(seen[t.id])return;seen[t.id]=1;
+        var c=Object.assign({},t);c.__own=(typeof taskCanonicalWs==='function'&&taskCanonicalWs(t))||w;out.push(c);
       });
       return out;
     }catch(e){return [];}
@@ -11696,12 +11731,18 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     }catch(e){}
     return null;
   }
+  function myDayTasks(w,today){
+    try{return (tasksOf(w)||[]).filter(function(t){return (t.status!=='done'&&t.status!=='canceled')||(t.status==='done'&&t.doneOn===today&&t.dueDate&&t.dueDate<=today);});}catch(e){return [];}
+  }
   function myDayHTML(w){
     var today=tdy(),tomorrow=tmr();
-    var t=act(w);
+    var t=myDayTasks(w,today);
     var overdue=t.filter(function(x){return x.dueDate&&x.dueDate<today;});
     var dueToday=t.filter(function(x){return x.dueDate===today;});
     var dueTmr=t.filter(function(x){return x.dueDate===tomorrow;});
+    var openOverdue=overdue.filter(function(x){return x.status!=='done';}).length;
+    var openToday=dueToday.filter(function(x){return x.status!=='done';}).length;
+    var finished=t.filter(function(x){return x.status==='done';}).length;
     var evToday=evs(w).filter(function(e){return e.date===today;});
     var h=new Date().getHours();
     /* Step 64: the Overview says good morning; here the card says what it holds. */
@@ -11713,15 +11754,16 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
     /* A count of zero is not drawn: only what is there takes room. */
     var chips=''
-      +(overdue.length?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+overdue.length+'</b> overdue</button>':'')
-      +(dueToday.length?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+dueToday.length+'</b> due today</button>':'')
+      +(openOverdue?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openOverdue+'</b> overdue</button>':'')
+      +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openToday+'</b> due today</button>':'')
+      +(finished?'<button type="button" class="myday-chip ok" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+finished+'</b> done today</button>':'')
       +((w==='dew'||w==='o')&&myNew?'<button type="button" class="myday-chip info" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new request'+(myNew>1?'s':'')+'</button>':'');
     var rows='';
     overdue.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row bad" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti ti-alert-triangle"></i>'+esc(x.topic||x.title||'Task')+'<span class="md-sub">was due '+esc(fdt(x.dueDate))+'</span></button>';
+      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'bad')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-alert-triangle')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'was due '+esc(fdt(x.dueDate)))+'</span></button>';
     });
     dueToday.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row warn" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti ti-calendar-due"></i>'+esc(x.topic||x.title||'Task')+'<span class="md-sub">due today</span></button>';
+      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-calendar-due')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
     });
     evToday.slice(0,1).forEach(function(e){
       rows+='<button type="button" class="myday-row info" onclick="uxpGoto(\'#'+w+'-evhub-body\')"><i class="ti ti-confetti"></i>'+esc(e.name||'Event')+'<span class="md-sub">event today</span></button>';
@@ -12071,6 +12113,46 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
       wrapper.querySelector('.evb-g-h').setAttribute('aria-expanded',String(open));
     });
   };
+  window.evbShowEvent=function(name){
+    if(!window.MarcomEventBoard)return false;
+    function norm(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase();}
+    if(!norm(name))return false;
+    var group=MarcomEventBoard.groups(evtList(),{showDone:true,assignees:taskAssignees}).groups.find(function(g){return norm(g.label)===norm(name);});
+    if(!group)return false;
+    var label=group.label;
+    evbOpen[label]=true;
+    if(flt&&flt!==label)flt='';
+    if(!group.open)evbShowDone=true;
+    var focused=document.activeElement;
+    if(focused&&focused.tagName==='SELECT'&&focused.blur)focused.blur();
+    window.evbRender();
+    var toggle=document.getElementById('evb-show-done');if(toggle)toggle.checked=evbShowDone;
+    var body=document.getElementById('evb-body');
+    if(body)Array.prototype.forEach.call(body.querySelectorAll('.evb-g[data-label]'),function(row){
+      if(row.getAttribute('data-label')!==label)return;
+      try{row.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){row.scrollIntoView();}
+      row.classList.remove('tc-found');void row.offsetWidth;row.classList.add('tc-found');
+      setTimeout(function(){row.classList.remove('tc-found');},2400);
+    });
+    return true;
+  };
+  window.evbShowTask=function(id){
+    var task=evtList().find(function(t){return String(t.id)===String(id);});
+    if(!task)return;
+    var label=MarcomEventBoard.labelOf(task)||'Other';
+    evbOpen[label]=true;evbMore[label]=true;
+    if(flt&&flt!==MarcomEventBoard.labelOf(task))flt='';
+    var panel=document.getElementById('panel-overview');
+    if(panel&&!panel.classList.contains('active'))switchTab('overview');
+    window.evbRender();
+    var body=document.getElementById('evb-body'); if(!body)return;
+    Array.prototype.forEach.call(body.querySelectorAll('.evb-row[data-id]'),function(row){
+      if(row.getAttribute('data-id')!==String(id))return;
+      try{row.scrollIntoView({behavior:motionBehavior(),block:'center'});}catch(e){row.scrollIntoView();}
+      row.classList.remove('tc-found');void row.offsetWidth;row.classList.add('tc-found');
+      setTimeout(function(){row.classList.remove('tc-found');},2400);
+    });
+  };
   window.evbShowMore=function(label){evbMore[label]=true;evbRender();};
   window.evbFilter=function(v){flt=v;evbRender();};
   window.evbAssign=function(id,owner){
@@ -12144,18 +12226,19 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
         +(evbMore[k]?items:items.slice(0,5)).map(function(t){
           var asg=taskAssignees(t);
           var owner=asg[0]||'';
-          var opts=['<option value="">Unassigned</option>'].concat(order().map(function(w){
+          var opts=['<option value="">'+(owner?'Unassigned':'Assign to…')+'</option>'].concat(order().map(function(w){
             return '<option value="'+w+'"'+(w===owner?' selected':'')+'>'+esc(nm(w))+'</option>';
           })).join('');
           var ownHtml=asg.length
             ? '<span class="evb-own has"'+(asg.length>1?' title="Shared card"':'')+'>'+esc(asg.map(function(w){return nm(w);}).join(', '))+'</span>'
             : '<button type="button" class="evb-claim" onclick="evbClaim(\''+t.id+'\')"><i class="ti ti-hand-click"></i> Claim</button>';
-          return '<div class="evb-row'+(t.status==='done'||t.status==='canceled'?' evb-row-done':'')+'">'
+          return '<div class="evb-row'+(t.status==='done'||t.status==='canceled'?' evb-row-done':'')+'" data-id="'+esc(t.id)+'" onclick="'+esc('taskCardClick(event,'+JSON.stringify(owner||'boss')+','+JSON.stringify(t.id)+')')+'">'
             +'<div class="evb-row-main"><div class="evb-t">'+esc(t.topic||t.title||'Task')+'</div>'
             +'<div class="evb-s">'+(t.dueDate?'<span><i class="ti ti-calendar" style="font-size:11px;"></i> '+esc(fdt(t.dueDate))+'</span>':'')
+            +(/^(high|medium|low)$/i.test(t.priority||'')?'<span class="evb-priority">'+esc(t.priority.charAt(0).toUpperCase()+t.priority.slice(1).toLowerCase())+'</span>':'')
             +'<span>'+esc((SC[t.status||'pending']||{l:'Pending'}).l)+'</span></div></div>'
             +ownHtml
-            +'<select class="evb-sel" aria-label="Assign this task" onchange="evbAssign(\''+t.id+'\',this.value)">'+opts+'</select>'
+            +'<select class="evb-sel" aria-label="Assign this task" onchange="evbAssign(\''+t.id+'\',this.value);this.blur();evbRender()">'+opts+'</select>'
             +'</div>';
         }).join('')
         +(!evbMore[k]&&items.length>5?'<button type="button" class="evb-more" onclick="evbShowMore('+labelArg+')">Show '+(items.length-5)+' more</button>':'')
@@ -13657,6 +13740,10 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
       css+=':root{--member-'+w+':'+ink+';}';
       css+='html:not(.dark) body.theme-'+w+'{--accent:'+c+';--accent-ink:'+ink+';--accent-ondark:'+ink+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onLight+';}';
       css+='html.dark body.theme-'+w+'{--accent:'+bright+';--accent-ink:'+bright+';--accent-ondark:'+bright+';--accent-light:'+tint+';--accent-shadow:'+sh+';--accent-on:'+onDark+';}';
+      /* Match the fixed identity shades so a chosen colour wins in both modes. */
+      var identity='#panel-'+w+' :is(#'+w+'-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title)';
+      css+='html:not(.dark) '+identity+'{color:'+ink+'!important;}';
+      css+='html.dark '+identity+'{color:'+bright+'!important;}';
       /* Custom colour decorates inactive labels only. Selection keeps the same
          white label, filled background and gold indicator for every workspace. */
       css+='html:not(.dark) .tab-nav .tab-btn#tab-'+w+':not(.a-active):not(.a-boss)'

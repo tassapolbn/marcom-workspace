@@ -22,11 +22,12 @@ class FixedDate extends Date{constructor(...a){if(a.length)super(...a);else supe
 
 /* tasks: each person's own share (what their tab shows); board: the team list,
    where a shared task appears once. Due dates are days from today. */
-function team({tasks={},board,sick={},lieu={},calendar={},missing=[],names={},lieuText,meetings={}}={}){
+function team({eventTasks=[],tasks={},board,sick={},lieu={},calendar={},missing=[],names={},lieuText,meetings={}}={}){
   const nodes=Object.fromEntries(['team-list','team-sum','team-note','ov-team-next'].map(id=>[id,{id,innerHTML:'',hidden:false}]));
   const window={avlState:w=>calendar[w]||{cls:'',txt:'Calendar not connected'},avlMissing:()=>missing.slice()};
   if(lieuText)window.LIEU_balanceText=lieuText;
   const context=vm.createContext({window,document:{getElementById:id=>nodes[id]||null},Date:FixedDate,
+    eventTasks,taskAssignees:t=>t.assignees|| (t.owner?[t.owner]:[]),
     MORDER:['boss','dew','o','junior'],
     tReal:w=>tasks[w]||[],tOf:w=>(board||tasks)[w]||[],isActive:t=>t.status!=='done'&&t.status!=='canceled',
     dU:d=>d,tdy:()=>TODAY,sOf:w=>sick[w]||[],lOf:w=>lieu[w]||[],tsToDate:ts=>ts?new Date(ts):null,
@@ -157,4 +158,24 @@ test('the Overview shell has one Team today section between the greeting and the
   assert.doesNotMatch(shell,/Workload Heatmap/);
   assert.doesNotMatch(shell,/Leave &amp; Availability/);
   assert.doesNotMatch(source,/id='avl-card'|id="avl-card"|c\.id='avl-card'/);
+});
+
+
+test('Team today includes unowned shared work and points to the soonest due',()=>{
+  const nodes=team({eventTasks:[{id:'later',__src:'event',status:'pending',dueDate:'2026-11-01'},
+    {id:'first',__src:'event',status:'pending',dueDate:'2026-10-28'}]});
+  assert.match(nodes['team-sum'].innerHTML,/2 open/);
+  assert.match(nodes['team-sum'].innerHTML,/2 with no owner/);
+  assert.match(nodes['team-sum'].innerHTML,/evbShowTask\(&quot;first&quot;\)/);
+  const one=team({eventTasks:[{id:'one',__src:'event',status:'pending'}]});
+  assert.match(one['team-sum'].innerHTML,/1 open/);
+  assert.match(one['team-sum'].innerHTML,/1 with no owner/);
+});
+
+
+test('a three-owner shared task counts once in the Team today total',()=>{
+  const shared={__src:'event',status:'pending',assignees:['boss','dew','o']};
+  const nodes=team({eventTasks:[shared],tasks:{boss:[shared],dew:[shared],o:[shared]},board:{boss:[shared]}});
+  assert.match(nodes['team-sum'].innerHTML,/1 open/);
+  assert.doesNotMatch(nodes['team-sum'].innerHTML,/with no owner/);
 });
