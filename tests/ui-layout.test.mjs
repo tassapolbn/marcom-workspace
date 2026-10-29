@@ -1208,11 +1208,11 @@ test('picking an event fills a shared card\'s "Event name", unless someone typed
 test('every Deadlines legend tells a deadline, one due soon and a sick day apart',()=>{
   const boss=slice('<div class="cal-grid" id="boss-cal-grid"></div>','<div class="cal-detail" id="boss-cal-detail"');
   assert.match(boss,/style="background:var\(--navy\);"><\/div>Deadline<\/div>/);
-  assert.match(boss,/style="background:var\(--danger\);"><\/div>Due soon<\/div>/,'the red dot the calendar draws for a deadline due soon');
+  assert.match(boss,/class="cal-leg-dot cd-urgent"><\/div>Due soon<\/div>/,'the legend shares the calendar due-soon ring');
   assert.match(boss,/<div class="cal-leg-sick"><\/div>Sick day<\/div>/);
   assert.doesNotMatch(boss,/var\(--sick\);"><\/div>Sick</,'no red dot that reads like a deadline');
   assert.match(source,/Due soon<\/div><div class="cal-leg-item"><div class="cal-leg-sick"><\/div>Sick day<\/div><\/div>/,'the member tabs\' calendars say the same');
-  assert.match(source,/const dc=info\.urgent\?'cd-urgent':/,'red dots still mean due soon or overdue');
+  assert.match(source,/const dc=info\.urgent\?'cd-urgent':/,'urgent dates share the due-soon marker');
   assert.match(step58,/\.cal-leg-sick\{width:10px;height:10px;border-radius:3px;background:var\(--sick-light\);box-shadow:inset 0 0 0 1px var\(--sick\);\}/,'the same tint a sick day gets');
 });
 
@@ -1816,4 +1816,19 @@ test('desktop Add Task follows the filters and Today dates follow task names',()
   assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
   assert.match(source,/dateLabel=DOW\[n.getDay\(\)\]/);
   assert.doesNotMatch(slice('window.ovDaily=function(){','/* quick actions */'),/Good morning|Good afternoon|Good evening|ov-greet/);
+});
+
+
+test('step 72b keeps gold on the logo and high priority in readable quiet ink',()=>{
+  const block=stepBlock('72b');
+  for(const [ink,bg] of [['#34445c','#ffffff'],['#34445c','#e5e7eb'],['#4b5563','#ffffff'],['#003057','#ffffff'],['#ffffff','#003057']]){
+    assert.ok(contrast(ink,bg)>=4.5,ink+' on '+bg);
+  }
+  assert.match(block,/html:not\(\.dark\) \.uxp-undo\{color:#fff;font-weight:800;text-decoration:underline;/);
+  assert.match(block,/\.ov-pri\.high\{background:transparent!important;color:#34445c!important;font-weight:800;/);
+  assert.match(block,/\.cd-urgent\{background:transparent!important;border:1.5px solid #003057/);
+  assert.match(block,/\.myday-chip\.warn\{background:#e5e7eb/);
+  assert.match(source,/<span class="ov-pri high"><i class="ti ti-arrow-up" aria-hidden="true"><\/i>High/);
+  assert.match(source,/<span class="mb mb-high"><i class="ti ti-arrow-up"/);
+  assert.doesNotMatch(block,/html\.dark/,'colour overrides only apply in light mode');
 });

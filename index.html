@@ -1086,7 +1086,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="cal-grid" id="boss-cal-grid"></div>
           <div class="cal-legend">
             <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div>
-            <div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div>
+            <div class="cal-leg-item"><div class="cal-leg-dot cd-urgent"></div>Due soon</div>
             <div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div>
           </div>
           <div class="cal-detail" id="boss-cal-detail" style="display:none;">
@@ -1776,7 +1776,7 @@ function memberPanelHTML(w){
   +    '<div class="widget gcal-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-event"></i> Google Calendar</div><button class="gcal-refresh" id="'+w+'-gcal-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-gcal-body"></div></div></div>'
   +    '<div class="widget upcoming-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-clock-hour-4"></i> Upcoming Events</div><button class="gcal-refresh" id="'+w+'-upcoming-refresh" onclick="loadGCal(\''+w+'\')" title="Refresh"><i class="ti ti-refresh"></i></button></div><div class="widget-body"><div id="'+w+'-upcoming-body"></div></div></div>'
   +    '<div class="widget pin-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-pin"></i> Pinned Notes</div></div><div class="widget-body"><input class="pin-search pin-search-input" placeholder="Search pinned notes..." oninput="pinSearchInput(this.value)" /><div class="pin-slot"></div></div></div>'
-  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--danger);"></div>Due soon</div><div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
+  +    '<div class="widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-calendar-month"></i> Deadlines</div><div class="cal-nav-mini"><button class="cal-arrow" onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button><span id="'+w+'-cal-title" style="font-size:12px;font-weight:700;min-width:88px;text-align:center;"></span><button class="cal-arrow" onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button></div></div><div class="widget-body"><div class="cal-grid" id="'+w+'-cal-grid"></div><div class="cal-legend"><div class="cal-leg-item"><div class="cal-leg-dot" style="background:var(--navy);"></div>Deadline</div><div class="cal-leg-item"><div class="cal-leg-dot cd-urgent"></div>Due soon</div><div class="cal-leg-item"><div class="cal-leg-sick"></div>Sick day</div></div><div class="cal-detail" id="'+w+'-cal-detail" style="display:none;"><div class="cal-detail-title" id="'+w+'-cal-detail-title"></div><div id="'+w+'-cal-detail-list"></div></div></div></div>'
   +    '<div class="widget lieu-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-beach"></i> Day-off in Lieu</div><button class="btn btn-teal btn-sm" onclick="openLieu(\''+w+'\')"><i class="ti ti-plus"></i> Add</button></div><div class="widget-body"><div class="lieu-balance"><div class="lieu-num" id="'+w+'-lieu-balance">0</div><div class="lieu-num-lbl">days available</div><div class="lieu-split"><span>Earned: <b id="'+w+'-lieu-earned">0</b></span><span>Used: <b id="'+w+'-lieu-used">0</b></span></div></div><div class="lieu-records" id="'+w+'-lieu-records"></div></div></div>'
   +    '<div class="widget sick-widget"><div class="widget-head"><div class="widget-title"><i class="ti ti-heart-broken"></i> Sick Leave</div><button class="btn btn-sm" style="background:var(--sick-light);color:var(--sick);font-size:11px;padding:5px 10px;" onclick="confirmReset(\''+w+'\')"><i class="ti ti-refresh"></i> Reset Year</button></div><div class="widget-body"><div class="sick-balance"><div class="sick-num" id="'+w+'-sick-count">0</div><div class="sick-num-lbl" id="'+w+'-sick-year-label">days this year</div></div><div style="display:flex;gap:6px;margin:10px 0 4px;"><input type="date" id="'+w+'-sick-date-input" class="form-input" style="flex:1;padding:7px 10px;font-size:12px;" /><button onclick="addSickDay(\''+w+'\')" style="background:var(--sick);color:white;border:none;border-radius:var(--rsm);padding:7px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;"><i class="ti ti-plus"></i> Add</button></div><div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Pick any date to mark as sick leave</div><div class="sick-list" id="'+w+'-sick-list"></div></div></div>'
   +  '</div>'
@@ -3158,7 +3158,7 @@ function taskCardHTML(task,who){
   const overdue=!finished&&du!==null&&du<0,soon=isSoon(task);
   const catClass=task.category==='Together'?'mb mb-together':(who==='best'?'mb mb-cat-coral':'mb mb-cat');
   let prv=task.priority||'medium';if(prv==='normal')prv='medium';
-  const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-flag-3-filled" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
+  const prBadge=prv==='high'?'<span class="mb mb-high"><i class="ti ti-arrow-up" style="font-size:11px;"></i>High</span>':(prv==='low'?'<span class="mb mb-low"><i class="ti ti-flag-3" style="font-size:11px;"></i>Low</span>':'<span class="mb mb-med"><i class="ti ti-flag-3" style="font-size:11px;"></i>Medium</span>');
   let evBadge='';
   if(isEventTask(task)){
     const _evLbl=(task.eventLabel||task.eventName||'').trim();
@@ -5428,7 +5428,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var on=ovDl===o[0];
       return '<button type="button" class="ov-fpill'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="ovDlFilter(\''+o[0]+'\')">'+o[1]+'</button>';
     }).join(''));
-    function pri(t){ return t.priority==='high'?'<span class="ov-pri high">High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
+    function pri(t){ return t.priority==='high'?'<span class="ov-pri high"><i class="ti ti-arrow-up" aria-hidden="true"></i>High</span>':(t.priority==='low'?'<span class="ov-pri low">Low</span>':'<span class="ov-pri">Med</span>'); }
     function row(it){
       var owners=it.t.__src==='event'?taskAssignees(it.t):[it.w];
       var who=owners.length?owners.map(nm).join(', '):'No owner';
@@ -8095,7 +8095,7 @@ html.dark #lunch-banner .lb-close{background:rgba(255,255,255,.1);color:#f0c668;
            junior:{role:'Junior Events Coordinator',icon:'ti-user-plus'}};
   /* The header numbers are also the quickest filters for the board below. */
   var STAT_CHIPS='<button type="button" class="mh-stat mh-stat-active" data-f="all" title="Show all tasks"><i class="ti ti-clipboard-list"></i> <b>0</b> <span class="mh-l">Active</span></button>'
-                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-alarm"></i> <b>0</b> <span class="mh-l">Due Soon</span></button>'
+                +'<button type="button" class="mh-stat mh-stat-soon" data-f="soon" title="Show tasks due soon"><i class="ti ti-clock"></i> <b>0</b> <span class="mh-l">Due Soon</span></button>'
                 +'<button type="button" class="mh-stat mh-stat-done" data-f="done" title="Show done tasks"><i class="ti ti-circle-check"></i> <b>0</b> <span class="mh-l">Done</span></button>';
   document.addEventListener('click',function(e){
     var chip=e.target&&e.target.closest?e.target.closest('.member-head .mh-stat[data-f]'):null; if(!chip)return;
@@ -11749,7 +11749,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     /* A count of zero is not drawn: only what is there takes room. */
     var chips=''
       +(openOverdue?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openOverdue+'</b> overdue</button>':'')
-      +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openToday+'</b> due today</button>':'')
+      +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><i class="ti ti-clock" aria-hidden="true"></i><b>'+openToday+'</b> due today</button>':'')
       +(finished?'<button type="button" class="myday-chip ok" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+finished+'</b> done today</button>':'')
       +((w==='dew'||w==='o')&&myNew?'<button type="button" class="myday-chip info" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new request'+(myNew>1?'s':'')+'</button>':'');
     var rows='';
@@ -11757,7 +11757,7 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
       rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'bad')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-alert-triangle')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'was due '+esc(fdt(x.dueDate)))+'</span></button>';
     });
     dueToday.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-calendar-due')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
+      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-clock')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
     });
     evToday.slice(0,1).forEach(function(e){
       rows+='<button type="button" class="myday-row info" onclick="uxpGoto(\'#'+w+'-evhub-body\')"><i class="ti ti-confetti"></i>'+esc(e.name||'Event')+'<span class="md-sub">event today</span></button>';
@@ -13653,7 +13653,7 @@ html:not(.dark) .tab-btn:hover{color:#FFFFFF!important;background:rgba(255,255,2
 
 /* member labels as light tints that read on navy */
 html:not(.dark) .tab-nav .tab-btn#tab-overview,
-html:not(.dark) .tab-nav .tab-btn#tab-overview:not(.a-active){color:#F7CF6A!important;}
+html:not(.dark) .tab-nav .tab-btn#tab-overview:not(.a-active){color:rgba(255,255,255,.72)!important;}
 html:not(.dark) .tab-nav .tab-btn#tab-boss,
 html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active),
 html:not(.dark) .tab-nav .tab-btn#tab-boss:not(.a-active):not(.a-boss){color:#B3D8FF!important;}

@@ -2211,7 +2211,8 @@ browser tab, which the test browser does not show).
 
   - Done (2026-10-29, built by Codex from .codex-tasks/step-71.md): removed the Overview greeting and kept its date; Payday stays in place. Add Task now follows the person filters and uses the same form, with a compact navy button on computers; Today dates sit beside task names on computers. The iPhone round button and Today layout retain their existing rules. Checked 396 passing tests; the one known sandbox Netlify failure concerns .aws and .codex. Screenshot capture and the first card row bottom measurement remain unverified: the sandbox blocks the preview port and Chromium launch.
 
-- [ ] **72. Colour means one thing (light mode)**
+- [ ] **72. Colour means one thing (light mode)** (72b done; 72c next)
+  - Done (2026-10-29, built by Codex from .codex-tasks/step-72b.md): Light-mode Overview labels, calendar rings, message actions and pinned icons use white, navy or quiet ink. High priority has an up arrow and dark text; approaching deadlines use clocks and neutral colours; sick and leave calendar marks are grey. Added contrast and icon checks. UI suite: 397 of 398 tests pass; the only failure is the documented sandbox-only Netlify folder check. Preview server and Chromium are blocked by sandbox EPERM, so the requested rendered scans and screenshots could not be produced. Header line and glows retained.
   - Files: `assets/workspace-ui.css`, `index.html` (the colour picker's
     list and inline colours), tests.
   - Change:
