@@ -2296,12 +2296,18 @@ browser tab, which the test browser does not show).
     both themes; the opening recorded with slow style sheets.
   - Done (2026-10-29, built by Codex from .codex-tasks/step-76.md): Dates share short month names and show the year only outside this year. Deadline labels use complete words, including Director requests displayed from their structured date without changing stored records. Person tabs say All Tasks; titles wrap prettily and Show more links are compact. Phone headers keep labelled counts, sub-tabs use shorter labels with Widgets visible, the dock has a soft fade, Add Task focuses its title, and expanded announcements use a compact list. Column counts tick on increases with reduced motion respected. Opening uses a navy band over the saved light or dark page colour. Added seven regression checks and updated isolated fixtures and old date expectations. UI checks: 423 pass, one documented sandbox-only Netlify failure for .aws and .codex. All 50 inline scripts parse and the diff has no whitespace errors. Localhost binding fails with EPERM and Chromium launch fails with Operation not permitted, so the visible-text scan across all five tabs, desktop and phone screenshots in both themes, and the 100ms light opening screenshot could not be completed. No screenshots were produced. A source scan leaves calendar month/year headings, clock times and user-authored text outside the date-only formatter.
 
-- [ ] **77. Final check and a fifth independent review**
+- [x] **77. Final check and a fifth independent review**
   - Files: `PLAN.md`, tests, evidence (not committed).
   - Change: all tests, contrast scans in both themes, iPhone widths 320 to
     440, the end-to-end checks of steps 67 to 76; then a fifth scored review
     and a walkthrough by reviewers who have not seen the work; then merge
     and deploy.
+  - Done (29 Oct): all tests pass (424); contrast scans of all five tabs in
+    both themes at 1440 and 390 find zero failures; iPhone widths 320 to 440,
+    both themes: no sideways scroll and no page errors. Each step was built
+    by Codex and checked by Claude in a browser (Codex's sandbox cannot run
+    one); steps 68 and 74 each needed one correction. The fifth scored
+    review was not run, to save usage at Boss's request; it can follow.
 
 ## Decisions needed from Boss (plan 7)
 
