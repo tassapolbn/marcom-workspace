@@ -2536,6 +2536,14 @@ A shared Event Board card goes only to the first assigned person's tab
     Calendar, Duplicate, and a Design or Photography request being accepted),
     send the row and store `sheetRows` (tab and row) on the card. One toast only
     if it fails, with the reason. Nothing happens when the link is not set.
+  - Built in two parts: 81a, the mapping (`assets/sheet-sync.js`), and 81b, the
+    app wiring and Settings.
+  - 81a done (2026-11-04, built by Codex from .codex-tasks/step-81a.md, reviewed
+    by Claude): `MarcomSheet.rowFor`, `forAppend`, `changes`, `cancelWord` and
+    the status words, with 52 tests, including one that keeps the app's heading
+    rule equal to the script's. Claude replaced the raw Thai text (O's
+    "ส่งเมลแล้ว" and the Thai letter range, in both files) with escape codes so
+    no file encoding can garble them.
   - Test: `npm run test:ui` (every mapping and status in the tables above, each
     member, shared cards with 0, 1 and 3 people going to the first person's tab
     only, empty fields); the preview

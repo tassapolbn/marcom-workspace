@@ -44,7 +44,7 @@ function json_(obj) {
 /* Lower case; every run of characters other than a-z, 0-9 and Thai letters
    becomes one space. "Due date 📆" -> "due date". */
 function cleanHeading_(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9฀-๿]+/g, ' ').trim();
+  return String(s).toLowerCase().replace(/[^a-z0-9\u0E00-\u0E7F]+/g, ' ').trim();
 }
 
 /* The heading scan reads only as far as the tab's last used column: a range
