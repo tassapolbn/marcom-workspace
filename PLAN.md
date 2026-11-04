@@ -2701,7 +2701,7 @@ plan 8's automatic updates (already live) as well as to plan 9:
 
 ## Steps (Codex builds each one; Claude reviews, tests and commits)
 
-- [ ] **85. A Google Sheet button on every card**
+- [x] **85. A Google Sheet button on every card**
   - Files: `index.html` (card buttons, `sheet-script` block, a few CSS lines),
     `tests/ui-sheet-refresh.test.mjs` (new).
   - Shown only while the link is on. Its icon shows whether the card is already
@@ -2716,6 +2716,18 @@ plan 8's automatic updates (already live) as well as to plan 9:
   - Test: unit tests for both paths, the question being cancelled, errors and
     shared cards; the local preview at desktop and phone width in light and
     dark; then Boss tries one old card on the real sheet.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-85.md, reviewed by
+    Claude): the button after Calendar (table-plus icon, or a green table icon
+    once the card is in the sheet), shown only while the link is on. It uses
+    the script's `sync`, so an old card typed once by hand is linked to that
+    row, never duplicated; a linked card is checked first (and if its row was
+    removed, it asks before adding it again). Differences open the notice
+    `sheetAskConflicts` ("Update the sheet" / "Keep the sheet"); Update sends
+    only those cells. An older deployed script falls back safely (adding a
+    fresh row only). Checked in the local preview with the real code and a
+    simulated script: the question, one request, Keep wrote nothing more and
+    saved the link; Update re-sent only the `note` cell; text from the sheet is
+    shown as plain text. 18 new tests; UI suite 460 pass, the same 2 failures.
 
 - [x] **86. Take the test copy's ID out of the public code (decision 3)**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `SHEET-SETUP.md`,

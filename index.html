@@ -3238,6 +3238,7 @@ function taskCardHTML(task,who){
     +'<div class="task-foot">'+statusSelectHTML(who,task).replace('class="tcard-sel"','class="tcard-sel tc-row-sel"')+moveSelectHTML(who,task)
       +'<span class="task-acts">'
         +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
+        +'<button class="icon-btn tc-sheet-btn'+(task.sheetRow?' sheet-on':'')+'" onclick="event.stopPropagation();sheetCardButton(\''+who+'\',\''+task.id+'\')" title="'+(task.sheetRow?'Refresh this card in the Google Sheet':'Add this card to the Google Sheet')+'" aria-label="'+(task.sheetRow?'Refresh this card in the Google Sheet':'Add this card to the Google Sheet')+'"><i class="ti '+(task.sheetRow?'ti-table':'ti-table-plus')+'"></i></button>'
         +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate" aria-label="Duplicate this task"><i class="ti ti-copy"></i></button>'
         +'<button class="icon-btn" onclick="event.stopPropagation();openEdit(\''+who+'\',\''+task.id+'\')" title="Edit" aria-label="Edit this task"><i class="ti ti-edit"></i></button>'
         +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete" aria-label="Delete this task"><i class="ti ti-trash"></i></button>'
@@ -7251,6 +7252,85 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       }else{
         uiToast('The card was saved, but it was not added to the Google Sheet ('+row.tab+'): '+window.sheetReason(res,row.tab)+'.',{duration:9000});
       }
+      return res;
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetAskConflicts=function(tab,row,conflicts){
+    var lines=[tab+"'s tab, row "+row+', already has:'];
+    conflicts.forEach(function(c){
+      var key=String(c.key), value=c.card===null||c.card===undefined||c.card===''?'(empty)':String(c.card);
+      lines.push(key.charAt(0).toUpperCase()+key.slice(1)+': sheet "'+c.sheet+'", card "'+value+'"');
+    });
+    lines.push("Update the sheet with the card's details, or keep what is in the sheet?");
+    return uiConfirm({title:'The Google Sheet has different information',icon:'ti-alert-triangle',
+      message:lines.join('\n'),okLabel:'Update the sheet',cancelLabel:'Keep the sheet'});
+  };
+  window.sheetCardButton=async function(who,id){
+    try{
+      var card=(tasksOf(who)||[]).find(t=>t.id===id); if(!card)return;
+      var colRef=taskRef(card,who);
+      function toast(message){uiToast(message,{duration:6000});}
+      if(!window.sheetConfigured()){toast('The Google Sheet link is off.');return;}
+      var member=card.sheetRow?card.sheetRow.member:MarcomSheet.memberFor(card,who);
+      var row=MarcomSheet.rowFor(card,who,member);
+      if(!row){toast('This card has nobody assigned, so it has no tab in the Google Sheet.');return;}
+      var savedRow=card.sheetRow&&card.sheetRow.row;
+      async function run(check,force){
+        var item={cardId:id,who:member,values:row.values};
+        if(force)item.force=force;
+        var reply=await window.sheetCall({action:'sync',check:check,cards:[item]});
+        if(reply&&reply.ok===false&&reply.error==='unknown action'){
+          if(card.sheetRow)toast('Update the Google Sheet script to the new version to refresh cards (see SHEET-SETUP.md).');
+          else{
+            var added=await window.sheetSyncNew(who,id,card,colRef);
+            if(added&&added.ok)toast('Added to the Google Sheet ('+(added.tab||row.tab)+', row '+added.row+'). Used the older script to add a fresh empty row.');
+          }
+          return null;
+        }
+        var res=reply&&reply.ok&&Array.isArray(reply.results)?reply.results.find(r=>r.cardId===id):null;
+        var tab=res&&res.tab||row.tab;
+        if(!res||res.result==='protected'||res.result==='error'){
+          toast('The Google Sheet was not changed: '+window.sheetReason(res?{error:res.error||res.result}:reply,tab)+'.');
+          return null;
+        }
+        if(res.result==='ambiguous'){
+          toast(tab+'\'s tab has more than one row named "'+row.values.task+'" (rows '+(res.matches||[]).join(', ')+'), so nothing was changed. Fix it in the sheet, then try again.');
+          return null;
+        }
+        return res;
+      }
+      async function saveLink(res){
+        if(res.result==='added'||res.result==='linked'||res.row!==savedRow){
+          var upd={sheetRow:{member:member,tab:res.tab||row.tab,row:res.row,title:row.values.task}};
+          if(colRef.id==='event_tasks'||card.__src==='event')Object.assign(upd,stampEdit());
+          await colRef.doc(id).update(upd);
+          savedRow=res.row;
+        }
+      }
+      if(!card.sheetRow){
+        if(!await uiConfirm({title:'Add to the Google Sheet?',icon:'ti-table-plus',
+          message:'"'+row.values.task+'" will go into '+row.tab+"'s tab in a new empty row. If the same task is already typed there once, the card is linked to that row instead, and nothing in it is overwritten.",okLabel:'Add it'}))return;
+      }else{
+        var preview=await run(true); if(!preview)return;
+        if(preview.result==='added'&&!await uiConfirm({title:'Add to the Google Sheet again?',icon:'ti-table-plus',
+          message:"This card's row is no longer in the Google Sheet. Add it again in a new empty row?",okLabel:'Add it again'}))return;
+      }
+      var res=await run(false); if(!res)return;
+      // Save a newly established link even if the later conflict update fails.
+      await saveLink(res);
+      var kept=false;
+      if(res.conflicts&&res.conflicts.length){
+        if(await window.sheetAskConflicts(res.tab||row.tab,res.row,res.conflicts)){
+          res=await run(false,res.conflicts.map(c=>c.key)); if(!res)return;
+          await saveLink(res);
+        }else kept=true;
+      }
+      var tab=res.tab||row.tab, location=' ('+tab+', row '+res.row+').';
+      if(kept)toast((res.written&&res.written.length?'Filled the empty cells; kept the rest of what is in the Google Sheet':'Kept what is in the Google Sheet')+location);
+      else if(res.result==='added')toast('Added to the Google Sheet'+location);
+      else if(res.result==='linked')toast('Linked to the row already in the Google Sheet'+location);
+      else if(res.result==='updated')toast('Updated in the Google Sheet'+location);
+      else if(res.result==='unchanged')toast('Already up to date in the Google Sheet ('+tab+').');
     }catch(e){console.error('[sheet] step failed',e);}
   };
   window.sheetSyncEdit=async function(who,id,before,after,colRef){
@@ -7351,6 +7431,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     try{unsub=d.collection('dept_settings').doc('sheetsync').onSnapshot(function(doc){
       var data=(doc&&doc.exists)?doc.data():null;
       CFG=data?{url:data.url||'',secret:data.secret||''}:null;
+      if(document.body)document.body.classList.toggle('sheet-link-on',window.sheetConfigured());
       var section=document.getElementById('sheet-cfg'); if(section&&!isAdmin())section.textContent=memberLine();
     },function(e){console.error(e);});}catch(e){console.error(e);}
   }
@@ -10949,7 +11030,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
 /* ===== UXP Priority 0: dialogs, toasts, today strip, collapse, wizard ===== */
 #uxp-modal{z-index:720;}
 .uxp-modal{max-width:430px;}
-.uxp-msg{font-size:13.5px;line-height:1.6;color:var(--text);}
+.uxp-msg{font-size:13.5px;line-height:1.6;color:var(--text);white-space:pre-line;}
 .uxp-modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:6px 22px 18px;}
 .uxp-modal-foot .btn{min-height:44px;min-width:100px;font-size:13.5px;}
 .uxp-btn-danger{background:#c2410c;color:#fff;border:none;}
@@ -12987,6 +13068,10 @@ html.dark .mb-time{background:rgba(96,150,210,.22);color:#93b8e8;}
 .t24:has(input.rc-err) .form-select{border-color:#dc2626;}
 </style>
 <style id="calmap-style">
+.tc-sheet-btn{display:none}
+body.sheet-link-on .tc-sheet-btn{display:flex}
+.icon-btn.sheet-on{color:#147c3b;}
+html.dark .icon-btn.sheet-on{color:#5fcf85;}
 .icon-btn.cal-on{color:#147c3b;}
 html.dark .icon-btn.cal-on{color:#5fcf85;}
 </style>
