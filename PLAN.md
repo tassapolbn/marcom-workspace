@@ -2878,7 +2878,10 @@ Approved on 4 Nov 2026 as recommended (1 to 8). Added after Boss's rule
 
 Approved on 4 Nov 2026 as recommended (9 to 12). Order: 87, 85, 88, 90, 89.
 
-# Plan 10 (4 Nov 2026): shared cards in every person's tab, and Status that follows the app, for Boss to approve
+# Plan 10 (4 Nov 2026): shared cards in every person's tab, and Status that follows the app, approved by Boss
+
+Status: **approved by Boss on 4 Nov 2026, with every recommended decision.**
+Branch: `feature/sheet-every-tab`. Builder: Codex, one step at a time.
 
 Boss asked: "Make the shared card added to each person's tab", and "if the card
 was removed or marked complete in the app, then the status [should] match the
