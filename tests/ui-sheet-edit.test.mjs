@@ -14,8 +14,8 @@ const tabs={boss:'Boss',dew:'Dew',o:'O',junior:'Eye'};
 const card=(member='boss',extra={})=>({topic:'Campaign',status:'pending',
   sheetRow:{member,tab:tabs[member],row:5,title:'Campaign'},...extra});
 
-function sheet({cfg={url,secret:'phrase'},reply={ok:true,tab:'Boss',row:5},fetchError=false,updateError=false}={}){
-  const calls=[],toasts=[],updates=[],logs=[],infos=[];
+function sheet({cfg={url,secret:'phrase'},reply={ok:true,tab:'Boss',row:5},fetchError=false,updateError=false,replies,confirm=false}={}){
+  const calls=[],toasts=[],updates=[],logs=[],infos=[],notices=[];
   const db={collection:()=>({doc:()=>({onSnapshot(fn){fn({exists:!!cfg,data:()=>cfg});return ()=>{};}})})};
   const context=vm.createContext({
     document:{readyState:'complete',getElementById:()=>null},
@@ -24,9 +24,10 @@ function sheet({cfg={url,secret:'phrase'},reply={ok:true,tab:'Boss',row:5},fetch
     fetch:async (address,options)=>{
       calls.push({address,options,body:JSON.parse(options.body)});
       if(fetchError)throw new Error('offline');
-      return {json:async()=>reply};
+      return {json:async()=>replies?replies[calls.length-1]:reply};
     },
-    uiToast:(message,options)=>toasts.push({message,options}),
+    uiConfirm:options=>{notices.push(plain(options));return typeof confirm==='function'?confirm(options):Promise.resolve(confirm);},
+    uiToast:(message,options)=>toasts.push({message,options:options&&plain(options)}),
     stampEdit:()=>({lastEditedBy:'boss@example.test',lastEditedAt:'stamp'})
   });
   context.window=context;
@@ -36,7 +37,7 @@ function sheet({cfg={url,secret:'phrase'},reply={ok:true,tab:'Boss',row:5},fetch
     if(updateError)throw new Error('update denied');
     updates.push({id,upd:plain(upd)});
   }})};
-  return {context,calls,toasts,updates,logs,infos,colRef};
+  return {context,calls,toasts,updates,logs,infos,notices,colRef};
 }
 
 async function sync(h,method,before,after={...before,status:'done'}){
@@ -66,9 +67,9 @@ test('unchanged sheet cells make no request, including app-only edits',async()=>
 });
 
 test('Boss status edit sends only the changed cell using the linked member and row hints',async()=>{
-  const h=sheet();await sync(h,'sheetSyncEdit',card());
+  const h=sheet();await sync(h,'sheetSyncEdit',card('boss',{status:'in-progress'}));
   assert.equal(h.calls.length,1);
-  assert.deepEqual(h.calls[0].body,{action:'update',who:'boss',cardId:'card-1',row:5,title:'Campaign',values:{status:'Completed'},secret:'phrase'});
+  assert.deepEqual(h.calls[0].body,{action:'update',who:'boss',cardId:'card-1',row:5,title:'Campaign',values:{status:'Completed'},expect:{status:'In progress'},secret:'phrase'});
   assert.equal(h.updates.length,0);assert.equal(h.toasts.length,0);
 });
 
@@ -77,6 +78,7 @@ test('title changes save new fallback hints, including an explicitly cleared tit
     const h=sheet({reply:{ok:true}}),before=card();
     await sync(h,'sheetSyncEdit',before,{...before,topic:title});
     assert.deepEqual(h.calls[0].body.values,{task:title});
+    assert.deepEqual(h.calls[0].body.expect,{task:'Campaign'});
     assert.equal(h.calls[0].body.title,'Campaign');
     assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRow:{member:'boss',tab:'Boss',row:5,title}}}]);
   }
@@ -134,12 +136,91 @@ test('cancel and restore use each linked tab wording without deleting a row',asy
     await sync(h,'sheetSyncRestore',task);
     assert.equal(h.calls.length,2);
     for(const [i,status] of [canceled,'In progress'].entries()){
-      assert.deepEqual(h.calls[i].body,{action:'update',who:member,cardId:'card-1',row:5,title:'Campaign',values:{status},secret:'phrase'});
+      assert.deepEqual(h.calls[i].body,{action:'update',who:member,cardId:'card-1',row:5,title:'Campaign',values:{status},expect:{status:i===0?'In progress':canceled},secret:'phrase'});
     }
     assert.equal(h.updates.length,0);assert.equal(h.toasts.length,0);
   }
   const h=sheet();await sync(h,'sheetSyncRestore',card('dew',{status:'on-hold',dzStatus:'In Progress'}));
   assert.deepEqual(h.calls[0].body.values,{status:' Hold'});
+});
+
+test('edit expectations include exactly changed keys, preserving dates and empty values',async()=>{
+  const h=sheet(), before=card('boss',{dueDate:'2026-11-01',notes:'Old note'});
+  await sync(h,'sheetSyncEdit',before,{...before,dueDate:'2026-11-04',notes:'',assignedBy:'Boss'});
+  assert.deepEqual(h.calls[0].body.values,{'due date':{date:'2026-11-04'},'assigned by':'Boss',note:''});
+  assert.deepEqual(h.calls[0].body.expect,{'due date':{date:'2026-11-01'},'assigned by':'',note:'Old note'});
+});
+
+for(const method of ['sheetSyncEdit','sheetSyncCancel','sheetSyncRestore']){
+  test(method+' asks nothing for no conflicts or an older script reply',async()=>{
+    for(const reply of [{ok:true,tab:'Boss',row:5,conflicts:[]},{ok:true,tab:'Boss',row:5}]){
+      const h=sheet({reply});await sync(h,method,card());
+      assert.equal(h.calls.length,1);assert.equal(h.notices.length,0);assert.equal(h.toasts.length,0);
+    }
+  });
+
+  for(const approve of [false,true]){
+    test(method+(approve?' updates only approved conflicts':' keeps the sheet after showing conflicts'),async()=>{
+      for(const location of [{tab:'Eye',row:12},{}]){
+        const value=method==='sheetSyncCancel'?'Canceled':method==='sheetSyncRestore'?'Not started':'Completed';
+        const conflicts=[{key:'status',sheet:'Waiting for approval',card:value}];
+        const h=sheet({replies:[{ok:true,...location,conflicts},{ok:true}],confirm:approve});
+        const before=card();
+        await sync(h,method,before,{...before,status:'done',notes:'Non-conflicting change'});
+        const tab=location.tab||'Boss',row=location.row||5;
+        assert.equal(h.notices.length,1);
+        assert.deepEqual(h.notices[0],{
+          title:'The Google Sheet has different information',icon:'ti-alert-triangle',
+          message:tab+"'s tab, row "+row+', already has:\nStatus: sheet "Waiting for approval", card "'+value+'"\n'+
+            "Update the sheet with the card's details, or keep what is in the sheet?",
+          okLabel:'Update the sheet',cancelLabel:'Keep the sheet'
+        });
+        assert.equal(h.calls.length,approve?2:1);
+        if(approve)assert.deepEqual(h.calls[1].body,{
+          action:'update',who:'boss',cardId:'card-1',row,title:'Campaign',
+          values:{status:value},force:['status'],secret:'phrase'
+        });
+        assert.deepEqual(h.toasts,[{message:(approve?'Updated the Google Sheet':'Kept what is in the Google Sheet')+
+          ' ('+tab+', row '+row+').',options:{duration:6000}}]);
+        assert.equal(h.logs.length,0);
+      }
+    });
+  }
+
+  test(method+' reports forced update failures with the usual toast and keeps not found quiet',async()=>{
+    const first={ok:true,conflicts:[{key:'status',sheet:'External status',card:'Completed'}]};
+    for(const error of ['protected','network','not found']){
+      const h=sheet({replies:[first,{ok:false,error}],confirm:true});
+      await sync(h,method,card());
+      const usual=sheet({reply:{ok:false,error}});await sync(usual,method,card());
+      assert.equal(h.calls.length,2);assert.deepEqual(h.toasts,usual.toasts);assert.deepEqual(h.infos,usual.infos);
+    }
+  });
+}
+
+test('forced edits retain date objects and explicit empty values for exactly the conflicting keys',async()=>{
+  const conflicts=[{key:'due date',sheet:'Earlier date',card:'2026-11-04'},{key:'note',sheet:'Sheet note',card:''}];
+  const h=sheet({replies:[{ok:true,conflicts},{ok:true}],confirm:true});
+  const before=card('boss',{dueDate:'2026-11-01',notes:'Old note'});
+  await sync(h,'sheetSyncEdit',before,{...before,dueDate:'2026-11-04',notes:'',status:'done'});
+  assert.deepEqual(h.calls[1].body.values,{'due date':{date:'2026-11-04'},note:''});
+  assert.deepEqual(h.calls[1].body.force,['due date','note']);
+  assert.match(h.notices[0].message,/Note: sheet "Sheet note", card "\(empty\)"/);
+});
+
+test('concurrent conflicting changes show one notice at a time',async()=>{
+  const answers=[];
+  const h=sheet({reply:{ok:true,conflicts:[{key:'status',sheet:'External status',card:'Completed'}]},
+    confirm:()=>new Promise(resolve=>answers.push(resolve))});
+  const first=sync(h,'sheetSyncEdit',card()),second=sync(h,'sheetSyncCancel',card());
+  await flush();
+  assert.equal(h.calls.length,2);assert.equal(h.notices.length,1);assert.equal(answers.length,1);
+  answers[0](false);
+  await flush();
+  assert.equal(h.notices.length,2);assert.equal(answers.length,2);
+  answers[1](false);
+  await Promise.all([first,second]);
+  assert.equal(h.calls.length,2);assert.equal(h.toasts.length,2);
 });
 
 test('unexpected helper and metadata-write failures are caught and logged',async()=>{

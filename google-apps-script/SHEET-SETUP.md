@@ -1,7 +1,6 @@
 # Google Sheet link — setup
 
-Do this once for the team's Google Sheet. Start with the test copy already set
-in the script. Connect it to the workspace in Step 6.
+Do this once for the team's Google Sheet. Connect it to the workspace in Step 6.
 
 ## Step 1 — Which Google account to use
 
@@ -26,7 +25,7 @@ will show that account.
 
 Use a separate project from the calendar script.
 
-## Step 3 — Set your secret phrase
+## Step 3 — Set your secret phrase and the sheet
 
 Near the top of the code, find:
 
@@ -35,9 +34,17 @@ Near the top of the code, find:
 Replace `change-me-please` with a long private phrase of your own. Keep it
 somewhere safe; you will paste the same phrase into Settings in Step 6.
 Do not leave it blank. The script refuses to work until the sample phrase is
-replaced. Press **Ctrl+S** to save.
+replaced.
 
-`SPREADSHEET_ID` already points to the test copy. Leave it as it is for now.
+Also find:
+
+    var SPREADSHEET_ID = '';
+
+Paste the team sheet's ID between the quotes: the part of the sheet's link
+between `/d/` and `/edit`. The script refuses to work if the ID is empty.
+
+Never put the sheet's ID or the secret into the GitHub repository, because it
+is public. Enter them only in Apps Script. Press **Ctrl+S** to save.
 
 ## Step 4 — Deploy as a Web app
 
@@ -85,21 +92,47 @@ This checks that the script is live. Step 6 checks access to the sheet.
 - The script inserts a fresh row so the sheet's table grows with it.
 - Edits update the same row, even if someone has moved it by sorting or
   inserting rows. A repeated save uses the card's hidden row tag.
+- **Nothing already in the sheet is overwritten without asking.** The script
+  writes a cell only when it is empty, already holds the new value, or still
+  holds what the app wrote there before. If someone typed something else, the
+  cell is left alone and the app shows the difference with **Update the sheet**
+  and **Keep the sheet**. Emptying a field in the app never blanks a cell on its
+  own.
 - Deleting a card sets its Status to **Canceled**, **CANCELLED** or **Cancel**,
-  using that tab's words. It never deletes the sheet row.
+  using that tab's words (asking first if someone changed the Status in the
+  sheet). It never deletes the sheet row.
 - Columns the app has no value for stay empty, apart from repeated row formulas
   that the script copies from neighbouring rows.
 - Existing formulas and headings are never changed.
-- Cards that existed before the connection are not copied.
+- Cards that existed before the connection are not copied automatically. Use
+  the **Google Sheet button** on a card (next to Calendar), or **Refresh all** in
+  Settings (Boss only). Both link an old card to its row when the same task is
+  already typed there once, instead of adding it twice.
+- **Refresh all** shows what it would do first and writes nothing until you
+  press **Apply**. Cells that differ are listed unticked; only ticked ones are
+  overwritten. Rows the app added for cards that were later deleted are listed
+  ticked, to be marked Canceled. Rows typed by hand are never removed.
 - Every other tab is left alone, including the hidden **Boss 1** tab.
 
 The workspace sends the column values and status words. The script writes the
-values it receives.
+values it receives, following the rules above.
 
-## Step 8 — Switching to the real sheet
+## Updating the script to a new version
 
-1. Open the real sheet. Copy the part of its link between `/d/` and `/edit`.
-2. In the script, replace the value of `SPREADSHEET_ID` with that ID.
+When the workspace gains new sheet features, the script in Apps Script needs
+the new version too:
+
+1. Open your project at script.google.com.
+2. Note your two lines, `var SECRET = '...';` and `var SPREADSHEET_ID = '...';`.
+3. Replace all the code with the new `marcom-sheet-sync.gs`, then put your two
+   lines back. Press **Ctrl+S**.
+4. **Deploy > Manage deployments > pencil icon > Version: New version > Deploy**.
+   The URL stays the same, so Settings need no change.
+
+## Step 8 — Changing the sheet
+
+1. Open the sheet you want to use. Copy the part of its link between `/d/` and `/edit`.
+2. In Apps Script, replace the value of `SPREADSHEET_ID` with that ID.
 3. Press **Ctrl+S**.
 4. Choose **Deploy > Manage deployments > pencil icon**.
 5. Set **Version: New version**, then click **Deploy**. The URL stays the same.
@@ -118,6 +151,8 @@ values it receives.
 
 - **"secret not set"**: the script still has the sample phrase. Do Step 3,
   then redeploy a New version (see the last point below).
+- **"spreadsheet not set"**: `SPREADSHEET_ID` is empty in Apps Script; do Step 3
+  and deploy a New version.
 - **"unauthorised"**: the phrase in Settings does not match `SECRET`.
 - **"tab not found"**: a tab may have been renamed. Names must be exactly
   **Boss**, **Dew**, **O** and **Eye**.

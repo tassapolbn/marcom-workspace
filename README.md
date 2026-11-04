@@ -313,7 +313,8 @@ Once the link is set up, a new card is also added as one row in its owner's
 tab of the team's **Marketing & Communications Tracker** sheet: **Boss**,
 **Dew**, **O** or **Eye**. A shared card goes to the first person's tab only.
 A shared card with nobody assigned gets no row. Cards that existed before the
-link was set up are not copied.
+link was set up are not copied automatically: the card button and Refresh all
+(below) send them.
 
 Editing a linked card updates the same row, and only the cells that changed.
 This includes the form, the status menu, Dew's design stage, the done tick and
@@ -328,6 +329,30 @@ newest tasks at the top. Empty spacers and rows with only formulas do not count
 as tasks. The script inserts a fresh row so the sheet's table grows with it.
 It copies row formulas shared by neighbouring rows, such as Dew's Duration and
 O's watermark date.
+
+**Nothing in the sheet is overwritten without asking (Boss's rule, plan 9).**
+Before changing a cell, the script looks at what is there. It writes only into
+an empty cell, a cell that already holds the new value, or a cell that still
+holds what the app wrote before (the app sends that as `expect`). If someone
+typed something else, nothing is written: the app shows the difference
+("sheet ..., card ...") with **Update the sheet** and **Keep the sheet**, and
+only "Update" overwrites those cells (`force`). A field emptied in the app never
+blanks a cell on its own. Rows are never deleted.
+
+**The Google Sheet button on each card** (after Calendar, shown while the link
+is on) adds an old card or refreshes one already in the sheet. When the same
+task is typed once in the owner's tab (same name, and the same due date when
+both have one), the card is linked to that row instead of being added twice;
+several rows with that name are left for a person to sort out.
+
+**Refresh all** (Settings > Google Sheet link, Boss only) compares open cards and
+cards already in the sheet with the sheet, in batches of 25. It shows what would
+change first (to add, to link, to update, already matching, need a look, rows of
+deleted cards) and writes nothing until **Apply**. Differences are listed
+unticked; only ticked cells are overwritten. Rows the app added for cards that
+were later deleted are listed ticked and get Status Canceled; rows typed by hand
+are never touched. The script actions behind these are `sync` and `sweep`, both
+with a check mode that writes nothing.
 
 **What goes in each column:**
 
@@ -372,10 +397,13 @@ Google account that can edit all four tabs. O's tab is protected.
 number, is stored as plain text. Nothing typed in the app or the public Request
 Centre can become a formula through the link. Treat the URL and secret together
 like a key and keep them private. The script refuses to work with its sample
-secret.
+secret. This repository is public, so the sheet's ID and the secret are never
+committed. A test copy of the sheet should not be shared as "anyone with the
+link can edit".
 
-**Switching from the test copy to the real sheet:** change `SPREADSHEET_ID` in
-the Apps Script. Choose **Deploy > Manage deployments > pencil icon > Version:
+**Which sheet:** the sheet's ID lives only in the Apps Script project
+(`SPREADSHEET_ID`), never in this public repository. To change sheets, change
+it there. Choose **Deploy > Manage deployments > pencil icon > Version:
 New version > Deploy**. The URL stays the same. Press **Test connection** in
 Settings and check all four tabs' headings and write access. Heading matching
 ignores emoji, capitals and punctuation. If a column is renamed to something
@@ -387,6 +415,8 @@ Google Sheet shaped like the real tabs. `tests/ui-sheet-sync.test.mjs` checks
 columns and status words. `tests/ui-sheet-link.test.mjs` and
 `tests/ui-sheet-edit.test.mjs` check the app side.
 `tests/ui-sheet-request.test.mjs` checks server-created Request Centre cards.
+`tests/ui-sheet-refresh.test.mjs` and `tests/ui-sheet-refresh-all.test.mjs`
+check the card button and Refresh all.
 Run them with the rest of the UI checks using `npm run test:ui`.
 
 Request Centre cards created by the server are sent too:

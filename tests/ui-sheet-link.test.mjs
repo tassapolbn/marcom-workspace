@@ -99,6 +99,8 @@ test('friendly reasons preserve unknown errors and explain script setup failures
   const {context:c}=sheet();
   for(const [error,expected] of [
     ['secret not set','the script still has its sample secret phrase; set your own and redeploy it'],
+    ['spreadsheet not set',"the script has no sheet ID yet; paste the sheet's ID into SPREADSHEET_ID and deploy a New version"],
+    ['unknown action','the Google script is an older version; paste the new one and deploy a New version (see SHEET-SETUP.md)'],
     ['tab not found','the sheet has no tab named Eye'],['no heading row',"Eye's tab has no heading row with a Task column"],
     ['busy, please try again','the sheet was busy, please try again'],['unknown member','unknown member'],['no card id','no card id'],['not found','not found']
   ])assert.equal(c.sheetReason({error},'Eye'),expected);
