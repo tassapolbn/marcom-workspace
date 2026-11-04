@@ -2642,3 +2642,121 @@ as a one-off button if wanted.
 Found in step 79, set by Claude (Boss can change either): new Dew rows go right
 under Dew's newest tasks at the top; the script must be deployed from a Google
 account that can edit O's protected tab.
+
+# Plan 9 (4 Nov 2026): a Google Sheet button on every card, approved by Boss
+
+Status: **approved by Boss on 4 Nov 2026, with every recommended decision**,
+including Refresh all. Branch: `feature/sheet-refresh`. Built in the order 86,
+87, 85, 88, 89, so the card button (85) can use the same compare-and-match as
+Refresh all (87): pressing it on an old card whose task is typed once in the
+sheet links to that row instead of adding a second one (decision 5). If the
+deployed script is still the older version, the button falls back to plain
+adding and refreshing.
+
+Boss asked for a button that sends an existing ("old") card to the Google Sheet,
+or refreshes it there. Plan 8 only sends cards created after the link was set
+up. The link now points at the real "Marketing & Communications Tracker"
+(its ID is kept out of GitHub, see step 86).
+
+## What the study found
+
+- Each card has a row of small buttons at the bottom (`.task-acts` in
+  `taskCardHTML`, `index.html`): Calendar, Duplicate, Edit, Delete. The new
+  button sits after Calendar, in the same style.
+- Cards are drawn before the link's settings load, so the button is drawn on
+  every card and shown or hidden with one class on the page (on when the link
+  is set), instead of redrawing every board.
+- Many old tasks were probably typed into the sheet by hand already. Sending a
+  card that is already there by hand would add the same task twice, so the
+  button asks first and says so.
+- The GitHub repository is public and the script in it holds the test copy's ID;
+  the copy is shared "anyone with the link can edit" (owner
+  communications.city@headstartphuket.com).
+
+## Steps (Codex builds each one; Claude reviews, tests and commits)
+
+- [ ] **85. A Google Sheet button on every card**
+  - Files: `index.html` (card buttons, `sheet-script` block, a few CSS lines),
+    `tests/ui-sheet-refresh.test.mjs` (new).
+  - Shown only while the link is on. Its icon shows whether the card is already
+    in the sheet.
+  - Card not in the sheet yet: "Add "<title>" to <tab>'s tab in the Google
+    Sheet? If it is already typed in the sheet, it will appear twice." On yes,
+    it adds the row (same rules as a new card: the owner's tab, a shared card
+    goes to the first person) and says "Added to the Google Sheet (<tab>, row N)".
+  - Card already in the sheet: refreshes its row with the card's current values
+    (decision 2) and says "Updated in the Google Sheet (<tab>)". If someone
+    removed that row in the sheet, it offers to add the card again.
+  - Test: unit tests for both paths, the question being cancelled, errors and
+    shared cards; the local preview at desktop and phone width in light and
+    dark; then Boss tries one old card on the real sheet.
+
+- [ ] **86. Take the test copy's ID out of the public code (decision 3)**
+  - Files: `google-apps-script/marcom-sheet-sync.gs`, `SHEET-SETUP.md`,
+    `README.md`, `tests/ui-sheet-script.test.mjs`.
+  - `SPREADSHEET_ID` becomes empty in the repository, and the script answers
+    "spreadsheet not set" until the sheet's ID is pasted in Apps Script (Boss's
+    deployed script already has the real one). The old ID stays in GitHub's
+    history, so Boss should also set the copy to Restricted or delete it.
+
+- [ ] **87. Refresh all, part 1: the script compares and matches (Boss's addition)**
+  - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
+  - A new `sync` action takes a batch of cards (about 25 per request, so no
+    request comes near Google's 6-minute limit). For each card:
+    - its row is found by its hidden tag (in any of the four tabs): only the
+      cells that differ are written (decision 2), or it is reported unchanged;
+    - no tag yet: if exactly one row in the owner's tab has the same task name
+      (and the same due date, when both have one), that row is linked to the
+      card and updated instead of adding a duplicate (decision 5);
+    - several such rows: nothing is written, the card is listed "to check";
+    - no such row: a new row is added, exactly like a new card.
+  - A final `sweep` request with the list of every card's id finds rows the app
+    added whose card has since been deleted, and sets their Status to the
+    tab's cancel word (decision 6). Rows typed by hand have no tag, so they are
+    never touched by the sweep.
+  - With `check: true` the script reports what it would do and writes nothing
+    (decision 7).
+  - Test: the fake sheet from step 80 with hand-typed rows, repeated names,
+    tagged rows of deleted cards and a protected tab; check mode writes nothing.
+
+- [ ] **88. Refresh all, part 2: the button in Settings**
+  - Files: `index.html` (Settings section "Google Sheet link"),
+    `tests/ui-sheet-refresh.test.mjs`.
+  - Boss only (decision 8). "Refresh all" first runs in check mode and shows:
+    to add N, to link to rows already in the sheet N, to update N, unchanged N,
+    to mark Canceled N, and the list to check by hand. Nothing changes until
+    Boss presses Apply; Apply shows the same counts as they happen ("12 of
+    140...") and saves the sheet link on every card that was added or linked.
+  - Which cards: decision 4.
+  - Test: unit tests with a fake script (counts, list to check, Apply saves the
+    links, a failed batch stops and says where); the local preview; then Boss
+    runs it in check mode on the real sheet before applying.
+
+- [ ] **89. Ship it**
+  - Merge into `main`, push, check the Netlify deploy, as in plan 8. Boss then
+    pastes the updated script into Apps Script and deploys a New version (the
+    `sync` action lives there), keeping the real sheet's ID and the secret.
+
+## Decisions needed from Boss (plan 9)
+
+1. **The plan:** recommended, approve steps 85 to 89.
+2. **Refreshing a card that is already in the sheet** (the card button and
+   Refresh all): recommended, it fills in the card's values but never blanks a
+   cell (anything typed only in the sheet stays); or the row becomes an exact
+   copy of the card, blanking cells the card has empty.
+3. **Step 86:** recommended, yes; or leave the copy's ID in the code.
+4. **Which cards Refresh all looks at:** recommended, open cards (Pending, In
+   Progress, Waiting, On Hold) plus every card already in the sheet, so old
+   finished cards that were never sent do not pour in; or every card,
+   including old finished ones.
+5. **Old cards whose task is already typed in the sheet:** recommended, link to
+   that row when exactly one row in the tab has the same task name (and the
+   same due date, when both have one), otherwise list it to check; or never
+   match, always add a new row.
+6. **"Remove to match":** recommended, a row the app added for a card that was
+   later deleted gets Status Canceled, as decided in plan 8; or that row is
+   deleted from the sheet. Either way, rows typed by hand are never removed.
+7. **Check first:** recommended, Refresh all shows what it would do and changes
+   nothing until Boss presses Apply; or it applies straight away.
+8. **Who can run Refresh all:** recommended, Boss only (Settings); members use
+   the button on their own cards.
