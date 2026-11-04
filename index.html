@@ -2281,8 +2281,8 @@ function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--
    column immediately instead of waiting for a click elsewhere. */
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign(val==='done'?taskDoneFields((tasksOf(who)||[]).find(x=>x.id===id)||{},true):{status:val,done:false},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
-function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);ref.doc(id).update(Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
+function setTaskStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const fields=Object.assign(val==='done'?taskDoneFields(card||{},true):{status:val,done:false},stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the status change');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setDesignStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);const fields=Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the design status');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
   var opts=MEMBER_ORDER.filter(function(w){return w!==who;});
@@ -2570,7 +2570,7 @@ function uiToast(msg,opts){
   host.appendChild(t);
   setTimeout(function(){ t.classList.add('out'); setTimeout(kill,320); }, opts.duration||5000);
 }
-function deleteWithUndo(colRef,id,item,label){
+function deleteWithUndo(colRef,id,item,label,afterUndo){
   if(!colRef)return Promise.resolve(false);
   var data=null;
   if(item){ data={}; Object.keys(item).forEach(function(k){ if(k!=='id'&&k!=='__src')data[k]=item[k]; }); }
@@ -2584,7 +2584,7 @@ function deleteWithUndo(colRef,id,item,label){
     if(_me){ data.createdBy=_me; Object.assign(data,stampEdit()); }
   }
   return colRef.doc(id).delete().then(function(){
-    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).catch(function(e){ console.error(e); dbSaveFailed(e,'the restored item'); }); }});
+    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).then(function(){if(typeof afterUndo==='function')afterUndo();}).catch(function(e){ console.error(e); dbSaveFailed(e,'the restored item'); }); }});
     else uiToast(label||'Deleted');
     return true;
   }).catch(function(e){ console.error(e); uiToast('Delete failed. Please try again.'); return false; });
@@ -2877,6 +2877,7 @@ function saveTask(){
       console.error('[task] update failed',e);
       dbSaveFailed(e,'your changes');
     });
+    try{if(window.sheetSyncEdit)sheetSyncEdit(modalState.who,modalState.editId,old,Object.assign({},old||{},data),ref);}catch(e){console.error('[sheet] step failed',e);}
     try{if(old&&old.requestId&&old.status!==data.status&&window.rcMirrorStatus)rcMirrorStatus(old.requestId,data.status);}catch(e){}
   }
   else if(modalState.editId&&wasEvent!==evtOn){
@@ -2889,7 +2890,11 @@ function saveTask(){
        signed-in user, so stamp it now (an admin may share another member's task). */
     if(evtOn)merged.createdBy=meEmail();
     else if(!merged.createdBy)merged.createdBy=meEmail();
-    ref.add(merged).then(function(){return srcRef.doc(modalState.editId).delete();})
+    const thatWho=modalState.who,thatId=modalState.editId;
+    ref.add(merged).then(function(newDoc){
+      try{if(window.sheetSyncEdit)sheetSyncEdit(thatWho,newDoc.id,old,merged,ref);}catch(e){console.error('[sheet] step failed',e);}
+      return srcRef.doc(thatId).delete();
+    })
       .then(function(){try{uiToast(evtOn?'Moved to the shared Event Board':'Moved back to your own board');}catch(e){}})
       .catch(function(e){console.error(e);try{uiToast('Could not change the task type: '+((e&&e.message)||''));}catch(_){}});
   }
@@ -2940,11 +2945,13 @@ function deleteTask(who,id){
   uiConfirm({title:_shared?'Delete a shared event task':'Delete task',message:_msg,okLabel:'Delete',danger:true}).then(function(ok){
     if(!ok)return;
     var _cref=taskRef(t,who);
+    try{if(t&&t.sheetRow&&window.sheetSyncCancel)sheetSyncCancel(who,id,t);}catch(e){console.error('[sheet] step failed',e);}
+    var afterUndo=t&&t.sheetRow?function(){try{if(window.sheetSyncRestore)sheetSyncRestore(who,id,t);}catch(e){console.error('[sheet] step failed',e);}}:undefined;
     if(t&&(t.gcalEventId||t.calendarAddedAt)&&window.gcsDeleteFor){
       gcsDeleteFor(who,t,id);
-      deleteWithUndo(_cref,id,t,'Task deleted');
+      deleteWithUndo(_cref,id,t,'Task deleted',afterUndo);
     } else {
-      deleteWithUndo(_cref,id,t,'Task deleted');
+      deleteWithUndo(_cref,id,t,'Task deleted',afterUndo);
     }
   });
 }
@@ -3046,12 +3053,14 @@ function toggleTaskDone(who,id){
   tcLinger(who,id,t.status||'pending');
   rf.doc(id).update(Object.assign({},fields,stampEdit()))
     .catch(function(e){dbSaveFailed(e,completing?'the completed task':'the reopened task');});
+  try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,t,Object.assign({},t,fields),rf);}catch(e){console.error('[sheet] step failed',e);}
   if(completing){
     const title=t.topic||t.title||'Task',previous={statusBefore:fields.statusBefore};
     uiToast('Done: '+(title.length>40?title.slice(0,40)+'…':title),{undo:function(){
       tcLinger(who,id,'done');
       rf.doc(id).update(Object.assign(taskDoneFields(previous,false),stampEdit()))
         .catch(function(e){dbSaveFailed(e,'the reopened task');});
+      try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,Object.assign({},t,fields),Object.assign({},t,taskDoneFields(previous,false)),rf);}catch(e){console.error('[sheet] step failed',e);}
     },duration:6000});
   }
 }
@@ -7189,7 +7198,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
 })();
 </script>
 <script id="sheet-script">
-/* ===== GOOGLE SHEET LINK (new cards only, team-wide Settings) ===== */
+/* ===== GOOGLE SHEET LINK (linked cards, team-wide Settings) ===== */
 (function(){
   if(window.__sheetInit)return; window.__sheetInit=true;
   var CFG=null, unsub=null;
@@ -7241,6 +7250,49 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       }else{
         uiToast('The card was saved, but it was not added to the Google Sheet ('+row.tab+'): '+window.sheetReason(res,row.tab)+'.',{duration:9000});
       }
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetSyncEdit=async function(who,id,before,after,colRef){
+    try{
+      if(!window.sheetConfigured()||!window.MarcomSheet)return;
+      var row=before&&before.sheetRow, member=row&&row.member;
+      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
+      var values=MarcomSheet.changes(before,after,member); if(!Object.keys(values).length)return;
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values});
+      if(res&&res.ok){
+        var title=(values.task!==undefined&&values.task!==null)?values.task:row.title;
+        if((res.row||row.row)!==row.row||title!==row.title){
+          var upd={sheetRow:{member:member,tab:res.tab||row.tab,row:res.row||row.row,title:title}};
+          if(colRef.id==='event_tasks'||before.__src==='event')Object.assign(upd,stampEdit());
+          await colRef.doc(id).update(upd);
+        }
+      }else if(res&&res.error==='not found'){
+        console.info('[sheet] row not found',id,row.tab);
+      }else{
+        uiToast('The change was saved, but the Google Sheet ('+row.tab+') was not updated: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      }
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetSyncCancel=async function(who,id,card){
+    try{
+      if(!window.sheetConfigured()||!window.MarcomSheet)return;
+      var row=card&&card.sheetRow, member=row&&row.member;
+      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:{status:MarcomSheet.cancelWord(member)}});
+      if(res&&res.ok)return;
+      if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
+      else uiToast('The card was deleted, but its row in the Google Sheet ('+row.tab+') was not marked Canceled: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetSyncRestore=async function(who,id,card){
+    try{
+      if(!window.sheetConfigured()||!window.MarcomSheet)return;
+      var row=card&&card.sheetRow, member=row&&row.member;
+      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:{status:MarcomSheet.statusWord(card,member)}});
+      if(res&&res.ok)return;
+      if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
+      else uiToast('The card was restored, but its status in the Google Sheet ('+row.tab+') was not put back: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
     }catch(e){console.error('[sheet] step failed',e);}
   };
   function sheetMsg(t,bad){ var o=document.getElementById('sheet-test-out'); if(!o)return; o.style.color=bad?'#b91c1c':'#147c3b'; o.textContent=t; }
@@ -12788,7 +12840,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
 
   /* If the user presses Undo on a deletion, put the calendar event back. */
   var _dwu=window.deleteWithUndo;
-  window.deleteWithUndo=function(colRef,id,item,label){
+  window.deleteWithUndo=function(colRef,id,item,label,afterUndo){
     if(!(item&&item.gcalEventId))return _dwu.apply(this,arguments);
     var who=(item.owner||((window.__cur||{}).workspace)||'boss');
     var calWs=item.gcalOwner||who;
@@ -12802,6 +12854,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     colRef.doc(id).delete().then(function(){
       uiToast(label||'Deleted',{undo:function(){
         colRef.doc(id).set(data).then(function(){
+          if(typeof afterUndo==='function')afterUndo();
           if(gcsConfigured(calWs))call(calWs,payloadFor(data,id,who)).then(function(res){
             if(res&&res.ok)colRef.doc(id).update(Object.assign({gcalEventId:res.eventId||'',gcalOwner:calWs},stampEdit())).catch(function(e){console.error('[calendar] link write failed',e);});
           });

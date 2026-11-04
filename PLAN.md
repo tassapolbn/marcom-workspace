@@ -2562,7 +2562,7 @@ A shared Event Board card goes only to the first assigned person's tab
     Settings panel in light and dark and at phone width; after deploy, add a
     test card for each member and check the copy with the connector.
 
-- [ ] **82. Edits keep the row in step (decision 2)**
+- [x] **82. Edits keep the row in step (decision 2)**
   - Files: `index.html`, `tests/ui-sheet-sync.test.mjs`.
   - When a card that has a sheet row is edited in the form, or its status is
     changed from the card menu (`setTaskStatus`), send `update`. Deleting a card
@@ -2572,6 +2572,18 @@ A shared Event Board card goes only to the first assigned person's tab
   - Test: unit tests for which edits send an update; live check on the copy:
     change status and due date, the same row changes, no new row appears;
     delete the card, the row says Canceled; Undo, the status comes back.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-82.md, reviewed by
+    Claude): `sheetSyncEdit` after the edit form (also when a card moves to or
+    from the shared board), the status menu, Dew's design-stage menu, and the
+    done tick and its Undo; `sheetSyncCancel` on delete and `sheetSyncRestore`
+    on its Undo (both versions of `deleteWithUndo`, the plain one and the
+    calendar one). Only changed cells are sent. Claude replaced one `??`
+    operator, which the app had never used and older iPhones cannot read, with
+    a plain check. Checked in the local preview with the real code: a new card
+    sent its filled cells; marking it done sent only Status "Completed";
+    deleting sent "Canceled"; Undo restored the card with its sheet link and
+    sent "Completed". 15 new tests; UI suite 403 pass, the same 2 failures as
+    on `main`.
 
 - [ ] **83. Docs and switch-over**
   - Files: `README.md`, `PLAN.md`.
