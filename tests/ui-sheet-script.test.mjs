@@ -373,6 +373,28 @@ test('update searches the requested tab first, then only the other allowed tabs'
   assert.equal(f.cell('Eye', 7, 2).v, 'Eye card');
 });
 
+test('update tabOnly confines tags and title fallback to the requested tab while legacy search still works', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Boss shared', status: 'Boss status' }, 'shared');
+  const boss = clone(f.sheets.Boss.rows);
+  const update = extra => f.post({ action: 'update', who: 'dew', cardId: 'shared',
+    values: { status: 'Dew status' }, force: ['status'], ...extra });
+  assert.deepEqual(update({ tabOnly: true }), { ok: false, error: 'not found', tab: 'Dew' });
+  assert.deepEqual(f.sheets.Boss.rows, boss);
+  // Even with a tag elsewhere, the fallback links only the requested tab.
+  assert.equal(update({ tabOnly: true, row: 4, title: 'Newest one' }).tab, 'Dew');
+  assert.deepEqual(f.sheets.Dew.rows[3].metadata, [{ key: 'marcomCard', value: 'shared' }]);
+  assert.equal(update({ tabOnly: true, values: { status: 'Dew done' } }).row, 4);
+  assert.equal(f.cell('Dew', 4, 5).v, 'Dew done');
+  assert.deepEqual(f.sheets.Boss.rows, boss);
+  // Without literal true, callers retain the original cross-tab search.
+  for (const tabOnly of [undefined, false, 'true', 1]) {
+    const result = update({ who: 'o', tabOnly, values: { status: 'Legacy' } });
+    assert.equal(result.tab, 'Boss');
+    assert.equal(f.cell('Boss', 5, 3).v, 'Legacy');
+  }
+});
+
 test('row and exact trimmed title fallback tags an existing task; wrong or invalid fallback never appends', t => {
   const f = fixture(t), count = f.sheets.Eye.rows.length;
   assert.equal(f.post({ action: 'update', who: 'junior', cardId: 'old-card', row: 4, title: ' File one ', values: { Status: 'Done' } }).row, 4);
@@ -724,19 +746,48 @@ test('sync tagged cards compare, fill, force only chosen keys, and ignore all em
   assert.equal(f.cell('Boss', 5, 3).f, '=42');
 });
 
-test('sync prefers the own-tab tag then finds tags on other allowed tabs, including empty tagged rows', t => {
+test('sync ignores other tabs and finds only its own tags, including empty tagged rows', t => {
   const f = fixture(t);
   tag(f, 'Eye', 4, 'shared');
-  assert.equal(sync(f, [card('shared', 'boss', { notes: 'Found Eye' })]).results[0].tab, 'Eye');
-  f.append('boss', { task: 'Own' }, 'shared');
-  assert.equal(sync(f, [card('shared', 'boss', { note: 'Own tab first' })]).results[0].tab, 'Boss');
-  assert.equal(f.cell('Eye', 4, 6).v, 'Found Eye');
+  const eye = clone(f.sheets.Eye.rows);
+  const added = sync(f, [card('shared', 'boss', { task: 'Own', note: 'Boss only' })]).results[0];
+  assert.deepEqual([added.result, added.tab, added.who, added.row], ['added', 'Boss', 'boss', 5]);
+  assert.equal(sync(f, [card('shared', 'boss', { note: 'Boss only' })]).results[0].result, 'unchanged');
+  assert.deepEqual(f.sheets.Eye.rows, eye);
   f.sheets.Boss.rows.push(row([])); f.sheets.Boss.maxRows++;
   tag(f, 'Boss', 6, 'empty-tag');
   const result = sync(f, [card('empty-tag', 'boss', { task: 'Fill empty tagged row' })]).results[0];
   assert.equal(result.row, 6);
   assert.equal(result.result, 'updated');
   assert.equal(f.cell('Boss', 6, 2).v, 'Fill empty tagged row');
+});
+
+test('sync shared card entries independently find, link or add rows with each members values', t => {
+  for (const kind of ['tagged', 'linked', 'added']) {
+    const f = fixture(t);
+    const bossRow = f.append('boss', { task: 'Boss task', status: 'Boss old' }, 'shared').row;
+    if (kind === 'tagged') tag(f, 'Dew', 4, 'shared');
+    const dewTask = kind === 'added' ? 'New Dew task' : 'Newest one';
+    const cards = [card('shared', 'boss', { task: 'Boss task', status: 'Boss done', note: 'Boss notes' }, ['status']),
+      card('shared', 'dew', { task: dewTask, status: 'Dew done', 'additional details': 'Dew details' }, ['status'])];
+    const before = f.snapshot(), preview = sync(f, cards, true);
+    assert.deepEqual(f.snapshot(), before, kind + ' preview writes nothing');
+    const applied = sync(f, cards);
+    assert.deepEqual(applied.results.map(r => [r.who, r.tab, r.result]),
+      [['boss', 'Boss', 'updated'], ['dew', 'Dew', kind === 'tagged' ? 'updated' : kind]]);
+    assert.deepEqual(preview.results, applied.results.map(r => r.result === 'added' ? { ...r, row: 0 } : r));
+    const dewRow = applied.results[1].row;
+    assert.equal(f.cell('Boss', bossRow, 2).v, 'Boss task');
+    assert.equal(f.cell('Boss', bossRow, 3).v, 'Boss done');
+    assert.equal(f.cell('Boss', bossRow, 6).v, 'Boss notes');
+    assert.equal(f.cell('Dew', dewRow, 2).v, dewTask);
+    assert.equal(f.cell('Dew', dewRow, 5).v, 'Dew done');
+    assert.equal(f.cell('Dew', dewRow, 7).v, 'Dew details');
+    for (const tab of ['Boss', 'Dew']) {
+      assert.equal(f.sheets[tab].rows.flatMap(r => r.metadata).filter(m => m.value === 'shared').length, 1);
+    }
+    assert.deepEqual(sync(f, cards).results.map(r => [r.who, r.result]), [['boss', 'unchanged'], ['dew', 'unchanged']]);
+  }
 });
 
 test('sync links normalized hand-typed names and Eye Event-only names without replacing their text', t => {
@@ -830,8 +881,8 @@ test('sync reads each unchanged tab block and tags once, and remembers earlier w
   assert.deepEqual(result.results.map(r => r.result), ['linked', 'unchanged', 'unchanged']);
   assert.deepEqual(result.results[2].conflicts, [{ key: 'notes', sheet: 'First', card: 'Second' }]);
   for (const name of ['Boss', 'Dew', 'O', 'Eye']) {
-    assert.equal(f.sheets[name].tagReads, 1, name);
-    assert.equal(f.sheets[name].reads.length, 3, name + ' should only read values, formulas and display once');
+    assert.equal(f.sheets[name].tagReads, name === 'Eye' ? 1 : 0, name);
+    assert.equal(f.sheets[name].reads.length, name === 'Eye' ? 3 : 0, name + ' should read only the requested tab once');
   }
 });
 
@@ -862,6 +913,7 @@ test('sync limits batches, isolates invalid entries, exceptions, and protected t
     card('throws', 'boss', { task: 'Fail' }), card('protected', 'o', { task: 'Shoot one' }),
     card('protected-new', 'o', { task: 'New' }), card('works', 'junior', { task: 'File one', notes: 'Success' })]).results;
   assert.deepEqual(results.map(r => r.result), ['error', 'error', 'error', 'error', 'protected', 'protected', 'linked']);
+  assert.deepEqual(results.map(r => r.who), ['', 'boss', '', 'boss', 'o', 'o', 'junior']);
   assert.match(results[1].error, /no card id/);
   assert.match(results[2].error, /unknown member/);
   assert.match(results[3].error, /write failed/);
@@ -896,6 +948,94 @@ test('sweep previews missing tagged cards across tabs and only cancels explicitl
   assert.deepEqual(f.state.opens, [true, true, true, true]);
   assert.equal(f.state.releases, 4);
   for (const sheet of Object.values(f.sheets)) assert.deepEqual(sheet.deletes, []);
+});
+
+test('sweep members identifies removed assignments and deleted cards but never hand-typed rows', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Shared', status: 'Active' }, 'shared');
+  tag(f, 'Dew', 4, 'shared');
+  tag(f, 'O', 3, 'deleted');
+  tag(f, 'Eye', 4, 'unspecified');
+  tag(f, 'Eye', 5, 'unassigned');
+  f.put('Dew', 5, 5, 'Hand-typed status');
+  const before = f.snapshot();
+  const body = { cardIds: ['shared', 'unspecified', 'unassigned'],
+    members: { shared: ['boss'], deleted: ['o'], unassigned: [] },
+    apply: ['shared', 'deleted', 'unspecified', 'unassigned'] };
+  const preview = sweep(f, { ...body, check: true });
+  assert.deepEqual(preview.rows, [
+    { cardId: 'shared', who: 'dew', reason: 'removed', tab: 'Dew', row: 4, status: '' },
+    { cardId: 'deleted', who: 'o', reason: 'deleted', tab: 'O', row: 3, status: '' },
+    { cardId: 'unassigned', who: 'junior', reason: 'removed', tab: 'Eye', row: 5, status: '' }
+  ]);
+  assert.deepEqual(f.snapshot(), before);
+  assert.deepEqual(sweep(f, body).rows.map(({ result, ...entry }) => entry), preview.rows);
+  assert.equal(f.cell('Boss', 5, 3).v, 'Active');
+  assert.equal(f.cell('Dew', 4, 5).v, 'Cancel');
+  assert.equal(f.cell('Dew', 5, 5).v, 'Hand-typed status');
+  assert.deepEqual(f.sheets.Eye.rows[3], before.Eye.rows[3]);
+});
+
+test('sweep apply member selectors cancel only that candidate tab and strings cancel every candidate tab', t => {
+  for (const removed of [false, true]) {
+    const f = fixture(t);
+    f.append('boss', { task: 'Shared', status: 'Active' }, 'shared');
+    tag(f, 'Dew', 4, 'shared'); f.put('Dew', 4, 5, 'Active');
+    const body = { cardIds: removed ? ['shared'] : [], members: { shared: [] } };
+    const before = f.snapshot(), apply = [{ cardId: 'shared', who: 'dew' }];
+    const preview = sweep(f, { ...body, apply, check: true });
+    assert.ok(preview.rows.every(r => r.reason === (removed ? 'removed' : 'deleted')));
+    assert.deepEqual(f.snapshot(), before);
+    const selected = sweep(f, { ...body, apply });
+    assert.deepEqual(selected.rows.map(r => [r.who, r.result]), [['boss', 'unchanged'], ['dew', 'canceled']]);
+    assert.equal(f.cell('Boss', 5, 3).v, 'Active');
+    assert.equal(f.cell('Dew', 4, 5).v, 'Cancel');
+    const all = sweep(f, { ...body, apply: ['shared'] });
+    assert.deepEqual(all.rows.map(r => r.result), ['canceled', 'unchanged']);
+    assert.equal(f.cell('Boss', 5, 3).v, 'Canceled');
+    assert.ok(sweep(f, { ...body, apply: ['shared', ...apply] }).rows.every(r => r.result === 'unchanged'));
+    for (const sheet of Object.values(f.sheets)) assert.deepEqual(sheet.deletes, []);
+  }
+});
+
+test('sweep rejects invalid apply entries before any cancellation, including after valid selectors', t => {
+  const f = fixture(t);
+  tag(f, 'Dew', 4, 'shared');
+  const before = f.snapshot();
+  const invalid = [null, 42, true, [], {}, { cardId: 'shared' }, { who: 'dew' },
+    { cardId: 42, who: 'dew' }, { cardId: ['shared'], who: 'dew' },
+    ...['Jez', 'toString', '__proto__', ['dew'], null].map(who => ({ cardId: 'shared', who }))];
+  for (const check of [false, true]) {
+    for (const item of invalid) {
+      assert.deepEqual(sweep(f, { check, apply: ['shared', { cardId: 'shared', who: 'dew' }, item] }),
+        { ok: false, error: 'invalid apply' });
+      assert.deepEqual(f.snapshot(), before);
+    }
+    for (const apply of [null, 'shared', { cardId: 'shared', who: 'dew' }]) {
+      assert.deepEqual(sweep(f, { check, apply }), { ok: false, error: 'invalid apply' });
+    }
+  }
+  assert.deepEqual(f.snapshot(), before);
+});
+
+test('sweep validates the entire members object and accepts the documented size boundaries', t => {
+  const f = fixture(t);
+  tag(f, 'Dew', 4, 'shared');
+  const before = f.snapshot();
+  const atLimit = Object.fromEntries(Array.from({ length: 5000 }, (_, i) => ['c' + i, ['boss', 'dew', 'o', 'junior']]));
+  const invalid = [null, [], 'shared', 42, false, { shared: 'boss' }, { shared: null }, { shared: {} },
+    { shared: ['Jez'] }, { shared: ['toString'] }, { shared: ['__proto__'] }, { shared: [null] }, { shared: [['boss']] },
+    { shared: ['boss', 'dew', 'o', 'junior', 'boss'] }, { ...atLimit, extra: [] }];
+  for (const check of [false, true]) {
+    for (const members of invalid) {
+      assert.deepEqual(sweep(f, { check, members, apply: ['shared'] }), { ok: false, error: 'invalid members' });
+      assert.deepEqual(f.snapshot(), before);
+    }
+  }
+  for (const members of [{}, { shared: [] }, atLimit, JSON.parse('{"__proto__":["boss"],"constructor":[]}')]) {
+    assert.equal(sweep(f, { members }).ok, true);
+  }
+  assert.deepEqual(f.snapshot(), before);
 });
 
 test('sweep protects blocked and formula statuses, reports display values, and continues after write errors', t => {

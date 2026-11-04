@@ -85,7 +85,8 @@ This checks that the script is live. Step 6 checks access to the sheet.
 ## Step 7 — How it behaves
 
 - A new card adds one row to its owner's tab: **Boss**, **Dew**, **O** or **Eye**
-  (Junior). A card shared with several people goes to the first person's tab.
+  (Junior). A card shared with several people gets a row in each person's tab.
+  Someone added to the card gets a row; someone taken off gets Canceled in theirs.
 - In Dew's tab, the row goes right under the newest tasks at the top. In the
   other tabs, it goes under the last task. Empty spacers and rows containing
   only formulas do not count as tasks.
@@ -99,8 +100,10 @@ This checks that the script is live. Step 6 checks access to the sheet.
   and **Keep the sheet**. Emptying a field in the app never blanks a cell on its
   own.
 - Deleting a card sets its Status to **Canceled**, **CANCELLED** or **Cancel**,
-  using that tab's words (asking first if someone changed the Status in the
-  sheet). It never deletes the sheet row.
+  using that tab's words. It never deletes the sheet row.
+- When a card is completed, reopened, deleted or restored, its **Status follows
+  the app without asking**, in every row of the card. Every other cell keeps the
+  rule above.
 - Columns the app has no value for stay empty, apart from repeated row formulas
   that the script copies from neighbouring rows.
 - Existing formulas and headings are never changed.

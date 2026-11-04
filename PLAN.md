@@ -2878,7 +2878,10 @@ Approved on 4 Nov 2026 as recommended (1 to 8). Added after Boss's rule
 
 Approved on 4 Nov 2026 as recommended (9 to 12). Order: 87, 85, 88, 90, 89.
 
-# Plan 10 (4 Nov 2026): shared cards in every person's tab, and Status that follows the app, for Boss to approve
+# Plan 10 (4 Nov 2026): shared cards in every person's tab, and Status that follows the app, approved by Boss
+
+Status: **approved by Boss on 4 Nov 2026, with every recommended decision.**
+Branch: `feature/sheet-every-tab`. Builder: Codex, one step at a time.
 
 Boss asked: "Make the shared card added to each person's tab", and "if the card
 was removed or marked complete in the app, then the status [should] match the
@@ -2901,20 +2904,29 @@ first person's tab only).
 
 ## Steps (Codex builds each one; Claude reviews, tests and commits)
 
-- [ ] **91. Who gets a row, and where a card's rows are**
+- [x] **91. Who gets a row, and where a card's rows are**
   - Files: `assets/sheet-sync.js`, `tests/ui-sheet-sync.test.mjs`.
   - `membersFor(card, who)`: every person on a shared card (in order, no
     repeats), or the card's own person. `linksOf(card)`: the card's rows, read
     from the new `sheetRows` or the old `sheetRow`.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-91.md, reviewed by
+    Claude): `membersFor`, `linksOf` and `linkFor`; old single links still
+    read. Sync tests 57 pass; UI suite 496 pass, the same 2 failures.
 
-- [ ] **92. The script works tab by tab**
+- [x] **92. The script works tab by tab**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
   - `update` and `sync` look for a card's row only in the tab of the person
     named in the request; each result says which person it is for. `sweep` is
     told which people each card has, and also lists rows of people who were
     taken off a shared card (decision 3). Rows are still never deleted.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-92.md, reviewed by
+    Claude): `update` takes `tabOnly`; `sync` looks only in the entry's own tab
+    and returns `who`; `sweep` takes `members` and lists rows with reason
+    `deleted` or `removed`, and `apply` can name one person's row
+    (`{cardId, who}`). Script tests 60 pass; UI suite 502 pass, the same 2
+    failures.
 
-- [ ] **93. The app sends every person's row**
+- [x] **93. The app sends every person's row**
   - Files: `index.html` (the `sheet-script` block), `tests/ui-sheet-link.test.mjs`,
     `tests/ui-sheet-edit.test.mjs`.
   - A new shared card gets a fresh row in each person's tab, in that tab's
@@ -2924,8 +2936,20 @@ first person's tab only).
   - Status follows the app without asking when a card is completed, reopened,
     deleted or restored, in every row of that card (decision 2). Other cells
     still follow plan 9's rule (ask before overwriting).
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-93.md, reviewed by
+    Claude): new shared cards get a fresh row per person; edits, completing,
+    reopening, deleting and Undo update every row of the card in its own tab
+    (`tabOnly`), with Status forced in the cases Boss named; people added get a
+    row, people taken off get Canceled; all of a card's rows are saved once as
+    `sheetRows`. Codex rightly flagged, outside its scope, that the delete and
+    Undo hooks and the card's icon still looked only at the old single
+    `sheetRow`, so a card saved in the new format would not have been marked
+    Canceled on delete. Claude added `hasSheetLink()` (both formats) and used it
+    in those three places, with a test that no check outside the sheet module
+    looks only at the old field, and updated three tests to the new format.
+    Sheet tests 225 pass; UI suite 520 pass, the same 2 failures.
 
-- [ ] **94. The card button and Refresh all, one row per person**
+- [x] **94. The card button and Refresh all, one row per person**
   - Files: `index.html`, `tests/ui-sheet-refresh.test.mjs`,
     `tests/ui-sheet-refresh-all.test.mjs`.
   - The card button checks and fills every person's row of a shared card.
@@ -2934,8 +2958,22 @@ first person's tab only).
     cards that so far are only in the first person's tab (decision 4), all
     shown in the summary before Apply. Status differences of completed cards
     are listed already ticked (decision 2).
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-94.md, reviewed by
+    Claude): the card button sends one entry per person (done cards force
+    Status), cancels rows of people taken off, asks once when rows were removed
+    in the sheet, and saves all rows once; Refresh all works per (card,
+    person), adds the missing rows of shared cards, ticks Status differences of
+    done cards, and lists "Rows of deleted cards" and "Rows of people taken off
+    a card" (both ticked), applying them as `{cardId, who}`. Claude fixed his
+    own step 93 slip: the card icon called `hasSheetLink()`, which the card
+    tests (that draw a card on its own) do not have, so 12 of them failed;
+    `taskCardHTML` now works it out itself (`inSheet`), with a test that it uses
+    no outside helper. These tests only ran because `index.html` now has LF line
+    endings in this copy; the one layout test still failing checks
+    `assets/workspace-ui.css`, which has CRLF here and was not touched. Sheet
+    tests 242 pass; UI suite 667 pass, 2 known failures.
 
-- [ ] **95. Docs and ship**
+- [x] **95. Docs and ship**
   - README, `SHEET-SETUP.md`, merge into `main`, push, check the deploy, and
     rebuild Boss's ready-to-paste script. Boss pastes the new script version.
 

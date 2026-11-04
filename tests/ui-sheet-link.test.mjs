@@ -12,7 +12,7 @@ const url='https://script.google.com/macros/s/saved/exec';
 const plain=value=>JSON.parse(JSON.stringify(value));
 const escape=value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
-function sheet({cfg={url,secret:'saved phrase'},reply={ok:true,tab:'Boss',row:5},role='admin',fetchError=false,updateError=false,saveError=false}={}){
+function sheet({cfg={url,secret:'saved phrase'},reply={ok:true,tab:'Boss',row:5},replies,role='admin',fetchError=false,updateError=false,saveError=false}={}){
   const calls=[],toasts=[],updates=[],saves=[],logs=[],watches=[];
   const nodes=Object.fromEntries(['sheet-url','sheet-secret','sheet-test-out'].map(id=>[id,{value:'',textContent:'',innerHTML:'',style:{}}]));
   const body={appendChild:node=>{nodes[node.id]=node;}};
@@ -24,7 +24,7 @@ function sheet({cfg={url,secret:'saved phrase'},reply={ok:true,tab:'Boss',row:5}
   const context=vm.createContext({document:{readyState:'complete',getElementById:id=>nodes[id],
     querySelector:selector=>selector==='#settings-modal .modal-body'?body:null,createElement:()=>({style:{},innerHTML:'',textContent:''})},
     firebase:{firestore:()=>db},console:{error:(...args)=>logs.push(args)},
-    fetch:async (address,options)=>{calls.push({address,options,body:JSON.parse(options.body)});if(fetchError)throw new Error('offline');return {json:async()=>reply};},
+    fetch:async (address,options)=>{calls.push({address,options,body:JSON.parse(options.body)});if(fetchError)throw new Error('offline');return {json:async()=>replies?replies[calls.length-1]:reply};},
     uiToast:(message,options)=>toasts.push({message,options}),stampEdit:()=>({lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}),
     escHtml:escape,whenAuthed:fn=>{authed=fn;},setTimeout:fn=>fn(),__cur:{role},openSettings:()=>{opened++;}});
   context.window=context;
@@ -59,18 +59,62 @@ test('Boss append uses saved config and nonempty values, then stores an unstampe
   assert.equal(call.address,url);assert.equal(call.options.method,'POST');assert.equal(call.options.redirect,'follow');
   assert.equal(call.options.headers['Content-Type'],'text/plain;charset=utf-8');
   assert.deepEqual(call.body,{action:'append',who:'boss',cardId:'card-1',secret:'saved phrase',values:{task:'School campaign',status:'Not started','due date':{date:'2026-11-04'}}});
-  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRow:{member:'boss',tab:'Boss',row:5,title:'School campaign'}}}]);
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{boss:{tab:'Boss',row:5,title:'School campaign'}}}}]);
   assert.equal(h.toasts.length,0);
 });
 
-test('shared cards append only to their first assignee and stamp the link update',async()=>{
+test('shared cards append each assignee with their own columns and words, then save once with a stamp',async()=>{
   for(const bySource of [false,true]){
-    const h=sheet({reply:{ok:true}});
+    const h=sheet({replies:[{ok:true,tab:'Dew',row:7},{ok:true,tab:'O',row:12}]});
     if(!bySource)h.colRef.id='event_tasks';
-    await h.context.sheetSyncNew('boss','shared',{topic:'Poster',assignees:['dew','o'],...(bySource?{__src:'event'}:{})},h.colRef);
-    assert.equal(h.calls.length,1);assert.equal(h.calls[0].body.who,'dew');
-    assert.deepEqual(h.updates,[{id:'shared',upd:{sheetRow:{member:'dew',tab:'Dew',row:0,title:'Poster'},lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
+    const first=await h.context.sheetSyncNew('boss','shared',{
+      topic:'Poster',assignees:['dew','o'],status:'waiting',description:'Design details',mdCategory:'Photos',
+      ...(bySource?{__src:'event'}:{})
+    },h.colRef);
+    assert.deepEqual(plain(first),{ok:true,tab:'Dew',row:7});
+    assert.deepEqual(h.calls.map(c=>c.body),[
+      {action:'append',who:'dew',cardId:'shared',secret:'saved phrase',values:{task:'Poster',priority:'Medium',status:'Waiting for response','details provided':'Design details'}},
+      {action:'append',who:'o',cardId:'shared',secret:'saved phrase',values:{task:'Poster',status:'Blocked',media:'Photo'}}
+    ]);
+    assert.deepEqual(h.updates,[{id:'shared',upd:{sheetRows:{dew:{tab:'Dew',row:7,title:'Poster'},o:{tab:'O',row:12,title:'Poster'}},lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
   }
+});
+
+test('shared appends run one after another and save only after both replies',async()=>{
+  const h=sheet(),pending=[],requests=[];
+  h.context.sheetCall=payload=>{requests.push(plain(payload));return new Promise(resolve=>pending.push(resolve));};
+  const result=h.context.sheetSyncNew('boss','shared',{topic:'Poster',assignees:['dew','o']},h.colRef);
+  assert.equal(requests.length,1);assert.equal(requests[0].who,'dew');assert.equal(h.updates.length,0);
+  pending[0]({ok:true,row:7});await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(requests.length,2);assert.equal(requests[1].who,'o');assert.equal(h.updates.length,0);
+  pending[1]({ok:true,row:12});await result;
+  assert.equal(h.updates.length,1);
+});
+
+test('one failed member gives one named toast and preserves the successful link regardless of order',async()=>{
+  for(const failed of ['dew','o']){
+    const replies=['dew','o'].map(member=>member===failed?{ok:false,error:'protected'}:{ok:true,row:9});
+    const h=sheet({replies});
+    const first=await h.context.sheetSyncNew('boss','shared',{topic:'Poster',__src:'event',assignees:['dew','o']},h.colRef);
+    const member=failed==='dew'?'o':'dew',tab=member==='dew'?'Dew':'O',failedTab=failed==='dew'?'Dew':'O';
+    assert.deepEqual(plain(first),replies[0]);
+    assert.equal(h.calls.length,2);
+    assert.deepEqual(h.updates,[{id:'shared',upd:{sheetRows:{[member]:{tab,row:9,title:'Poster'}},lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
+    assert.deepEqual(h.toasts.map(t=>t.message),['The card was saved, but it was not added to the Google Sheet ('+failedTab+'): '+failedTab+"'s tab is protected, and the account that runs the link cannot edit it."]);
+  }
+});
+
+test('multiple append failures are combined into one toast naming all failing tabs and reasons',async()=>{
+  const h=sheet({replies:[{ok:false,error:'protected'},{ok:false,error:'network'}]});
+  await h.context.sheetSyncNew('boss','shared',{topic:'Poster',assignees:['dew','o']},h.colRef);
+  assert.equal(h.calls.length,2);assert.equal(h.updates.length,0);assert.equal(h.toasts.length,1);
+  assert.match(h.toasts[0].message,/Google Sheet \(Dew, O\).*Dew's tab is protected.*Google could not be reached/);
+});
+
+test('new links carry over an old single link without writing the old field',async()=>{
+  const h=sheet({reply:{ok:true,row:8}});
+  await h.context.sheetSyncNew('o','shared',{topic:'Poster',assignees:['o'],sheetRow:{member:'dew',tab:'Dew',row:4,title:'Old title'}},h.colRef);
+  assert.deepEqual(h.updates,[{id:'shared',upd:{sheetRows:{dew:{tab:'Dew',row:4,title:'Old title'},o:{tab:'O',row:8,title:'Poster'}}}}]);
 });
 
 for(const [error,reason] of [['protected',"Boss's tab is protected, and the account that runs the link cannot edit it"],['unauthorised','the secret phrase in Settings does not match the script'],['network','Google could not be reached']]){

@@ -2936,6 +2936,13 @@ function saveTask(){
   window.__sopSaving=true;closeModal();window.__sopSaving=false;
   if(window.__sopBatch&&window.__sopOpenNext)window.__sopOpenNext();
 }
+/* Is this card in the Google Sheet? Understands the per-person rows (sheetRows)
+   and the older single row (sheetRow). */
+function hasSheetLink(t){
+  if(!t)return false;
+  if(t.sheetRow&&typeof t.sheetRow==='object')return true;
+  return !!(t.sheetRows&&typeof t.sheetRows==='object'&&Object.keys(t.sheetRows).length);
+}
 function deleteTask(who,id){
   var t=(tasksOf(who)||[]).find(function(x){return x.id===id;});
   var _shared=isEventTask(t);
@@ -2945,8 +2952,8 @@ function deleteTask(who,id){
   uiConfirm({title:_shared?'Delete a shared event task':'Delete task',message:_msg,okLabel:'Delete',danger:true}).then(function(ok){
     if(!ok)return;
     var _cref=taskRef(t,who);
-    try{if(t&&t.sheetRow&&window.sheetSyncCancel)sheetSyncCancel(who,id,t);}catch(e){console.error('[sheet] step failed',e);}
-    var afterUndo=t&&t.sheetRow?function(){try{if(window.sheetSyncRestore)sheetSyncRestore(who,id,t);}catch(e){console.error('[sheet] step failed',e);}}:undefined;
+    try{if(hasSheetLink(t)&&window.sheetSyncCancel)sheetSyncCancel(who,id,t);}catch(e){console.error('[sheet] step failed',e);}
+    var afterUndo=hasSheetLink(t)?function(){try{if(window.sheetSyncRestore)sheetSyncRestore(who,id,t);}catch(e){console.error('[sheet] step failed',e);}}:undefined;
     if(t&&(t.gcalEventId||t.calendarAddedAt)&&window.gcsDeleteFor){
       gcsDeleteFor(who,t,id);
       deleteWithUndo(_cref,id,t,'Task deleted',afterUndo);
@@ -3176,6 +3183,9 @@ function evTagHTML(label,task,who){
 }
 function taskCardHTML(task,who){
   const status=task.status||'pending',sc=SC[status],topic=task.topic||task.title||'';
+  /* In the Google Sheet? (per-person sheetRows or the older single sheetRow).
+     Worked out here so drawing a card needs no other helper. */
+  const inSheet=!!(task.sheetRow&&typeof task.sheetRow==='object')||!!(task.sheetRows&&typeof task.sheetRows==='object'&&Object.keys(task.sheetRows).length);
   const du=task.dueDate?daysUntil(task.dueDate):null;
   const finished=status==='done'||status==='canceled';
   const overdue=!finished&&du!==null&&du<0,soon=isSoon(task);
@@ -3238,7 +3248,7 @@ function taskCardHTML(task,who){
     +'<div class="task-foot">'+statusSelectHTML(who,task).replace('class="tcard-sel"','class="tcard-sel tc-row-sel"')+moveSelectHTML(who,task)
       +'<span class="task-acts">'
         +'<button class="icon-btn'+(task.calendarAddedAt?' cal-on':'')+'" onclick="event.stopPropagation();uxpTaskCalendar(\''+who+'\',\''+task.id+'\')" title="'+(task.calendarAddedAt?'Already in a calendar. Add again?':'Add to Calendar')+'" aria-label="Add this task to Google Calendar"><i class="ti ti-calendar-'+(task.calendarAddedAt?'check':'plus')+'"></i></button>'
-        +'<button class="icon-btn tc-sheet-btn'+(task.sheetRow?' sheet-on':'')+'" onclick="event.stopPropagation();sheetCardButton(\''+who+'\',\''+task.id+'\')" title="'+(task.sheetRow?'Refresh this card in the Google Sheet':'Add this card to the Google Sheet')+'" aria-label="'+(task.sheetRow?'Refresh this card in the Google Sheet':'Add this card to the Google Sheet')+'"><i class="ti '+(task.sheetRow?'ti-table':'ti-table-plus')+'"></i></button>'
+        +'<button class="icon-btn tc-sheet-btn'+(inSheet?' sheet-on':'')+'" onclick="event.stopPropagation();sheetCardButton(\''+who+'\',\''+task.id+'\')" title="'+(inSheet?'Refresh this card in the Google Sheet':'Add this card to the Google Sheet')+'" aria-label="'+(inSheet?'Refresh this card in the Google Sheet':'Add this card to the Google Sheet')+'"><i class="ti '+(inSheet?'ti-table':'ti-table-plus')+'"></i></button>'
         +'<button class="icon-btn" onclick="event.stopPropagation();duplicateTask(\''+who+'\',\''+task.id+'\')" title="Duplicate" aria-label="Duplicate this task"><i class="ti ti-copy"></i></button>'
         +'<button class="icon-btn" onclick="event.stopPropagation();openEdit(\''+who+'\',\''+task.id+'\')" title="Edit" aria-label="Edit this task"><i class="ti ti-edit"></i></button>'
         +'<button class="icon-btn del" onclick="event.stopPropagation();deleteTask(\''+who+'\',\''+task.id+'\')" title="Delete" aria-label="Delete this task"><i class="ti ti-trash"></i></button>'
@@ -7241,19 +7251,34 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     if(String(er).indexOf('busy')===0)return 'the sheet was busy, please try again';
     return er;
   };
+  // Preserve legacy links and save all successful rows in one card update.
+  async function sheetSaveLinks(card,id,colRef,links){
+    if(!links.length)return;
+    var map={};
+    MarcomSheet.linksOf(card).concat(links).forEach(function(link){
+      map[link.member]={tab:link.tab,row:link.row,title:link.title};
+    });
+    var upd={sheetRows:map};
+    if(colRef.id==='event_tasks'||card.__src==='event')Object.assign(upd,stampEdit());
+    await colRef.doc(id).update(upd);
+  }
   window.sheetSyncNew=async function(who,id,task,colRef){
     try{
       if(!window.sheetConfigured()||!id||!task||!window.MarcomSheet)return;
-      var row=MarcomSheet.rowFor(task,who); if(!row)return;
-      var res=await window.sheetCall({action:'append',who:row.member,cardId:id,values:MarcomSheet.forAppend(row.values)});
-      if(res&&res.ok){
-        var upd={sheetRow:{member:row.member,tab:res.tab||row.tab,row:res.row||0,title:row.values.task||''}};
-        if(colRef.id==='event_tasks'||task.__src==='event')Object.assign(upd,stampEdit());
-        await colRef.doc(id).update(upd);
-      }else{
-        uiToast('The card was saved, but it was not added to the Google Sheet ('+row.tab+'): '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      var members=MarcomSheet.membersFor(task,who), links=[], failures=[], first;
+      for(var i=0;i<members.length;i++){
+        var row=MarcomSheet.rowFor(task,who,members[i]);
+        var res=await window.sheetCall({action:'append',who:row.member,cardId:id,values:MarcomSheet.forAppend(row.values)});
+        if(i===0)first=res;
+        if(res&&res.ok)links.push({member:row.member,tab:res.tab||row.tab,row:res.row||0,title:row.values.task||''});
+        else failures.push({tab:row.tab,reason:window.sheetReason(res,row.tab)});
       }
-      return res;
+      if(failures.length){
+        var reasons=failures.map(function(f){return f.reason;}).filter(function(reason,i,all){return all.indexOf(reason)===i;});
+        uiToast('The card was saved, but it was not added to the Google Sheet ('+failures.map(function(f){return f.tab;}).join(', ')+'): '+reasons.join('; ')+'.',{duration:9000});
+      }
+      await sheetSaveLinks(task,id,colRef,links);
+      return first;
     }catch(e){console.error('[sheet] step failed',e);}
   };
   var sheetConflictQueue=Promise.resolve();
@@ -7271,72 +7296,118 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     sheetConflictQueue=notice.catch(function(){});
     return notice;
   };
+  function sheetSameEntry(a,b){return a.cardId===b.cardId&&a.who===b.who;}
+  function sheetCompleteResults(items,results){
+    return Array.isArray(results)&&results.length===items.length&&items.every(function(item){
+      return results.filter(function(r){return sheetSameEntry(item,r);}).length===1;
+    });
+  }
+  function sheetResultLink(card,item,res){
+    if(['added','linked','updated','unchanged'].indexOf(res.result)<0||!res.row)return null;
+    var old=MarcomSheet.linkFor(card,item.who);
+    var link={member:item.who,tab:res.tab||MarcomSheet.TABS[item.who],row:res.row,title:item.values.task};
+    return !old||res.result==='added'||res.result==='linked'||old.tab!==link.tab||old.row!==link.row||old.title!==link.title?link:null;
+  }
   window.sheetCardButton=async function(who,id){
     try{
       var card=(tasksOf(who)||[]).find(t=>t.id===id); if(!card)return;
       var colRef=taskRef(card,who);
       function toast(message){uiToast(message,{duration:6000});}
       if(!window.sheetConfigured()){toast('The Google Sheet link is off.');return;}
-      var member=card.sheetRow?card.sheetRow.member:MarcomSheet.memberFor(card,who);
-      var row=MarcomSheet.rowFor(card,who,member);
-      if(!row){toast('This card has nobody assigned, so it has no tab in the Google Sheet.');return;}
-      var savedRow=card.sheetRow&&card.sheetRow.row;
-      async function run(check,force){
-        var item={cardId:id,who:member,values:row.values};
-        if(force)item.force=force;
-        var reply=await window.sheetCall({action:'sync',check:check,cards:[item]});
+      var members=MarcomSheet.membersFor(card,who), rows=MarcomSheet.linksOf(card);
+      var removed=rows.filter(function(row){return members.indexOf(row.member)<0;});
+      if(!members.length&&!removed.length){toast('This card has nobody assigned, so it has no tab in the Google Sheet.');return;}
+      var items=members.map(function(member){
+        var item={cardId:id,who:member,values:MarcomSheet.rowFor(card,who,member).values};
+        if(card.status==='done'||card.done===true)item.force=['status'];
+        return item;
+      });
+      var links=[], messages=[], multiple=members.length+removed.length>1;
+      function names(tabs){return tabs.length<2?tabs[0]:tabs.slice(0,-1).join(', ')+' and '+tabs[tabs.length-1];}
+      function report(){if(messages.length)toast(multiple?'Google Sheet: '+messages.join('; ')+'.':messages[0]);}
+      function failure(res,tab){
+        messages.push('The Google Sheet was not changed: '+window.sheetReason(res,tab)+'.');
+      }
+      function usable(res,item){
+        var tab=res.tab||MarcomSheet.TABS[item.who];
+        if(res.result==='protected'||res.result==='error'){
+          failure({error:res.error||res.result},tab);return false;
+        }
+        if(res.result==='ambiguous'){
+          messages.push(tab+'\'s tab has more than one row named "'+item.values.task+'" (rows '+(res.matches||[]).join(', ')+'), so nothing was changed. Fix it in the sheet, then try again.');
+          return false;
+        }
+        return true;
+      }
+      async function run(check,entries){
+        var reply=await window.sheetCall({action:'sync',check:check,cards:entries});
         if(reply&&reply.ok===false&&reply.error==='unknown action'){
-          if(card.sheetRow)toast('Update the Google Sheet script to the new version to refresh cards (see SHEET-SETUP.md).');
+          if(rows.length)messages.push('Update the Google Sheet script to the new version to refresh cards (see SHEET-SETUP.md).');
           else{
             var added=await window.sheetSyncNew(who,id,card,colRef);
-            if(added&&added.ok)toast('Added to the Google Sheet ('+(added.tab||row.tab)+', row '+added.row+'). Used the older script to add a fresh empty row.');
+            if(added&&added.ok)toast('Added to the Google Sheet ('+(added.tab||MarcomSheet.TABS[members[0]])+', row '+added.row+'). Used the older script to add a fresh empty row.');
           }
           return null;
         }
-        var res=reply&&reply.ok&&Array.isArray(reply.results)?reply.results.find(r=>r.cardId===id):null;
-        var tab=res&&res.tab||row.tab;
-        if(!res||res.result==='protected'||res.result==='error'){
-          toast('The Google Sheet was not changed: '+window.sheetReason(res?{error:res.error||res.result}:reply,tab)+'.');
-          return null;
+        if(!reply||!reply.ok){failure(reply,MarcomSheet.TABS[entries[0].who]);return null;}
+        if(!sheetCompleteResults(entries,reply.results)){failure({error:'the script returned incomplete card results'},'');return null;}
+        return reply.results;
+      }
+      if(!rows.length){
+        var tabs=members.map(function(member){return MarcomSheet.TABS[member];});
+        var message='"'+items[0].values.task+'" will go into '+names(tabs)+(tabs.length===1?
+          "'s tab in a new empty row. If the same task is already typed there once, the card is linked to that row instead, and nothing in it is overwritten.":
+          "'s tabs, a new empty row in each. If the same task is already typed in a tab once, the card is linked to that row instead, and nothing in it is overwritten.");
+        if(!await uiConfirm({title:'Add to the Google Sheet?',icon:'ti-table-plus',message:message,okLabel:'Add it'}))return;
+      }else if(items.length){
+        var preview=await run(true,items); if(!preview){report();return;}
+        items=items.filter(function(item){return usable(preview.find(function(r){return sheetSameEntry(item,r);}),item);});
+        var missing=items.filter(function(item){
+          return MarcomSheet.linkFor(card,item.who)&&preview.find(function(r){return sheetSameEntry(item,r);}).result==='added';
+        });
+        if(missing.length&&!await uiConfirm({title:'Add to the Google Sheet again?',icon:'ti-table-plus',
+          message:'The rows in '+names(missing.map(function(item){return MarcomSheet.TABS[item.who];}))+' are no longer in the Google Sheet. Add them again?',okLabel:'Add it again'})){
+          items=items.filter(function(item){return missing.indexOf(item)<0;});
         }
-        if(res.result==='ambiguous'){
-          toast(tab+'\'s tab has more than one row named "'+row.values.task+'" (rows '+(res.matches||[]).join(', ')+'), so nothing was changed. Fix it in the sheet, then try again.');
-          return null;
+      }
+      var results=items.length?await run(false,items):[];
+      if(!results){report();return;}
+      for(var i=0;i<items.length;i++){
+        var item=items[i], res=results.find(function(r){return sheetSameEntry(item,r);});
+        if(!usable(res,item))continue;
+        var link=sheetResultLink(card,item,res), kept=false;
+        // Retain the established link even if a later conflict update fails.
+        if(link)links.push(link);
+        if(res.conflicts&&res.conflicts.length){
+          if(await window.sheetAskConflicts(res.tab||MarcomSheet.TABS[item.who],res.row,res.conflicts)){
+            var forced=Object.assign({},item,{force:res.conflicts.map(function(c){return c.key;})});
+            var updated=await run(false,[forced]);
+            if(!updated||!usable(updated[0],item))continue;
+            res=updated[0];
+            var changed=sheetResultLink(card,item,res);
+            if(changed)links.push(changed);
+          }else kept=true;
         }
-        return res;
+        var tab=res.tab||MarcomSheet.TABS[item.who], location=' ('+tab+', row '+res.row+').';
+        if(multiple)messages.push(tab+' row '+res.row+' '+(kept?'kept (sheet differences kept)':res.result));
+        else if(kept)messages.push((res.written&&res.written.length?'Filled the empty cells; kept the rest of what is in the Google Sheet':'Kept what is in the Google Sheet')+location);
+        else if(res.result==='added')messages.push('Added to the Google Sheet'+location);
+        else if(res.result==='linked')messages.push('Linked to the row already in the Google Sheet'+location);
+        else if(res.result==='updated')messages.push('Updated in the Google Sheet'+location);
+        else if(res.result==='unchanged')messages.push('Already up to date in the Google Sheet ('+tab+').');
       }
-      async function saveLink(res){
-        if(res.result==='added'||res.result==='linked'||res.row!==savedRow){
-          var upd={sheetRow:{member:member,tab:res.tab||row.tab,row:res.row,title:row.values.task}};
-          if(colRef.id==='event_tasks'||card.__src==='event')Object.assign(upd,stampEdit());
-          await colRef.doc(id).update(upd);
-          savedRow=res.row;
-        }
+      for(var j=0;j<removed.length;j++){
+        var row=removed[j];
+        var canceled=await window.sheetCall({action:'update',who:row.member,cardId:id,tabOnly:true,row:row.row,title:row.title,
+          values:{status:MarcomSheet.cancelWord(row.member)},force:['status']});
+        if(!canceled||!canceled.ok){failure(canceled,row.tab);continue;}
+        var cancelLink={member:row.member,tab:canceled.tab||row.tab,row:canceled.row||row.row,title:row.title};
+        if(cancelLink.tab!==row.tab||cancelLink.row!==row.row)links.push(cancelLink);
+        messages.push(multiple?cancelLink.tab+' row '+cancelLink.row+' marked '+MarcomSheet.cancelWord(row.member):
+          'Updated in the Google Sheet ('+cancelLink.tab+', row '+cancelLink.row+').');
       }
-      if(!card.sheetRow){
-        if(!await uiConfirm({title:'Add to the Google Sheet?',icon:'ti-table-plus',
-          message:'"'+row.values.task+'" will go into '+row.tab+"'s tab in a new empty row. If the same task is already typed there once, the card is linked to that row instead, and nothing in it is overwritten.",okLabel:'Add it'}))return;
-      }else{
-        var preview=await run(true); if(!preview)return;
-        if(preview.result==='added'&&!await uiConfirm({title:'Add to the Google Sheet again?',icon:'ti-table-plus',
-          message:"This card's row is no longer in the Google Sheet. Add it again in a new empty row?",okLabel:'Add it again'}))return;
-      }
-      var res=await run(false); if(!res)return;
-      // Save a newly established link even if the later conflict update fails.
-      await saveLink(res);
-      var kept=false;
-      if(res.conflicts&&res.conflicts.length){
-        if(await window.sheetAskConflicts(res.tab||row.tab,res.row,res.conflicts)){
-          res=await run(false,res.conflicts.map(c=>c.key)); if(!res)return;
-          await saveLink(res);
-        }else kept=true;
-      }
-      var tab=res.tab||row.tab, location=' ('+tab+', row '+res.row+').';
-      if(kept)toast((res.written&&res.written.length?'Filled the empty cells; kept the rest of what is in the Google Sheet':'Kept what is in the Google Sheet')+location);
-      else if(res.result==='added')toast('Added to the Google Sheet'+location);
-      else if(res.result==='linked')toast('Linked to the row already in the Google Sheet'+location);
-      else if(res.result==='updated')toast('Updated in the Google Sheet'+location);
-      else if(res.result==='unchanged')toast('Already up to date in the Google Sheet ('+tab+').');
+      await sheetSaveLinks(card,id,colRef,links);
+      report();
     }catch(e){console.error('[sheet] step failed',e);}
   };
   async function sheetResolveUpdate(res,member,id,row,values){
@@ -7349,60 +7420,81 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     }
     var forced={}, keys=res.conflicts.map(function(c){return c.key;});
     keys.forEach(function(key){forced[key]=values[key];});
-    var reply=await window.sheetCall({action:'update',who:member,cardId:id,row:rowNumber,title:row.title,values:forced,force:keys});
+    var reply=await window.sheetCall({action:'update',who:member,cardId:id,tabOnly:true,row:rowNumber,title:row.title,values:forced,force:keys});
     if(reply&&reply.ok)uiToast('Updated the Google Sheet ('+(reply.tab||tab)+', row '+(reply.row||rowNumber)+').',{duration:6000});
     return reply;
+  }
+  function sheetUpdateError(res,id,row,prefix){
+    if(res&&res.ok)return;
+    if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
+    else uiToast(prefix+window.sheetReason(res,row.tab)+'.',{duration:9000});
   }
   window.sheetSyncEdit=async function(who,id,before,after,colRef){
     try{
       if(!window.sheetConfigured()||!window.MarcomSheet)return;
-      var row=before&&before.sheetRow, member=row&&row.member;
-      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
-      var values=MarcomSheet.changes(before,after,member); if(!Object.keys(values).length)return;
-      var oldValues=MarcomSheet.rowFor(before,'',member).values, expect={};
-      Object.keys(values).forEach(function(key){expect[key]=oldValues[key];});
-      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values,expect:expect});
-      if(res&&res.ok){
-        var title=(values.task!==undefined&&values.task!==null)?values.task:row.title;
-        if((res.row||row.row)!==row.row||title!==row.title){
-          var upd={sheetRow:{member:member,tab:res.tab||row.tab,row:res.row||row.row,title:title}};
-          if(colRef.id==='event_tasks'||before.__src==='event')Object.assign(upd,stampEdit());
-          await colRef.doc(id).update(upd);
+      var rows=MarcomSheet.linksOf(before); if(!rows.length)return;
+      var previous=MarcomSheet.membersFor(before,who), members=MarcomSheet.membersFor(after,who), links=[];
+      var wasDone=before.status==='done'||before.done===true, isDone=after.status==='done'||after.done===true;
+      var completing=isDone&&!wasDone, reopening=wasDone&&!isDone;
+      for(var i=0;i<rows.length;i++){
+        var row=rows[i], member=row.member, values, expect={}, force=undefined;
+        if(members.indexOf(member)<0){
+          values={status:MarcomSheet.cancelWord(member)}; force=['status'];
+        }else if(previous.indexOf(member)<0){
+          values={status:MarcomSheet.statusWord(after,member)}; force=['status'];
+        }else{
+          values=MarcomSheet.changes(before,after,member); if(!Object.keys(values).length)continue;
+          var oldValues=MarcomSheet.rowFor(before,who,member).values;
+          Object.keys(values).forEach(function(key){expect[key]=oldValues[key];});
+          if((completing||reopening)&&Object.prototype.hasOwnProperty.call(values,'status'))force=['status'];
         }
-        res=await sheetResolveUpdate(res,member,id,row,values);
+        var payload={action:'update',who:member,cardId:id,tabOnly:true,row:row.row,title:row.title,values:values};
+        if(Object.keys(expect).length)payload.expect=expect;
+        if(force)payload.force=force;
+        var res=await window.sheetCall(payload);
+        if(res&&res.ok){
+          var link={member:member,tab:res.tab||row.tab,row:res.row||row.row,
+            title:values.task!==undefined&&values.task!==null?values.task:row.title};
+          // Keep location hints even if the later conflict update fails.
+          if(link.tab!==row.tab||link.row!==row.row||link.title!==row.title)links.push(link);
+          res=await sheetResolveUpdate(res,member,id,row,values);
+          if(res&&res.ok){
+            link.tab=res.tab||link.tab; link.row=res.row||link.row;
+            if(links.indexOf(link)<0&&(link.tab!==row.tab||link.row!==row.row))links.push(link);
+          }
+        }
+        sheetUpdateError(res,id,row,'The change was saved, but the Google Sheet ('+row.tab+') was not updated: ');
       }
-      if(res&&res.ok)return;
-      if(res&&res.error==='not found'){
-        console.info('[sheet] row not found',id,row.tab);
-      }else{
-        uiToast('The change was saved, but the Google Sheet ('+row.tab+') was not updated: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      for(var j=0;j<members.length;j++){
+        var added=members[j]; if(MarcomSheet.linkFor(before,added))continue;
+        var fresh=MarcomSheet.rowFor(after,who,added);
+        var appended=await window.sheetCall({action:'append',who:added,cardId:id,values:MarcomSheet.forAppend(fresh.values)});
+        if(appended&&appended.ok)links.push({member:added,tab:appended.tab||fresh.tab,row:appended.row||0,title:fresh.values.task||''});
+        sheetUpdateError(appended,id,fresh,'The change was saved, but the Google Sheet ('+fresh.tab+') was not updated: ');
       }
+      await sheetSaveLinks(before,id,colRef,links);
     }catch(e){console.error('[sheet] step failed',e);}
   };
   window.sheetSyncCancel=async function(who,id,card){
     try{
       if(!window.sheetConfigured()||!window.MarcomSheet)return;
-      var row=card&&card.sheetRow, member=row&&row.member;
-      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
-      var values={status:MarcomSheet.cancelWord(member)};
-      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values,expect:{status:MarcomSheet.statusWord(card,member)}});
-      res=await sheetResolveUpdate(res,member,id,row,values);
-      if(res&&res.ok)return;
-      if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
-      else uiToast('The card was deleted, but its row in the Google Sheet ('+row.tab+') was not marked Canceled: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      var rows=MarcomSheet.linksOf(card);
+      for(var i=0;i<rows.length;i++){
+        var row=rows[i], values={status:MarcomSheet.cancelWord(row.member)};
+        var res=await window.sheetCall({action:'update',who:row.member,cardId:id,tabOnly:true,row:row.row,title:row.title,values:values,force:['status']});
+        sheetUpdateError(res,id,row,'The card was deleted, but its row in the Google Sheet ('+row.tab+') was not marked Canceled: ');
+      }
     }catch(e){console.error('[sheet] step failed',e);}
   };
   window.sheetSyncRestore=async function(who,id,card){
     try{
       if(!window.sheetConfigured()||!window.MarcomSheet)return;
-      var row=card&&card.sheetRow, member=row&&row.member;
-      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
-      var values={status:MarcomSheet.statusWord(card,member)};
-      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values,expect:{status:MarcomSheet.cancelWord(member)}});
-      res=await sheetResolveUpdate(res,member,id,row,values);
-      if(res&&res.ok)return;
-      if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
-      else uiToast('The card was restored, but its status in the Google Sheet ('+row.tab+') was not put back: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      var rows=MarcomSheet.linksOf(card);
+      for(var i=0;i<rows.length;i++){
+        var row=rows[i], values={status:MarcomSheet.statusWord(card,row.member)};
+        var res=await window.sheetCall({action:'update',who:row.member,cardId:id,tabOnly:true,row:row.row,title:row.title,values:values,force:['status']});
+        sheetUpdateError(res,id,row,'The card was restored, but its status in the Google Sheet ('+row.tab+') was not put back: ');
+      }
     }catch(e){console.error('[sheet] step failed',e);}
   };
   // A preview owns its entries and choices until Apply or Cancel; checking never writes.
@@ -7436,48 +7528,56 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
     if(!reply||!reply.ok)throw new Error(window.sheetReason(reply,''));
     var rows=payload.action==='sync'?reply.results:reply.rows;
     if(!Array.isArray(rows))throw new Error('the script returned an incomplete reply');
-    if(payload.action==='sync'&&(rows.length!==payload.cards.length||payload.cards.some(function(c){
-      return rows.filter(function(r){return r.cardId===c.cardId;}).length!==1;
-    })))throw new Error('the script returned incomplete card results');
+    if(payload.action==='sync'&&!sheetCompleteResults(payload.cards,rows))throw new Error('the script returned incomplete card results');
     return rows;
+  }
+  function refreshMembers(cards){
+    var members=Object.create(null);
+    cards.forEach(function(x){members[x.card.id]=MarcomSheet.membersFor(x.card,x.who);});
+    return members;
   }
   function refreshSummary(preview){
     var counts=refreshCounts(preview.results), conflicts=0;
     function e(value){return escHtml(String(value==null?'':value));}
     function line(value){return '<div>'+e(value)+'</div>';}
+    function entryFor(r){return preview.entries.find(function(x){return sheetSameEntry(x.item,r);});}
+    var groups=[{reason:'deleted',label:'Rows of deleted cards'},{reason:'removed',label:'Rows of people taken off a card'}];
     var html='<div style="display:grid;gap:5px;">'+[
       'To add '+counts.added,'To link to rows already in the sheet '+counts.linked,
       'To update '+counts.updated,'Already matching '+counts.unchanged,'Need a look '+counts.ambiguous,
-      'Protected '+counts.protected,'Errors '+counts.error,'Rows of deleted cards '+preview.rows.length
-    ].map(line).join('')+'</div>';
+      'Protected '+counts.protected,'Errors '+counts.error
+    ].concat(groups.map(function(group){return group.label+' '+preview.rows.filter(function(r){return r.reason===group.reason;}).length;})).map(line).join('')+'</div>';
+    preview.results.forEach(function(r){
+      html+=line(entryFor(r).item.values.task+' - '+r.tab+(r.row?', row '+r.row:'')+': '+r.result);
+    });
     preview.choices=[];
     preview.results.forEach(function(r){
       if(!(r.conflicts||[]).length)return;
       if(!conflicts)html+='<h4>Different in the sheet</h4><p>Tick a cell to overwrite it with the card\'s value.</p>';
-      var entry=preview.entries.find(function(x){return x.item.cardId===r.cardId;});
-      html+=line(entry.item.values.task+' — '+r.tab+', row '+r.row);
+      var entry=entryFor(r);
+      html+=line(entry.item.values.task+' - '+r.tab+', row '+r.row);
       r.conflicts.forEach(function(c){
         var id='sheet-refresh-force-'+preview.choices.length, key=String(c.key);
-        preview.choices.push({id:id,cardId:r.cardId,key:key});conflicts++;
-        html+='<label style="display:block;margin:5px 0;"><input type="checkbox" id="'+id+'"> '+
+        preview.choices.push({id:id,cardId:r.cardId,who:r.who,key:key});conflicts++;
+        html+='<label style="display:block;margin:5px 0;"><input type="checkbox" id="'+id+'"'+(entry.done&&key==='status'?' checked':'')+'> '+
           e(key.charAt(0).toUpperCase()+key.slice(1)+': sheet "'+c.sheet+'" -> card "'+c.card+'"')+'</label>';
       });
     });
     if(counts.ambiguous){
-      html+='<h4>Need a look</h4><p>Nothing will be done for these cards. Resolve their matching rows in the sheet first.</p>';
+      html+='<h4>Need a look</h4><p>Nothing will be done for these rows. Resolve their matching rows in the sheet first.</p>';
       preview.results.filter(function(r){return r.result==='ambiguous';}).forEach(function(r){
-        var entry=preview.entries.find(function(x){return x.item.cardId===r.cardId;});
-        html+=line(entry.item.values.task+' — '+r.tab+', rows '+(r.matches||[]).join(', '));
+        html+=line(entryFor(r).item.values.task+' - '+r.tab+', rows '+(r.matches||[]).join(', '));
       });
     }
-    if(preview.rows.length){
-      html+='<h4>Rows of deleted cards</h4>';
+    groups.forEach(function(group){
+      if(!preview.rows.some(function(r){return r.reason===group.reason;}))return;
+      html+='<h4>'+group.label+'</h4>';
       preview.rows.forEach(function(r,i){
-        var member=MEMBER_ORDER.find(function(w){return MarcomSheet.TABS[w]===r.tab;});
+        if(r.reason!==group.reason)return;
         html+='<label style="display:block;margin:5px 0;"><input type="checkbox" id="sheet-refresh-row-'+i+'" checked> '+
-          e(r.tab+' row '+r.row+', status "'+r.status+'" -> '+MarcomSheet.cancelWord(member))+'</label>';
+          e((preview.titles[r.cardId]||r.cardId)+' - '+r.tab+' row '+r.row+', status "'+r.status+'" -> '+MarcomSheet.cancelWord(r.who))+'</label>';
       });
-    }
+    });
     var actionable=counts.added+counts.linked+counts.updated+preview.rows.length+conflicts;
     html+=actionable?'':'<p>Everything already matches.</p>';
     html+='<div style="display:flex;gap:8px;margin-top:10px;">'+(actionable?
@@ -7496,22 +7596,23 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       refreshPreview=null;
       if(!refreshReady())return;
       refreshButtons(true);
-      var cards=refreshCards(), preview={entries:[],allIds:cards.map(function(x){return x.card.id;}),cancel:{},results:[],rows:[],config:JSON.stringify(CFG)};
+      var cards=refreshCards(), preview={entries:[],allIds:cards.map(function(x){return x.card.id;}),members:refreshMembers(cards),titles:Object.create(null),cancel:{},results:[],rows:[],config:JSON.stringify(CFG)};
       MEMBER_ORDER.forEach(function(w){preview.cancel[w]=MarcomSheet.cancelWord(w);});
       cards.forEach(function(x){
         var card=x.card;
-        if(!card.sheetRow&&(card.done||['pending','in-progress','waiting','on-hold'].indexOf(card.status)<0))return;
-        var member=card.sheetRow?card.sheetRow.member:MarcomSheet.memberFor(card,x.who);
-        if(typeof member!=='string'||!Object.prototype.hasOwnProperty.call(MarcomSheet.TABS,member))return;
-        var row=MarcomSheet.rowFor(card,x.who,member);if(!row)return;
-        preview.entries.push({card:card,ref:x.ref,item:{cardId:card.id,who:member,values:row.values}});
+        preview.titles[card.id]=card.topic||card.title||card.id;
+        if(!MarcomSheet.linksOf(card).length&&(card.done||['pending','in-progress','waiting','on-hold'].indexOf(card.status)<0))return;
+        MarcomSheet.membersFor(card,x.who).forEach(function(member){
+          var row=MarcomSheet.rowFor(card,x.who,member);
+          preview.entries.push({card:card,ref:x.ref,done:card.status==='done'||card.done===true,item:{cardId:card.id,who:member,values:row.values}});
+        });
       });
       for(var i=0;i<preview.entries.length;i+=25){
         var batch=preview.entries.slice(i,i+25);
         refreshMessage('Checking '+Math.min(i+25,preview.entries.length)+' of '+preview.entries.length+'...');
         preview.results=preview.results.concat(await refreshCall({action:'sync',check:true,cards:batch.map(function(x){return x.item;})}));
       }
-      preview.rows=await refreshCall({action:'sweep',check:true,cardIds:preview.allIds,cancel:preview.cancel});
+      preview.rows=await refreshCall({action:'sweep',check:true,cardIds:preview.allIds,members:preview.members,cancel:preview.cancel});
       refreshSummary(preview);refreshPreview=preview;
     }catch(e){refreshMessage('Stopped: '+(e&&e.message||window.sheetReason(null,''))+'. Nothing was changed.');}
     finally{refreshButtons(false);}
@@ -7524,36 +7625,49 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       if(preview.config!==JSON.stringify(CFG)){refreshPreview=null;refreshMessage('The Google Sheet link changed. Press Refresh all to check again.');return;}
       function ticked(id){var input=document.getElementById(id);return !!(input&&input.checked);}
       var entries=preview.entries.map(function(x){return Object.assign({},x.item,{force:preview.choices.filter(function(c){
-        return c.cardId===x.item.cardId&&ticked(c.id);
+        return sheetSameEntry(c,x.item)&&ticked(c.id);
       }).map(function(c){return c.key;})});});
-      var apply=preview.rows.filter(function(r,i){return ticked('sheet-refresh-row-'+i);}).map(function(r){return r.cardId;});
+      var apply=preview.rows.filter(function(r,i){return ticked('sheet-refresh-row-'+i);}).map(function(r){return {cardId:r.cardId,who:r.who};});
       refreshButtons(true);refreshPreview=null;
-      var results=[];
+      var results=[], pending=new Map();
+      preview.entries.forEach(function(x){
+        var group=pending.get(x.item.cardId);
+        if(!group){group={entry:x,remaining:0,links:[]};pending.set(x.item.cardId,group);}
+        group.remaining++;
+      });
       for(var i=0;i<entries.length;i+=25){
         refreshMessage('Applying '+Math.min(i+25,total)+' of '+total+'...');
         var batch=await refreshCall({action:'sync',check:false,cards:entries.slice(i,i+25)});
         done+=batch.length;results=results.concat(batch);
         for(var j=0;j<batch.length;j++){
-          var r=batch[j], x=preview.entries.slice(i,i+25).find(function(entry){return entry.item.cardId===r.cardId;});
-          if(['added','linked','updated','unchanged'].indexOf(r.result)<0||!r.row)continue;
-          if(r.result==='added'||r.result==='linked'||r.row!==(x.card.sheetRow&&x.card.sheetRow.row)){
-            var upd={sheetRow:{member:x.item.who,tab:r.tab,row:r.row,title:x.item.values.task}};
-            if(x.ref.id==='event_tasks'||x.card.__src==='event')Object.assign(upd,stampEdit());
-            await x.ref.doc(x.item.cardId).update(upd);
+          var r=batch[j], x=preview.entries.slice(i,i+25).find(function(entry){return sheetSameEntry(entry.item,r);});
+          var group=pending.get(r.cardId), link=sheetResultLink(x.card,x.item,r);
+          if(link)group.links.push(link);
+          group.remaining--;
+          if(!group.remaining){
+            pending.delete(r.cardId);
+            await sheetSaveLinks(x.card,r.cardId,x.ref,group.links);
           }
         }
       }
       // Include cards arriving while Boss reviews the preview, too.
       if(!MEMBER_ORDER.every(loadedOf)||!eventTasksLoaded)throw new Error("the team's cards are still loading; the sweep was not run");
-      var liveIds=Array.from(new Set(preview.allIds.concat(refreshCards().map(function(x){return x.card.id;}))));
-      var rows=await refreshCall({action:'sweep',check:false,cardIds:liveIds,cancel:preview.cancel,apply:apply});
+      var liveCards=refreshCards(), liveIds=Array.from(new Set(preview.allIds.concat(liveCards.map(function(x){return x.card.id;}))));
+      var rows=await refreshCall({action:'sweep',check:false,cardIds:liveIds,members:refreshMembers(liveCards),cancel:preview.cancel,apply:apply});
       var counts=refreshCounts(results), left=results.reduce(function(n,r){return n+(r.conflicts||[]).length;},0);
       var message='Done: added '+counts.added+', linked '+counts.linked+', updated '+counts.updated+', already matching '+counts.unchanged+
         ', marked Canceled '+rows.filter(function(r){return r.result==='canceled';}).length+'. Differences left as they are: '+left+'.';
       var protectedRows=rows.filter(function(r){return r.result==='protected';}).length, errors=rows.filter(function(r){return r.result==='error';}).length;
       if(counts.ambiguous+counts.protected+counts.error+protectedRows+errors)message+=' Need a look '+counts.ambiguous+', protected '+(counts.protected+protectedRows)+', errors '+(counts.error+errors)+'.';
       refreshMessage(message);
-    }catch(e){refreshPreview=null;refreshMessage('Stopped after '+done+' of '+total+' cards: '+(e&&e.message||window.sheetReason(null,''))+'. The cards before that were done; nothing after it was changed.');}
+    }catch(e){
+      // A card can span batches; preserve successful rows if a later batch fails.
+      if(pending)for(var group of pending.values()){
+        try{await sheetSaveLinks(group.entry.card,group.entry.item.cardId,group.entry.ref,group.links);}
+        catch(saveError){console.error('[sheet] link save failed',saveError);}
+      }
+      refreshPreview=null;refreshMessage('Stopped after '+done+' of '+total+' rows: '+(e&&e.message||window.sheetReason(null,''))+'. The rows before that were done; nothing after it was changed.');
+    }
     finally{refreshButtons(false);}
   };
   function sheetMsg(t,bad){ var o=document.getElementById('sheet-test-out'); if(!o)return; o.style.color=bad?'#b91c1c':'#147c3b'; o.textContent=t; }
