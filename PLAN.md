@@ -2731,7 +2731,7 @@ plan 8's automatic updates (already live) as well as to plan 9:
     repository. Claude also removed the copy's ID from plan 8's introduction in
     this file. 44 sheet tests pass; UI suite 420 pass, the same 2 failures.
 
-- [ ] **87. Refresh all, part 1: the script compares and matches (Boss's addition)**
+- [x] **87. Refresh all, part 1: the script compares and matches (Boss's addition)**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
   - A new `sync` action takes a batch of cards (about 25 per request, so no
     request comes near Google's 6-minute limit). For each card:
@@ -2750,6 +2750,19 @@ plan 8's automatic updates (already live) as well as to plan 9:
     (decision 7).
   - Test: the fake sheet from step 80 with hand-typed rows, repeated names,
     tagged rows of deleted cards and a protected tab; check mode writes nothing.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-87.md, reviewed by
+    Claude): Boss's rule is in the script itself. A cell is written only when it
+    is empty, already equal, holds what the app expected, or the person chose to
+    overwrite it; an empty card value never clears a cell on its own. Everything
+    else comes back as a difference (sheet value and card value). New actions
+    `sync` (tagged rows, linking a hand-typed row only when exactly one row has
+    the same name and, when both have one, the same due date; otherwise
+    "ambiguous"; else a fresh row) and `sweep` (tagged rows of deleted cards,
+    changed only for ids the person ticked), both with a check mode that writes
+    nothing. Claude added one fix: when `sync` adds a row and then fails (for
+    example the hidden tag), the fresh row is removed again, as `append` does
+    (a new test fails without it). Script tests 54 pass; UI suite 442 pass, the
+    same 2 failures.
 
 - [ ] **88. Refresh all, part 2: the button in Settings**
   - Files: `index.html` (Settings section "Google Sheet link"),

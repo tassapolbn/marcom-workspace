@@ -25,6 +25,11 @@ const headings = {
 const duration = '=INT(RC[-1]-RC[-2]) & " days " & TEXT(RC[-1]-RC[-2], "hh:mm:ss")';
 const watermark = '=IF(RC[-1]<>"", RC[-1]+14, "")';
 const clone = value => JSON.parse(JSON.stringify(value));
+const sheetDate = date => new Date(date + 'T00:00:00+07:00');
+const formatDate = (date, tz, format) => {
+  assert.equal(format, 'yyyy-MM-dd');
+  return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+};
 const row = values => ({ cells: values.map(v => typeof v === 'object' && v !== null && 'f' in v ? { ...v } : { v, f: '' }), metadata: [] });
 
 // Only the Apps Script methods listed in the task are exposed to the VM.
@@ -39,11 +44,14 @@ class Range {
     this.sheet.reads.push([this.r, this.c, this.nr, this.nc, field]);
     return Array.from({ length: this.nr }, (_, dr) => Array.from({ length: this.nc }, (_, dc) => {
       const cell = this.sheet.rows[this.r + dr - 1]?.cells[this.c + dc - 1] || { v: '', f: '' };
-      return field === 'display' ? String(cell.v) : cell[field];
+      const value = typeof cell.v === 'string' ? cell.v.replace(/^'/, '') : cell.v;
+      return field === 'display' ? (cell.display ?? (value instanceof Date ? formatDate(value, 'Asia/Bangkok', 'yyyy-MM-dd') : String(value)))
+        : field === 'v' ? value : cell[field];
     }));
   }
   getValues() { return this.matrix('v'); }
   getDisplayValues() { return this.matrix('display'); }
+  getDisplayValue() { return this.getDisplayValues()[0][0]; }
   getFormulas() { return this.matrix('f'); }
   getFormulasR1C1() { return this.matrix('f'); }
   getFormula() { return this.matrix('f')[0][0]; }
@@ -82,7 +90,7 @@ const used = cell => !!(cell.f || (cell.v !== '' && cell.v !== null && cell.v !=
 
 class Sheet {
   constructor(name, rows, state) {
-    Object.assign(this, { name, rows: rows.map(row), state, protections: [], reads: [], inserts: [], deletes: [] });
+    Object.assign(this, { name, rows: rows.map(row), state, protections: [], reads: [], inserts: [], deletes: [], tagReads: 0 });
     // Like Google Sheets, a tab has a fixed size, and a range past it is an error.
     this.maxRows = rows.length;
     this.maxColumns = widths[name];
@@ -143,8 +151,11 @@ class Sheet {
     const finder = {
       withKey(k) { key = k; return finder; },
       withValue(v) { value = v; return finder; },
-      find: () => this.rows.flatMap((r, i) => r.metadata.filter(m => m.key === key && m.value === value)
-        .map(() => ({ getLocation: () => ({ getRow: () => this.getRange(i + 1, 1) }) })))
+      find: () => {
+        this.tagReads++;
+        return this.rows.flatMap((r, i) => r.metadata.filter(m => m.key === key && (value === undefined || m.value === value))
+          .map(m => ({ getValue: () => m.value, getLocation: () => ({ getRow: () => this.getRange(i + 1, 1) }) })));
+      }
     };
     return finder;
   }
@@ -202,10 +213,11 @@ function fixture(t, { protectedO = false, emptyDew = false } = {}) {
       MimeType: { JSON: 'application/json' },
       createTextOutput: text => ({ text, setMimeType(mime) { assert.equal(mime, 'application/json'); return this; } })
     },
-    Utilities: { parseDate: (date, tz, format) => {
+    Utilities: { formatDate, parseDate: (date, tz, format) => {
       assert.equal(format, 'yyyy-MM-dd');
+      assert.equal(tz, 'Asia/Bangkok');
       if (state.failDate) throw new Error('invalid date');
-      return { date, tz };
+      return sheetDate(date);
     } }
   });
   vm.runInContext(source, context, { filename: 'marcom-sheet-sync.gs' });
@@ -239,7 +251,7 @@ test('headings normalize emoji, case, punctuation and Thai; titles are not headi
 
 test('wrong or missing secret refuses every action without opening or changing the sheet', t => {
   const f = fixture(t), before = f.snapshot();
-  for (const action of ['ping', 'append', 'update']) {
+  for (const action of ['ping', 'append', 'update', 'sync', 'sweep']) {
     for (const secret of ['wrong', undefined]) {
       assert.deepEqual(f.post({ action, secret, who: 'boss', cardId: 'card' }), { ok: false, error: 'unauthorised' });
     }
@@ -273,7 +285,7 @@ test('Boss inserts below its headings, writes the matching values and a date, an
   assert.deepEqual(result, { ok: true, tab: 'Boss', row: 5, tagged: true, updated: false, skipped: ['Unknown'], kept: [] });
   assert.deepEqual(f.sheets.Boss.rows.slice(0, 4), titles);
   assert.deepEqual(f.sheets.Boss.rows[4].cells.map(c => c.v), [
-    'Open day', 'Prepare signs', 'In progress', { date: '2026-11-04', tz: 'Asia/Bangkok' }, 'School', 'ส่งเมลแล้ว'
+    'Open day', 'Prepare signs', 'In progress', sheetDate('2026-11-04'), 'School', 'ส่งเมลแล้ว'
   ]);
   assert.deepEqual(f.sheets.Boss.rows[4].metadata, [{ key: 'marcomCard', value: 'card-1' }]);
   assert.deepEqual(f.sheets.Boss.inserts, [4]);
@@ -325,23 +337,25 @@ test('Dew with an empty first task row inserts directly below the heading and us
   assert.equal(f.cell('Dew', 6, 2).v, 'Newest two');
 });
 
-test('repeated append updates its tagged row without inserting again', t => {
+test('repeated append compares its tagged row without inserting again', t => {
   const f = fixture(t);
   assert.equal(f.append('boss', { Task: 'One', Status: 'New' }).updated, false);
-  assert.deepEqual(f.append('boss', { Task: 'Changed' }), { ok: true, tab: 'Boss', row: 5, updated: true, skipped: [], kept: [] });
-  assert.equal(f.cell('Boss', 5, 2).v, 'Changed');
+  assert.deepEqual(f.append('boss', { Task: 'Changed' }), { ok: true, tab: 'Boss', row: 5, updated: true, skipped: [], kept: [],
+    written: [], same: [], conflicts: [{ key: 'Task', sheet: 'One', card: 'Changed' }] });
+  assert.equal(f.cell('Boss', 5, 2).v, 'One');
   assert.equal(f.cell('Boss', 5, 3).v, 'New');
   assert.deepEqual(f.sheets.Boss.inserts, [4]);
 });
 
-test('tagged updates follow shifted rows, change only supplied keys, and clear empty strings', t => {
+test('tagged updates follow shifted rows, compare supplied keys, and clear only when forced', t => {
   const f = fixture(t);
   f.append('boss', { Task: 'One', Note: 'Clear me', Status: ' Hold' });
   // A person inserts a row above the card between requests.
   f.state.held = true;
   f.sheets.Boss.insertRowAfter(4);
   f.state.held = false;
-  const result = f.post({ action: 'update', who: 'boss', cardId: 'card-1', values: { Note: '', Task: 'Edited' } });
+  const result = f.post({ action: 'update', who: 'boss', cardId: 'card-1', values: { Note: '', Task: 'Edited' },
+    expect: { Task: 'One' }, force: ['Note'] });
   assert.equal(result.row, 6);
   assert.equal(f.cell('Boss', 6, 6).v, '');
   assert.equal(f.cell('Boss', 6, 3).v, ' Hold');
@@ -386,7 +400,7 @@ test('value conversion validates dates and keeps numbers and booleans without co
   const f = fixture(t), convert = value => f.context.toCellValue_(value, 'Asia/Bangkok');
   for (const input of [null, undefined, {}, [], { date: '2026-02-29' }, { date: '2026-11-31' },
     { date: '2026-00-01' }, { date: '2026-13-01' }, { date: '2026-01-00' }, { date: '26-01-01' }]) assert.equal(convert(input), '');
-  assert.deepEqual(convert({ date: '2028-02-29' }), { date: '2028-02-29', tz: 'Asia/Bangkok' });
+  assert.deepEqual(convert({ date: '2028-02-29' }), sheetDate('2028-02-29'));
   assert.equal(convert(0), 0);
   assert.equal(convert(false), false);
   assert.equal(convert(12.5), 12.5);
@@ -440,7 +454,7 @@ test('append and update hold the lock before opening the sheet and release it on
   f.post({ action: 'update', who: 'boss', cardId: 'card-1', values: { Status: 'Done' } });
   f.post({ action: 'update', who: 'boss', cardId: 'missing', values: {} });
   f.sheets.Boss.failValueColumn = 2;
-  assert.equal(f.post({ action: 'update', who: 'boss', cardId: 'card-1', values: { Task: 'Fails' } }).error, 'Error: write failed');
+  assert.equal(f.post({ action: 'update', who: 'boss', cardId: 'card-1', values: { Task: 'Fails' }, expect: { Task: 'One' } }).error, 'Error: write failed');
   f.state.failOpen = true;
   assert.equal(f.append('boss').error, 'Error: open failed');
   assert.deepEqual(f.state.opens, [true, true, true, true, true]);
@@ -590,7 +604,7 @@ test('the sample secret phrase is refused for every action, but the health check
     Utilities: {}
   });
   vm.runInContext(original, context);
-  for (const action of ['ping', 'append', 'update']) {
+  for (const action of ['ping', 'append', 'update', 'sync', 'sweep']) {
     const body = JSON.stringify({ secret: 'change-me-please', action, who: 'boss', cardId: 'card' });
     assert.deepEqual(JSON.parse(context.doPost({ postData: { contents: body } }).text),
       { ok: false, error: 'secret not set' });
@@ -609,7 +623,7 @@ test('an empty sheet ID refuses every action after checking the secret, without 
   vm.runInContext(original.replace(SAMPLE, "var SECRET = 'test-phrase';"), context);
   for (const id of ['', ' \t\n ']) {
     context.SPREADSHEET_ID = id;
-    for (const action of ['ping', 'append', 'update']) {
+    for (const action of ['ping', 'append', 'update', 'sync', 'sweep']) {
       for (const secret of ['test-phrase', 'wrong']) {
         const body = JSON.stringify({ secret, action, who: 'boss', cardId: 'card', values: { Task: 'No write' } });
         assert.deepEqual(JSON.parse(context.doPost({ postData: { contents: body } }).text),
@@ -620,4 +634,370 @@ test('an empty sheet ID refuses every action after checking the secret, without 
   assert.equal(opens, 0, 'the sheet must not be opened');
   assert.equal(locks, 0, 'the lock must not be taken');
   assert.deepEqual(JSON.parse(context.doGet().text), { ok: true, service: 'MARCOM sheet link', ready: true });
+});
+
+const card = (cardId, who, values, force = []) => ({ cardId, who, values, force });
+const sync = (f, cards, check = false) => f.post({ action: 'sync', cards, check });
+const tag = (f, tab, r, cardId) => f.sheets[tab].rows[r - 1].metadata.push({ key: 'marcomCard', value: cardId });
+const cancel = { boss: 'Canceled', dew: 'Cancel', o: 'CANCELLED', junior: 'Canceled' };
+const sweep = (f, overrides = {}) => f.post({ action: 'sweep', cardIds: [], cancel, apply: [], ...overrides });
+
+test('comparable text respects dates, time zone, primitive types, and the no-clear decision order', t => {
+  const f = fixture(t), { cellText_, valueText_, nameKey_, decide_ } = f.context;
+  for (const [input, expected] of [[null, ''], [undefined, ''], ['  text\n', 'text'], [0, '0'], [false, 'false']]) {
+    assert.equal(cellText_(input, 'Asia/Bangkok'), expected);
+    assert.equal(valueText_(input), expected);
+  }
+  assert.equal(cellText_(sheetDate('2026-11-04'), 'Asia/Bangkok'), '2026-11-04');
+  assert.equal(cellText_(sheetDate('2026-11-04'), 'UTC'), '2026-11-03');
+  assert.equal(valueText_({ date: '2028-02-29' }), '2028-02-29');
+  for (const input of [{}, [], { date: '2026-02-29' }, { date: '2026-11-31' }, { date: 'bad' }]) assert.equal(valueText_(input), '');
+  assert.equal(nameKey_('  File \n ONE\t here  '), 'file one here');
+  for (const [current, next, expected, has, forced, outcome] of [
+    ['a', 'a', '', false, true, 'same'], ['', '', '', false, false, 'same'],
+    ['a', '', 'a', true, false, 'conflict'], ['a', '', '', false, true, 'write'],
+    ['', 'b', '', false, false, 'write'], ['a', 'b', '', false, true, 'write'],
+    ['a', 'b', 'a', true, false, 'write'], ['a', 'b', 'a', false, false, 'conflict'],
+    ['a', 'b', 'wrong', true, false, 'conflict']
+  ]) assert.equal(decide_(current, next, expected, has, forced), outcome);
+});
+
+test('update fills blanks, reports same and conflicts, and compares only own expected keys', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Original', status: 'New', note: 'Keep', 'due date': { date: '2026-11-04' } });
+  f.cell('Boss', 5, 3).display = 'NEW (display)';
+  const update = extra => f.post({ action: 'update', who: 'boss', cardId: 'card-1', ...extra });
+  const result = update({ values: { task: ' Original ', event: 'Filled', status: 'Done', note: 'Changed',
+    'due date': { date: '2026-11-04' }, unknown: 'Ignored' }, expect: { note: 'Wrong' } });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.written, ['event']);
+  assert.deepEqual(result.same, ['task', 'due date']);
+  assert.deepEqual(result.skipped, ['unknown']);
+  assert.deepEqual(result.conflicts, [{ key: 'status', sheet: 'NEW (display)', card: 'Done' }, { key: 'note', sheet: 'Keep', card: 'Changed' }]);
+  assert.equal(f.cell('Boss', 5, 3).v, 'New');
+  assert.equal(f.cell('Boss', 5, 6).v, 'Keep');
+  assert.deepEqual(update({ values: { task: 'Edited', status: 'Done' }, expect: { task: ' Original ' } }).written, ['task']);
+  assert.equal(f.cell('Boss', 5, 2).v, 'Edited');
+  assert.deepEqual(update({ values: { 'due date': { date: '2026-11-05' } }, expect: { 'due date': { date: '2026-11-04' } } }).written, ['due date']);
+  assert.deepEqual(f.cell('Boss', 5, 4).v, sheetDate('2026-11-05'));
+});
+
+test('update force applies only to its exact keys; empty values require force even with matching expect', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Old', status: 'New', note: 'Keep' });
+  const update = extra => f.post({ action: 'update', who: 'boss', cardId: 'card-1', ...extra });
+  let result = update({ values: { task: 'Changed', status: 'Done', note: '' }, force: ['status'], expect: { note: 'Keep' } });
+  assert.deepEqual(result.written, ['status']);
+  assert.deepEqual(result.conflicts.map(c => c.key), ['task', 'note']);
+  assert.equal(f.cell('Boss', 5, 2).v, 'Old');
+  assert.equal(f.cell('Boss', 5, 6).v, 'Keep');
+  result = update({ values: { note: '' }, force: ['note'] });
+  assert.deepEqual(result.written, ['note']);
+  assert.equal(f.cell('Boss', 5, 6).v, '');
+  f.put('Boss', 5, 3, 'Calculated', '=42');
+  result = update({ values: { status: 'Forced' }, force: ['status'], expect: { status: 'Calculated' } });
+  assert.deepEqual(result.kept, ['status']);
+  assert.deepEqual(result.written, []);
+  assert.equal(f.cell('Boss', 5, 3).f, '=42');
+  assert.deepEqual(f.post({ action: 'append', who: 'boss', cardId: 'card-1', values: { task: 'Edited' }, expect: { task: 'Old' } }).written, ['task']);
+});
+
+test('sync tagged cards compare, fill, force only chosen keys, and ignore all empty values', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'One', status: 'New', note: 'Keep' });
+  assert.equal(sync(f, [card('card-1', 'boss', { task: 'One' })]).results[0].result, 'unchanged');
+  let result = sync(f, [card('card-1', 'boss', { event: 'Open day', status: 'Done', note: '' }, ['note'])]).results[0];
+  assert.equal(result.result, 'updated');
+  assert.deepEqual(result.written, ['event']);
+  assert.deepEqual(result.conflicts, [{ key: 'status', sheet: 'New', card: 'Done' }]);
+  assert.equal(f.cell('Boss', 5, 6).v, 'Keep');
+  result = sync(f, [card('card-1', 'boss', { task: 'Different', status: 'Done', note: '' }, ['status', 'note'])]).results[0];
+  assert.deepEqual(result.written, ['status']);
+  assert.deepEqual(result.conflicts, [{ key: 'task', sheet: 'One', card: 'Different' }]);
+  assert.equal(f.cell('Boss', 5, 3).v, 'Done');
+  const before = f.snapshot();
+  result = sync(f, [card('card-1', 'boss', { task: 'Different', note: '' }, ['note'])]).results[0];
+  assert.equal(result.result, 'unchanged');
+  assert.deepEqual(f.snapshot(), before);
+  f.put('Boss', 5, 3, 'Computed', '=42');
+  assert.deepEqual(sync(f, [card('card-1', 'boss', { status: 'Done' }, ['status'])]).results[0].written, []);
+  assert.equal(f.cell('Boss', 5, 3).f, '=42');
+});
+
+test('sync prefers the own-tab tag then finds tags on other allowed tabs, including empty tagged rows', t => {
+  const f = fixture(t);
+  tag(f, 'Eye', 4, 'shared');
+  assert.equal(sync(f, [card('shared', 'boss', { notes: 'Found Eye' })]).results[0].tab, 'Eye');
+  f.append('boss', { task: 'Own' }, 'shared');
+  assert.equal(sync(f, [card('shared', 'boss', { note: 'Own tab first' })]).results[0].tab, 'Boss');
+  assert.equal(f.cell('Eye', 4, 6).v, 'Found Eye');
+  f.sheets.Boss.rows.push(row([])); f.sheets.Boss.maxRows++;
+  tag(f, 'Boss', 6, 'empty-tag');
+  const result = sync(f, [card('empty-tag', 'boss', { task: 'Fill empty tagged row' })]).results[0];
+  assert.equal(result.row, 6);
+  assert.equal(result.result, 'updated');
+  assert.equal(f.cell('Boss', 6, 2).v, 'Fill empty tagged row');
+});
+
+test('sync links normalized hand-typed names and Eye Event-only names without replacing their text', t => {
+  const f = fixture(t);
+  f.put('Eye', 4, 2, '  File  \n ONE ');
+  f.put('Eye', 4, 3, 'Human status');
+  const results = sync(f, [card('file', 'junior', { task: 'file one', status: 'New', notes: 'Fill' }),
+    card('event', 'junior', { task: ' EVENT-only   last ', notes: 'Also fill' })]).results;
+  assert.deepEqual(results.map(r => [r.result, r.row]), [['linked', 4], ['linked', 6]]);
+  assert.deepEqual(results[0].conflicts.map(c => c.key), ['task', 'status']);
+  assert.equal(f.cell('Eye', 4, 2).v, '  File  \n ONE ');
+  assert.equal(f.cell('Eye', 4, 6).v, 'Fill');
+  assert.equal(f.cell('Eye', 6, 1).v, 'Event-only last');
+  assert.equal(f.cell('Eye', 6, 2).v, ' EVENT-only   last ');
+  assert.equal(f.sheets.Eye.rows[3].metadata[0].value, 'file');
+  assert.equal(f.sheets.Eye.rows[5].metadata[0].value, 'event');
+});
+
+test('sync matches equal due dates and missing dates, but adds when both dates differ', t => {
+  for (const [rowDue, cardDue, expected] of [
+    [sheetDate('2026-11-04'), { date: '2026-11-04' }, 'linked'],
+    ['2026-11-04', { date: '2026-11-04' }, 'linked'],
+    [sheetDate('2026-11-04'), { date: '2026-11-05' }, 'added'],
+    ['', { date: '2026-11-05' }, 'linked'],
+    [sheetDate('2026-11-04'), '', 'linked'], ['No date yet', { date: '2026-11-05' }, 'linked']
+  ]) {
+    const f = fixture(t);
+    f.put('Eye', 4, 5, rowDue);
+    const result = sync(f, [card('date-card', 'junior', { task: 'File one', 'due date': cardDue })]).results[0];
+    assert.equal(result.result, expected);
+    assert.equal(result.row, expected === 'added' ? 7 : 4);
+    if (expected === 'added') assert.deepEqual(f.cell('Eye', 4, 5).v, rowDue);
+  }
+});
+
+test('sync ambiguous names never write, and rows tagged for another card are never matched', t => {
+  const f = fixture(t);
+  f.put('Eye', 5, 2, ' FILE ONE ');
+  const before = f.snapshot();
+  const ambiguous = sync(f, [card('ambiguous', 'junior', { task: 'File one', status: 'New' }, ['task'])]).results[0];
+  assert.equal(ambiguous.result, 'ambiguous');
+  assert.deepEqual(ambiguous.matches, [4, 5]);
+  assert.deepEqual(f.snapshot(), before);
+  tag(f, 'Eye', 4, 'someone-else'); tag(f, 'Eye', 5, 'another-card');
+  const added = sync(f, [card('new', 'junior', { task: 'File one' })]).results[0];
+  assert.equal(added.result, 'added');
+  assert.equal(added.row, 7);
+  assert.equal(f.sheets.Eye.rows[3].metadata[0].value, 'someone-else');
+});
+
+test('sync adds exactly where append does with formulas and unchanged shifted rows', t => {
+  for (const who of ['boss', 'dew', 'o', 'junior']) {
+    const f = fixture(t), control = fixture(t);
+    const values = { task: 'Brand new', status: 'New', 'due date': { date: '2026-11-04' },
+      'duration include edit': 'Keep formula', 'watermark deleting date': 'Keep formula' };
+    const expected = control.append(who, values, 'added');
+    const result = sync(f, [card('added', who, values)]).results[0];
+    assert.equal(result.result, 'added');
+    assert.equal(result.row, expected.row);
+    assert.deepEqual(f.snapshot(), control.snapshot());
+    assert.deepEqual(f.sheets[result.tab].deletes, []);
+  }
+});
+
+test('sync check is a deep no-op and predicts link, add, conflict, ambiguous, and protected outcomes', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Tagged', status: 'Human status' }, 'tagged');
+  f.put('O', 4, 1, 'Shoot one');
+  f.sheets.Eye.protections.push({ type: 'RANGE', start: 5, end: 5, edit: false });
+  const cards = [card('tagged', 'boss', { task: 'Tagged', status: 'New', note: 'Fill' }),
+    card('linked', 'junior', { task: 'File one', notes: 'Fill' }),
+    card('added', 'dew', { task: 'New', 'duration include edit': 'Formula stays' }),
+    card('ambiguous', 'o', { task: 'Shoot one' }), card('protected', 'junior', { task: 'File two' })];
+  const before = f.snapshot(), inserts = clone(Object.values(f.sheets).map(s => s.inserts));
+  const preview = sync(f, cards, true);
+  assert.equal(preview.check, true);
+  assert.deepEqual(preview.results.map(r => r.result), ['updated', 'linked', 'added', 'ambiguous', 'protected']);
+  assert.deepEqual(f.snapshot(), before);
+  assert.deepEqual(Object.values(f.sheets).map(s => s.inserts), inserts);
+  assert.equal(preview.results[2].row, 0);
+  const applied = sync(f, cards);
+  applied.results[2].row = 0;
+  assert.deepEqual(preview.results, applied.results);
+  assert.equal(f.state.releases, 3);
+});
+
+test('sync reads each unchanged tab block and tags once, and remembers earlier writes and links', t => {
+  const f = fixture(t);
+  const result = sync(f, [card('link', 'junior', { task: 'File one', notes: 'First' }),
+    card('link', 'junior', { task: 'File one', notes: 'First' }), card('link', 'junior', { notes: 'Second' })]);
+  assert.deepEqual(result.results.map(r => r.result), ['linked', 'unchanged', 'unchanged']);
+  assert.deepEqual(result.results[2].conflicts, [{ key: 'notes', sheet: 'First', card: 'Second' }]);
+  for (const name of ['Boss', 'Dew', 'O', 'Eye']) {
+    assert.equal(f.sheets[name].tagReads, 1, name);
+    assert.equal(f.sheets[name].reads.length, 3, name + ' should only read values, formulas and display once');
+  }
+});
+
+test('sync refreshes an inserted tab before the next card and check simulates the same sequence', t => {
+  const f = fixture(t);
+  tag(f, 'Dew', 9, 'old');
+  const cards = [card('first', 'dew', { task: 'First new' }), card('second', 'dew', { task: 'Second new' }),
+    card('old', 'dew', { status: 'Updated' }), card('first', 'dew', { task: 'First new' })];
+  const before = f.snapshot(), preview = sync(f, cards, true);
+  assert.deepEqual(f.snapshot(), before);
+  const result = sync(f, cards);
+  assert.deepEqual(result.results.map(r => [r.result, r.row]), [['added', 6], ['added', 7], ['updated', 11], ['unchanged', 6]]);
+  assert.deepEqual(preview.results, result.results.map(r => r.result === 'added' ? { ...r, row: 0 } : r));
+  assert.equal(f.cell('Dew', 11, 2).v, 'Older one');
+  assert.equal(f.cell('Dew', 11, 5).v, 'Updated');
+  assert.equal(f.cell('Dew', 6, 11).f, duration);
+  assert.equal(f.cell('Dew', 7, 11).f, duration);
+  assert.equal(f.sheets.Dew.tagReads, 4, 'one preview read plus three apply reads');
+});
+
+test('sync limits batches, isolates invalid entries, exceptions, and protected tabs', t => {
+  const f = fixture(t), before = f.snapshot();
+  assert.deepEqual(sync(f, Array.from({ length: 31 }, (_, i) => card('c' + i, 'boss', {}))), { ok: false, error: 'too many cards' });
+  assert.deepEqual(f.snapshot(), before);
+  f.sheets.O.protections.push({ type: 'SHEET', edit: false });
+  f.sheets.Boss.failValueColumn = 2;
+  const results = sync(f, [null, card('bad id', 'boss', {}), card('bad-member', 'Jez', {}),
+    card('throws', 'boss', { task: 'Fail' }), card('protected', 'o', { task: 'Shoot one' }),
+    card('protected-new', 'o', { task: 'New' }), card('works', 'junior', { task: 'File one', notes: 'Success' })]).results;
+  assert.deepEqual(results.map(r => r.result), ['error', 'error', 'error', 'error', 'protected', 'protected', 'linked']);
+  assert.match(results[1].error, /no card id/);
+  assert.match(results[2].error, /unknown member/);
+  assert.match(results[3].error, /write failed/);
+  assert.equal(f.cell('Eye', 4, 6).v, 'Success');
+  assert.deepEqual(f.sheets.O.rows, before.O.rows);
+  assert.deepEqual(f.state.waits, [20000, 20000]);
+  assert.deepEqual(f.state.opens, [true, true]);
+  assert.equal(f.state.releases, 2);
+});
+
+test('sweep previews missing tagged cards across tabs and only cancels explicitly selected ids', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Deleted', status: 'In progress' }, 'gone-boss');
+  for (const [tab, r, id, col] of [['Dew', 4, 'gone-dew', 5], ['O', 3, 'gone-o', 4],
+    ['Eye', 4, 'gone-eye', 3], ['Eye', 5, 'still-live', 3], ['Dew', 5, 'not-selected', 5]]) {
+    tag(f, tab, r, id); f.put(tab, r, col, 'In progress');
+  }
+  const before = f.snapshot(), selected = ['gone-boss', 'gone-dew', 'gone-o', 'gone-eye', 'still-live'];
+  const preview = sweep(f, { check: true, cardIds: ['still-live'], apply: selected });
+  assert.equal(preview.check, true);
+  assert.deepEqual(preview.rows.map(r => r.cardId), ['gone-boss', 'gone-dew', 'not-selected', 'gone-o', 'gone-eye']);
+  assert.ok(preview.rows.every(r => r.status === 'In progress' && !('result' in r)));
+  assert.deepEqual(f.snapshot(), before);
+  const applied = sweep(f, { cardIds: ['still-live'], apply: selected });
+  assert.deepEqual(applied.rows.map(({ result, ...r }) => r), preview.rows);
+  assert.deepEqual(applied.rows.map(r => r.result), ['canceled', 'canceled', 'unchanged', 'canceled', 'canceled']);
+  const expected = clone(before);
+  for (const [tab, r, col, word] of [['Boss', 5, 3, 'Canceled'], ['Dew', 4, 5, 'Cancel'],
+    ['O', 3, 4, 'CANCELLED'], ['Eye', 4, 3, 'Canceled']]) expected[tab].rows[r - 1].cells[col - 1].v = word;
+  assert.deepEqual(f.snapshot(), expected, 'only the selected Status cells change');
+  assert.ok(sweep(f, { cardIds: ['still-live'], apply: selected }).rows.every(r => r.result === 'unchanged'));
+  assert.deepEqual(f.state.opens, [true, true, true, true]);
+  assert.equal(f.state.releases, 4);
+  for (const sheet of Object.values(f.sheets)) assert.deepEqual(sheet.deletes, []);
+});
+
+test('sweep protects blocked and formula statuses, reports display values, and continues after write errors', t => {
+  const f = fixture(t);
+  tag(f, 'Dew', 4, 'throws'); f.sheets.Dew.failValueColumn = 5;
+  tag(f, 'O', 3, 'protected'); f.sheets.O.protections.push({ type: 'SHEET', edit: false });
+  tag(f, 'Eye', 4, 'formula'); f.put('Eye', 4, 3, 'Calculated', '=42');
+  f.cell('Eye', 4, 3).display = 'Visible status';
+  tag(f, 'Eye', 5, 'works');
+  const before = f.snapshot(), apply = ['throws', 'protected', 'formula', 'works'];
+  assert.equal(sweep(f, { check: true, apply }).rows.find(r => r.cardId === 'formula').status, 'Visible status');
+  assert.deepEqual(f.snapshot(), before);
+  const result = sweep(f, { apply });
+  assert.deepEqual(result.rows.map(r => r.result), ['error', 'protected', 'protected', 'canceled']);
+  assert.equal(f.cell('Eye', 4, 3).f, '=42');
+  assert.equal(f.cell('Eye', 5, 3).v, 'Canceled');
+  assert.equal(f.state.releases, 2);
+});
+
+test('sweep validates ids and cancellation words before any mutation', t => {
+  const f = fixture(t), before = f.snapshot();
+  for (const cardIds of [null, 'card', [1], Array(5001).fill('x')]) assert.equal(sweep(f, { cardIds }).error, 'invalid cardIds');
+  for (const words of [null, [], { boss: '' }, { boss: '  ' }, { boss: 'x'.repeat(41) }, { boss: false }, { Jez: 'Cancel' }]) {
+    assert.equal(sweep(f, { cancel: words }).error, 'invalid cancel');
+  }
+  assert.equal(sweep(f, { apply: [42] }).error, 'invalid apply');
+  assert.equal(sweep(f, { cardIds: Array(5000).fill('x') }).ok, true);
+  assert.deepEqual(f.snapshot(), before);
+});
+
+test('request fields cannot bypass comparisons or activate internal writer options', t => {
+  const f = fixture(t);
+  f.append('boss', { task: 'Human text' });
+  const before = f.snapshot();
+  for (const action of ['update', 'append']) {
+    const result = f.post({ action, who: 'boss', cardId: 'card-1', values: { task: 'Replace' },
+      fresh: true, ignoreEmpty: true, check: true, data: {} });
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.conflicts, [{ key: 'task', sheet: 'Human text', card: 'Replace' }]);
+  }
+  assert.deepEqual(f.snapshot(), before);
+});
+
+test('sync cache preserves display spaces and escaped text when later cards compare the same row', t => {
+  const f = fixture(t);
+  tag(f, 'Eye', 4, 'same-card');
+  const results = sync(f, [card('same-card', 'junior', { status: ' Hold', notes: '=plain text' }),
+    card('same-card', 'junior', { status: 'Done', notes: '=plain text' })]).results;
+  assert.deepEqual(results[1].written, []);
+  assert.deepEqual(results[1].conflicts, [{ key: 'status', sheet: ' Hold', card: 'Done' }]);
+  assert.equal(f.cell('Eye', 4, 6).f, '');
+});
+
+test('a failed sync link tag does not fill the hand-typed row, and later cards still run', t => {
+  const f = fixture(t), before = clone(f.sheets.Eye.rows);
+  f.sheets.Eye.failTag = true;
+  const results = sync(f, [card('link', 'junior', { task: 'File one', notes: 'Do not write' }),
+    card('next', 'dew', { task: 'Newest one', status: 'Fill' })]).results;
+  assert.equal(results[0].result, 'error');
+  assert.match(results[0].error, /tag failed/);
+  assert.equal(results[1].result, 'linked');
+  assert.deepEqual(f.sheets.Eye.rows, before);
+});
+
+test('a failed tag on a newly added sync row removes that fresh row, like append does', t => {
+  const f = fixture(t), before = clone(f.sheets.O.rows);
+  f.sheets.O.failTag = true;
+  const results = sync(f, [card('fresh', 'o', { task: 'Brand new shoot' }),
+    card('other', 'boss', { task: 'Still runs' })]).results;
+  assert.equal(results[0].result, 'error');
+  assert.match(results[0].error, /tag failed/);
+  assert.deepEqual(f.sheets.O.rows, before, 'no empty row (with copied formulas) is left behind');
+  assert.equal(f.sheets.O.inserts.length, 1);
+  assert.equal(f.sheets.O.deletes.length, 1);
+  assert.equal(results[1].result, 'added');
+});
+
+test('sync insertion uses last used data for formulas even when tags extend into empty tail rows', t => {
+  const f = fixture(t), control = fixture(t);
+  for (const instance of [f, control]) {
+    instance.put('Eye', 5, 6, '', '=RC[-1]+1');
+    instance.put('Eye', 6, 6, '', '=RC[-1]+1');
+    instance.sheets.Eye.rows.push(row([])); instance.sheets.Eye.maxRows++;
+    tag(instance, 'Eye', 7, 'empty-tail');
+  }
+  const values = { task: 'New task', notes: 'Keep formula' };
+  const before = f.snapshot(), preview = sync(f, [card('new', 'junior', values)], true);
+  assert.deepEqual(f.snapshot(), before);
+  assert.deepEqual(preview.results[0].written, ['task']);
+  sync(f, [card('new', 'junior', values)]);
+  control.append('junior', values, 'new');
+  assert.deepEqual(f.snapshot(), control.snapshot());
+});
+
+test('sync previews an update to its own inserted row using that row protection position', t => {
+  const f = fixture(t);
+  f.sheets.Dew.protections.push({ type: 'SHEET', edit: false, exceptions: [[6, 7]] });
+  const cards = [card('new', 'dew', { task: 'New' }), card('new', 'dew', { status: 'Filled' })];
+  const before = f.snapshot(), preview = sync(f, cards, true);
+  assert.deepEqual(f.snapshot(), before);
+  const applied = sync(f, cards);
+  applied.results[0].row = 0;
+  assert.deepEqual(preview.results, applied.results);
+  assert.deepEqual(preview.results.map(r => r.result), ['added', 'updated']);
 });
