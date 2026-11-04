@@ -2524,7 +2524,7 @@ A shared Event Board card goes only to the first assigned person's tab
     that depends on today's date). Not yet tried on Google: Boss deploys the
     script, then Claude tests it on the copy.
 
-- [ ] **81. New cards go to the sheet**
+- [x] **81. New cards go to the sheet**
   - Files: `assets/sheet-sync.js` (new), `index.html`, `tests/ui-sheet-sync.test.mjs` (new).
   - `assets/sheet-sync.js`: the tab for each member (boss → Boss, dew → Dew,
     o → O, junior → Eye) and the column and status tables above, as one pure
@@ -2544,6 +2544,18 @@ A shared Event Board card goes only to the first assigned person's tab
     rule equal to the script's. Claude replaced the raw Thai text (O's
     "ส่งเมลแล้ว" and the Thai letter range, in both files) with escape codes so
     no file encoding can garble them.
+  - 81b done (2026-11-04, built by Codex from .codex-tasks/step-81b.md, reviewed
+    by Claude): the Settings section "Google Sheet link" (Boss edits, members see
+    "on" or "off"), and `sheetSyncNew` called after a new card is saved in the
+    form (also Save + Calendar, Duplicate, SOP batches), when a Design or
+    Photography request is accepted, from O's "use template", and for O's
+    recurring cards. Claude added two messages to Test connection: a tab with no
+    Task heading, and an address that answers but is not this script (for
+    example the calendar sync's). Checked in the local preview: the section in
+    light and dark mode, at 375 px wide for Boss and for a member, no sideways
+    scrolling, no errors, and a new Boss card sent to the link and given its
+    `sheetRow`. UI suite: 388 pass, the same 2 failures as on `main`. Not yet
+    tried against Google (needs the deployed script).
   - Test: `npm run test:ui` (every mapping and status in the tables above, each
     member, shared cards with 0, 1 and 3 people going to the first person's tab
     only, empty fields); the preview
