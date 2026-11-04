@@ -2488,7 +2488,7 @@ A shared Event Board card goes only to the first assigned person's tab
     - In Eye's tab some tasks are typed in the Event column only, so "last task"
       must look across all columns.
 
-- [ ] **80. The Apps Script and its setup guide**
+- [x] **80. The Apps Script and its setup guide**
   - Files: `google-apps-script/marcom-sheet-sync.gs` (new),
     `google-apps-script/SHEET-SETUP.md` (new), `tests/ui-sheet-script.test.mjs` (new).
   - Script: `SECRET`, `SPREADSHEET_ID` (the copy for now), and the allowed tabs
@@ -2511,6 +2511,18 @@ A shared Event Board card goes only to the first assigned person's tab
   - Note: Google limits hidden row tags (about 30,000 characters per tab, roughly
     1,300 cards). If a tag cannot be added, the row is still written and later
     edits find it by its row number and title instead.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-80.md, reviewed by
+    Claude). Claude fixed one bug: the heading scan always read 13 columns, but
+    Boss's and Eye's tabs have only 6, and Google refuses a range wider than the
+    tab, so every Boss and Eye card would have failed. The fake sheet in the test
+    now has each tab's real width and refuses such ranges; with the old code 21
+    of the tests fail. Claude also made the script refuse to run with the sample
+    secret phrase ("secret not set"), extended the formula guard to text with
+    spaces before `=`, and wrote the Thai letter range as escapes. Script tests:
+    31 pass. UI suite: 324 pass, 2 fail, and both fail the same way on `main`
+    (`ui-layout`: this Windows copy has CRLF line endings; `ui-team`: a fixture
+    that depends on today's date). Not yet tried on Google: Boss deploys the
+    script, then Claude tests it on the copy.
 
 - [ ] **81. New cards go to the sheet**
   - Files: `assets/sheet-sync.js` (new), `index.html`, `tests/ui-sheet-sync.test.mjs` (new).
