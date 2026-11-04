@@ -2342,8 +2342,8 @@ Boss asked: when a card is added in the app, add it to the team's Google Sheet
 too, in the tab of the person it belongs to (Boss, Dew, O, Eye). Each tab has its
 own column headings, so each person's row is filled to match their own tab. Every
 other tab in the sheet stays untouched. For now we test only on the copy,
-"Copy of Marketing & Communications Tracker"
-(`1lvsuK3IP77BqkoiymEgpoGJYnM1PKZRp4e9Zy9VnEDg`). Boss sends the real link later.
+"Copy of Marketing & Communications Tracker" (its ID is kept out of this public
+repository since step 86). Boss sends the real link later.
 
 ## What the copy sheet looks like (read on 4 Nov, nothing changed)
 
@@ -2658,6 +2658,32 @@ or refreshes it there. Plan 8 only sends cards created after the link was set
 up. The link now points at the real "Marketing & Communications Tracker"
 (its ID is kept out of GitHub, see step 86).
 
+## Boss's rule (4 Nov 2026): never remove what is already in the sheet
+
+"Make sure it will never remove the information that was on the sheet
+already: just find a blank row, and send a notification first with the option
+to update or not if there is information already in the row." This applies to
+plan 8's automatic updates (already live) as well as to plan 9:
+
+- **New rows:** a new card always goes into an empty row. The app adds a fresh
+  empty row under the last task and fills only that row; it never writes into a
+  row that has anything in it (decision 9).
+- **Compare before writing:** every update tells the script what the app
+  expects to find in each cell it wants to change (what it wrote last time). The
+  script writes a cell only when it is empty, already holds the new value, or
+  holds exactly what the app expected. Anything else (someone typed something
+  in the sheet) is a **difference**: nothing is written to that cell, and the
+  reply lists it (column, what the sheet has, what the card has).
+- **Notice first, then choose:** the app shows the differences ("Sheet: Edit,
+  card: In progress") with **Update the sheet** and **Keep the sheet**. Only
+  "Update the sheet" overwrites, and only those cells (decision 10).
+- **Refresh (card button and Refresh all):** empty cells are filled; cells that
+  already hold something different are listed first, each with a tick box, and
+  are only changed when ticked and applied.
+- **Deleted cards in Refresh all:** the rows that would get Status Canceled are
+  listed with tick boxes (decision 11). Rows are never deleted and rows typed by
+  hand are never touched by this.
+
 ## What the study found
 
 - Each card has a row of small buttons at the bottom (`.task-acts` in
@@ -2691,13 +2717,19 @@ up. The link now points at the real "Marketing & Communications Tracker"
     shared cards; the local preview at desktop and phone width in light and
     dark; then Boss tries one old card on the real sheet.
 
-- [ ] **86. Take the test copy's ID out of the public code (decision 3)**
+- [x] **86. Take the test copy's ID out of the public code (decision 3)**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `SHEET-SETUP.md`,
     `README.md`, `tests/ui-sheet-script.test.mjs`.
   - `SPREADSHEET_ID` becomes empty in the repository, and the script answers
     "spreadsheet not set" until the sheet's ID is pasted in Apps Script (Boss's
     deployed script already has the real one). The old ID stays in GitHub's
     history, so Boss should also set the copy to Restricted or delete it.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-86.md, reviewed by
+    Claude): `SPREADSHEET_ID = ''`, the script answers "spreadsheet not set"
+    until it is filled in Apps Script, the app explains that message, and the
+    setup guide and README say the ID and secret never go into this public
+    repository. Claude also removed the copy's ID from plan 8's introduction in
+    this file. 44 sheet tests pass; UI suite 420 pass, the same 2 failures.
 
 - [ ] **87. Refresh all, part 1: the script compares and matches (Boss's addition)**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
@@ -2732,6 +2764,17 @@ up. The link now points at the real "Marketing & Communications Tracker"
     links, a failed batch stops and says where); the local preview; then Boss
     runs it in check mode on the real sheet before applying.
 
+- [ ] **90. Edits never overwrite the sheet without asking (Boss's rule)**
+  - Files: `index.html` (`sheetSyncEdit`, `sheetSyncCancel`, `sheetSyncRestore`),
+    `tests/ui-sheet-edit.test.mjs`. Built after step 87 adds "compare before
+    writing" to the script.
+  - Edits, the done tick, deleting (Canceled) and Undo send what they expect to
+    find. When the reply lists differences, the app shows them with **Update the
+    sheet** and **Keep the sheet**; "Update" sends only those cells again with
+    permission to overwrite.
+  - Test: unit tests (no difference: no question; a difference: one notice,
+    Keep writes nothing, Update overwrites only the listed cells); the preview.
+
 - [ ] **89. Ship it**
   - Merge into `main`, push, check the Netlify deploy, as in plan 8. Boss then
     pastes the updated script into Apps Script and deploys a New version (the
@@ -2760,3 +2803,19 @@ up. The link now points at the real "Marketing & Communications Tracker"
    nothing until Boss presses Apply; or it applies straight away.
 8. **Who can run Refresh all:** recommended, Boss only (Settings); members use
    the button on their own cards.
+
+Approved on 4 Nov 2026 as recommended (1 to 8). Added after Boss's rule
+"never remove what is already in the sheet" (for Boss to approve):
+
+9. **Where a new row goes:** recommended, a fresh empty row added right under
+   the last task, so the sheet's table, dropdowns and date formats grow with it
+   (the rows below move down by one; nothing is overwritten); or reuse the empty
+   rows already in the sheet (Eye, Dew and O have some), adding a row only in
+   Boss's tab.
+10. **The notice when the sheet differs:** recommended, a small window listing
+    each difference ("Sheet: ..., card: ...") with Update the sheet / Keep the
+    sheet; or keep the sheet silently and only show a short message.
+11. **Deleted cards' rows in Refresh all:** recommended, listed with their tick
+    boxes already ticked (Boss unticks any to keep); or listed unticked.
+12. **The plan with this rule:** recommended, approve step 90 and the
+    "compare before writing" rule in steps 85, 87 and 88.

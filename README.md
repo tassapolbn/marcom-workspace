@@ -372,10 +372,13 @@ Google account that can edit all four tabs. O's tab is protected.
 number, is stored as plain text. Nothing typed in the app or the public Request
 Centre can become a formula through the link. Treat the URL and secret together
 like a key and keep them private. The script refuses to work with its sample
-secret.
+secret. This repository is public, so the sheet's ID and the secret are never
+committed. A test copy of the sheet should not be shared as "anyone with the
+link can edit".
 
-**Switching from the test copy to the real sheet:** change `SPREADSHEET_ID` in
-the Apps Script. Choose **Deploy > Manage deployments > pencil icon > Version:
+**Which sheet:** the sheet's ID lives only in the Apps Script project
+(`SPREADSHEET_ID`), never in this public repository. To change sheets, change
+it there. Choose **Deploy > Manage deployments > pencil icon > Version:
 New version > Deploy**. The URL stays the same. Press **Test connection** in
 Settings and check all four tabs' headings and write access. Heading matching
 ignores emoji, capitals and punctuation. If a column is renamed to something

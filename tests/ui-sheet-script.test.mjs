@@ -4,10 +4,13 @@ import test from 'node:test';
 import vm from 'node:vm';
 
 const original = readFileSync(new URL('../google-apps-script/marcom-sheet-sync.gs', import.meta.url), 'utf8');
-/* The script refuses to run with its sample phrase, so the tests use their own. */
+/* Tests supply their own secret phrase and a fake sheet ID. */
 const SAMPLE = "var SECRET = 'change-me-please';";
 assert.ok(original.includes(SAMPLE), 'the script ships with the sample phrase');
-const source = original.replace(SAMPLE, "var SECRET = 'test-phrase';");
+const EMPTY_SHEET = "var SPREADSHEET_ID = '';";
+assert.ok(original.includes(EMPTY_SHEET), 'the script ships without a sheet ID');
+const source = original.replace(SAMPLE, "var SECRET = 'test-phrase';")
+  .replace(EMPTY_SHEET, "var SPREADSHEET_ID = 'test-sheet-id';");
 /* Columns in each tab of the copy (the gridProperties columnCount). */
 const widths = { Boss: 6, Dew: 11, O: 13, Eye: 6, 'Boss 1': 6, Jez: 31 };
 const OUTSIDE = 'The coordinates of the range are outside the dimensions of the sheet.';
@@ -180,7 +183,7 @@ function fixture(t, { protectedO = false, emptyDew = false } = {}) {
     SpreadsheetApp: {
       ProtectionType: { RANGE: 'RANGE', SHEET: 'SHEET' },
       openById: id => {
-        assert.equal(id, '1lvsuK3IP77BqkoiymEgpoGJYnM1PKZRp4e9Zy9VnEDg');
+        assert.equal(id, 'test-sheet-id');
         state.opens.push(state.held);
         if (state.failOpen) throw new Error('open failed');
         return ss;
@@ -592,5 +595,29 @@ test('the sample secret phrase is refused for every action, but the health check
     assert.deepEqual(JSON.parse(context.doPost({ postData: { contents: body } }).text),
       { ok: false, error: 'secret not set' });
   }
+  assert.deepEqual(JSON.parse(context.doGet().text), { ok: true, service: 'MARCOM sheet link', ready: true });
+});
+
+test('an empty sheet ID refuses every action after checking the secret, without opening or locking', () => {
+  let opens = 0, locks = 0;
+  const context = vm.createContext({
+    SpreadsheetApp: { openById: () => { opens++; throw new Error('unexpected sheet open'); } },
+    LockService: { getScriptLock: () => { locks++; throw new Error('unexpected lock'); } },
+    ContentService: { MimeType: { JSON: 'application/json' },
+      createTextOutput: text => ({ text, setMimeType() { return this; } }) }
+  });
+  vm.runInContext(original.replace(SAMPLE, "var SECRET = 'test-phrase';"), context);
+  for (const id of ['', ' \t\n ']) {
+    context.SPREADSHEET_ID = id;
+    for (const action of ['ping', 'append', 'update']) {
+      for (const secret of ['test-phrase', 'wrong']) {
+        const body = JSON.stringify({ secret, action, who: 'boss', cardId: 'card', values: { Task: 'No write' } });
+        assert.deepEqual(JSON.parse(context.doPost({ postData: { contents: body } }).text),
+          { ok: false, error: secret === 'wrong' ? 'unauthorised' : 'spreadsheet not set' });
+      }
+    }
+  }
+  assert.equal(opens, 0, 'the sheet must not be opened');
+  assert.equal(locks, 0, 'the lock must not be taken');
   assert.deepEqual(JSON.parse(context.doGet().text), { ok: true, service: 'MARCOM sheet link', ready: true });
 });

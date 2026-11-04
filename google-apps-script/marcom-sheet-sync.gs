@@ -11,7 +11,7 @@
  * SETUP (see SHEET-SETUP.md for the click-by-click version)
  *  1. Go to script.google.com and create a new project.
  *  2. Delete the sample code and paste this whole file in.
- *  3. Set SECRET below. Leave SPREADSHEET_ID on the test copy for now.
+ *  3. Paste your secret into SECRET and the team sheet ID into SPREADSHEET_ID.
  *  4. Deploy > New deployment > type "Web app".
  *       Execute as:      Me
  *       Who has access:  Anyone
@@ -25,9 +25,9 @@
 
 /* Any private phrase. It must match the one entered in the workspace Settings. */
 var SECRET = 'change-me-please';
-/* The spreadsheet: the part of its link between /d/ and /edit.
-   This is the COPY used for testing. Change it to the real sheet later. */
-var SPREADSHEET_ID = '1lvsuK3IP77BqkoiymEgpoGJYnM1PKZRp4e9Zy9VnEDg';
+/* Paste the team sheet's ID here: the part of its link between /d/ and /edit.
+   Never commit a real ID: this repository is public. */
+var SPREADSHEET_ID = '';
 /* The ONLY tabs this script may write to, by member. Every other tab is left alone. */
 var TABS = { boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye' };
 /* Tabs that keep the newest task at the top. A new row goes right under the
@@ -265,6 +265,7 @@ function doPost(e) {
     /* Refuse to work until the sample phrase has been replaced. */
     if (!SECRET || SECRET === 'change-me-please') return json_({ ok: false, error: 'secret not set' });
     if (body.secret !== SECRET) return json_({ ok: false, error: 'unauthorised' });
+    if (!SPREADSHEET_ID.trim()) return json_({ ok: false, error: 'spreadsheet not set' });
     if (body.action === 'ping') return json_(ping_(SpreadsheetApp.openById(SPREADSHEET_ID)));
     if (body.action !== 'append' && body.action !== 'update') return json_({ ok: false, error: 'unknown action' });
     if (typeof body.who !== 'string' || !Object.prototype.hasOwnProperty.call(TABS, body.who)) {

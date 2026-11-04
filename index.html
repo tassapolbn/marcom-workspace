@@ -7230,6 +7230,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   window.sheetReason=function(res,tab){
     var er=(res&&res.error)||'no reply';
     if(er==='secret not set')return 'the script still has its sample secret phrase; set your own and redeploy it';
+    if(er==='spreadsheet not set')return "the script has no sheet ID yet; paste the sheet's ID into SPREADSHEET_ID and deploy a New version";
     if(er==='unauthorised')return 'the secret phrase in Settings does not match the script';
     if(er==='protected')return tab+"'s tab is protected, and the account that runs the link cannot edit it";
     if(er==='tab not found')return 'the sheet has no tab named '+tab;

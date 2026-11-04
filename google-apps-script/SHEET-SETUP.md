@@ -1,7 +1,6 @@
 # Google Sheet link — setup
 
-Do this once for the team's Google Sheet. Start with the test copy already set
-in the script. Connect it to the workspace in Step 6.
+Do this once for the team's Google Sheet. Connect it to the workspace in Step 6.
 
 ## Step 1 — Which Google account to use
 
@@ -26,7 +25,7 @@ will show that account.
 
 Use a separate project from the calendar script.
 
-## Step 3 — Set your secret phrase
+## Step 3 — Set your secret phrase and the sheet
 
 Near the top of the code, find:
 
@@ -35,9 +34,17 @@ Near the top of the code, find:
 Replace `change-me-please` with a long private phrase of your own. Keep it
 somewhere safe; you will paste the same phrase into Settings in Step 6.
 Do not leave it blank. The script refuses to work until the sample phrase is
-replaced. Press **Ctrl+S** to save.
+replaced.
 
-`SPREADSHEET_ID` already points to the test copy. Leave it as it is for now.
+Also find:
+
+    var SPREADSHEET_ID = '';
+
+Paste the team sheet's ID between the quotes: the part of the sheet's link
+between `/d/` and `/edit`. The script refuses to work if the ID is empty.
+
+Never put the sheet's ID or the secret into the GitHub repository, because it
+is public. Enter them only in Apps Script. Press **Ctrl+S** to save.
 
 ## Step 4 — Deploy as a Web app
 
@@ -96,10 +103,10 @@ This checks that the script is live. Step 6 checks access to the sheet.
 The workspace sends the column values and status words. The script writes the
 values it receives.
 
-## Step 8 — Switching to the real sheet
+## Step 8 — Changing the sheet
 
-1. Open the real sheet. Copy the part of its link between `/d/` and `/edit`.
-2. In the script, replace the value of `SPREADSHEET_ID` with that ID.
+1. Open the sheet you want to use. Copy the part of its link between `/d/` and `/edit`.
+2. In Apps Script, replace the value of `SPREADSHEET_ID` with that ID.
 3. Press **Ctrl+S**.
 4. Choose **Deploy > Manage deployments > pencil icon**.
 5. Set **Version: New version**, then click **Deploy**. The URL stays the same.
@@ -118,6 +125,8 @@ values it receives.
 
 - **"secret not set"**: the script still has the sample phrase. Do Step 3,
   then redeploy a New version (see the last point below).
+- **"spreadsheet not set"**: `SPREADSHEET_ID` is empty in Apps Script; do Step 3
+  and deploy a New version.
 - **"unauthorised"**: the phrase in Settings does not match `SECRET`.
 - **"tab not found"**: a tab may have been renamed. Names must be exactly
   **Boss**, **Dew**, **O** and **Eye**.
