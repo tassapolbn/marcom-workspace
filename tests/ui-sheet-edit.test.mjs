@@ -471,7 +471,13 @@ test('delete hooks require a linked card and both Undo implementations accept th
   }
 });
 
-test('hasSheetLink understands per-person rows and the older single row (delete, Undo and the card icon use it)',()=>{
+test('a card is drawn without any helper outside taskCardHTML (the card tests draw it on its own)',()=>{
+  const card=source.slice(source.indexOf('function taskCardHTML(task,who){'),source.indexOf('function kanbanHTML('));
+  assert.match(card,/const inSheet=!!\(task\.sheetRow&&typeof task\.sheetRow==='object'\)\|\|!!\(task\.sheetRows&&/);
+  assert.doesNotMatch(card,/hasSheetLink\(/,'taskCardHTML must not call a helper defined elsewhere');
+});
+
+test('hasSheetLink understands per-person rows and the older single row (delete and Undo use it)',()=>{
   const start=source.indexOf('function hasSheetLink(t){'),end=source.indexOf('function deleteTask(who,id){');
   assert.ok(start>0&&end>start);
   const context=vm.createContext({});vm.runInContext(source.slice(start,end),context);

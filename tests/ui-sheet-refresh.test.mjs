@@ -10,8 +10,8 @@ const script=source.slice(start,source.indexOf('</script>',start));
 const plain=value=>JSON.parse(JSON.stringify(value));
 const url='https://script.google.com/macros/s/saved/exec';
 const card=(extra={})=>({id:'card-1',topic:'Campaign',status:'pending',...extra});
-const linked=(extra={})=>card({sheetRow:{member:'boss',tab:'Boss',row:5,title:'Campaign'},...extra});
-const result=(kind,extra={})=>({ok:true,results:[{cardId:'card-1',result:kind,tab:'Boss',row:5,written:[],conflicts:[],...extra}]});
+const linked=(extra={})=>card({assignees:['boss'],sheetRow:{member:'boss',tab:'Boss',row:5,title:'Campaign'},...extra});
+const result=(kind,extra={})=>({ok:true,results:[{cardId:'card-1',who:'boss',result:kind,tab:'Boss',row:5,written:[],conflicts:[],...extra}]});
 
 function sheet({task=card(),cfg={url,secret:'phrase'},replies=[],answers=[],collection='boss_tasks',updateError=false}={}){
   const calls=[],toasts=[],updates=[],logs=[],questions=[],toggles=[],events=[];
@@ -45,7 +45,7 @@ function sheet({task=card(),cfg={url,secret:'phrase'},replies=[],answers=[],coll
 }
 function toast(h,message){assert.deepEqual(h.toasts,[{message,options:{duration:6000}}]);}
 function saved(h,member='boss',tab='Boss',row=5){
-  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRow:{member,tab,row,title:'Campaign'},
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{[member]:{tab,row,title:'Campaign'}},
     ...(h.stamps?{lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}:{})}}]);
 }
 
@@ -68,7 +68,7 @@ test('unlinked cards ask first; declining sends and saves nothing',async()=>{
 test('adding uses the assigned member and full row values; only shared links receive a stamp',async()=>{
   for(const shared of ['personal','collection','source']){
     const task=card({assignees:['dew'],...(shared==='source'?{__src:'event'}:{})});
-    const h=sheet({task,collection:shared==='collection'?'event_tasks':'o_tasks',answers:[true],replies:[result('added',{tab:'Dew',row:9})]});
+    const h=sheet({task,collection:shared==='collection'?'event_tasks':'o_tasks',answers:[true],replies:[result('added',{who:'dew',tab:'Dew',row:9})]});
     await h.press();
     assert.deepEqual(h.events,['confirm','sync:false']);
     assert.deepEqual(h.calls,[{action:'sync',check:false,cards:[{cardId:'card-1',who:'dew',values:plain(h.context.MarcomSheet.rowFor(task,'o','dew').values)}],secret:'phrase'}]);
@@ -78,13 +78,13 @@ test('adding uses the assigned member and full row values; only shared links rec
 });
 
 test('an existing matching row is linked and reported',async()=>{
-  const h=sheet({answers:[true],replies:[result('linked')]});await h.press();
+  const h=sheet({answers:[true],replies:[result('linked',{who:'o'})]});await h.press();
   saved(h,'o');toast(h,'Linked to the row already in the Google Sheet (Boss, row 5).');
 });
 
-test('linked cards check first, use their saved member and report unchanged or updated',async()=>{
+test('linked cards check first, use their assigned member and report unchanged or updated',async()=>{
   for(const kind of ['unchanged','updated']){
-    const task=linked({assignees:['dew']});
+    const task=linked();
     const h=sheet({task,replies:[result(kind),result(kind)]});await h.press();
     assert.deepEqual(h.calls.map(c=>[c.action,c.check,c.cards[0].who]),[['sync',true,'boss'],['sync',false,'boss']]);
     assert.deepEqual(h.calls[0].cards,h.calls[1].cards);
@@ -98,7 +98,7 @@ test('a missing linked row requires consent before adding again',async()=>{
   for(const answer of [false,true]){
     const h=sheet({task:linked(),answers:[answer],replies:[result('added',{row:0}),result('added',{row:12})]});
     await h.press();assert.equal(h.calls.length,answer?2:1);
-    assert.equal(h.questions[0].message,"This card's row is no longer in the Google Sheet. Add it again in a new empty row?");
+    assert.equal(h.questions[0].message,"The rows in Boss are no longer in the Google Sheet. Add them again?");
     assert.equal(h.questions[0].okLabel,'Add it again');
     if(answer){saved(h,'boss','Boss',12);toast(h,'Added to the Google Sheet (Boss, row 12).');}
     else{assert.equal(h.updates.length,0);assert.equal(h.toasts.length,0);}
@@ -136,7 +136,7 @@ test('updating conflicts sends exactly their keys in one additional sync',async(
 
 test('newly linked cards keep their metadata when conflicts are kept or a forced update fails',async()=>{
   for(const update of [false,true]){
-    const h=sheet({answers:[true,update],replies:[result('linked',{conflicts}),{ok:false,error:'network'}]});
+    const h=sheet({answers:[true,update],replies:[result('linked',{who:'o',conflicts}),{ok:false,error:'network'}]});
     await h.press();saved(h,'o');assert.equal(h.calls.length,update?2:1);
     assert.equal(h.toasts.length,1);
   }
@@ -152,7 +152,7 @@ test('ambiguous rows, protected rows, result errors and failed replies save noth
   ];
   for(const [reply,message] of cases){
     for(const isLinked of [false,true]){
-      const h=sheet({task:isLinked?linked():card(),answers:isLinked?[]:[true],replies:[reply]});
+      const h=sheet({task:isLinked?linked():card({assignees:['boss']}),answers:isLinked?[]:[true],replies:[reply]});
       await h.press();assert.equal(h.calls.length,1);assert.equal(h.updates.length,0);toast(h,message);
     }
   }
@@ -182,7 +182,7 @@ test('legacy fallback failure reports only its existing failure toast',async()=>
 test('unexpected failures are caught and logged',async()=>{
   const h=sheet({task:linked()});h.context.sheetCall=()=>{throw new Error('unexpected');};
   await assert.doesNotReject(h.press());assert.equal(h.logs.length,1);
-  const failed=sheet({answers:[true],replies:[result('added')],updateError:true});
+  const failed=sheet({answers:[true],replies:[result('added',{who:'o'})],updateError:true});
   await assert.doesNotReject(failed.press());assert.equal(failed.logs.length,1);
 });
 
@@ -196,10 +196,10 @@ test('task card source places the sheet action after Calendar with both icons, l
   const block=source.slice(source.indexOf('function taskCardHTML('),source.indexOf('function kanbanHTML('));
   const lines=block.split(/\r?\n/),at=lines.findIndex(l=>l.includes('uxpTaskCalendar('));
   const button=lines[at+1];
-  assert.match(button,/class="icon-btn tc-sheet-btn/);assert.match(button,/hasSheetLink\(task\)\?' sheet-on':''/);
+  assert.match(button,/class="icon-btn tc-sheet-btn/);assert.match(button,/inSheet\?' sheet-on':''/);
   assert.ok(button.includes("onclick=\"event.stopPropagation();sheetCardButton(\\''+who+'\\',\\''+task.id+'\\')\""));
-  assert.match(button,/hasSheetLink\(task\)\?'ti-table':'ti-table-plus'/);
-  for(const attribute of ['title','aria-label'])assert.ok(button.includes(attribute+'="\'+(hasSheetLink(task)?\'Refresh this card in the Google Sheet\':\'Add this card to the Google Sheet\')+\'"'));
+  assert.match(button,/inSheet\?'ti-table':'ti-table-plus'/);
+  for(const attribute of ['title','aria-label'])assert.ok(button.includes(attribute+'="\'+(inSheet?\'Refresh this card in the Google Sheet\':\'Add this card to the Google Sheet\')+\'"'));
   assert.match(lines[at+2],/duplicateTask/);
 });
 
@@ -209,4 +209,100 @@ test('CSS gates the button on settings, shows linked green in both themes and pr
   assert.match(source,/\.icon-btn\.sheet-on\{color:#147c3b;\}/);
   assert.match(source,/html\.dark \.icon-btn\.sheet-on\{color:#5fcf85;\}/);
   assert.match(source,/\.uxp-msg\{[^}]*white-space:pre-line/);
+});
+
+const personResult=(who,kind='unchanged',row=5,extra={})=>result(kind,{who,tab:{boss:'Boss',dew:'Dew',o:'O',junior:'Eye'}[who],row,...extra}).results[0];
+const peopleReply=(...results)=>({ok:true,results});
+const sharedCard=(extra={})=>card({__src:'event',assignees:['boss','dew'],...extra});
+const sharedRows={boss:{tab:'Boss',row:7,title:'Campaign'},dew:{tab:'Dew',row:12,title:'Campaign'}};
+
+test('a new shared card names every tab, sends one entry per person, saves once and gives one toast',async()=>{
+  const task=sharedCard({description:'Brief',notes:'Team note'});
+  const h=sheet({task,answers:[true],replies:[peopleReply(personResult('dew','added',12),personResult('boss','added',7))]});
+  await h.press();
+  assert.equal(h.questions[0].message,'"Campaign" will go into Boss and Dew\'s tabs, a new empty row in each. If the same task is already typed in a tab once, the card is linked to that row instead, and nothing in it is overwritten.');
+  assert.deepEqual(h.calls,[{action:'sync',check:false,cards:['boss','dew'].map(who=>({cardId:task.id,who,values:plain(h.context.MarcomSheet.rowFor(task,'o',who).values)})),secret:'phrase'}]);
+  assert.deepEqual(h.updates,[{id:task.id,upd:{sheetRows:sharedRows,lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
+  assert.equal(h.stamps,1);assert.equal(h.logs.length,0);
+  toast(h,'Google Sheet: Boss row 7 added; Dew row 12 added.');
+});
+
+test('three assigned tabs are all named in the question',async()=>{
+  const h=sheet({task:sharedCard({assignees:['boss','dew','o']}),answers:[false]});await h.press();
+  assert.match(h.questions[0].message,/Boss, Dew and O's tabs/);assert.equal(h.calls.length,0);
+});
+
+test('done cards force Status for every person, on both check and real sync',async()=>{
+  for(const done of [{status:'done'},{done:true}]){
+    const task=sharedCard({...done,sheetRows:sharedRows});
+    const h=sheet({task,replies:[peopleReply(personResult('boss','unchanged',7),personResult('dew','unchanged',12)),peopleReply(personResult('boss','updated',7),personResult('dew','updated',12))]});
+    await h.press();assert.equal(h.calls.length,2);
+    for(const call of h.calls)assert.deepEqual(call.cards.map(c=>[c.who,c.force]),[['boss',['status']],['dew',['status']]]);
+    assert.equal(h.questions.length,0);assert.equal(h.updates.length,0);
+    toast(h,'Google Sheet: Boss row 7 updated; Dew row 12 updated.');
+  }
+});
+
+test('the card button cancels only the removed person with a forced tab-only update',async()=>{
+  const task=sharedCard({assignees:['boss'],sheetRows:sharedRows});
+  const h=sheet({task,replies:[peopleReply(personResult('boss','unchanged',7)),peopleReply(personResult('boss','updated',7)),{ok:true,tab:'Dew',row:13}]});
+  await h.press();
+  assert.deepEqual(h.calls.slice(0,2).map(c=>c.cards.map(c=>c.who)),[['boss'],['boss']]);
+  assert.deepEqual(h.calls[2],{action:'update',who:'dew',cardId:task.id,tabOnly:true,row:12,title:'Campaign',values:{status:'Cancel'},force:['status'],secret:'phrase'});
+  assert.equal(h.updates.length,1);assert.equal(h.stamps,1);
+  assert.deepEqual(h.updates[0].upd.sheetRows,{...sharedRows,dew:{...sharedRows.dew,row:13}});
+  toast(h,'Google Sheet: Boss row 7 updated; Dew row 13 marked Cancel.');
+});
+
+test('an entirely unassigned linked card still cancels its former people',async()=>{
+  const h=sheet({task:sharedCard({assignees:[],sheetRows:sharedRows}),replies:[{ok:true,row:7},{ok:true,row:12}]});
+  await h.press();assert.deepEqual(h.calls.map(c=>[c.action,c.who,c.values.status,c.tabOnly,c.force]),[
+    ['update','boss','Canceled',true,['status']],['update','dew','Cancel',true,['status']]
+  ]);assert.equal(h.updates.length,0);assert.equal(h.questions.length,0);
+});
+
+test('declining missing rows asks once and excludes only those people from the real run',async()=>{
+  const task=sharedCard({assignees:['boss','dew','o'],sheetRows:{...sharedRows,o:{tab:'O',row:9,title:'Campaign'}}});
+  const h=sheet({task,answers:[false],replies:[peopleReply(personResult('boss','added',0),personResult('dew','updated',12),personResult('o','added',0)),peopleReply(personResult('dew','updated',12))]});
+  await h.press();assert.equal(h.questions.length,1);
+  assert.equal(h.questions[0].message,'The rows in Boss and O are no longer in the Google Sheet. Add them again?');
+  assert.deepEqual(h.calls[0].cards.map(c=>c.who),['boss','dew','o']);
+  assert.deepEqual(h.calls[1].cards.map(c=>c.who),['dew']);
+  assert.equal(h.updates.length,0);toast(h,'Google Sheet: Dew row 12 updated.');
+});
+
+test('a shared card missing only its second link adds that person without a missing-row question',async()=>{
+  const h=sheet({task:sharedCard({sheetRow:{member:'boss',...sharedRows.boss}}),replies:[peopleReply(personResult('boss','unchanged',7),personResult('dew','added',0)),peopleReply(personResult('boss','unchanged',7),personResult('dew','added',12))]});
+  await h.press();assert.equal(h.questions.length,0);assert.equal(h.updates.length,1);
+  assert.deepEqual(h.updates[0].upd.sheetRows,sharedRows);assert.equal(h.stamps,1);
+});
+
+test('shared conflicts ask per row and each Update resends only that person and their conflict keys',async()=>{
+  const bossConflict=[{key:'note',sheet:'Keep',card:'New'}],dewConflict=[{key:'priority',sheet:'Low',card:'High'}];
+  const h=sheet({task:sharedCard(),answers:[true,true,true],replies:[
+    peopleReply(personResult('dew','linked',12,{conflicts:dewConflict}),personResult('boss','linked',7,{conflicts:bossConflict})),
+    peopleReply(personResult('boss','updated',8)),peopleReply(personResult('dew','updated',13))
+  ]});
+  await h.press();assert.equal(h.questions.length,3);
+  assert.match(h.questions[1].message,/Boss's tab, row 7/);assert.match(h.questions[2].message,/Dew's tab, row 12/);
+  assert.deepEqual(h.calls.slice(1).map(c=>c.cards.map(item=>[item.who,item.force])),[[['boss',['note']]],[['dew',['priority']]]]);
+  assert.equal(h.updates.length,1);assert.equal(h.stamps,1);
+  assert.deepEqual(h.updates[0].upd.sheetRows,{boss:{...sharedRows.boss,row:8},dew:{...sharedRows.dew,row:13}});
+  toast(h,'Google Sheet: Boss row 8 updated; Dew row 13 updated.');
+});
+
+test('a failed shared conflict update still saves both established row links once',async()=>{
+  const h=sheet({task:sharedCard(),answers:[true,true],replies:[
+    peopleReply(personResult('boss','linked',7,{conflicts:[{key:'note',sheet:'Keep',card:'New'}]}),personResult('dew','added',12)),
+    {ok:false,error:'network'}
+  ]});
+  await h.press();assert.equal(h.updates.length,1);assert.deepEqual(h.updates[0].upd.sheetRows,sharedRows);
+  assert.equal(h.toasts.length,1);assert.match(h.toasts[0].message,/Google could not be reached/);assert.match(h.toasts[0].message,/Dew row 12 added/);
+});
+
+test('the card button rejects missing or duplicate person results before saving',async()=>{
+  for(const results of [[personResult('boss')],[personResult('boss'),personResult('boss')]]){
+    const h=sheet({task:sharedCard({sheetRows:sharedRows}),replies:[peopleReply(...results)]});await h.press();
+    assert.equal(h.calls.length,1);assert.equal(h.updates.length,0);assert.match(h.toasts[0].message,/incomplete card results/);
+  }
 });

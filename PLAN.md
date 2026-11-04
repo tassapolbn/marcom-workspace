@@ -2949,7 +2949,7 @@ first person's tab only).
     looks only at the old field, and updated three tests to the new format.
     Sheet tests 225 pass; UI suite 520 pass, the same 2 failures.
 
-- [ ] **94. The card button and Refresh all, one row per person**
+- [x] **94. The card button and Refresh all, one row per person**
   - Files: `index.html`, `tests/ui-sheet-refresh.test.mjs`,
     `tests/ui-sheet-refresh-all.test.mjs`.
   - The card button checks and fills every person's row of a shared card.
@@ -2958,6 +2958,20 @@ first person's tab only).
     cards that so far are only in the first person's tab (decision 4), all
     shown in the summary before Apply. Status differences of completed cards
     are listed already ticked (decision 2).
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-94.md, reviewed by
+    Claude): the card button sends one entry per person (done cards force
+    Status), cancels rows of people taken off, asks once when rows were removed
+    in the sheet, and saves all rows once; Refresh all works per (card,
+    person), adds the missing rows of shared cards, ticks Status differences of
+    done cards, and lists "Rows of deleted cards" and "Rows of people taken off
+    a card" (both ticked), applying them as `{cardId, who}`. Claude fixed his
+    own step 93 slip: the card icon called `hasSheetLink()`, which the card
+    tests (that draw a card on its own) do not have, so 12 of them failed;
+    `taskCardHTML` now works it out itself (`inSheet`), with a test that it uses
+    no outside helper. These tests only ran because `index.html` now has LF line
+    endings in this copy; the one layout test still failing checks
+    `assets/workspace-ui.css`, which has CRLF here and was not touched. Sheet
+    tests 242 pass; UI suite 667 pass, 2 known failures.
 
 - [ ] **95. Docs and ship**
   - README, `SHEET-SETUP.md`, merge into `main`, push, check the deploy, and
