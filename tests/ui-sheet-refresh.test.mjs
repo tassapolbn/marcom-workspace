@@ -164,7 +164,10 @@ test('unknown action falls back through sheetSyncNew only for an unlinked card',
   const original=h.context.sheetSyncNew;let fallback=0;
   h.context.sheetSyncNew=(...args)=>{fallback++;assert.equal(args[0],'o');assert.equal(args[1],'card-1');assert.equal(args[3],h.colRef);return original(...args);};
   await h.press();assert.equal(fallback,1);
-  assert.deepEqual(h.calls.map(c=>c.action),['sync','append']);saved(h,'o','O',7);
+  assert.deepEqual(h.calls.map(c=>c.action),['sync','append']);
+  /* sheetSyncNew now saves the per-person map (plan 10). */
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{o:{tab:'O',row:7,title:'Campaign'}},
+    ...(h.stamps?{lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}:{})}}]);
   toast(h,'Added to the Google Sheet (O, row 7). Used the older script to add a fresh empty row.');
   const old=sheet({task:linked(),replies:[unknown]});await old.press();
   assert.equal(old.calls.length,1);assert.equal(old.calls[0].check,true);assert.equal(old.updates.length,0);
@@ -193,10 +196,10 @@ test('task card source places the sheet action after Calendar with both icons, l
   const block=source.slice(source.indexOf('function taskCardHTML('),source.indexOf('function kanbanHTML('));
   const lines=block.split(/\r?\n/),at=lines.findIndex(l=>l.includes('uxpTaskCalendar('));
   const button=lines[at+1];
-  assert.match(button,/class="icon-btn tc-sheet-btn/);assert.match(button,/task\.sheetRow\?' sheet-on':''/);
+  assert.match(button,/class="icon-btn tc-sheet-btn/);assert.match(button,/hasSheetLink\(task\)\?' sheet-on':''/);
   assert.ok(button.includes("onclick=\"event.stopPropagation();sheetCardButton(\\''+who+'\\',\\''+task.id+'\\')\""));
-  assert.match(button,/task\.sheetRow\?'ti-table':'ti-table-plus'/);
-  for(const attribute of ['title','aria-label'])assert.ok(button.includes(attribute+'="\'+(task.sheetRow?\'Refresh this card in the Google Sheet\':\'Add this card to the Google Sheet\')+\'"'));
+  assert.match(button,/hasSheetLink\(task\)\?'ti-table':'ti-table-plus'/);
+  for(const attribute of ['title','aria-label'])assert.ok(button.includes(attribute+'="\'+(hasSheetLink(task)?\'Refresh this card in the Google Sheet\':\'Add this card to the Google Sheet\')+\'"'));
   assert.match(lines[at+2],/duplicateTask/);
 });
 

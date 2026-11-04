@@ -2926,7 +2926,7 @@ first person's tab only).
     (`{cardId, who}`). Script tests 60 pass; UI suite 502 pass, the same 2
     failures.
 
-- [ ] **93. The app sends every person's row**
+- [x] **93. The app sends every person's row**
   - Files: `index.html` (the `sheet-script` block), `tests/ui-sheet-link.test.mjs`,
     `tests/ui-sheet-edit.test.mjs`.
   - A new shared card gets a fresh row in each person's tab, in that tab's
@@ -2936,6 +2936,18 @@ first person's tab only).
   - Status follows the app without asking when a card is completed, reopened,
     deleted or restored, in every row of that card (decision 2). Other cells
     still follow plan 9's rule (ask before overwriting).
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-93.md, reviewed by
+    Claude): new shared cards get a fresh row per person; edits, completing,
+    reopening, deleting and Undo update every row of the card in its own tab
+    (`tabOnly`), with Status forced in the cases Boss named; people added get a
+    row, people taken off get Canceled; all of a card's rows are saved once as
+    `sheetRows`. Codex rightly flagged, outside its scope, that the delete and
+    Undo hooks and the card's icon still looked only at the old single
+    `sheetRow`, so a card saved in the new format would not have been marked
+    Canceled on delete. Claude added `hasSheetLink()` (both formats) and used it
+    in those three places, with a test that no check outside the sheet module
+    looks only at the old field, and updated three tests to the new format.
+    Sheet tests 225 pass; UI suite 520 pass, the same 2 failures.
 
 - [ ] **94. The card button and Refresh all, one row per person**
   - Files: `index.html`, `tests/ui-sheet-refresh.test.mjs`,

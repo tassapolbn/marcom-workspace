@@ -12,7 +12,7 @@ const plain=value=>JSON.parse(JSON.stringify(value));
 const url='https://script.google.com/macros/s/saved/exec';
 const tabs={boss:'Boss',dew:'Dew',o:'O',junior:'Eye'};
 const card=(member='boss',extra={})=>({topic:'Campaign',status:'pending',
-  sheetRow:{member,tab:tabs[member],row:5,title:'Campaign'},...extra});
+  assignees:[member],sheetRow:{member,tab:tabs[member],row:5,title:'Campaign'},...extra});
 
 function sheet({cfg={url,secret:'phrase'},reply={ok:true,tab:'Boss',row:5},fetchError=false,updateError=false,replies,confirm=false}={}){
   const calls=[],toasts=[],updates=[],logs=[],infos=[],notices=[];
@@ -69,7 +69,7 @@ test('unchanged sheet cells make no request, including app-only edits',async()=>
 test('Boss status edit sends only the changed cell using the linked member and row hints',async()=>{
   const h=sheet();await sync(h,'sheetSyncEdit',card('boss',{status:'in-progress'}));
   assert.equal(h.calls.length,1);
-  assert.deepEqual(h.calls[0].body,{action:'update',who:'boss',cardId:'card-1',row:5,title:'Campaign',values:{status:'Completed'},expect:{status:'In progress'},secret:'phrase'});
+  assert.deepEqual(h.calls[0].body,{action:'update',who:'boss',cardId:'card-1',tabOnly:true,row:5,title:'Campaign',values:{status:'Completed'},expect:{status:'In progress'},force:['status'],secret:'phrase'});
   assert.equal(h.updates.length,0);assert.equal(h.toasts.length,0);
 });
 
@@ -80,14 +80,14 @@ test('title changes save new fallback hints, including an explicitly cleared tit
     assert.deepEqual(h.calls[0].body.values,{task:title});
     assert.deepEqual(h.calls[0].body.expect,{task:'Campaign'});
     assert.equal(h.calls[0].body.title,'Campaign');
-    assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRow:{member:'boss',tab:'Boss',row:5,title}}}]);
+    assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{boss:{tab:'Boss',row:5,title}}}}]);
   }
 });
 
 test('a moved sheet row saves its returned location; unchanged or absent row does not write',async()=>{
   const h=sheet({reply:{ok:true,tab:'Eye',row:12}});
   await sync(h,'sheetSyncEdit',card());
-  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRow:{member:'boss',tab:'Eye',row:12,title:'Campaign'}}}]);
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{boss:{tab:'Eye',row:12,title:'Campaign'}}}}]);
   for(const reply of [{ok:true,row:5},{ok:true}]){
     const unchanged=sheet({reply});await sync(unchanged,'sheetSyncEdit',card());
     assert.equal(unchanged.updates.length,0);
@@ -100,7 +100,7 @@ test('shared row hint updates stamp edits for collection and source markers',asy
     if(!bySource)h.colRef.id='event_tasks';
     await sync(h,'sheetSyncEdit',card('boss',bySource?{__src:'event'}:{}));
     assert.deepEqual(h.updates,[{id:'card-1',upd:{
-      sheetRow:{member:'boss',tab:'Boss',row:8,title:'Campaign'},
+      sheetRows:{boss:{tab:'Boss',row:8,title:'Campaign'}},
       lastEditedBy:'boss@example.test',lastEditedAt:'stamp'
     }}]);
   }
@@ -136,7 +136,7 @@ test('cancel and restore use each linked tab wording without deleting a row',asy
     await sync(h,'sheetSyncRestore',task);
     assert.equal(h.calls.length,2);
     for(const [i,status] of [canceled,'In progress'].entries()){
-      assert.deepEqual(h.calls[i].body,{action:'update',who:member,cardId:'card-1',row:5,title:'Campaign',values:{status},expect:{status:i===0?'In progress':canceled},secret:'phrase'});
+      assert.deepEqual(h.calls[i].body,{action:'update',who:member,cardId:'card-1',tabOnly:true,row:5,title:'Campaign',values:{status},force:['status'],secret:'phrase'});
     }
     assert.equal(h.updates.length,0);assert.equal(h.toasts.length,0);
   }
@@ -159,14 +159,14 @@ for(const method of ['sheetSyncEdit','sheetSyncCancel','sheetSyncRestore']){
     }
   });
 
-  for(const approve of [false,true]){
+  if(method==='sheetSyncEdit')for(const approve of [false,true]){
     test(method+(approve?' updates only approved conflicts':' keeps the sheet after showing conflicts'),async()=>{
       for(const location of [{tab:'Eye',row:12},{}]){
-        const value=method==='sheetSyncCancel'?'Canceled':method==='sheetSyncRestore'?'Not started':'Completed';
+        const value='Waiting for approval';
         const conflicts=[{key:'status',sheet:'Waiting for approval',card:value}];
         const h=sheet({replies:[{ok:true,...location,conflicts},{ok:true}],confirm:approve});
         const before=card();
-        await sync(h,method,before,{...before,status:'done',notes:'Non-conflicting change'});
+        await sync(h,method,before,{...before,status:'waiting',notes:'Non-conflicting change'});
         const tab=location.tab||'Boss',row=location.row||5;
         assert.equal(h.notices.length,1);
         assert.deepEqual(h.notices[0],{
@@ -177,7 +177,7 @@ for(const method of ['sheetSyncEdit','sheetSyncCancel','sheetSyncRestore']){
         });
         assert.equal(h.calls.length,approve?2:1);
         if(approve)assert.deepEqual(h.calls[1].body,{
-          action:'update',who:'boss',cardId:'card-1',row,title:'Campaign',
+          action:'update',who:'boss',cardId:'card-1',tabOnly:true,row,title:'Campaign',
           values:{status:value},force:['status'],secret:'phrase'
         });
         assert.deepEqual(h.toasts,[{message:(approve?'Updated the Google Sheet':'Kept what is in the Google Sheet')+
@@ -187,11 +187,11 @@ for(const method of ['sheetSyncEdit','sheetSyncCancel','sheetSyncRestore']){
     });
   }
 
-  test(method+' reports forced update failures with the usual toast and keeps not found quiet',async()=>{
-    const first={ok:true,conflicts:[{key:'status',sheet:'External status',card:'Completed'}]};
+  if(method==='sheetSyncEdit')test(method+' reports forced update failures with the usual toast and keeps not found quiet',async()=>{
+    const first={ok:true,conflicts:[{key:'status',sheet:'External status',card:'Waiting for approval'}]};
     for(const error of ['protected','network','not found']){
       const h=sheet({replies:[first,{ok:false,error}],confirm:true});
-      await sync(h,method,card());
+      await sync(h,method,card(),{...card(),status:'waiting'});
       const usual=sheet({reply:{ok:false,error}});await sync(usual,method,card());
       assert.equal(h.calls.length,2);assert.deepEqual(h.toasts,usual.toasts);assert.deepEqual(h.infos,usual.infos);
     }
@@ -210,9 +210,9 @@ test('forced edits retain date objects and explicit empty values for exactly the
 
 test('concurrent conflicting changes show one notice at a time',async()=>{
   const answers=[];
-  const h=sheet({reply:{ok:true,conflicts:[{key:'status',sheet:'External status',card:'Completed'}]},
+  const h=sheet({reply:{ok:true,conflicts:[{key:'status',sheet:'External status',card:'Waiting for approval'}]},
     confirm:()=>new Promise(resolve=>answers.push(resolve))});
-  const first=sync(h,'sheetSyncEdit',card()),second=sync(h,'sheetSyncCancel',card());
+  const first=sync(h,'sheetSyncEdit',card(),{...card(),status:'waiting'}),second=sync(h,'sheetSyncEdit',card(),{...card(),status:'waiting'});
   await flush();
   assert.equal(h.calls.length,2);assert.equal(h.notices.length,1);assert.equal(answers.length,1);
   answers[0](false);
@@ -232,6 +232,167 @@ test('unexpected helper and metadata-write failures are caught and logged',async
   const h=sheet({reply:{ok:true,row:9},updateError:true});
   await assert.doesNotReject(sync(h,'sheetSyncEdit',card()));
   assert.equal(h.logs.length,1);assert.equal(h.toasts.length,0);
+});
+
+const shared=(extra={})=>({topic:'Campaign',__src:'event',assignees:['dew','o'],status:'in-progress',
+  sheetRows:{dew:{tab:'Dew',row:7,title:'Campaign'},o:{tab:'O',row:12,title:'Campaign'}},...extra});
+const update=(who,row,values,extra={})=>({action:'update',who,cardId:'card-1',tabOnly:true,row,title:'Campaign',values,...extra,secret:'phrase'});
+
+test('an own card without assignees follows its person and its legacy single link',async()=>{
+  const h=sheet({reply:{ok:true}}),before=card('boss',{assignees:undefined,status:'in-progress'});
+  await h.context.sheetSyncEdit('boss','card-1',before,{...before,status:'waiting'},h.colRef);
+  assert.deepEqual(h.calls.map(c=>c.body),[update('boss',5,{status:'Waiting for approval'},{expect:{status:'In progress'}})]);
+  assert.equal(h.updates.length,0);
+});
+
+test('ordinary shared status changes use each tab wording and expectations without force',async()=>{
+  const h=sheet({reply:{ok:true}}),before=shared();
+  await sync(h,'sheetSyncEdit',before,{...before,status:'waiting'});
+  assert.deepEqual(h.calls.map(c=>c.body),[
+    update('dew',7,{status:'Waiting for response'},{expect:{status:'In progress'}}),
+    update('o',12,{status:'Blocked'},{expect:{status:'In progress'}})
+  ]);
+  assert.equal(h.updates.length,0);assert.equal(h.notices.length,0);
+});
+
+test('completing and reopening force Status in every row for status and done flag cards',async()=>{
+  for(const doneFlag of [false,true]){
+    const h=sheet({reply:{ok:true,conflicts:[]}});
+    const before=shared(doneFlag?{status:undefined,done:false}:{});
+    const after={...before,...(doneFlag?{done:true}:{status:'done'})};
+    await sync(h,'sheetSyncEdit',before,after);
+    await sync(h,'sheetSyncEdit',after,before);
+    assert.equal(h.calls.length,4);assert.equal(h.notices.length,0);
+    for(const [i,call] of h.calls.entries()){
+      const member=i%2?'o':'dew',status=doneFlag?(member==='dew'?'Ready to do!':'Not started'):'In progress';
+      assert.deepEqual(call.body,update(member,i%2?12:7,{status:i<2?'Completed':status},
+        {expect:{status:i<2?status:'Completed'},force:['status']}));
+    }
+  }
+});
+
+test('a non-status edit does not force cells even on a completed card',async()=>{
+  const h=sheet({reply:{ok:true}}),before=shared({status:'done'});
+  await sync(h,'sheetSyncEdit',before,{...before,assignedBy:'Boss'});
+  for(const call of h.calls){
+    assert.deepEqual(call.body.values,{'assigned by':'Boss'});
+    assert.deepEqual(call.body.expect,{'assigned by':''});
+    assert.equal(call.body.force,undefined);
+  }
+  assert.equal(h.calls.length,2);
+});
+
+for(const approve of [false,true]){
+  test('shared non-status conflicts ask sequentially and '+(approve?'force only approved keys':'Keep sends nothing'),async()=>{
+    const answers=[],before=shared(),conflicts=[{key:'assigned by',sheet:'Sheet owner',card:'Boss'}];
+    const h=sheet({confirm:()=>new Promise(resolve=>answers.push(resolve)),replies:approve?
+      [{ok:true,conflicts},{ok:true},{ok:true,conflicts},{ok:true}]:[{ok:true,conflicts},{ok:true,conflicts}]});
+    const pending=sync(h,'sheetSyncEdit',before,{...before,status:'done',assignedBy:'Boss'});
+    await flush();
+    assert.equal(h.calls.length,1);assert.equal(h.notices.length,1);assert.equal(h.updates.length,0);
+    assert.match(h.notices[0].message,/Dew's tab, row 7/);
+    answers[0](approve);await flush();
+    assert.equal(h.calls.length,approve?3:2);assert.equal(h.notices.length,2);
+    assert.match(h.notices[1].message,/O's tab, row 12/);
+    answers[1](approve);await pending;
+    assert.equal(h.calls.length,approve?4:2);
+    if(approve){
+      assert.deepEqual(h.calls[1].body,update('dew',7,{'assigned by':'Boss'},{force:['assigned by']}));
+      assert.deepEqual(h.calls[3].body,update('o',12,{'assigned by':'Boss'},{force:['assigned by']}));
+    }
+    for(const i of approve?[0,2]:[0,1]){
+      assert.deepEqual(h.calls[i].body.values,{'assigned by':'Boss',status:'Completed'});
+      assert.deepEqual(h.calls[i].body.force,['status']);
+    }
+  });
+}
+
+test('removing O cancels its existing row; adding Junior appends Eye and saves all links once',async()=>{
+  const h=sheet({replies:[{ok:true},{ok:true,tab:'Eye',row:21}]}),before=shared();
+  await sync(h,'sheetSyncEdit',before,{...before,assignees:['dew','junior']});
+  assert.deepEqual(h.calls.map(c=>c.body),[
+    update('o',12,{status:'CANCELLED'},{force:['status']}),
+    {action:'append',who:'junior',cardId:'card-1',values:{task:'Campaign',status:'In progress'},secret:'phrase'}
+  ]);
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{...before.sheetRows,junior:{tab:'Eye',row:21,title:'Campaign'}},lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
+  assert.equal(h.notices.length,0);
+});
+
+test('an edit never sends an unlinked card, even when people are added or removed',async()=>{
+  for(const sheetRows of [undefined,{}]){
+    const h=sheet(),before=shared({sheetRows});
+    await sync(h,'sheetSyncEdit',before,{...before,assignees:['junior']});
+    assert.equal(h.calls.length,0);assert.equal(h.updates.length,0);assert.equal(h.toasts.length,0);
+  }
+});
+
+test('putting O back restores its existing row status with force instead of appending',async()=>{
+  const h=sheet({reply:{ok:true}}),before=shared({assignees:['dew'],status:'waiting'});
+  await sync(h,'sheetSyncEdit',before,{...before,assignees:['dew','o']});
+  assert.deepEqual(h.calls.map(c=>c.body),[update('o',12,{status:'Blocked'},{force:['status']})]);
+  assert.equal(h.updates.length,0);assert.equal(h.notices.length,0);
+});
+
+test('a forced removal does not force another member ordinary status change',async()=>{
+  const h=sheet({reply:{ok:true}}),before=shared();
+  await sync(h,'sheetSyncEdit',before,{...before,assignees:['o'],status:'waiting'});
+  assert.deepEqual(h.calls.map(c=>c.body),[
+    update('dew',7,{status:'Cancel'},{force:['status']}),
+    update('o',12,{status:'Blocked'},{expect:{status:'In progress'}})
+  ]);
+});
+
+test('delete and Undo force every linked row status without any notice, including former members',async()=>{
+  const h=sheet({reply:{ok:true,conflicts:[{key:'status',sheet:'Manual change',card:'Ignored conflict'}]}});
+  const before=shared({assignees:['dew'],status:'waiting'});
+  await sync(h,'sheetSyncCancel',before);await sync(h,'sheetSyncRestore',before);
+  assert.deepEqual(h.calls.map(c=>c.body),[
+    update('dew',7,{status:'Cancel'},{force:['status']}),
+    update('o',12,{status:'CANCELLED'},{force:['status']}),
+    update('dew',7,{status:'Waiting for response'},{force:['status']}),
+    update('o',12,{status:'Blocked'},{force:['status']})
+  ]);
+  assert.equal(h.notices.length,0);assert.equal(h.toasts.length,0);
+});
+
+for(const method of ['sheetSyncEdit','sheetSyncCancel','sheetSyncRestore']){
+  test(method+' handles every row after failures and reports errors per tab',async()=>{
+    const h=sheet({replies:[{ok:false,error:'protected'},{ok:false,error:'network'}]}),before=shared();
+    await sync(h,method,before,{...before,status:'waiting'});
+    assert.equal(h.calls.length,2);assert.equal(h.toasts.length,2);
+    assert.match(h.toasts[0].message,/Google Sheet \(Dew\).*Dew's tab is protected/);
+    assert.match(h.toasts[1].message,/Google Sheet \(O\).*Google could not be reached/);
+    assert.equal(h.updates.length,0);
+  });
+}
+
+test('edit append errors name Eye while successful changed row hints are saved once',async()=>{
+  const h=sheet({replies:[{ok:true,row:8},{ok:true,row:13},{ok:false,error:'protected'}]}),before=shared();
+  await sync(h,'sheetSyncEdit',before,{...before,topic:'New campaign',assignees:['dew','o','junior']});
+  assert.equal(h.calls.length,3);assert.equal(h.toasts.length,1);
+  assert.match(h.toasts[0].message,/Google Sheet \(Eye\).*Eye's tab is protected/);
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{dew:{tab:'Dew',row:8,title:'New campaign'},o:{tab:'O',row:13,title:'New campaign'}},lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
+});
+
+test('a failed conflict update still preserves changed links and continues to the next member',async()=>{
+  const before=shared(),h=sheet({confirm:true,replies:[
+    {ok:true,row:8,conflicts:[{key:'task',sheet:'Sheet title',card:'New campaign'}]},
+    {ok:false,error:'protected'},{ok:true,row:13}
+  ]});
+  await sync(h,'sheetSyncEdit',before,{...before,topic:'New campaign'});
+  assert.equal(h.calls.length,3);assert.equal(h.notices.length,1);assert.equal(h.toasts.length,1);
+  assert.equal(h.calls[2].body.who,'o');assert.equal(h.updates.length,1);
+  assert.deepEqual(h.updates[0].upd.sheetRows,{dew:{tab:'Dew',row:8,title:'New campaign'},o:{tab:'O',row:13,title:'New campaign'}});
+});
+
+test('an old single link is updated once and carried into the map when a new member is added',async()=>{
+  const h=sheet({replies:[{ok:true,row:8},{ok:true,row:12}]}),before=card('dew',{__src:'event'});
+  await sync(h,'sheetSyncEdit',before,{...before,topic:'New campaign',assignees:['dew','o']});
+  assert.equal(h.calls.length,2);
+  assert.deepEqual(h.calls[0].body,update('dew',5,{task:'New campaign'},{expect:{task:'Campaign'}}));
+  assert.equal(h.calls[1].body.action,'append');assert.equal(h.calls[1].body.who,'o');
+  assert.deepEqual(h.updates,[{id:'card-1',upd:{sheetRows:{dew:{tab:'Dew',row:8,title:'New campaign'},o:{tab:'O',row:12,title:'New campaign'}},lastEditedBy:'boss@example.test',lastEditedAt:'stamp'}}]);
+  assert.deepEqual(before.sheetRow,{member:'dew',tab:'Dew',row:5,title:'Campaign'});
 });
 
 function between(from,to){
@@ -298,8 +459,8 @@ test('edit, move, menu and done hooks stay in the requested paths and preserve e
 
 test('delete hooks require a linked card and both Undo implementations accept the callback',()=>{
   const deletion=between('function deleteTask(','function duplicateTask(');
-  assert.match(deletion,/if\(!ok\)return;[\s\S]*if\(t&&t.sheetRow&&window.sheetSyncCancel\)sheetSyncCancel\(who,id,t\)/);
-  assert.match(deletion,/var afterUndo=t&&t.sheetRow\?function\(\)\{try\{if\(window.sheetSyncRestore\)sheetSyncRestore\(who,id,t\);\}catch\(e\)/);
+  assert.match(deletion,/if\(!ok\)return;[\s\S]*if\(hasSheetLink\(t\)&&window.sheetSyncCancel\)sheetSyncCancel\(who,id,t\)/);
+  assert.match(deletion,/var afterUndo=hasSheetLink\(t\)\?function\(\)\{try\{if\(window.sheetSyncRestore\)sheetSyncRestore\(who,id,t\);\}catch\(e\)/);
   assert.equal((deletion.match(/deleteWithUndo\(_cref,id,t,'Task deleted',afterUndo\)/g)||[]).length,2);
   assert.match(baseDelete,/function deleteWithUndo\(colRef,id,item,label,afterUndo\)/);
   assert.match(calendarDelete,/window.deleteWithUndo=function\(colRef,id,item,label,afterUndo\)/);
@@ -308,4 +469,16 @@ test('delete hooks require a linked card and both Undo implementations accept th
     assert.match(block,/set\(data\).then\(function\(\)\{\s*if\(typeof afterUndo==='function'\)afterUndo\(\)/);
     assert.match(block,/dbSaveFailed\(e,'the restored item'\)/);
   }
+});
+
+test('hasSheetLink understands per-person rows and the older single row (delete, Undo and the card icon use it)',()=>{
+  const start=source.indexOf('function hasSheetLink(t){'),end=source.indexOf('function deleteTask(who,id){');
+  assert.ok(start>0&&end>start);
+  const context=vm.createContext({});vm.runInContext(source.slice(start,end),context);
+  assert.equal(context.hasSheetLink({sheetRows:{dew:{tab:'Dew',row:5,title:'x'}}}),true);
+  assert.equal(context.hasSheetLink({sheetRow:{member:'boss',tab:'Boss',row:5,title:'x'}}),true);
+  assert.equal(context.hasSheetLink({sheetRows:{}}),false);
+  assert.equal(context.hasSheetLink({}),false);
+  assert.equal(context.hasSheetLink(null),false);
+  assert.doesNotMatch(source,/task\.sheetRow\?|t&&t\.sheetRow/,'no check outside the sheet module looks only at the old single row');
 });
