@@ -7255,15 +7255,20 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       return res;
     }catch(e){console.error('[sheet] step failed',e);}
   };
+  var sheetConflictQueue=Promise.resolve();
   window.sheetAskConflicts=function(tab,row,conflicts){
-    var lines=[tab+"'s tab, row "+row+', already has:'];
-    conflicts.forEach(function(c){
-      var key=String(c.key), value=c.card===null||c.card===undefined||c.card===''?'(empty)':String(c.card);
-      lines.push(key.charAt(0).toUpperCase()+key.slice(1)+': sheet "'+c.sheet+'", card "'+value+'"');
+    var notice=sheetConflictQueue.then(function(){
+      var lines=[tab+"'s tab, row "+row+', already has:'];
+      conflicts.forEach(function(c){
+        var key=String(c.key), value=c.card===null||c.card===undefined||c.card===''?'(empty)':String(c.card);
+        lines.push(key.charAt(0).toUpperCase()+key.slice(1)+': sheet "'+c.sheet+'", card "'+value+'"');
+      });
+      lines.push("Update the sheet with the card's details, or keep what is in the sheet?");
+      return uiConfirm({title:'The Google Sheet has different information',icon:'ti-alert-triangle',
+        message:lines.join('\n'),okLabel:'Update the sheet',cancelLabel:'Keep the sheet'});
     });
-    lines.push("Update the sheet with the card's details, or keep what is in the sheet?");
-    return uiConfirm({title:'The Google Sheet has different information',icon:'ti-alert-triangle',
-      message:lines.join('\n'),okLabel:'Update the sheet',cancelLabel:'Keep the sheet'});
+    sheetConflictQueue=notice.catch(function(){});
+    return notice;
   };
   window.sheetCardButton=async function(who,id){
     try{
@@ -7333,13 +7338,29 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       else if(res.result==='unchanged')toast('Already up to date in the Google Sheet ('+tab+').');
     }catch(e){console.error('[sheet] step failed',e);}
   };
+  async function sheetResolveUpdate(res,member,id,row,values){
+    if(!res||!res.ok||!res.conflicts||!res.conflicts.length)return res;
+    var tab=res.tab||row.tab, rowNumber=res.row||row.row;
+    var location=' ('+tab+', row '+rowNumber+').';
+    if(!await window.sheetAskConflicts(tab,rowNumber,res.conflicts)){
+      uiToast('Kept what is in the Google Sheet'+location,{duration:6000});
+      return res;
+    }
+    var forced={}, keys=res.conflicts.map(function(c){return c.key;});
+    keys.forEach(function(key){forced[key]=values[key];});
+    var reply=await window.sheetCall({action:'update',who:member,cardId:id,row:rowNumber,title:row.title,values:forced,force:keys});
+    if(reply&&reply.ok)uiToast('Updated the Google Sheet ('+(reply.tab||tab)+', row '+(reply.row||rowNumber)+').',{duration:6000});
+    return reply;
+  }
   window.sheetSyncEdit=async function(who,id,before,after,colRef){
     try{
       if(!window.sheetConfigured()||!window.MarcomSheet)return;
       var row=before&&before.sheetRow, member=row&&row.member;
       if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
       var values=MarcomSheet.changes(before,after,member); if(!Object.keys(values).length)return;
-      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values});
+      var oldValues=MarcomSheet.rowFor(before,'',member).values, expect={};
+      Object.keys(values).forEach(function(key){expect[key]=oldValues[key];});
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values,expect:expect});
       if(res&&res.ok){
         var title=(values.task!==undefined&&values.task!==null)?values.task:row.title;
         if((res.row||row.row)!==row.row||title!==row.title){
@@ -7347,7 +7368,10 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
           if(colRef.id==='event_tasks'||before.__src==='event')Object.assign(upd,stampEdit());
           await colRef.doc(id).update(upd);
         }
-      }else if(res&&res.error==='not found'){
+        res=await sheetResolveUpdate(res,member,id,row,values);
+      }
+      if(res&&res.ok)return;
+      if(res&&res.error==='not found'){
         console.info('[sheet] row not found',id,row.tab);
       }else{
         uiToast('The change was saved, but the Google Sheet ('+row.tab+') was not updated: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
@@ -7359,7 +7383,9 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       if(!window.sheetConfigured()||!window.MarcomSheet)return;
       var row=card&&card.sheetRow, member=row&&row.member;
       if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
-      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:{status:MarcomSheet.cancelWord(member)}});
+      var values={status:MarcomSheet.cancelWord(member)};
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values,expect:{status:MarcomSheet.statusWord(card,member)}});
+      res=await sheetResolveUpdate(res,member,id,row,values);
       if(res&&res.ok)return;
       if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
       else uiToast('The card was deleted, but its row in the Google Sheet ('+row.tab+') was not marked Canceled: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
@@ -7370,7 +7396,9 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       if(!window.sheetConfigured()||!window.MarcomSheet)return;
       var row=card&&card.sheetRow, member=row&&row.member;
       if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
-      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:{status:MarcomSheet.statusWord(card,member)}});
+      var values={status:MarcomSheet.statusWord(card,member)};
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values,expect:{status:MarcomSheet.cancelWord(member)}});
+      res=await sheetResolveUpdate(res,member,id,row,values);
       if(res&&res.ok)return;
       if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
       else uiToast('The card was restored, but its status in the Google Sheet ('+row.tab+') was not put back: '+window.sheetReason(res,row.tab)+'.',{duration:9000});

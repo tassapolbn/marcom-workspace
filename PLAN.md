@@ -2803,7 +2803,7 @@ plan 8's automatic updates (already live) as well as to plan 9:
     ["gone-card"]`, and saved the links; sheet text stayed plain text. 16 new
     tests; UI suite 476 pass, the same 2 failures.
 
-- [ ] **90. Edits never overwrite the sheet without asking (Boss's rule)**
+- [x] **90. Edits never overwrite the sheet without asking (Boss's rule)**
   - Files: `index.html` (`sheetSyncEdit`, `sheetSyncCancel`, `sheetSyncRestore`),
     `tests/ui-sheet-edit.test.mjs`. Built after step 87 adds "compare before
     writing" to the script.
@@ -2813,6 +2813,13 @@ plan 8's automatic updates (already live) as well as to plan 9:
     permission to overwrite.
   - Test: unit tests (no difference: no question; a difference: one notice,
     Keep writes nothing, Update overwrites only the listed cells); the preview.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-90.md, reviewed by
+    Claude): edits, the done tick, deleting and Undo send `expect` (what the app
+    wrote before); a reply with differences opens the notice, Keep sends
+    nothing more, Update re-sends only those cells with `force`. Notices queue
+    one after another. An older deployed script returns no differences, so the
+    old behaviour continues until the new script is pasted. Edit tests 30 pass;
+    UI suite 491 pass, the same 2 failures.
 
 - [ ] **89. Ship it**
   - Merge into `main`, push, check the Netlify deploy, as in plan 8. Boss then
