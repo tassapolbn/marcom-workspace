@@ -2281,8 +2281,8 @@ function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--
    column immediately instead of waiting for a click elsewhere. */
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;ref.doc(id).update(Object.assign(val==='done'?taskDoneFields((tasksOf(who)||[]).find(x=>x.id===id)||{},true):{status:val,done:false},stampEdit())).catch(e=>{dbSaveFailed(e,'the status change');});try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
-function setDesignStatus(who,id,val){const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);ref.doc(id).update(Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit())).catch(e=>{dbSaveFailed(e,'the design status');});try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
+function setTaskStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const fields=Object.assign(val==='done'?taskDoneFields(card||{},true):{status:val,done:false},stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the status change');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setDesignStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);const fields=Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the design status');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
   var opts=MEMBER_ORDER.filter(function(w){return w!==who;});
@@ -2570,7 +2570,7 @@ function uiToast(msg,opts){
   host.appendChild(t);
   setTimeout(function(){ t.classList.add('out'); setTimeout(kill,320); }, opts.duration||5000);
 }
-function deleteWithUndo(colRef,id,item,label){
+function deleteWithUndo(colRef,id,item,label,afterUndo){
   if(!colRef)return Promise.resolve(false);
   var data=null;
   if(item){ data={}; Object.keys(item).forEach(function(k){ if(k!=='id'&&k!=='__src')data[k]=item[k]; }); }
@@ -2584,7 +2584,7 @@ function deleteWithUndo(colRef,id,item,label){
     if(_me){ data.createdBy=_me; Object.assign(data,stampEdit()); }
   }
   return colRef.doc(id).delete().then(function(){
-    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).catch(function(e){ console.error(e); dbSaveFailed(e,'the restored item'); }); }});
+    if(data)uiToast(label||'Deleted',{undo:function(){ colRef.doc(id).set(data).then(function(){if(typeof afterUndo==='function')afterUndo();}).catch(function(e){ console.error(e); dbSaveFailed(e,'the restored item'); }); }});
     else uiToast(label||'Deleted');
     return true;
   }).catch(function(e){ console.error(e); uiToast('Delete failed. Please try again.'); return false; });
@@ -2877,6 +2877,7 @@ function saveTask(){
       console.error('[task] update failed',e);
       dbSaveFailed(e,'your changes');
     });
+    try{if(window.sheetSyncEdit)sheetSyncEdit(modalState.who,modalState.editId,old,Object.assign({},old||{},data),ref);}catch(e){console.error('[sheet] step failed',e);}
     try{if(old&&old.requestId&&old.status!==data.status&&window.rcMirrorStatus)rcMirrorStatus(old.requestId,data.status);}catch(e){}
   }
   else if(modalState.editId&&wasEvent!==evtOn){
@@ -2889,7 +2890,11 @@ function saveTask(){
        signed-in user, so stamp it now (an admin may share another member's task). */
     if(evtOn)merged.createdBy=meEmail();
     else if(!merged.createdBy)merged.createdBy=meEmail();
-    ref.add(merged).then(function(){return srcRef.doc(modalState.editId).delete();})
+    const thatWho=modalState.who,thatId=modalState.editId;
+    ref.add(merged).then(function(newDoc){
+      try{if(window.sheetSyncEdit)sheetSyncEdit(thatWho,newDoc.id,old,merged,ref);}catch(e){console.error('[sheet] step failed',e);}
+      return srcRef.doc(thatId).delete();
+    })
       .then(function(){try{uiToast(evtOn?'Moved to the shared Event Board':'Moved back to your own board');}catch(e){}})
       .catch(function(e){console.error(e);try{uiToast('Could not change the task type: '+((e&&e.message)||''));}catch(_){}});
   }
@@ -2906,6 +2911,7 @@ function saveTask(){
       console.error('[task] save failed',e);
       dbSaveFailed(e,'the task');
     });
+    try{if(window.sheetSyncNew)sheetSyncNew(whoNow,newRef.id,evtOn?Object.assign({__src:'event'},data):data,ref);}catch(e){console.error('[sheet] step failed',e);}
     /* Step 60: say what was added and for whom, with a way to see it. */
     try{
       var _ppl2=evtOn?(data.assignees||[]):[whoNow];
@@ -2939,11 +2945,13 @@ function deleteTask(who,id){
   uiConfirm({title:_shared?'Delete a shared event task':'Delete task',message:_msg,okLabel:'Delete',danger:true}).then(function(ok){
     if(!ok)return;
     var _cref=taskRef(t,who);
+    try{if(t&&t.sheetRow&&window.sheetSyncCancel)sheetSyncCancel(who,id,t);}catch(e){console.error('[sheet] step failed',e);}
+    var afterUndo=t&&t.sheetRow?function(){try{if(window.sheetSyncRestore)sheetSyncRestore(who,id,t);}catch(e){console.error('[sheet] step failed',e);}}:undefined;
     if(t&&(t.gcalEventId||t.calendarAddedAt)&&window.gcsDeleteFor){
       gcsDeleteFor(who,t,id);
-      deleteWithUndo(_cref,id,t,'Task deleted');
+      deleteWithUndo(_cref,id,t,'Task deleted',afterUndo);
     } else {
-      deleteWithUndo(_cref,id,t,'Task deleted');
+      deleteWithUndo(_cref,id,t,'Task deleted',afterUndo);
     }
   });
 }
@@ -3045,12 +3053,14 @@ function toggleTaskDone(who,id){
   tcLinger(who,id,t.status||'pending');
   rf.doc(id).update(Object.assign({},fields,stampEdit()))
     .catch(function(e){dbSaveFailed(e,completing?'the completed task':'the reopened task');});
+  try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,t,Object.assign({},t,fields),rf);}catch(e){console.error('[sheet] step failed',e);}
   if(completing){
     const title=t.topic||t.title||'Task',previous={statusBefore:fields.statusBefore};
     uiToast('Done: '+(title.length>40?title.slice(0,40)+'…':title),{undo:function(){
       tcLinger(who,id,'done');
       rf.doc(id).update(Object.assign(taskDoneFields(previous,false),stampEdit()))
         .catch(function(e){dbSaveFailed(e,'the reopened task');});
+      try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,Object.assign({},t,fields),Object.assign({},t,taskDoneFields(previous,false)),rf);}catch(e){console.error('[sheet] step failed',e);}
     },duration:6000});
   }
 }
@@ -6489,7 +6499,10 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     tplClose();
   };
   window.tplUse=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; var ref=refOfT('o'); if(!ref)return;
-    var p=ref.add({topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:tdy(),createdAt:ts()});
+    var task={topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:tdy(),createdAt:ts()};
+    var p=ref.add(task).then(function(doc){
+      try{if(window.sheetSyncNew)sheetSyncNew('o',doc.id,task,ref);}catch(e){console.error('[sheet] step failed',e);}
+    });
     if(p&&p.catch)p.catch(function(e){uiToast('Could not create task (O or admin only): '+((e&&e.message)||e));});
   };
 
@@ -6536,7 +6549,10 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
       var dref=ref.doc(docId);
       dref.get().then(function(d){
         if(d&&d.exists)return; /* already created earlier or by another device */
-        return dref.set({topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:ds,recurringFrom:t.id,genDate:ds,createdAt:ts()});
+        var task={topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:ds,recurringFrom:t.id,genDate:ds,createdAt:ts()};
+        return dref.set(task).then(function(){
+          try{if(window.sheetSyncNew)sheetSyncNew('o',docId,task,ref);}catch(e){console.error('[sheet] step failed',e);}
+        });
       }).catch(function(e){ /* denied for non-O users; ignore */ });
     });
   }
@@ -7178,6 +7194,167 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   var _os=window.openSettings; window.openSettings=function(){ try{if(_os)_os();}catch(e){} setTimeout(inject,80); };
   function boot(){ watch(); }
   var __g=function(){whenAuthed(boot);};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__g); else __g();
+})();
+</script>
+<script id="sheet-script">
+/* ===== GOOGLE SHEET LINK (linked cards, team-wide Settings) ===== */
+(function(){
+  if(window.__sheetInit)return; window.__sheetInit=true;
+  var CFG=null, unsub=null;
+  function FS(){ try{return firebase.firestore();}catch(e){return null;} }
+  function isAdmin(){ var c=window.__cur; return !!(c&&c.role==='admin'); }
+  window.sheetConfigured=function(){ return !!(CFG&&CFG.url); };
+  function cleanUrl(u){
+    u=String(u||'').trim().replace(/\s+/g,'');
+    if(u.indexOf('script.googleusercontent.com')>=0){
+      return {url:'',error:'That address is the page Google redirects to, not the Web app address. Go back to the Apps Script project, press Deploy, then Manage deployments, and copy the URL shown there. It ends with /exec.'};
+    }
+    if(u&&!/^https:\/\/script\.google\.com\/macros\/s\/[^\/]+\/exec/.test(u)){
+      return {url:u,error:'That does not look like a Web app address. It should start with https://script.google.com/macros/s/ and end with /exec.'};
+    }
+    var m=u.match(/^(https:\/\/script\.google\.com\/macros\/s\/[^\/]+\/exec)/);
+    return {url:m?m[1]:u,error:''};
+  }
+  async function callUrl(url,secret,payload){
+    try{
+      var body=JSON.stringify(Object.assign({},payload,{secret:secret||''}));
+      var reply=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,redirect:'follow'});
+      return await reply.json();
+    }catch(e){return {ok:false,error:'network'};}
+  }
+  window.sheetCall=function(payload){
+    if(!window.sheetConfigured())return Promise.resolve({ok:false,error:'not configured'});
+    return callUrl(CFG.url,CFG.secret,payload);
+  };
+  window.sheetReason=function(res,tab){
+    var er=(res&&res.error)||'no reply';
+    if(er==='secret not set')return 'the script still has its sample secret phrase; set your own and redeploy it';
+    if(er==='unauthorised')return 'the secret phrase in Settings does not match the script';
+    if(er==='protected')return tab+"'s tab is protected, and the account that runs the link cannot edit it";
+    if(er==='tab not found')return 'the sheet has no tab named '+tab;
+    if(er==='no heading row')return tab+"'s tab has no heading row with a Task column";
+    if(er==='network')return 'Google could not be reached';
+    if(String(er).indexOf('busy')===0)return 'the sheet was busy, please try again';
+    return er;
+  };
+  window.sheetSyncNew=async function(who,id,task,colRef){
+    try{
+      if(!window.sheetConfigured()||!id||!task||!window.MarcomSheet)return;
+      var row=MarcomSheet.rowFor(task,who); if(!row)return;
+      var res=await window.sheetCall({action:'append',who:row.member,cardId:id,values:MarcomSheet.forAppend(row.values)});
+      if(res&&res.ok){
+        var upd={sheetRow:{member:row.member,tab:res.tab||row.tab,row:res.row||0,title:row.values.task||''}};
+        if(colRef.id==='event_tasks'||task.__src==='event')Object.assign(upd,stampEdit());
+        await colRef.doc(id).update(upd);
+      }else{
+        uiToast('The card was saved, but it was not added to the Google Sheet ('+row.tab+'): '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      }
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetSyncEdit=async function(who,id,before,after,colRef){
+    try{
+      if(!window.sheetConfigured()||!window.MarcomSheet)return;
+      var row=before&&before.sheetRow, member=row&&row.member;
+      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
+      var values=MarcomSheet.changes(before,after,member); if(!Object.keys(values).length)return;
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:values});
+      if(res&&res.ok){
+        var title=(values.task!==undefined&&values.task!==null)?values.task:row.title;
+        if((res.row||row.row)!==row.row||title!==row.title){
+          var upd={sheetRow:{member:member,tab:res.tab||row.tab,row:res.row||row.row,title:title}};
+          if(colRef.id==='event_tasks'||before.__src==='event')Object.assign(upd,stampEdit());
+          await colRef.doc(id).update(upd);
+        }
+      }else if(res&&res.error==='not found'){
+        console.info('[sheet] row not found',id,row.tab);
+      }else{
+        uiToast('The change was saved, but the Google Sheet ('+row.tab+') was not updated: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+      }
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetSyncCancel=async function(who,id,card){
+    try{
+      if(!window.sheetConfigured()||!window.MarcomSheet)return;
+      var row=card&&card.sheetRow, member=row&&row.member;
+      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:{status:MarcomSheet.cancelWord(member)}});
+      if(res&&res.ok)return;
+      if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
+      else uiToast('The card was deleted, but its row in the Google Sheet ('+row.tab+') was not marked Canceled: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  window.sheetSyncRestore=async function(who,id,card){
+    try{
+      if(!window.sheetConfigured()||!window.MarcomSheet)return;
+      var row=card&&card.sheetRow, member=row&&row.member;
+      if(typeof member!=='string'||['boss','dew','o','junior'].indexOf(member)<0)return;
+      var res=await window.sheetCall({action:'update',who:member,cardId:id,row:row.row,title:row.title,values:{status:MarcomSheet.statusWord(card,member)}});
+      if(res&&res.ok)return;
+      if(res&&res.error==='not found')console.info('[sheet] row not found',id,row.tab);
+      else uiToast('The card was restored, but its status in the Google Sheet ('+row.tab+') was not put back: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
+    }catch(e){console.error('[sheet] step failed',e);}
+  };
+  function sheetMsg(t,bad){ var o=document.getElementById('sheet-test-out'); if(!o)return; o.style.color=bad?'#b91c1c':'#147c3b'; o.textContent=t; }
+  window.sheetSave=async function(){
+    if(!isAdmin())return;
+    var chk=cleanUrl(((document.getElementById('sheet-url')||{}).value||''));
+    if(chk.error){sheetMsg(chk.error,true);return;}
+    var u=document.getElementById('sheet-url'); if(u)u.value=chk.url;
+    var sec=((document.getElementById('sheet-secret')||{}).value||'').trim();
+    try{
+      var d=FS(); if(!d)throw new Error('The workspace database is not connected. Please try again.');
+      await d.collection('dept_settings').doc('sheetsync').set({url:chk.url,secret:sec},{merge:true});
+      sheetMsg(chk.url?'Saved. New cards will now be added to the Google Sheet.':'Saved. The Google Sheet link is paused.',false);
+    }catch(e){sheetMsg('Could not save the Google Sheet link: '+((e&&e.message)||'unknown error'),true);}
+  };
+  window.sheetTest=async function(){
+    if(!isAdmin())return;
+    var chk=cleanUrl(((document.getElementById('sheet-url')||{}).value||''));
+    if(chk.error){sheetMsg(chk.error,true);return;}
+    if(!chk.url){sheetMsg('Paste the Web app URL first.',true);return;}
+    var sec=((document.getElementById('sheet-secret')||{}).value||'').trim();
+    sheetMsg('Testing...',false);
+    var res=await callUrl(chk.url,sec,{action:'ping'});
+    if(!res||!res.ok){
+      sheetMsg(res&&res.error==='unauthorised'?'The secret phrase does not match the script.':'Could not connect: '+window.sheetReason(res,''),true);
+      return;
+    }
+    /* Another Apps Script (for example the calendar sync) also answers ok, but without tabs. */
+    if(!Array.isArray(res.tabs)){sheetMsg('That address answered, but it is not the Google Sheet link script. Paste the Web app URL of the sheet link project (see SHEET-SETUP.md).',true);return;}
+    var out=document.getElementById('sheet-test-out'); if(!out)return;
+    out.innerHTML=(res.tabs||[]).map(function(tab){
+      var status=!tab.found?'tab not found':(!tab.headingRow?'no heading row with a Task column':(tab.canEdit?'can write':'cannot write: protected for this account'));
+      return '<div><b>'+escHtml(String(tab.name||''))+'</b>: '+escHtml((tab.headings||[]).join(', '))+'; '+escHtml(status)+'</div>';
+    }).join('');
+  };
+  function memberLine(){return window.sheetConfigured()?"Google Sheet link: on. New cards are also added to your tab in the team's Google Sheet.":'Google Sheet link: off.';}
+  function inject(){
+    var body=document.querySelector('#settings-modal .modal-body');
+    if(!body||document.getElementById('sheet-cfg'))return;
+    var d=document.createElement('div'); d.id='sheet-cfg';
+    d.style.cssText='margin-top:14px;padding-top:14px;border-top:1px solid var(--border);';
+    if(!isAdmin()){d.style.fontSize='12px';d.style.color='var(--muted)';d.textContent=memberLine();body.appendChild(d);return;}
+    d.innerHTML='<label class="form-label"><i class="ti ti-table" style="margin-right:5px;"></i> Google Sheet link</label>'
+      +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;">New cards are also added to their owner\'s tab (Boss, Dew, O or Eye) in the team\'s Google Sheet. Follow google-apps-script/SHEET-SETUP.md, then paste the Web app URL and the same secret phrase below. This applies to the whole team.</div>'
+      +'<input class="form-input" id="sheet-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:6px;">'
+      +'<input class="form-input" id="sheet-secret" type="text" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Secret phrase (must match the script)" style="margin-bottom:6px;">'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost btn-sm" onclick="sheetTest()"><i class="ti ti-plug-connected"></i> Test connection</button>'
+      +'<button type="button" class="btn btn-navy btn-sm" onclick="sheetSave()"><i class="ti ti-check"></i> Save</button></div>'
+      +'<div id="sheet-test-out" style="font-size:11.5px;font-weight:700;margin-top:7px;"></div>';
+    body.appendChild(d);
+    var u=document.getElementById('sheet-url'); if(u&&CFG)u.value=CFG.url||'';
+    var s=document.getElementById('sheet-secret'); if(s&&CFG)s.value=CFG.secret||'';
+  }
+  function watch(){ var d=FS(); if(!d||unsub)return;
+    try{unsub=d.collection('dept_settings').doc('sheetsync').onSnapshot(function(doc){
+      var data=(doc&&doc.exists)?doc.data():null;
+      CFG=data?{url:data.url||'',secret:data.secret||''}:null;
+      var section=document.getElementById('sheet-cfg'); if(section&&!isAdmin())section.textContent=memberLine();
+    },function(e){console.error(e);});}catch(e){console.error(e);}
+  }
+  var _os=window.openSettings; window.openSettings=function(){try{if(_os)_os();}catch(e){} setTimeout(inject,80);};
+  var __g=function(){whenAuthed(watch);};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',__g); else __g();
 })();
 </script>
@@ -10528,6 +10705,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       task.mdTaken=r.eventDate||'';task.mdStart=d.startTime||'';task.mdEnd=d.endTime||'';}
     try{task.createdAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
     f.collection(w+'_tasks').add(task).then(function(tr){
+      try{if(window.sheetSyncNew)sheetSyncNew(w,tr.id,task,f.collection(w+'_tasks'));}catch(e){console.error('[sheet] step failed',e);}
       f.collection('requests').doc(r.id).update({taskId:tr.id}).catch(function(){});
       try{uiToast('Task created for '+nmW(w));}catch(e){}
       /* Design and photography requests become cards too, so they get the
@@ -12662,7 +12840,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
 
   /* If the user presses Undo on a deletion, put the calendar event back. */
   var _dwu=window.deleteWithUndo;
-  window.deleteWithUndo=function(colRef,id,item,label){
+  window.deleteWithUndo=function(colRef,id,item,label,afterUndo){
     if(!(item&&item.gcalEventId))return _dwu.apply(this,arguments);
     var who=(item.owner||((window.__cur||{}).workspace)||'boss');
     var calWs=item.gcalOwner||who;
@@ -12676,6 +12854,7 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
     colRef.doc(id).delete().then(function(){
       uiToast(label||'Deleted',{undo:function(){
         colRef.doc(id).set(data).then(function(){
+          if(typeof afterUndo==='function')afterUndo();
           if(gcsConfigured(calWs))call(calWs,payloadFor(data,id,who)).then(function(res){
             if(res&&res.ok)colRef.doc(id).update(Object.assign({gcalEventId:res.eventId||'',gcalOwner:calWs},stampEdit())).catch(function(e){console.error('[calendar] link write failed',e);});
           });
@@ -13950,6 +14129,7 @@ html:not(.dark) .app-header .salary-info-sub,html:not(.dark) .app-header .salary
 <script src="assets/ui-tabs.js"></script>
 <script src="assets/ui-dialogs.js"></script>
 <script src="assets/task-draft.js"></script>
+<script src="assets/sheet-sync.js"></script>
 <script src="assets/widget-summary.js"></script>
 <link rel="stylesheet" href="assets/workspace-ui.css">
 <link rel="stylesheet" href="assets/request-centre.css">
