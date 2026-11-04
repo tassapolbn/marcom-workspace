@@ -2821,10 +2821,20 @@ plan 8's automatic updates (already live) as well as to plan 9:
     old behaviour continues until the new script is pasted. Edit tests 30 pass;
     UI suite 491 pass, the same 2 failures.
 
-- [ ] **89. Ship it**
+- [x] **89. Ship it**
   - Merge into `main`, push, check the Netlify deploy, as in plan 8. Boss then
     pastes the updated script into Apps Script and deploys a New version (the
     `sync` action lives there), keeping the real sheet's ID and the secret.
+  - Done (2026-11-04): merged into `main` as `983d4f5` (no pull request, as in
+    plan 8). GitHub had an outage ("Git Operations degraded"), so the first
+    pushes were refused; an automatic retry got through on its second attempt.
+    The Netlify production deploy is ready, its secret scan is clean, and the
+    live page has the card button, Refresh all and the notice queue. Claude
+    wrote the README and setup-guide updates, made the app explain an older
+    deployed script, and rebuilt Boss's ready-to-paste copy
+    (`.claude/sheet-link-ready/`, git-ignored) from the new script with the same
+    secret and the real sheet's ID. Still for Boss: paste it into Apps Script
+    and deploy a New version; set the test copy to Restricted.
 
 ## Decisions needed from Boss (plan 9)
 
