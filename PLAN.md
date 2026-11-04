@@ -2877,3 +2877,77 @@ Approved on 4 Nov 2026 as recommended (1 to 8). Added after Boss's rule
     "compare before writing" rule in steps 85, 87 and 88.
 
 Approved on 4 Nov 2026 as recommended (9 to 12). Order: 87, 85, 88, 90, 89.
+
+# Plan 10 (4 Nov 2026): shared cards in every person's tab, and Status that follows the app, for Boss to approve
+
+Boss asked: "Make the shared card added to each person's tab", and "if the card
+was removed or marked complete in the app, then the status [should] match the
+app and the sheet". This changes plan 8's decision 5 (a shared card went to the
+first person's tab only).
+
+## What the study found
+
+- A card remembers one sheet row (`sheetRow`), used in 17 places in
+  `index.html` and 3 in the server helper. A shared card now needs one row per
+  person, so the card keeps a small list instead (`sheetRows`, one entry per
+  person); the old single `sheetRow` is still understood, so nothing already
+  linked is lost.
+- The script looks for a card's row in the expected tab and then in the other
+  three. With one row per tab that would update the wrong person's row, so it
+  must look only in that person's tab.
+- Completing or deleting a card already sets Status to Completed or Canceled,
+  but plan 9's rule asks first when someone changed the Status in the sheet by
+  hand. Boss now wants Status to follow the app in these cases.
+
+## Steps (Codex builds each one; Claude reviews, tests and commits)
+
+- [ ] **91. Who gets a row, and where a card's rows are**
+  - Files: `assets/sheet-sync.js`, `tests/ui-sheet-sync.test.mjs`.
+  - `membersFor(card, who)`: every person on a shared card (in order, no
+    repeats), or the card's own person. `linksOf(card)`: the card's rows, read
+    from the new `sheetRows` or the old `sheetRow`.
+
+- [ ] **92. The script works tab by tab**
+  - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
+  - `update` and `sync` look for a card's row only in the tab of the person
+    named in the request; each result says which person it is for. `sweep` is
+    told which people each card has, and also lists rows of people who were
+    taken off a shared card (decision 3). Rows are still never deleted.
+
+- [ ] **93. The app sends every person's row**
+  - Files: `index.html` (the `sheet-script` block), `tests/ui-sheet-link.test.mjs`,
+    `tests/ui-sheet-edit.test.mjs`.
+  - A new shared card gets a fresh row in each person's tab, in that tab's
+    columns and words. Edits update each person's row. A person added to a
+    shared card gets a row; a person taken off gets Canceled in their row
+    (decision 3).
+  - Status follows the app without asking when a card is completed, reopened,
+    deleted or restored, in every row of that card (decision 2). Other cells
+    still follow plan 9's rule (ask before overwriting).
+
+- [ ] **94. The card button and Refresh all, one row per person**
+  - Files: `index.html`, `tests/ui-sheet-refresh.test.mjs`,
+    `tests/ui-sheet-refresh-all.test.mjs`.
+  - The card button checks and fills every person's row of a shared card.
+    Refresh all compares one entry per person, lists rows of people taken off
+    a card with the deleted cards' rows, and adds the missing rows for shared
+    cards that so far are only in the first person's tab (decision 4), all
+    shown in the summary before Apply. Status differences of completed cards
+    are listed already ticked (decision 2).
+
+- [ ] **95. Docs and ship**
+  - README, `SHEET-SETUP.md`, merge into `main`, push, check the deploy, and
+    rebuild Boss's ready-to-paste script. Boss pastes the new script version.
+
+## Decisions needed from Boss (plan 10)
+
+1. **The plan:** recommended, approve steps 91 to 95.
+2. **When Status follows the app without asking:** recommended, when a card is
+   completed, reopened, deleted or restored (what Boss described), in every
+   row of the card; other status changes still ask if the sheet was changed by
+   hand. Or: every status change follows the app without asking.
+3. **Someone taken off a shared card:** recommended, their row's Status becomes
+   Canceled (the row stays, like a deleted card); or their row is left as it is.
+4. **Shared cards already in the sheet (first person's tab only):** recommended,
+   Refresh all adds the missing rows in the other people's tabs, shown in its
+   summary before Apply; or only shared cards from now on get every row.
