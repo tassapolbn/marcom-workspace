@@ -2819,3 +2819,5 @@ Approved on 4 Nov 2026 as recommended (1 to 8). Added after Boss's rule
     boxes already ticked (Boss unticks any to keep); or listed unticked.
 12. **The plan with this rule:** recommended, approve step 90 and the
     "compare before writing" rule in steps 85, 87 and 88.
+
+Approved on 4 Nov 2026 as recommended (9 to 12). Order: 87, 85, 88, 90, 89.
