@@ -5,6 +5,7 @@
 const crypto = require('crypto');
 const { admin, getDb, rateLimited, json, clientIp } = require('./lib/admin');
 const { scheduleErrors } = require('./lib/request-validation');
+const { sendCardToSheet } = require('./lib/sheet-link');
 
 const TYPES = {
   design: { label: 'Graphic Design Request', short: 'Graphic Design', ws: 'dew',
@@ -168,9 +169,10 @@ exports.handler = async (event) => {
 
   /* Auto-create the task for the assigned team member. A failure here must not
      lose the request: it is logged to rc_failures for Boss to follow up. */
+  let task, taskRef;
   try {
     const title = (d.eventName || 'Request') + ': ' + (body.type === 'design' ? ('Design ' + (d.designType || 'Artwork')) : 'Photography Coverage');
-    const task = {
+    task = {
       topic: title.slice(0, 300),
       description: buildBrief(T, d, refNo),
       dueDate: d.deadline || '', status: 'pending', priority: 'medium', category: '',
@@ -188,7 +190,7 @@ exports.handler = async (event) => {
     if (body.type === 'photo') {
       task.mdEvent = d.eventName || ''; task.mdLocation = d.venue || ''; task.mdCategory = 'Photos';
     }
-    const taskRef = await db.collection(T.ws + '_tasks').add(task);
+    taskRef = await db.collection(T.ws + '_tasks').add(task);
     await db.collection('requests').doc(reqRef.id).update({ taskId: taskRef.id });
   } catch (e) {
     console.error('task automation failed', e);
@@ -201,7 +203,24 @@ exports.handler = async (event) => {
     } catch (e2) { console.error('failure log failed', e2); }
   }
 
-  try { await notify(refNo, T, d); } catch (e) { /* never fail the submission */ }
+  async function sheetStep() {
+    if (!taskRef) return;
+    try {
+      await sendCardToSheet({ db, who: T.ws, cardId: taskRef.id, task, taskRef });
+    } catch (e) {
+      try {
+        await db.collection('rc_failures').add({
+          refNo, requestId: reqRef.id, stage: 'sheet-link',
+          error: String((e && e.message) || e).slice(0, 1000),
+          createdAtIso: nowIso, createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e2) { console.error('failure log failed', e2); }
+    }
+  }
+  async function notifyStep() {
+    try { await notify(refNo, T, d); } catch (e) { /* never fail the submission */ }
+  }
+  await Promise.all([sheetStep(), notifyStep()]);
 
   return json(200, { ok: true, refNo });
 };

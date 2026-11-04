@@ -2599,13 +2599,31 @@ A shared Event Board card goes only to the first assigned person's tab
     Settings, and the team checks real rows on the copy (one card per member,
     an edit, a delete and its Undo).
 
-- [ ] **84. Request Centre cards created by the server also go to the sheet (decision 6; last, on its own after 79 to 83 are finished)**
+- [x] **84. Request Centre cards created by the server also go to the sheet (decision 6; last, on its own after 79 to 83 are finished)**
   - Files: `netlify/functions/submit-request.js`, a small shared helper in
     `netlify/functions/lib/`, and its test.
   - The function already creates the card for Dew or O. It then reads
     `dept_settings/sheetsync` with the Admin SDK and sends the same row. A sheet
     failure never fails the request; it is logged to `rc_failures`.
   - Test: unit test with a fake fetch; live test with one request on the copy.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-84.md, reviewed by
+    Claude): `netlify/functions/lib/sheet-link.js` reuses `assets/sheet-sync.js`
+    (now also loadable on the server), only calls a Google Apps Script address,
+    gives up after 6 seconds, and saves `sheetRow` on the card. In
+    `submit-request.js` the sheet step runs alongside the emails; a failure is
+    logged to `rc_failures` (stage `sheet-link`, seen in the Firebase Console)
+    and never changes the reply to the requester. 16 new tests; UI suite 419
+    pass, the same 2 failures as on `main`. Shipped as its own deploy after
+    plan 8, as Boss asked. Not tried with a real submission (that would create
+    a real request and send emails); it does nothing until the link is set up.
+
+Gone live (2026-11-04, Boss: "go live if finish, I don't have time"): plan 8
+(steps 79 to 83) was merged into `main` without a pull request (the GitHub CLI
+is not installed and the browser could not press the button) and deployed by
+Netlify; step 84 followed as a separate deploy. Nothing changes for the team
+until Boss deploys the Apps Script and saves its address in Settings > Google
+Sheet link. A ready-to-paste copy with a generated secret phrase is in
+`.claude/sheet-link-ready/` on Boss's computer (git-ignored).
 
 Cards that already exist are not copied into the sheet. That can be added later
 as a one-off button if wanted.

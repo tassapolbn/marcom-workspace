@@ -94,4 +94,5 @@
   }
   root.MarcomSheet = {TABS:TABS, cleanHeading:cleanHeading, memberFor:memberFor, statusWord:statusWord,
     cancelWord:cancelWord, rowFor:rowFor, forAppend:forAppend, changes:changes};
-})(window);
+  if (typeof module === 'object' && module && module.exports) module.exports = root.MarcomSheet;
+})(typeof window !== 'undefined' ? window : globalThis);

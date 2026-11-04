@@ -385,8 +385,11 @@ still needs a Task heading so the script can find its heading row.
 **Tests:** `tests/ui-sheet-script.test.mjs` runs the script against a fake
 Google Sheet shaped like the real tabs. `tests/ui-sheet-sync.test.mjs` checks
 columns and status words. `tests/ui-sheet-link.test.mjs` and
-`tests/ui-sheet-edit.test.mjs` check the app side. Run them with the rest of the
-UI checks using `npm run test:ui`.
+`tests/ui-sheet-edit.test.mjs` check the app side.
+`tests/ui-sheet-request.test.mjs` checks server-created Request Centre cards.
+Run them with the rest of the UI checks using `npm run test:ui`.
 
-**Not yet included:** Request Centre cards created by the server
-(`netlify/functions/submit-request.js`) will be linked in a later step.
+Request Centre cards created by the server are sent too:
+`netlify/functions/submit-request.js` reads the same settings and sends the new
+Dew or O card after creating it. A sheet problem never fails the request and
+is recorded in `rc_failures` (stage `sheet-link`) for Boss to follow up.
