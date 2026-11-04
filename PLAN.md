@@ -2330,3 +2330,245 @@ browser tab, which the test browser does not show).
    it is.
 4. **"Good afternoon, Boss" on the Overview:** recommended, remove it and
    keep the date; or keep it, smaller.
+
+# Plan 8 (4 Nov 2026): new cards also go to the MARCOM Google Sheet, approved by Boss
+
+Status: **approved by Boss on 4 Nov 2026**, with Boss's own answers to the
+decisions (see the end: deleting a card marks its row Canceled, and a shared
+card goes only to the first person's tab). Branch: `feature/sheet-sync`.
+Builder: Codex, one step at a time.
+
+Boss asked: when a card is added in the app, add it to the team's Google Sheet
+too, in the tab of the person it belongs to (Boss, Dew, O, Eye). Each tab has its
+own column headings, so each person's row is filled to match their own tab. Every
+other tab in the sheet stays untouched. For now we test only on the copy,
+"Copy of Marketing & Communications Tracker"
+(`1lvsuK3IP77BqkoiymEgpoGJYnM1PKZRp4e9Zy9VnEDg`). Boss sends the real link later.
+
+## What the copy sheet looks like (read on 4 Nov, nothing changed)
+
+- 40 tabs. Only four are touched: **Boss**, **Dew**, **O**, **Eye**. The hidden
+  "Boss 1" tab and all the others (Jez, Darren, Kwang, meeting notes, task lists
+  and so on) are never opened for writing.
+- Each of the four is a Google Sheets *table* with its headings on a different row:
+
+| Tab | Heading row | Columns |
+|---|---|---|
+| Boss | 4 | Event, Task 🐧, Status, Due Date, Assigned by, Note |
+| Eye | 3 | Event, Task 🗃️, Status, Event owner, Due date 📆, Notes |
+| Dew | 3 | Assigned by, Task, Priority, Due date, Status, Details Provided, Additional Details, Estimate Time, Start, Finish, Duration (include edit) |
+| O | 2 | Task 📸, Time, Assigned by, Status, Date, Due Date, Photo - FIle Location, FIle Location, Notes, Media, Upload date, Watermark deleting date, Watermark |
+
+- Boss's row 4 already has exactly the six headings Boss listed, so no heading
+  needs to be written. The Boss table is empty and covers only the heading row.
+  The other three tables already include hundreds of empty rows.
+- Each tab's Status menu has different words (see the status table below).
+
+## How it works
+
+Same pattern as the Google Calendar sync and the chat photo upload already in
+the app: a small **Google Apps Script** that runs as Boss's Google account (Boss
+can already edit the sheet), so no Google API keys or service accounts.
+
+1. A card is saved in the app. The app works out which tab it belongs to and
+   turns the card into values for **that tab's** headings
+   (`assets/sheet-sync.js`, tested without Google).
+2. The app sends those values to the script. The card is saved first and never
+   waits for the sheet.
+3. The script only accepts the four tab names, finds the heading row, matches
+   headings by name (emoji, capitals and punctuation ignored, so "Due date 📆"
+   matches "due date"), and inserts one fresh row right under the last task
+   (in Dew's tab, under the newest tasks at the top, because Dew's tab runs
+   newest first). Inserting, rather than typing into the row below, is what
+   keeps the row inside the Google table (step 79). The new row gets the row
+   formulas of the row above (Dew's Duration, O's watermark date). The script
+   never writes headings, never deletes or moves rows, never overwrites a cell
+   that holds a formula, and leaves unmatched columns empty for the person to
+   fill. Text that starts with `=`, `+`, `-` or `@`, or looks like a number,
+   is stored as plain text, so nothing typed in the app (or in the public
+   Request Centre) can become a formula in the sheet.
+4. It tags the row with the card's id, hidden (no extra column), so the same card
+   is never added twice and later edits find the right row even after sorting.
+5. A lock in the script stops two people adding at the same moment from writing
+   into the same row.
+
+Settings: Boss pastes the script's Web app URL and secret once in Settings,
+section **Google Sheet link** (stored in `dept_settings/sheetsync`: everyone
+reads, only the admin writes, so no security-rule change). **Test connection**
+lists the four tabs it found and their headings. Members see whether the link is
+on, but cannot change it.
+
+### What goes in each column
+
+| Tab | Column | From the card |
+|---|---|---|
+| Boss | Event | Event name (shared card label, event picker, O's event or Dew's brand) |
+| Boss | Task 🐧 | Title |
+| Boss | Status | Status, in Boss's words (table below) |
+| Boss | Due Date | Due date, as a real date |
+| Boss | Assigned by | Assigned by |
+| Boss | Note | Description and Notes |
+| Eye | Event, Task 🗃️, Status, Due date 📆 | as Boss |
+| Eye | Event owner | Assigned by (decision 4) |
+| Eye | Notes | Description and Notes |
+| Dew | Assigned by | Assigned by (the requestor on a design card) |
+| Dew | Task, Due date | Title, due date |
+| Dew | Priority | High, Medium or Low |
+| Dew | Status | Design stage, in Dew's words (table below) |
+| Dew | Details Provided | Description |
+| Dew | Additional Details | Notes |
+| Dew | Estimate Time, Start, Finish, Duration | left for Dew (Duration is a formula) |
+| O | Task 📸, Assigned by, Due Date | Title, assigned by, due date |
+| O | Time | Shoot start - end, for example "08:15 - 09:30" |
+| O | Status | Status, in O's words (table below) |
+| O | Date | Shoot date |
+| O | Photo - FIle Location | Shoot location (the existing rows hold places such as "SC Hall") |
+| O | FIle Location | File location |
+| O | Notes | "ส่งเมลแล้ว" when Mail sent is ticked, otherwise empty |
+| O | Media | Photos → Photo, Videos → Video, Both → Photo&VDO |
+| O | Upload date, Watermark deleting date | Upload date, watermark date |
+| O | Watermark | left for O |
+
+### Status words per tab
+
+| App | Boss and Eye | O | Dew (general card) |
+|---|---|---|---|
+| Pending | Not started | Not started | Ready to do! |
+| In Progress | In progress | In progress | In progress |
+| Waiting | Waiting for approval | Blocked | Waiting for response |
+| On Hold | On hold | Blocked | " Hold" (the menu has a leading space) |
+| Done | Completed | Completed | Completed |
+| Canceled | Canceled | CANCELLED | Cancel |
+
+Dew's design cards use the design stage instead: Waiting for Brief →
+Information needed, Brief Received → Ready to do!, In Progress → In progress,
+Review → Waiting for response, Revision Required → Edit, Approved → "File
+Prepared " (trailing space, as in the menu), Delivered → Completed.
+
+A shared Event Board card goes only to the first assigned person's tab
+(decision 5). A shared card with nobody assigned gets no row.
+
+## Steps (Codex builds each one; Claude reviews, tests and commits)
+
+- [x] **79. Check how the copy sheet behaves when a row is written (Claude, no app code)**
+  - Files: none in the repo. Uses the Google Sheets connector on the copy only.
+  - Do: write one test row under Boss's headings (row 5) and one under Eye's last
+    task; check that the Boss table grows to include row 5, that the Status menu
+    and date format apply, and that a plain name is accepted in the people
+    columns (Dew "Assigned by", Eye "Event owner"). Then clear both test rows.
+  - Result decides one detail of step 80: if the Boss table does not grow by
+    itself, the script grows it through Google's Sheets service (one extra
+    switch in the setup guide).
+  - Test: read the rows back with the connector; the copy ends exactly as it started.
+  - Done (2026-11-04, Claude, on the copy only). Test rows went into Boss row 5,
+    Eye row 78 and Dew row 12, then were removed; the copy was read back and is
+    exactly as it started (Boss 669 rows with a heading-only table, Eye row 78
+    and Dew row 12 empty, their formulas untouched). What it showed:
+    - Writing under Boss's table does **not** grow the table (the date showed as
+      the number 46330). **Inserting** a row right under the table's last row
+      does grow it. So the script inserts a fresh row each time; no extra Google
+      service is needed.
+    - Inside a table, dates written as real dates show as dd/MM/yyyy, the Status
+      menus accept their exact words (including Dew's " Hold" with its leading
+      space), and a plain name is accepted in the people columns.
+    - The menus do not refuse a word outside their list; the cell just gets
+      Google's red warning mark. The status words must therefore be exact.
+    - **O's whole tab (rows 1 to 776) is protected.** The write there was refused
+      for the account linked to Claude. The script runs as the account that
+      deploys it, so that account must be allowed to edit O's tab (the sheet's
+      owner always is). Test connection will show, per tab, whether the script
+      can write there.
+    - Dew's tab runs newest first: this year's tasks are at the top (rows 4 to
+      11), then empty rows 12 to 22, then older tasks down to 2023 at row 835. A
+      new Dew row therefore goes right under the newest tasks (row 12 today), not
+      at the bottom. O's tab has blank spacer rows between tasks, so "under the
+      last task" means the last filled row, not the first empty one.
+    - Empty table rows already carry their row formulas (Dew's Duration in K,
+      O's watermark date in L, from `=IF(K620<>"", K620 + 14, "")`).
+    - In Eye's tab some tasks are typed in the Event column only, so "last task"
+      must look across all columns.
+
+- [ ] **80. The Apps Script and its setup guide**
+  - Files: `google-apps-script/marcom-sheet-sync.gs` (new),
+    `google-apps-script/SHEET-SETUP.md` (new), `tests/ui-sheet-script.test.mjs` (new).
+  - Script: `SECRET`, `SPREADSHEET_ID` (the copy for now), and the allowed tabs
+    `Boss`, `Dew`, `O`, `Eye`. Actions: `ping` (the four tab names, their
+    headings, and whether this account can write there; nothing else),
+    `append` (lock, find the heading row and where the row goes, insert a fresh
+    row, copy the row formulas of the row above, write matched columns, skip
+    formula cells, turn dates into real dates, keep text as text, tag the row,
+    return the row number; if the card is already tagged, update instead),
+    `update` (find the tagged row and rewrite only the cells sent). Refuses any
+    other tab, any wrong secret, and a protected tab it cannot edit (with a
+    clear message), and never deletes.
+  - Guide: the same click-by-click style as `SETUP.md`, including which Google
+    account to deploy from (one that can edit all four tabs).
+  - Test: the node test loads the script into a fake Google Sheets (made-up tabs
+    shaped like the copy: Boss heading-only, Dew newest first with formulas, O
+    with spacer rows and a protected tab) and runs every action. Then Boss
+    deploys it (about 5 minutes) and Claude sends test rows to the copy, reads
+    them back with the connector, and removes them.
+  - Note: Google limits hidden row tags (about 30,000 characters per tab, roughly
+    1,300 cards). If a tag cannot be added, the row is still written and later
+    edits find it by its row number and title instead.
+
+- [ ] **81. New cards go to the sheet**
+  - Files: `assets/sheet-sync.js` (new), `index.html`, `tests/ui-sheet-sync.test.mjs` (new).
+  - `assets/sheet-sync.js`: the tab for each member (boss → Boss, dew → Dew,
+    o → O, junior → Eye) and the column and status tables above, as one pure
+    function `rowFor(task, who)` returning `{tab, values}` keyed by cleaned
+    heading. No network code.
+  - `index.html`: Settings section "Google Sheet link" (admin edits, members see
+    the status, Test connection lists the tabs and headings), saved in
+    `dept_settings/sheetsync`. After a new card is saved (the task form, Save +
+    Calendar, Duplicate, and a Design or Photography request being accepted),
+    send the row and store `sheetRows` (tab and row) on the card. One toast only
+    if it fails, with the reason. Nothing happens when the link is not set.
+  - Test: `npm run test:ui` (every mapping and status in the tables above, each
+    member, shared cards with 0, 1 and 3 people going to the first person's tab
+    only, empty fields); the preview
+    Settings panel in light and dark and at phone width; after deploy, add a
+    test card for each member and check the copy with the connector.
+
+- [ ] **82. Edits keep the row in step (decision 2)**
+  - Files: `index.html`, `tests/ui-sheet-sync.test.mjs`.
+  - When a card that has a sheet row is edited in the form, or its status is
+    changed from the card menu (`setTaskStatus`), send `update`. Deleting a card
+    sets its row's Status to that tab's cancel word (Boss and Eye "Canceled", O
+    "CANCELLED", Dew "Cancel"); Undo on the deletion puts the card's status
+    back (decision 3). The row itself is never deleted.
+  - Test: unit tests for which edits send an update; live check on the copy:
+    change status and due date, the same row changes, no new row appears;
+    delete the card, the row says Canceled; Undo, the status comes back.
+
+- [ ] **83. Docs and switch-over**
+  - Files: `README.md`, `PLAN.md`.
+  - README: what the link does, where to set it up, which tabs it touches, and
+    how to switch to the real sheet: change `SPREADSHEET_ID`, redeploy, press
+    Test connection and check the four tabs' headings.
+
+- [ ] **84. Request Centre cards created by the server also go to the sheet (decision 6; last, on its own after 79 to 83 are finished)**
+  - Files: `netlify/functions/submit-request.js`, a small shared helper in
+    `netlify/functions/lib/`, and its test.
+  - The function already creates the card for Dew or O. It then reads
+    `dept_settings/sheetsync` with the Admin SDK and sends the same row. A sheet
+    failure never fails the request; it is logged to `rc_failures`.
+  - Test: unit test with a fake fetch; live test with one request on the copy.
+
+Cards that already exist are not copied into the sheet. That can be added later
+as a one-off button if wanted.
+
+## Decisions (Boss, 4 Nov 2026)
+
+1. **The plan:** approved, steps 79 to 84.
+2. **Edits:** a card's edits and status changes update its row.
+3. **Deleting a card:** its row's Status is set to Canceled (in that tab's
+   words). The row is never deleted.
+4. **Eye's "Event owner" column:** filled from the card's "Assigned by".
+5. **Shared cards with several people:** only the first person's tab.
+6. **Request Centre cards made by the server:** included, as the last step (84),
+   done on its own after everything else is finished.
+
+Found in step 79, set by Claude (Boss can change either): new Dew rows go right
+under Dew's newest tasks at the top; the script must be deployed from a Google
+account that can edit O's protected tab.
