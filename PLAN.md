@@ -2585,11 +2585,19 @@ A shared Event Board card goes only to the first assigned person's tab
     sent "Completed". 15 new tests; UI suite 403 pass, the same 2 failures as
     on `main`.
 
-- [ ] **83. Docs and switch-over**
+- [x] **83. Docs and switch-over**
   - Files: `README.md`, `PLAN.md`.
   - README: what the link does, where to set it up, which tabs it touches, and
     how to switch to the real sheet: change `SPREADSHEET_ID`, redeploy, press
     Test connection and check the four tabs' headings.
+  - Done (2026-11-04, written by Codex from .codex-tasks/step-83.md, reviewed by
+    Claude): README section 10 "Google Sheet link", the two new files in the
+    layout and helper tables, and `SHEET-SETUP.md` no longer says the app side
+    comes later.
+  - Still to do before step 84: Boss deploys the script (SHEET-SETUP.md steps 1
+    to 5) from an account that can edit all four tabs of the copy, connects it in
+    Settings, and the team checks real rows on the copy (one card per member,
+    an edit, a delete and its Undo).
 
 - [ ] **84. Request Centre cards created by the server also go to the sheet (decision 6; last, on its own after 79 to 83 are finished)**
   - Files: `netlify/functions/submit-request.js`, a small shared helper in

@@ -14,6 +14,8 @@ and Video Editor), Eye (Junior Events Coordinator).
 | `index.html` | The whole application (internal workspace + public Request Centre) |
 | `assets/` | Static images (the support staff calendar was moved out of the HTML, saving ~650 KB per visit) and the small UI helpers listed in section 9 |
 | `assets/workspace-ui.css` | Shared styles loaded after every inline layer, ending with the design tokens (radius, spacing, type, canvas, cards, controls) |
+| `assets/sheet-sync.js` | Which card field goes in which Google Sheet column |
+| `google-apps-script/marcom-sheet-sync.gs` | The Google Sheet link script; see [SHEET-SETUP.md](google-apps-script/SHEET-SETUP.md) |
 | `netlify/functions/submit-request.js` | Public request submission endpoint (validation, sanitising, rate limiting, honeypot, server request number, task auto-creation, failure log, optional email notifications) |
 | `netlify/functions/request-status.js` | Secure status lookup by requester email, returns a minimal summary only |
 | `netlify/functions/team-board.js` | The Director's board page (`/team-board?token=...`), server rendered |
@@ -297,9 +299,94 @@ menu and the server validation both read that one list.
 | `task-draft.js` | New-task drafts |
 | `event-board.js` | Grouping and sorting for the Event Board |
 | `widget-summary.js` | Key numbers in widget headers |
+| `sheet-sync.js` | Google Sheet columns for each member's tab; tested in `tests/ui-sheet-sync.test.mjs` |
 
 Each helper has a matching `tests/ui-*.test.mjs` file.
 
 **Live site:** `netlify.toml` returns "not found" for the plans, README,
 review notes, rules, package files, tests, Apps Script and function sources.
 A test fails if a new top-level file is added without a rule.
+
+## 10. Google Sheet link (November 2026)
+
+Once the link is set up, a new card is also added as one row in its owner's
+tab of the team's **Marketing & Communications Tracker** sheet: **Boss**,
+**Dew**, **O** or **Eye**. A shared card goes to the first person's tab only.
+A shared card with nobody assigned gets no row. Cards that existed before the
+link was set up are not copied.
+
+Editing a linked card updates the same row, and only the cells that changed.
+This includes the form, the status menu, Dew's design stage, the done tick and
+Undo. Deleting the card sets the row's Status to that tab's cancel word:
+**Canceled**, **CANCELLED** or **Cancel**. Undo puts the status back. Task rows
+are never deleted.
+
+Every other tab is never touched. The script only accepts the four tab names.
+It never writes headings or overwrites formula cells. New rows go under the
+last task. Dew's tab runs newest first, so its new rows go right under the
+newest tasks at the top. Empty spacers and rows with only formulas do not count
+as tasks. The script inserts a fresh row so the sheet's table grows with it.
+It copies row formulas shared by neighbouring rows, such as Dew's Duration and
+O's watermark date.
+
+**What goes in each column:**
+
+| Tab | Sheet columns and card values |
+|---|---|
+| Boss | Event = event name; Task = title; Status = status; Due Date = due date; Assigned by = assigned by; Note = Description and Notes |
+| Eye | Event, Task, Status and Due date = as Boss; Event owner = assigned by; Notes = Description and Notes |
+| Dew | Assigned by = assigned by (or the design requestor); Task = title; Priority = High, Medium or Low; Due date = due date; Status = design stage or general status; Details Provided = Description; Additional Details = Notes |
+| O | Task = title; Time = shoot start - end; Assigned by = assigned by; Status = status; Date = shoot date; Due Date = due date; Photo - FIle Location = shoot location; FIle Location = file location |
+| O (continued) | Notes = "ส่งเมลแล้ว" when Mail sent is ticked, otherwise empty; Media = Photo, Video or Photo&VDO for Photos, Videos or Both; Upload date = upload date; Watermark deleting date = watermark date, unless the cell has a formula |
+
+Event name comes from the shared card label, event picker, O's event or Dew's
+brand. Dates are written as real dates. Dew's Estimate Time, Start and Finish
+are left for Dew; Duration keeps its formula. O's Watermark is left for O.
+
+**Status words per tab:**
+
+| App | Boss and Eye | O | Dew (general card) |
+|---|---|---|---|
+| Pending | Not started | Not started | Ready to do! |
+| In Progress | In progress | In progress | In progress |
+| Waiting | Waiting for approval | Blocked | Waiting for response |
+| On Hold | On hold | Blocked | " Hold" (leading space) |
+| Done | Completed | Completed | Completed |
+| Canceled | Canceled | CANCELLED | Cancel |
+
+Dew's design stage supplies the status while the card is Pending, In Progress
+or Waiting: Waiting for Brief → Information needed; Brief Received → Ready to
+do!; In Progress → In progress; Review → Waiting for response; Revision
+Required → Edit; Approved → "File Prepared " (trailing space); Delivered →
+Completed. On Hold, Done and Canceled use the table above.
+
+**Setting it up:** follow [google-apps-script/SHEET-SETUP.md](google-apps-script/SHEET-SETUP.md).
+Boss pastes the Web app URL and secret in **Settings > Google Sheet link**,
+tests the connection, then clicks **Save**. They are stored in
+`dept_settings/sheetsync`: everyone in the team reads, only the admin writes,
+so no rule change is needed. **Test connection** lists the four tabs, their
+headings and whether the script can write there. The script must run from a
+Google account that can edit all four tabs. O's tab is protected.
+
+**Keeping it safe:** text that starts with `=`, `+`, `-` or `@`, or looks like a
+number, is stored as plain text. Nothing typed in the app or the public Request
+Centre can become a formula through the link. Treat the URL and secret together
+like a key and keep them private. The script refuses to work with its sample
+secret.
+
+**Switching from the test copy to the real sheet:** change `SPREADSHEET_ID` in
+the Apps Script. Choose **Deploy > Manage deployments > pencil icon > Version:
+New version > Deploy**. The URL stays the same. Press **Test connection** in
+Settings and check all four tabs' headings and write access. Heading matching
+ignores emoji, capitals and punctuation. If a column is renamed to something
+else, that column is skipped until `assets/sheet-sync.js` is updated. Each tab
+still needs a Task heading so the script can find its heading row.
+
+**Tests:** `tests/ui-sheet-script.test.mjs` runs the script against a fake
+Google Sheet shaped like the real tabs. `tests/ui-sheet-sync.test.mjs` checks
+columns and status words. `tests/ui-sheet-link.test.mjs` and
+`tests/ui-sheet-edit.test.mjs` check the app side. Run them with the rest of the
+UI checks using `npm run test:ui`.
+
+**Not yet included:** Request Centre cards created by the server
+(`netlify/functions/submit-request.js`) will be linked in a later step.

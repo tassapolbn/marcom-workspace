@@ -1,8 +1,7 @@
 # Google Sheet link — setup
 
 Do this once for the team's Google Sheet. Start with the test copy already set
-in the script. The workspace connection described in Steps 6 and 7 will be
-added in a later step; this script alone does not change the app.
+in the script. Connect it to the workspace in Step 6.
 
 ## Step 1 — Which Google account to use
 
@@ -69,8 +68,6 @@ This checks that the script is live. Step 6 checks access to the sheet.
 
 ## Step 6 — Connect it to the workspace
 
-Once the Google Sheet link setting is available:
-
 1. Open the workspace and click the **Settings gear**.
 2. Find **Google Sheet link**. Only **Boss** can change this setting.
 3. Paste the Web app URL and your secret phrase.
@@ -96,8 +93,8 @@ Once the Google Sheet link setting is available:
 - Cards that existed before the connection are not copied.
 - Every other tab is left alone, including the hidden **Boss 1** tab.
 
-The workspace will send the column values and status words when its connection
-is added. The script writes the values it receives.
+The workspace sends the column values and status words. The script writes the
+values it receives.
 
 ## Step 8 — Switching to the real sheet
 
