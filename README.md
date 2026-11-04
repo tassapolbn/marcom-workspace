@@ -311,16 +311,21 @@ A test fails if a new top-level file is added without a rule.
 
 Once the link is set up, a new card is also added as one row in its owner's
 tab of the team's **Marketing & Communications Tracker** sheet: **Boss**,
-**Dew**, **O** or **Eye**. A shared card goes to the first person's tab only.
-A shared card with nobody assigned gets no row. Cards that existed before the
-link was set up are not copied automatically: the card button and Refresh all
-(below) send them.
+**Dew**, **O** or **Eye**. A shared card gets a row in **every** assigned
+person's tab, each in that tab's own columns and words (plan 10); the card
+remembers them as `sheetRows`, one entry per person (older cards keep the
+single `sheetRow`, which is still understood). A shared card with nobody
+assigned gets no row. Cards that existed before the link was set up are not
+copied automatically: the card button and Refresh all (below) send them.
 
-Editing a linked card updates the same row, and only the cells that changed.
+Editing a linked card updates each of its rows, and only the cells that changed.
 This includes the form, the status menu, Dew's design stage, the done tick and
-Undo. Deleting the card sets the row's Status to that tab's cancel word:
-**Canceled**, **CANCELLED** or **Cancel**. Undo puts the status back. Task rows
-are never deleted.
+Undo. Someone added to a shared card gets a row; someone taken off gets their
+row's Status set to their tab's cancel word. Deleting the card sets every row's
+Status to that tab's cancel word: **Canceled**, **CANCELLED** or **Cancel**.
+Undo puts the status back. **When a card is completed, reopened, deleted or
+restored, the Status follows the app without asking**, in every row, even if
+someone changed it in the sheet. Task rows are never deleted.
 
 Every other tab is never touched. The script only accepts the four tab names.
 It never writes headings or overwrites formula cells. New rows go under the
@@ -348,11 +353,14 @@ several rows with that name are left for a person to sort out.
 **Refresh all** (Settings > Google Sheet link, Boss only) compares open cards and
 cards already in the sheet with the sheet, in batches of 25. It shows what would
 change first (to add, to link, to update, already matching, need a look, rows of
-deleted cards) and writes nothing until **Apply**. Differences are listed
-unticked; only ticked cells are overwritten. Rows the app added for cards that
-were later deleted are listed ticked and get Status Canceled; rows typed by hand
-are never touched. The script actions behind these are `sync` and `sweep`, both
-with a check mode that writes nothing.
+deleted cards) and writes nothing until **Apply**. It works per card and
+person, so shared cards that were only in their first person's tab get their
+missing rows. Differences are listed unticked, except the Status of a card that
+is done in the app, which is ticked; only ticked cells are overwritten. Rows the
+app added for cards that were later deleted, and rows of people taken off a
+card, are listed ticked and get Status Canceled; rows typed by hand are never
+touched. The script actions behind these are `sync` and `sweep`, both with a
+check mode that writes nothing; both work on one person's tab at a time.
 
 **What goes in each column:**
 

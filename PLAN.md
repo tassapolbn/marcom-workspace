@@ -2973,7 +2973,7 @@ first person's tab only).
     `assets/workspace-ui.css`, which has CRLF here and was not touched. Sheet
     tests 242 pass; UI suite 667 pass, 2 known failures.
 
-- [ ] **95. Docs and ship**
+- [x] **95. Docs and ship**
   - README, `SHEET-SETUP.md`, merge into `main`, push, check the deploy, and
     rebuild Boss's ready-to-paste script. Boss pastes the new script version.
 
