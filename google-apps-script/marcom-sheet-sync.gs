@@ -271,7 +271,7 @@ function append_(ss, body, values) {
 function update_(ss, body, values) {
   var tab = TABS[body.who], keys = Object.keys(TABS);
   var order = [body.who];
-  for (var i = 0; i < keys.length; i++) if (keys[i] !== body.who) order.push(keys[i]);
+  for (var i = 0; body.tabOnly !== true && i < keys.length; i++) if (keys[i] !== body.who) order.push(keys[i]);
   for (i = 0; i < order.length; i++) {
     var sheet = ss.getSheetByName(TABS[order[i]]);
     if (!sheet) continue;
@@ -366,27 +366,22 @@ function insertionFormulas_(data, row) {
 function sync_(ss, body) {
   if (!Array.isArray(body.cards)) return { ok: false, error: 'invalid cards' };
   if (body.cards.length > 30) return { ok: false, error: 'too many cards' };
-  var check = body.check === true, cache = Object.create(null), members = Object.keys(TABS);
+  var check = body.check === true, cache = Object.create(null);
   var results = body.cards.map(function (card) {
     card = card || {};
-    var result = { cardId: card.cardId === undefined ? '' : card.cardId, result: 'error', tab: '', row: 0, written: [], conflicts: [] };
+    var result = { cardId: card.cardId === undefined ? '' : card.cardId, who: '', result: 'error', tab: '', row: 0, written: [], conflicts: [] };
     var data, insertedRow = 0;
     try {
       if (typeof card.who !== 'string' || !Object.prototype.hasOwnProperty.call(TABS, card.who)) throw new Error('unknown member');
+      result.who = card.who;
       result.tab = TABS[card.who];
       if (typeof card.cardId !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(card.cardId)) throw new Error('no card id');
-      var order = [card.who].concat(members.filter(function (key) { return key !== card.who; }));
+      // Shared cards have independent tagged rows in each assigned member's tab.
+      data = cachedTab_(ss, cache, TABS[card.who]);
       var row = 0;
-      for (var i = 0; i < order.length; i++) {
-        // A missing unrelated tab must not prevent a valid card from running.
-        if (!ss.getSheetByName(TABS[order[i]])) continue;
-        var candidate = cachedTab_(ss, cache, TABS[order[i]]);
-        for (var j = 0; j < candidate.tags.length; j++) {
-          if (candidate.tags[j].cardId === card.cardId) { data = candidate; row = candidate.tags[j].row; break; }
-        }
-        if (row) break;
+      for (var i = 0; i < data.tags.length; i++) {
+        if (data.tags[i].cardId === card.cardId) { row = data.tags[i].row; break; }
       }
-      if (!data) data = cachedTab_(ss, cache, TABS[card.who]);
       result.tab = data.sheet.getName();
       if (!data.heading.row) throw new Error('no heading row');
       var values = values_(card.values), kind = 'updated';
@@ -453,25 +448,40 @@ function sync_(ss, body) {
 function sweep_(ss, body) {
   if (!Array.isArray(body.cardIds) || body.cardIds.length > 5000 ||
       body.cardIds.some(function (id) { return typeof id !== 'string'; })) return { ok: false, error: 'invalid cardIds' };
+  var members = body.members === undefined ? {} : body.members;
+  if (!members || Object.prototype.toString.call(members) !== '[object Object]' ||
+      Object.keys(members).length > 5000 || Object.keys(members).some(function (id) {
+        return !Array.isArray(members[id]) || members[id].length > 4 || members[id].some(function (member) {
+          return typeof member !== 'string' || !Object.prototype.hasOwnProperty.call(TABS, member);
+        });
+      })) return { ok: false, error: 'invalid members' };
   var cancel = values_(body.cancel), cancelKeys = Object.keys(cancel);
   if (!body.cancel || Object.prototype.toString.call(body.cancel) !== '[object Object]' || cancelKeys.some(function (key) {
     return !Object.prototype.hasOwnProperty.call(TABS, key) || typeof cancel[key] !== 'string' || !cancel[key].trim() || cancel[key].length > 40;
   })) return { ok: false, error: 'invalid cancel' };
   var apply = body.apply === undefined ? [] : body.apply;
-  if (!Array.isArray(apply) || apply.some(function (id) { return typeof id !== 'string'; })) return { ok: false, error: 'invalid apply' };
+  if (!Array.isArray(apply) || apply.some(function (item) {
+    if (typeof item === 'string') return false;
+    return !item || Object.prototype.toString.call(item) !== '[object Object]' ||
+      typeof item.cardId !== 'string' || typeof item.who !== 'string' || !Object.prototype.hasOwnProperty.call(TABS, item.who);
+  })) return { ok: false, error: 'invalid apply' };
   var check = body.check === true, rows = [], live = Object.create(null);
   body.cardIds.forEach(function (id) { live[id] = true; });
   Object.keys(TABS).forEach(function (member) {
     if (!ss.getSheetByName(TABS[member])) return;
     var data = readTab_(ss, TABS[member]), col = data.columns.status;
     data.tags.forEach(function (tag) {
-      if (live[tag.cardId] || tag.row <= data.heading.row || !data.heading.row) return;
-      var entry = { cardId: tag.cardId, tab: TABS[member], row: tag.row,
+      var reason = !live[tag.cardId] ? 'deleted' :
+        Object.prototype.hasOwnProperty.call(members, tag.cardId) && members[tag.cardId].indexOf(member) === -1 ? 'removed' : '';
+      if (!reason || tag.row <= data.heading.row || !data.heading.row) return;
+      var entry = { cardId: tag.cardId, who: member, reason: reason, tab: TABS[member], row: tag.row,
         status: col ? data.display[tag.row - 1][col - 1] : '' };
       rows.push(entry);
       if (check) return;
       entry.result = 'unchanged';
-      if (apply.indexOf(tag.cardId) === -1) return;
+      if (!apply.some(function (item) {
+        return typeof item === 'string' ? item === tag.cardId : item.cardId === tag.cardId && item.who === member;
+      })) return;
       try {
         if (!col || !cancel[member]) throw new Error(!col ? 'no status heading' : 'missing cancel word');
         if (cellText_(data.values[tag.row - 1][col - 1], ss.getSpreadsheetTimeZone()) === valueText_(cancel[member])) return;

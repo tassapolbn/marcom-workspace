@@ -2913,12 +2913,18 @@ first person's tab only).
     Claude): `membersFor`, `linksOf` and `linkFor`; old single links still
     read. Sync tests 57 pass; UI suite 496 pass, the same 2 failures.
 
-- [ ] **92. The script works tab by tab**
+- [x] **92. The script works tab by tab**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
   - `update` and `sync` look for a card's row only in the tab of the person
     named in the request; each result says which person it is for. `sweep` is
     told which people each card has, and also lists rows of people who were
     taken off a shared card (decision 3). Rows are still never deleted.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-92.md, reviewed by
+    Claude): `update` takes `tabOnly`; `sync` looks only in the entry's own tab
+    and returns `who`; `sweep` takes `members` and lists rows with reason
+    `deleted` or `removed`, and `apply` can name one person's row
+    (`{cardId, who}`). Script tests 60 pass; UI suite 502 pass, the same 2
+    failures.
 
 - [ ] **93. The app sends every person's row**
   - Files: `index.html` (the `sheet-script` block), `tests/ui-sheet-link.test.mjs`,
