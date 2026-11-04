@@ -42,7 +42,8 @@ const expected = {
 
 test('exports only the requested API and tabs', () => {
   assert.deepEqual(Object.keys(sheet).sort(),
-    ['TABS', 'cleanHeading', 'memberFor', 'statusWord', 'cancelWord', 'rowFor', 'forAppend', 'changes'].sort());
+    ['TABS', 'cleanHeading', 'memberFor', 'membersFor', 'linksOf', 'linkFor',
+      'statusWord', 'cancelWord', 'rowFor', 'forAppend', 'changes'].sort());
   assert.deepEqual(plain(sheet.TABS), {boss: 'Boss', dew: 'Dew', o: 'O', junior: 'Eye'});
 });
 
@@ -126,6 +127,80 @@ test('shared cards go only to their first assignee or their older owner', () => 
     assert.equal(row({}, unknown), null);
     assert.equal(row(task, 'boss', unknown), null);
   }
+});
+
+test('membersFor returns every valid assignee once, or the owner or current member', () => {
+  assert.deepEqual(plain(sheet.membersFor({owner: 'o'}, 'boss')), ['boss']);
+  assert.deepEqual(plain(sheet.membersFor({__src: 'event',
+    assignees: ['dew', 'o', 'dew', 'x', 'junior'], owner: 'boss'}, 'boss')), ['dew', 'o', 'junior']);
+  assert.deepEqual(plain(sheet.membersFor({assignees: ['dew', 'o']}, 'boss')), ['dew', 'o']);
+  for (const assignees of [undefined, [], null]) {
+    assert.deepEqual(plain(sheet.membersFor({__src: 'event', assignees, owner: 'o'}, 'boss')), ['o']);
+  }
+  for (const who of ['', 'x', 'constructor', '__proto__', null, undefined]) {
+    assert.deepEqual(plain(sheet.membersFor({}, who)), []);
+    assert.deepEqual(plain(sheet.membersFor({__src: 'event', owner: who}, 'boss')), []);
+    assert.deepEqual(plain(sheet.membersFor({assignees: [who], owner: 'o'}, 'boss')), []);
+  }
+  assert.deepEqual(plain(sheet.membersFor(null, 'dew')), ['dew']);
+});
+
+test('linksOf reads sheetRows in fixed member order without changing the card', () => {
+  const task = {sheetRows: {
+    junior: {tab: 'Eye', row: 8, title: 'Design'}, o: {tab: 'O', row: 6, title: 'Photos'},
+    dew: {tab: 'Custom Dew', row: 4, title: 'Poster'}, boss: {tab: 'Boss', row: 2, title: 'Plan'},
+  }};
+  const snapshot = JSON.stringify(task);
+  assert.deepEqual(plain(sheet.linksOf(task)), [
+    {member: 'boss', tab: 'Boss', row: 2, title: 'Plan'},
+    {member: 'dew', tab: 'Custom Dew', row: 4, title: 'Poster'},
+    {member: 'o', tab: 'O', row: 6, title: 'Photos'},
+    {member: 'junior', tab: 'Eye', row: 8, title: 'Design'},
+  ]);
+  assert.equal(JSON.stringify(task), snapshot);
+});
+
+test('linksOf reads legacy sheetRow and gives sheetRows precedence for the same member', () => {
+  const old = {member: 'o', tab: 'Old O', row: 7, title: 'Old title'};
+  assert.deepEqual(plain(sheet.linksOf({sheetRow: old})), [old]);
+  assert.deepEqual(plain(sheet.linksOf({sheetRows: {o: {}}, sheetRow: old})), [
+    {member: 'o', tab: 'O', row: 0, title: ''},
+  ]);
+  assert.deepEqual(plain(sheet.linksOf({sheetRows: {junior: {}}, sheetRow: old})), [
+    old, {member: 'junior', tab: 'Eye', row: 0, title: ''},
+  ]);
+  assert.deepEqual(plain(sheet.linksOf({sheetRow: {member: 'dew'}})), [
+    {member: 'dew', tab: 'Dew', row: 0, title: ''},
+  ]);
+});
+
+test('linksOf ignores invalid members and non-object entries and supplies defaults', () => {
+  assert.deepEqual(plain(sheet.linksOf({sheetRows: {
+    x: {}, constructor: {}, boss: null, dew: 'bad', o: 3, junior: false,
+  }, sheetRow: {member: 'constructor'}})), []);
+  for (const row of [undefined, null, '7', 1.5, -1, NaN, Infinity]) {
+    assert.deepEqual(plain(sheet.linksOf({sheetRows: {boss: {row}}})), [
+      {member: 'boss', tab: 'Boss', row: 0, title: ''},
+    ]);
+  }
+  for (const sheetRows of [null, 'bad', [], new Date(), Object.create({boss: {row: 2}})]) {
+    assert.deepEqual(plain(sheet.linksOf({sheetRows})), []);
+  }
+  assert.deepEqual(plain(sheet.linksOf({sheetRows: {boss: [], dew: () => {}}})), []);
+  assert.deepEqual(plain(sheet.linksOf({sheetRows: Object.assign(Object.create(null), {junior: {}})})), [
+    {member: 'junior', tab: 'Eye', row: 0, title: ''},
+  ]);
+  for (const task of [{}, null, undefined]) assert.deepEqual(plain(sheet.linksOf(task)), []);
+});
+
+test('linkFor finds the normalized member entry or returns null', () => {
+  const task = {sheetRows: {dew: {row: 5}}, sheetRow: {member: 'o', row: 9}};
+  assert.deepEqual(plain(sheet.linkFor(task, 'dew')), {member: 'dew', tab: 'Dew', row: 5, title: ''});
+  assert.deepEqual(plain(sheet.linkFor(task, 'o')), {member: 'o', tab: 'O', row: 9, title: ''});
+  for (const member of ['boss', 'x', 'constructor', null, undefined]) {
+    assert.equal(sheet.linkFor(task, member), null);
+  }
+  assert.equal(sheet.linkFor(null, 'dew'), null);
 });
 
 test('empty cards include every column, with the specified status and priority defaults', () => {

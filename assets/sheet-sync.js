@@ -32,6 +32,32 @@
       (task.__src === 'event' ? task.owner : who);
     return validMember(member) ? member : '';
   }
+  function membersFor(task, who){
+    task = task || {};
+    var candidates = Array.isArray(task.assignees) && task.assignees.length ? task.assignees :
+      [task.__src === 'event' ? task.owner : who];
+    return candidates.filter(function(member, index){
+      return validMember(member) && candidates.indexOf(member) === index;
+    });
+  }
+  function linksOf(task){
+    task = task || {};
+    var rows = task.sheetRows, old = task.sheetRow;
+    var prototype = rows && typeof rows === 'object' ? Object.getPrototypeOf(rows) : undefined;
+    var plainRows = prototype === null ||
+      (prototype && Object.getPrototypeOf(prototype) === null);
+    return ['boss', 'dew', 'o', 'junior'].reduce(function(links, member){
+      var link = plainRows && has(rows, member) ? rows[member] : null;
+      if(!link || typeof link !== 'object' || Array.isArray(link))link = null;
+      if(!link && old && validMember(old.member) && old.member === member)link = old;
+      if(link)links.push({member:member, tab:text(link.tab) || TABS[member],
+        row:Number.isInteger(link.row) && link.row >= 0 ? link.row : 0, title:text(link.title)});
+      return links;
+    }, []);
+  }
+  function linkFor(task, member){
+    return linksOf(task).find(function(link){return link.member === member;}) || null;
+  }
   function statusWord(task, member){
     if(!validMember(member))return '';
     task = task || {};
@@ -92,7 +118,8 @@
     });
     return result;
   }
-  root.MarcomSheet = {TABS:TABS, cleanHeading:cleanHeading, memberFor:memberFor, statusWord:statusWord,
+  root.MarcomSheet = {TABS:TABS, cleanHeading:cleanHeading, memberFor:memberFor,
+    membersFor:membersFor, linksOf:linksOf, linkFor:linkFor, statusWord:statusWord,
     cancelWord:cancelWord, rowFor:rowFor, forAppend:forAppend, changes:changes};
   if (typeof module === 'object' && module && module.exports) module.exports = root.MarcomSheet;
 })(typeof window !== 'undefined' ? window : globalThis);

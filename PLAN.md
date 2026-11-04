@@ -2904,11 +2904,14 @@ first person's tab only).
 
 ## Steps (Codex builds each one; Claude reviews, tests and commits)
 
-- [ ] **91. Who gets a row, and where a card's rows are**
+- [x] **91. Who gets a row, and where a card's rows are**
   - Files: `assets/sheet-sync.js`, `tests/ui-sheet-sync.test.mjs`.
   - `membersFor(card, who)`: every person on a shared card (in order, no
     repeats), or the card's own person. `linksOf(card)`: the card's rows, read
     from the new `sheetRows` or the old `sheetRow`.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-91.md, reviewed by
+    Claude): `membersFor`, `linksOf` and `linkFor`; old single links still
+    read. Sync tests 57 pass; UI suite 496 pass, the same 2 failures.
 
 - [ ] **92. The script works tab by tab**
   - Files: `google-apps-script/marcom-sheet-sync.gs`, `tests/ui-sheet-script.test.mjs`.
