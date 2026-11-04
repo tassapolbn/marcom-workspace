@@ -2776,7 +2776,7 @@ plan 8's automatic updates (already live) as well as to plan 9:
     (a new test fails without it). Script tests 54 pass; UI suite 442 pass, the
     same 2 failures.
 
-- [ ] **88. Refresh all, part 2: the button in Settings**
+- [x] **88. Refresh all, part 2: the button in Settings**
   - Files: `index.html` (Settings section "Google Sheet link"),
     `tests/ui-sheet-refresh.test.mjs`.
   - Boss only (decision 8). "Refresh all" first runs in check mode and shows:
@@ -2788,6 +2788,20 @@ plan 8's automatic updates (already live) as well as to plan 9:
   - Test: unit tests with a fake script (counts, list to check, Apply saves the
     links, a failed batch stops and says where); the local preview; then Boss
     runs it in check mode on the real sheet before applying.
+  - Done (2026-11-04, built by Codex from .codex-tasks/step-88.md, reviewed by
+    Claude): "Refresh all" beside Test connection and Save, with a help line.
+    Check first in batches of 25 plus a sweep check; the summary shows the
+    counts, differences with unticked boxes, "need a look" rows, and deleted
+    cards' rows with ticked boxes. Apply sends only the ticked cells as
+    `force`, saves the links, and runs the sweep with only the ticked rows (and
+    counts cards created while the summary was open, so their rows are never
+    marked Canceled). It stops if the link changed, and stops safely when the
+    script's reply does not match the cards sent (for example two cards with the
+    same id, which only the preview's made-up data has). Checked in the local
+    preview with a simulated script: one check batch and one sweep check, then
+    Apply sent `force: ["note"]` for the ticked card only and `apply:
+    ["gone-card"]`, and saved the links; sheet text stayed plain text. 16 new
+    tests; UI suite 476 pass, the same 2 failures.
 
 - [ ] **90. Edits never overwrite the sheet without asking (Boss's rule)**
   - Files: `index.html` (`sheetSyncEdit`, `sheetSyncCancel`, `sheetSyncRestore`),

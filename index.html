@@ -7376,9 +7376,161 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       else uiToast('The card was restored, but its status in the Google Sheet ('+row.tab+') was not put back: '+window.sheetReason(res,row.tab)+'.',{duration:9000});
     }catch(e){console.error('[sheet] step failed',e);}
   };
+  // A preview owns its entries and choices until Apply or Cancel; checking never writes.
+  var refreshBusy=false, refreshPreview=null;
+  function refreshMessage(text){var out=document.getElementById('sheet-refresh-out');if(out)out.textContent=text;}
+  function refreshButtons(busy){
+    refreshBusy=busy;
+    ['sheet-test','sheet-save','sheet-refresh','sheet-refresh-apply','sheet-refresh-cancel'].forEach(function(id){
+      var button=document.getElementById(id);if(button)button.disabled=busy;
+    });
+  }
+  function refreshReady(){
+    if(!isAdmin()){refreshMessage('Only the admin can refresh all cards.');return false;}
+    if(!window.sheetConfigured()){refreshMessage('The Google Sheet link is off.');return false;}
+    if(!MEMBER_ORDER.every(loadedOf)||!eventTasksLoaded){refreshMessage("Still loading the team's cards. Try again in a moment.");return false;}
+    return true;
+  }
+  function refreshCards(){
+    var cards=[];
+    MEMBER_ORDER.forEach(function(w){(ownTasksOf(w)||[]).forEach(function(card){cards.push({card:card,who:w,ref:refOf(w)});});});
+    eventTasks.forEach(function(card){cards.push({card:card,who:MarcomSheet.memberFor(card,''),ref:eventTasksRef});});
+    return cards;
+  }
+  function refreshCounts(results){
+    var counts={added:0,linked:0,updated:0,unchanged:0,ambiguous:0,protected:0,error:0};
+    results.forEach(function(r){if(Object.prototype.hasOwnProperty.call(counts,r.result))counts[r.result]++;});
+    return counts;
+  }
+  async function refreshCall(payload){
+    var reply=await window.sheetCall(payload);
+    if(!reply||!reply.ok)throw new Error(window.sheetReason(reply,''));
+    var rows=payload.action==='sync'?reply.results:reply.rows;
+    if(!Array.isArray(rows))throw new Error('the script returned an incomplete reply');
+    if(payload.action==='sync'&&(rows.length!==payload.cards.length||payload.cards.some(function(c){
+      return rows.filter(function(r){return r.cardId===c.cardId;}).length!==1;
+    })))throw new Error('the script returned incomplete card results');
+    return rows;
+  }
+  function refreshSummary(preview){
+    var counts=refreshCounts(preview.results), conflicts=0;
+    function e(value){return escHtml(String(value==null?'':value));}
+    function line(value){return '<div>'+e(value)+'</div>';}
+    var html='<div style="display:grid;gap:5px;">'+[
+      'To add '+counts.added,'To link to rows already in the sheet '+counts.linked,
+      'To update '+counts.updated,'Already matching '+counts.unchanged,'Need a look '+counts.ambiguous,
+      'Protected '+counts.protected,'Errors '+counts.error,'Rows of deleted cards '+preview.rows.length
+    ].map(line).join('')+'</div>';
+    preview.choices=[];
+    preview.results.forEach(function(r){
+      if(!(r.conflicts||[]).length)return;
+      if(!conflicts)html+='<h4>Different in the sheet</h4><p>Tick a cell to overwrite it with the card\'s value.</p>';
+      var entry=preview.entries.find(function(x){return x.item.cardId===r.cardId;});
+      html+=line(entry.item.values.task+' — '+r.tab+', row '+r.row);
+      r.conflicts.forEach(function(c){
+        var id='sheet-refresh-force-'+preview.choices.length, key=String(c.key);
+        preview.choices.push({id:id,cardId:r.cardId,key:key});conflicts++;
+        html+='<label style="display:block;margin:5px 0;"><input type="checkbox" id="'+id+'"> '+
+          e(key.charAt(0).toUpperCase()+key.slice(1)+': sheet "'+c.sheet+'" -> card "'+c.card+'"')+'</label>';
+      });
+    });
+    if(counts.ambiguous){
+      html+='<h4>Need a look</h4><p>Nothing will be done for these cards. Resolve their matching rows in the sheet first.</p>';
+      preview.results.filter(function(r){return r.result==='ambiguous';}).forEach(function(r){
+        var entry=preview.entries.find(function(x){return x.item.cardId===r.cardId;});
+        html+=line(entry.item.values.task+' — '+r.tab+', rows '+(r.matches||[]).join(', '));
+      });
+    }
+    if(preview.rows.length){
+      html+='<h4>Rows of deleted cards</h4>';
+      preview.rows.forEach(function(r,i){
+        var member=MEMBER_ORDER.find(function(w){return MarcomSheet.TABS[w]===r.tab;});
+        html+='<label style="display:block;margin:5px 0;"><input type="checkbox" id="sheet-refresh-row-'+i+'" checked> '+
+          e(r.tab+' row '+r.row+', status "'+r.status+'" -> '+MarcomSheet.cancelWord(member))+'</label>';
+      });
+    }
+    var actionable=counts.added+counts.linked+counts.updated+preview.rows.length+conflicts;
+    html+=actionable?'':'<p>Everything already matches.</p>';
+    html+='<div style="display:flex;gap:8px;margin-top:10px;">'+(actionable?
+      '<button type="button" id="sheet-refresh-apply" class="btn btn-navy btn-sm" onclick="sheetRefreshApply()">Apply</button>':'')+
+      '<button type="button" id="sheet-refresh-cancel" class="btn btn-ghost btn-sm" onclick="sheetRefreshCancel()">Cancel</button></div>';
+    preview.actionable=!!actionable;
+    var out=document.getElementById('sheet-refresh-out');if(out)out.innerHTML=html;
+  }
+  window.sheetRefreshCancel=function(){
+    if(refreshBusy)return;
+    refreshPreview=null;refreshMessage('');
+  };
+  window.sheetRefreshAll=async function(){
+    if(refreshBusy)return;
+    try{
+      refreshPreview=null;
+      if(!refreshReady())return;
+      refreshButtons(true);
+      var cards=refreshCards(), preview={entries:[],allIds:cards.map(function(x){return x.card.id;}),cancel:{},results:[],rows:[],config:JSON.stringify(CFG)};
+      MEMBER_ORDER.forEach(function(w){preview.cancel[w]=MarcomSheet.cancelWord(w);});
+      cards.forEach(function(x){
+        var card=x.card;
+        if(!card.sheetRow&&(card.done||['pending','in-progress','waiting','on-hold'].indexOf(card.status)<0))return;
+        var member=card.sheetRow?card.sheetRow.member:MarcomSheet.memberFor(card,x.who);
+        if(typeof member!=='string'||!Object.prototype.hasOwnProperty.call(MarcomSheet.TABS,member))return;
+        var row=MarcomSheet.rowFor(card,x.who,member);if(!row)return;
+        preview.entries.push({card:card,ref:x.ref,item:{cardId:card.id,who:member,values:row.values}});
+      });
+      for(var i=0;i<preview.entries.length;i+=25){
+        var batch=preview.entries.slice(i,i+25);
+        refreshMessage('Checking '+Math.min(i+25,preview.entries.length)+' of '+preview.entries.length+'...');
+        preview.results=preview.results.concat(await refreshCall({action:'sync',check:true,cards:batch.map(function(x){return x.item;})}));
+      }
+      preview.rows=await refreshCall({action:'sweep',check:true,cardIds:preview.allIds,cancel:preview.cancel});
+      refreshSummary(preview);refreshPreview=preview;
+    }catch(e){refreshMessage('Stopped: '+(e&&e.message||window.sheetReason(null,''))+'. Nothing was changed.');}
+    finally{refreshButtons(false);}
+  };
+  window.sheetRefreshApply=async function(){
+    if(refreshBusy||!refreshPreview||!refreshPreview.actionable)return;
+    var preview=refreshPreview, done=0, total=preview.entries.length;
+    try{
+      if(!refreshReady()){refreshPreview=null;return;}
+      if(preview.config!==JSON.stringify(CFG)){refreshPreview=null;refreshMessage('The Google Sheet link changed. Press Refresh all to check again.');return;}
+      function ticked(id){var input=document.getElementById(id);return !!(input&&input.checked);}
+      var entries=preview.entries.map(function(x){return Object.assign({},x.item,{force:preview.choices.filter(function(c){
+        return c.cardId===x.item.cardId&&ticked(c.id);
+      }).map(function(c){return c.key;})});});
+      var apply=preview.rows.filter(function(r,i){return ticked('sheet-refresh-row-'+i);}).map(function(r){return r.cardId;});
+      refreshButtons(true);refreshPreview=null;
+      var results=[];
+      for(var i=0;i<entries.length;i+=25){
+        refreshMessage('Applying '+Math.min(i+25,total)+' of '+total+'...');
+        var batch=await refreshCall({action:'sync',check:false,cards:entries.slice(i,i+25)});
+        done+=batch.length;results=results.concat(batch);
+        for(var j=0;j<batch.length;j++){
+          var r=batch[j], x=preview.entries.slice(i,i+25).find(function(entry){return entry.item.cardId===r.cardId;});
+          if(['added','linked','updated','unchanged'].indexOf(r.result)<0||!r.row)continue;
+          if(r.result==='added'||r.result==='linked'||r.row!==(x.card.sheetRow&&x.card.sheetRow.row)){
+            var upd={sheetRow:{member:x.item.who,tab:r.tab,row:r.row,title:x.item.values.task}};
+            if(x.ref.id==='event_tasks'||x.card.__src==='event')Object.assign(upd,stampEdit());
+            await x.ref.doc(x.item.cardId).update(upd);
+          }
+        }
+      }
+      // Include cards arriving while Boss reviews the preview, too.
+      if(!MEMBER_ORDER.every(loadedOf)||!eventTasksLoaded)throw new Error("the team's cards are still loading; the sweep was not run");
+      var liveIds=Array.from(new Set(preview.allIds.concat(refreshCards().map(function(x){return x.card.id;}))));
+      var rows=await refreshCall({action:'sweep',check:false,cardIds:liveIds,cancel:preview.cancel,apply:apply});
+      var counts=refreshCounts(results), left=results.reduce(function(n,r){return n+(r.conflicts||[]).length;},0);
+      var message='Done: added '+counts.added+', linked '+counts.linked+', updated '+counts.updated+', already matching '+counts.unchanged+
+        ', marked Canceled '+rows.filter(function(r){return r.result==='canceled';}).length+'. Differences left as they are: '+left+'.';
+      var protectedRows=rows.filter(function(r){return r.result==='protected';}).length, errors=rows.filter(function(r){return r.result==='error';}).length;
+      if(counts.ambiguous+counts.protected+counts.error+protectedRows+errors)message+=' Need a look '+counts.ambiguous+', protected '+(counts.protected+protectedRows)+', errors '+(counts.error+errors)+'.';
+      refreshMessage(message);
+    }catch(e){refreshPreview=null;refreshMessage('Stopped after '+done+' of '+total+' cards: '+(e&&e.message||window.sheetReason(null,''))+'. The cards before that were done; nothing after it was changed.');}
+    finally{refreshButtons(false);}
+  };
   function sheetMsg(t,bad){ var o=document.getElementById('sheet-test-out'); if(!o)return; o.style.color=bad?'#b91c1c':'#147c3b'; o.textContent=t; }
   window.sheetSave=async function(){
     if(!isAdmin())return;
+    if(refreshBusy)return;
     var chk=cleanUrl(((document.getElementById('sheet-url')||{}).value||''));
     if(chk.error){sheetMsg(chk.error,true);return;}
     var u=document.getElementById('sheet-url'); if(u)u.value=chk.url;
@@ -7391,6 +7543,7 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
   };
   window.sheetTest=async function(){
     if(!isAdmin())return;
+    if(refreshBusy)return;
     var chk=cleanUrl(((document.getElementById('sheet-url')||{}).value||''));
     if(chk.error){sheetMsg(chk.error,true);return;}
     if(!chk.url){sheetMsg('Paste the Web app URL first.',true);return;}
@@ -7420,12 +7573,16 @@ html.dark .tc-progress-bar{background:#5f8cc4;}
       +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:8px;">New cards are also added to their owner\'s tab (Boss, Dew, O or Eye) in the team\'s Google Sheet. Follow google-apps-script/SHEET-SETUP.md, then paste the Web app URL and the same secret phrase below. This applies to the whole team.</div>'
       +'<input class="form-input" id="sheet-url" type="url" inputmode="url" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:6px;">'
       +'<input class="form-input" id="sheet-secret" type="text" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="Secret phrase (must match the script)" style="margin-bottom:6px;">'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost btn-sm" onclick="sheetTest()"><i class="ti ti-plug-connected"></i> Test connection</button>'
-      +'<button type="button" class="btn btn-navy btn-sm" onclick="sheetSave()"><i class="ti ti-check"></i> Save</button></div>'
-      +'<div id="sheet-test-out" style="font-size:11.5px;font-weight:700;margin-top:7px;"></div>';
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="sheet-test" class="btn btn-ghost btn-sm" onclick="sheetTest()"><i class="ti ti-plug-connected"></i> Test connection</button>'
+      +'<button type="button" id="sheet-save" class="btn btn-navy btn-sm" onclick="sheetSave()"><i class="ti ti-check"></i> Save</button>'
+      +'<button type="button" id="sheet-refresh" class="btn btn-ghost btn-sm" onclick="sheetRefreshAll()"><i class="ti ti-refresh"></i> Refresh all</button></div>'
+      +'<div style="font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:7px;">Refresh all compares the team\'s cards with the sheet. It shows what would change first; nothing is written until you press Apply.</div>'
+      +'<div id="sheet-test-out" style="font-size:11.5px;font-weight:700;margin-top:7px;"></div>'
+      +'<div id="sheet-refresh-out" aria-live="polite" style="font-size:12px;line-height:1.5;margin-top:10px;overflow-wrap:anywhere;"></div>';
     body.appendChild(d);
     var u=document.getElementById('sheet-url'); if(u&&CFG)u.value=CFG.url||'';
     var s=document.getElementById('sheet-secret'); if(s&&CFG)s.value=CFG.secret||'';
+    refreshButtons(refreshBusy);
   }
   function watch(){ var d=FS(); if(!d||unsub)return;
     try{unsub=d.collection('dept_settings').doc('sheetsync').onSnapshot(function(doc){
