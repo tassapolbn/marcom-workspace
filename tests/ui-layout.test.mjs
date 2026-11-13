@@ -224,13 +224,14 @@ test('a member tab greets once, and the greeting and counts share one line',()=>
   assert.match(step27,/\.myday-list\{flex:1 1 100%;/,'the focus list runs full width below');
 });
 
-test('in light mode the two cards read as one, keeping the member colour wash',()=>{
-  const head=step27.match(/html:not\(\.dark\) \.member-head\{([^}]*)\}/)[1];
-  const day=step27.match(/html:not\(\.dark\) \.myday\{([^}]*)\}/)[1];
-  assert.match(head,/border-radius:16px 16px 0 0!important/,'rounded on top only');
-  assert.match(day,/border-radius:0 0 16px 16px!important/,'rounded on the bottom only');
-  assert.match(head,/margin-bottom:0!important/,'no gap between them');
-  assert.doesNotMatch(head,/background/,'the 12% wash of the member colour is kept, it says whose desk this is');
+test('the name and Today halves read as one plain card in both themes',()=>{
+  const shared=stepBlock(102);
+  const head=rule(shared,'.tab-panel .member-head:has(+[id$="-myday"]>.myday)');
+  const day=rule(shared,'.tab-panel .member-head+[id$="-myday"]>.myday');
+  assert.match(head,/border-radius:var\(--hs-radius-card\) var\(--hs-radius-card\) 0 0/,'rounded on top only');
+  assert.match(day,/border-radius:0 0 var\(--hs-radius-card\) var\(--hs-radius-card\)/,'rounded on the bottom only');
+  assert.match(head,/margin-bottom:0/,'no gap between them');
+  assert.match(shared,/\.tab-panel \.member-head\{background:var\(--surface\);background-image:none/,'the person colour stays on the identity');
 });
 
 /* ===== Step 28: one card language ===== */
@@ -241,24 +242,27 @@ test('in light mode every card shares one calm shadow, and raised things keep th
   assert.ok(tokens,'the light shadow tokens are set');
   assert.doesNotMatch(tokens[1],/12px 30px/,'the floating card shadow is gone');
   assert.equal(tokens[1],'0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)','cards use the calm design-refresh shadow');
-  assert.match(step28,/:is\(\.task-card,\.evc-card,\.rq-card\):hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'hover still deepens as a card lifts');
+  assert.match(step28,/\.rq-card:hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'request hover keeps its lift');
+  assert.match(stepBlock(102),/\.task-card\{border-radius:var\(--hs-radius-tile\);box-shadow:var\(--hs-shadow-tile\);\}/,'task tiles use the shared quiet shadow');
   /* The Overview's search results floated above the page here; that box went in step 48. */
 });
 
 test('cards share one radius, decorative rails go and meaningful rails stay',()=>{
-  assert.match(step28,/\.task-card,#panel-overview \.ov-more\{border-radius:var\(--r-lg,16px\)!important;\}/);
-  assert.match(step28,/\.evhub\{border-left-width:1px!important;/,'Event Hub loses its decorative rail');
+  assert.match(stepBlock(102),/\.task-card\{border-radius:var\(--hs-radius-tile\)/);
+  assert.match(stepBlock(102),/#panel-overview \.ov-more,[\s\S]*?border-radius:var\(--hs-radius-card\)/);
+  assert.match(stepBlock(102),/\.tab-panel \.evhub,[\s\S]*?border:1px solid var\(--border\)/,'Event Hub loses its decorative rail');
   assert.match(step28,/\.ov-ann-item:not\(\.pinned\)\{border-left:1px solid var\(--border\);\}/,'plain announcements lose theirs');
   assert.doesNotMatch(step28,/\.ov-ann-item\.pinned\{[^}]*border-left/,'a pinned announcement keeps its rail: only pinned items have one');
   assert.doesNotMatch(step28,/\.task-card[^{]*\{[^}]*border-left/,'task status rails are untouched');
 });
 
 test('Team Announcements reads like every other card',()=>{
-  const head=step28.match(/#panel-overview \.ov-ann>\.ov-card-head\{([^}]*)\}/)[1];
-  assert.match(head,/background:none/,'no navy band');
+  const shared=stepBlock(102);
+  const head=rule(shared,'#panel-overview .ov-card-head');
+  assert.match(head,/background:transparent/,'no navy band');
   assert.match(head,/border-bottom:0/,'no gold rule');
-  assert.match(head,/margin:0 0 12px/,'the same spacing as the other card heads');
-  assert.match(step28,/\.ov-ann>\.ov-card-head \.ov-card-title\{color:var\(--text\);font-size:14px;font-weight:700;/);
+  assert.match(head,/margin-bottom:12px/,'the same spacing as the other card heads');
+  assert.match(shared,/#panel-overview \.ov-card-title,[\s\S]*?font-size:16px;font-weight:700;color:var\(--text\)/);
 });
 
 test('event chips have room for their names on computers',()=>{
@@ -537,7 +541,7 @@ test('on a phone each person is one short line and the work list starts on the f
   assert.match(phone,/\.ov-team-sum-w,\.nx-l\{display:none;\}/,'"21 open" and "14:00 Weekly sync" keep the heading to one line');
   assert.match(phone,/\.ov-team-head:has\(\.nx-btn\) \.ov-team-done\{display:none;\}/,'a next meeting takes the room of the done count');
   assert.match(media(stepBlock(98),'max-width:600px'),/\.ov-team-next\{grid-column:1\/-1;grid-row:3;/,'the next meeting keeps its own row below the summary');
-  assert.match(phone,/#ov-top,#ov-team\{margin-bottom:12px;\}/);
+  assert.match(phone,/#ov-top,#ov-team\{margin-bottom:var\(--hs-gap\);\}/);
   assert.match(phone,/\.tm-s\{display:inline;\}/,'a flag without a count keeps a short word');
   assert.doesNotMatch(shell,/ov-hello|ov-datesub/,'the removed date block leaves the phone showing the work');
   assert.doesNotMatch(css26,/\.ov-team-note/,'the calendar setup note moved to Settings (step 64)');
@@ -798,8 +802,8 @@ test('the header no longer repeats the selected tab, and the role line no longer
 });
 
 test('headings and rows share two left edges: the page edge and one inner edge in every card',()=>{
-  assert.match(step42,/#panel-overview \.ov-card\{padding-left:16px;padding-right:16px;\}/,'every Overview card writes from the same inner edge');
-  assert.match(step42,/#panel-overview \.ov-more-toggle\{padding-left:16px;padding-right:16px;\}/);
+  assert.match(stepBlock(102),/#panel-overview \.ov-card,#ov-team\{padding:16px var\(--hs-pad-card\) 20px;\}/,'every Overview card writes from the same responsive inner edge');
+  assert.match(step42,/#panel-overview \.ov-more-toggle\{padding-left:var\(--hs-pad-card\);padding-right:var\(--hs-pad-card\);\}/);
   assert.match(step42,/\.myday-list\{margin-left:-8px;margin-right:-8px;\}/,'today\'s rows start under "Dew\'s day", their hover still has room');
   assert.match(media(step42,'max-width:600px'),/\.myday-list\{margin-left:-6px;margin-right:-6px;\}/);
   assert.match(media(step42,'min-width:601px'),/\.tm\{padding-left:6px;\}/,'Team today\'s initials line up with its heading');
@@ -846,7 +850,8 @@ test('all event tiles keep their fill and text colours in both themes',()=>{
     .filter(([,sel,decl])=>/\.ev-chip(?![\w-])/.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
   assert.equal(clears.length,0,'no rule clears a filled tile');
   assert.doesNotMatch(css26,/html\.dark[^{}]*ev-chip[^{}]*\{[^}]*color:[^}]*!important/,'dark mode respects the helper colours');
-  assert.match(stepBlock(99),/\.ev-chip-filled\{border:0;border-radius:12px;min-width:0;\}/);
+  assert.match(stepBlock(99),/\.ev-chip-filled\{border:0;min-width:0;\}/);
+  assert.match(stepBlock(102),/\.ev-chip\{border-radius:var\(--hs-radius-tile\);\}/);
 });
 
 test("a task label on a coloured event keeps the event's own colours",()=>{
@@ -1005,8 +1010,8 @@ test('one search on every screen: the header button on iPhone, no box on the Ove
 const step49=stepBlock(49);
 
 test('in light mode a person colour fills no large area: plain name and Event Hub bars, navy buttons',()=>{
-  assert.match(step49,/html:not\(\.dark\) \.member-head\{background:var\(--surface\)!important;background-image:none!important;\}/);
-  assert.match(step49,/html:not\(\.dark\) \.evhub-head\{background:transparent!important;background-image:none!important;\}/);
+  assert.match(stepBlock(102),/\.tab-panel \.member-head\{background:var\(--surface\);background-image:none;/);
+  assert.match(stepBlock(102),/\.tab-panel \.evhub-head\{background:transparent;background-image:none;\}/);
   assert.match(step49,/html:not\(\.dark\) :is\(#panel-boss,#panel-dew,#panel-o,#panel-junior\) \.btn-accent\{background:var\(--navy,#003057\)!important;[^}]*color:#fff!important;\}/,
     'Add Task and the other primary buttons are the same navy on every tab');
   assert.match(step49,/html:not\(\.dark\) \.tab-panel \.fpill\.act-accent\{background:var\(--navy,#003057\)!important;/,'so is the selected filter');
@@ -1552,8 +1557,9 @@ test('deadline rows are buttons: Tab reaches them and Enter or Space opens the t
 });
 
 test('one set of left edges: every card title after the same chip, and flat rows starting at the card edge',()=>{
-  assert.match(step65,/\.ov-team-title>i\.ti:first-child\{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/,'Team today wears the chip the other titles wear');
-  assert.match(css26,/\.ov-card-title>i\.ti:first-child,\.widget-title>i\.ti:first-of-type\{\s*display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/);
+  const shared=stepBlock(102),tile=shared.slice(shared.indexOf('#panel-overview .ov-card-title>i.ti:first-child'),shared.indexOf('.ov-team-sum,.ov-team-next'));
+  for(const selector of ['.ov-card-title>i.ti:first-child','.ov-team-title>i.ti:first-child','.widget-title>i.ti:first-of-type'])assert.ok(tile.includes(selector));
+  assert.match(tile,/width:32px;height:32px;flex:0 0 32px;/,'every title uses the same icon tile');
   assert.match(step65,/html:not\(\.dark\) #ov-dl-card \.ov-dl,\nhtml:not\(\.dark\) #evb-card \.evb-row\{padding-left:0;padding-right:0;\}/);
   assert.match(step65,/box-shadow:-11px 0 0 var\(--surface-3\),11px 0 0 var\(--surface-3\)!important;/,'the hover tint reaches into the card padding');
   assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g-h\{width:calc\(100% \+ 24px\);margin-left:-12px;margin-right:-12px;\}/);
@@ -1856,8 +1862,8 @@ test('Reset Year asks before deleting sick records',()=>{
 
 test('step 72c quiet widget tiles and outline actions meet AA contrast',()=>{
   const block=stepBlock('72c');
-  assert.match(block,/\.side-col \.widget-title>i\.ti:first-of-type/);
-  assert.match(block,/color:#34445c!important;background:#e5e7eb!important/);
+  assert.match(stepBlock(102),/\.tab-panel \.widget-title>i\.ti:first-of-type/);
+  assert.match(stepBlock(102),/background:var\(--hs-icon-tile-bg\);color:var\(--hs-icon-tile-ink\)/);
   assert.match(block,/\.widget-head \.btn/);
   assert.match(block,/\.task-card \.story-email-btn/);
   assert.match(block,/background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important/);
@@ -1954,9 +1960,9 @@ test('step 101 uses equal desktop columns and keeps the phone and tablet list un
   assert.doesNotMatch(small,/member-head|mh-stat|display:grid/,'the existing small-screen header and single list stay in place');
   const outsideDesktop=css.replace(desktop,'');
   assert.doesNotMatch(outsideDesktop,/\.myday-columns\{|\.member-head\{|\.member-head \.mh-stat\{/);
-  const label=rule(desktop,'.myday-label'),overview=rule(source,'#panel-overview .ov-dl-grp-t');
-  for(const declaration of ['font-size:11px','font-weight:700','color:var(--muted)','text-transform:uppercase','letter-spacing:.4px']){
-    assert.ok(label.includes(declaration)&&overview.includes(declaration),declaration+' matches the Overview group labels');
+  const labels=rule(stepBlock(102),'.ov-dl-grp-t,.evb-sec-h,.myday-label');
+  for(const declaration of ['font-size:11.5px','font-weight:700','color:var(--muted)','text-transform:uppercase','letter-spacing:.06em']){
+    assert.ok(labels.includes(declaration),declaration+' is shared with the Overview group labels');
   }
 });
 
@@ -1989,8 +1995,9 @@ test('desktop stat figures sit 24px after the identity with dividers and the col
 
 test('step 101 figures, labels and quiet lines use readable theme inks',()=>{
   const desktop=media(stepBlock(101),'min-width:981px');
-  for(const selector of ['.member-head .mh-stat','.myday-label','.myday-empty'])assert.match(rule(desktop,selector),/color:var\(--muted\)/);
+  for(const selector of ['.member-head .mh-stat','.myday-empty'])assert.match(rule(desktop,selector),/color:var\(--muted\)/);
   assert.match(rule(desktop,'.member-head .mh-stat b'),/color:var\(--text\)/);
+  assert.match(rule(stepBlock(102),'.ov-dl-grp-t,.evb-sec-h,.myday-label'),/color:var\(--muted\)/);
   assert.match(source,/--text:#101A2B;--muted:#55637A;/);
   assert.match(source,/--text:#EAF0F8;/);
   assert.match(css26,/html.dark\{--muted:#a3b1c4;/);

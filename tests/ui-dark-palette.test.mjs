@@ -28,9 +28,11 @@ test('Dew keeps a brown hue and primary actions stay navy with custom colours',(
  assert.match(block,/filter-tabs \.fpill:is\(\.act-accent,\.act-navy\)\{background:#10243a!important/);
  assert.match(html,/css\+='html.dark body.theme-'\+w\+.*background:#10243a!important/);
 });
-test('dark event task groups and day agendas are flat and priority and today stay neutral',()=>{
+test('dark event task groups and day agendas are flat; today has the approved gold ring',()=>{
  assert.match(block,/html.dark #evb-card \.evb-g,html.dark #evb-card \.evb-row/);
  assert.match(block,/\.cal-detail\{border:0!important;.*border-radius:0!important;background:transparent!important;box-shadow:none!important/);
  assert.match(block,/\.ov-pri.high\{background:transparent!important;color:#bdc7d5!important/);
- assert.match(block,/today.sel\{outline-color:#93b4d5!important/);
+ const shared=css.split('/* Step 102:')[1];
+ assert.match(shared,/\.cal-day.today,#panel-overview \.ov-cal-grid \.cal-day.today\{\s*background:#003057;color:#fff;box-shadow:0 0 0 2px var\(--surface\),0 0 0 4px #F0B323;/);
+ assert.doesNotMatch(block,/today.sel\{outline-color:/);
 });

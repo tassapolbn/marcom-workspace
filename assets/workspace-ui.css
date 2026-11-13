@@ -73,7 +73,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .stat-num{font-size:26px;}
   .stat-desc{max-width:100%;margin-left:0;text-align:left;font-size:11px;}
   .stat-ic{width:32px;height:32px;font-size:18px;}
-  .member-head{padding:14px;gap:10px;}
+  .member-head{gap:10px;}
   .member-head-stats{justify-content:flex-start;margin-left:0;}
   .widget-head{flex-wrap:wrap;gap:8px;}
   .widget-head .cal-nav-mini{margin-left:auto;}
@@ -97,7 +97,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 #panel-overview .ov-cal-grid .cal-day:not(.empty):hover{border-color:var(--gray-mid);}
 #panel-overview .ov-cal-grid .cal-day.today{background:var(--navy);color:#fff;}
 #panel-overview .ov-cal-grid .cal-day.sel{outline:2px solid var(--focus-ink);outline-offset:-2px;}
-#panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:var(--gold);}
+
 #panel-overview .ov-cal-grid .ov-dots{height:6px;margin-top:4px;gap:3px;}
 #panel-overview .ov-cal-grid .cal-day.today .ov-cd{background:#fff;}
 html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
@@ -194,8 +194,7 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 @keyframes task-draft-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 /* Shared dropdown surfaces and discrete enter/exit motion. */
 .ui-menu{
-  position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:14px;
-  box-shadow:0 4px 12px rgba(0,0,0,.08),0 16px 40px rgba(0,0,0,.12);
+  position:absolute;background:var(--surface);border:1px solid var(--border);
   padding:6px;min-width:200px;z-index:640;display:none;
 }
 .ui-menu.open{display:block;}
@@ -311,7 +310,6 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #modal .role-closed .role-body{display:none;}
 @media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}
 
-
 /* The Upcoming Deadlines filter. */
 #panel-overview #ov-dl-card .ov-card-head{flex-wrap:wrap;gap:8px;}
 #panel-overview .ov-dl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
@@ -326,16 +324,15 @@ html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-mor
 #ov-dl-title:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
 
 /* Overview layout: a folded "Resources & more" section for less-used cards. */
-#panel-overview .ov-more{margin:8px 0 24px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
+#panel-overview .ov-more{margin:0;background:var(--surface);}
 #panel-overview .ov-more-toggle{
-  display:flex;align-items:center;gap:10px;width:100%;padding:14px 18px;border:0;border-radius:18px;
+  display:flex;align-items:center;gap:10px;width:100%;padding:16px var(--hs-pad-card);border:0;border-radius:var(--hs-radius-card);
   background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;
 }
 #panel-overview .ov-more-toggle:hover{background:var(--gray-light);}
 #panel-overview .ov-more-toggle:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
-#panel-overview .ov-more-toggle>.ti:first-child{font-size:18px;color:var(--navy);}
-html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
-#panel-overview .ov-more-title{font-size:14px;font-weight:800;white-space:nowrap;}
+
+#panel-overview .ov-more-title{white-space:nowrap;}
 #panel-overview .ov-more-sum{
   flex:1;min-width:0;color:var(--muted);font-size:12px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -343,14 +340,14 @@ html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
 #panel-overview .ov-more-chev{transition:transform 200ms ease;}
 #panel-overview .ov-more-toggle[aria-expanded="true"] .ov-more-chev{transform:rotate(180deg);}
 #panel-overview .ov-more-body{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;padding:4px 16px 16px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--hs-gap);align-items:start;padding:0 var(--hs-pad-card) 20px;
 }
 #panel-overview .ov-more.ov-more-closed .ov-more-body{display:none;}
 #panel-overview .ov-more-body>*{margin:0!important;min-width:0;}
 #panel-overview .ov-more-body>#sscal-card{grid-column:1 / -1;}
 @media(max-width:1100px){#panel-overview .ov-more-body{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:700px){
-  #panel-overview .ov-more-body{grid-template-columns:minmax(0,1fr);padding:4px 10px 12px;}
+  #panel-overview .ov-more-body{grid-template-columns:minmax(0,1fr);padding:0 var(--hs-pad-card) 20px;}
   #panel-overview .ov-more-sum{display:none;}
 }
 #panel-overview #ov-wm-card[hidden]{display:none!important;}
@@ -379,8 +376,8 @@ html.dark #panel-overview .ov-more-link:hover,html.dark #panel-overview .ov-more
 #ov-resx-card .ov-resx-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(16,24,40,.12);}
 html.dark #ov-resx-card .ov-resx-tab.on{background:rgba(255,255,255,.12);}
 #ov-resx-card .ov-resx-tab:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px;}
-#ov-resx-card .ov-resx-panel>.ov-card{border:0!important;box-shadow:none!important;background:transparent!important;padding:0!important;margin:0!important;}
-#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head{justify-content:flex-end;min-height:0;margin-bottom:6px;}
+#ov-resx-card .ov-resx-panel>.ov-card{background:transparent!important;margin:0!important;}
+#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head{justify-content:flex-end;margin-bottom:6px;}
 #ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head .ov-card-title,
 #ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head .uxp-col-btn{display:none;}
 /* Today's Menu: today only, in two columns. */
@@ -435,7 +432,7 @@ body.uxp-sb-entering .tab-panel .two-col>.side-col>*:not(.uxp-sb-head):not(.uxp-
 @media(max-width:980px){
   .tab-panel .two-col>.side-col{
     position:fixed;top:0;right:0;bottom:0;z-index:650;width:min(420px,92vw);overflow-y:auto;overscroll-behavior:contain;
-    padding:0 14px 24px;background:var(--bg,#fff);box-shadow:-24px 0 60px -24px rgba(0,0,0,.5);
+    padding:0 14px 24px;background:var(--bg,#fff);
     transform:translateX(105%);visibility:hidden;
     transition:transform 260ms cubic-bezier(.2,.8,.2,1),visibility 0s linear 260ms;
   }
@@ -514,27 +511,30 @@ html.dark{
 /* 1. Page and cards */
 html:not(.dark) body:not(.request-mode),
 html:not(.dark) body:is(.theme-overview,.theme-boss,.theme-dew,.theme-o,.theme-junior):not(.request-mode){background:var(--canvas)!important;}
-.ov-card,.widget,.stat-box,.member-head{
+.ov-card,.member-head{
+  transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
+}
+.widget,.stat-box{
   border-radius:var(--r-lg)!important;border:1px solid var(--card-border)!important;
   box-shadow:var(--card-shadow)!important;
   transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
 }
-#panel-overview .ov-card{padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-4);}
+#panel-overview .ov-card{margin-bottom:var(--hs-gap);}
 @media(hover:hover){
-  #panel-overview .ov-card:hover,.tab-panel .side-col>.widget:hover{box-shadow:var(--card-shadow-hover)!important;}
+  .tab-panel .side-col>.widget:hover{box-shadow:var(--card-shadow-hover)!important;}
 }
-.task-card{border-radius:14px!important;}
+
 .kb-col{border-radius:var(--r-lg)!important;}
-#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--sp-4);}
-#panel-overview .ov-grid{gap:var(--sp-5);}
+#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--hs-gap);}
+#panel-overview .ov-grid{gap:var(--hs-gap);}
 
 /* Card headers and titles */
 .ov-card-head,.widget-head{gap:var(--sp-3);}
 #panel-overview .ov-card-head{margin-bottom:var(--sp-3);}
-.ov-card-title,.widget-title{font-size:var(--fs-md);font-weight:700;letter-spacing:-.1px;}
+.ov-card-title,.widget-title{letter-spacing:-.1px;}
 .ov-card-title>i.ti:first-child,.widget-title>i.ti:first-of-type{
-  display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
-  margin-right:2px;border-radius:var(--r-sm);background:var(--icon-chip);font-size:15px;
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-right:2px;
 }
 
 /* 2. Controls */
@@ -554,7 +554,7 @@ html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textare
 .fpill,.ov-fpill{transition:background var(--t-fast) ease,color var(--t-fast) ease,border-color var(--t-fast) ease;}
 
 /* Dialogs */
-.modal{border-radius:20px!important;}
+
 .modal-header{border-bottom:1px solid var(--card-border);}
 .modal-footer{border-top:1px solid var(--card-border);}
 
@@ -700,11 +700,10 @@ html.dark #lunch-banner .lb-close:hover,html.dark #lunch-banner .lb-close:focus-
    .none only when nothing is booked, so a real meeting still shows as before. */
 .meet-card.none{display:none;}
 /* Light mode: the header card and the my-day card read as one card, who then
-   today, with one hairline border, one radius and one light shadow. The header
-   keeps its 12% wash of the member's own colour: it says whose desk this is.
-   Older shared card rules force radius, shadow and spacing with !important. */
-html:not(.dark) .member-head{border-bottom:0;border-radius:16px 16px 0 0!important;box-shadow:none!important;margin-bottom:0!important;}
-html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba(16,24,40,.06);border-radius:0 0 16px 16px!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)!important;}
+   today, with one hairline border, one radius and one light shadow.
+   Step 102 now joins these halves in both themes with the shared card values. */
+
+html:not(.dark) .myday{border-top-color:var(--border);}
 
 /* Step 28: one card language */
 /* One card everywhere: white surface, hairline border, one 16px radius and one
@@ -714,18 +713,18 @@ html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba
    raised names its own elevation. */
 html:not(.dark){--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);--shadow-hover:0 2px 4px rgba(16,24,40,.05),0 10px 22px -8px rgba(16,24,40,.14);}
 /* Raised on purpose: hover still deepens as cards lift, and search results float. */
-html:not(.dark) :is(.task-card,.evc-card,.rq-card):hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
+html:not(.dark) .rq-card:hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
 /* One card radius: task cards were 14px and the Resources fold 18px. */
-.task-card,#panel-overview .ov-more{border-radius:var(--r-lg,16px)!important;}
+
 /* Decorative side rails go. Rails that carry meaning stay: task status, a pinned
    announcement and a Director request. */
-.evhub{border-left-width:1px!important;border-left-color:var(--border)!important;}
+
 #panel-overview .ov-ann-item:not(.pinned){border-left:1px solid var(--border);}
 html:not(.dark) #panel-overview .ov-ann-item.pinned{box-shadow:var(--shadow);}
 /* Team Announcements loses its navy header and reads like every other card. */
-html:not(.dark) #panel-overview .ov-ann>.ov-card-head{background:none;margin:0 0 12px;padding:0;border-bottom:0;}
-html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title{color:var(--text);font-size:14px;font-weight:700;letter-spacing:normal;}
-html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title i{color:var(--navy);font-size:18px;}
+
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title{letter-spacing:normal;}
+
 /* Removing Event Hub's 4px rail widened its grid just enough to add a column at
    1440, shrinking chips to the 150px minimum, where names like "School Open Day"
    wrap. That minimum was already too tight at other widths, so it rises to 176px.
@@ -896,7 +895,7 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
    announcements stay first (Boss, 24 Oct) as one slim line, Team today is a
    strip of people showing only what needs attention, then the work list. */
 /* Announcements: the pinned or newest one on a single line; "All N" opens the rest. */
-#ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:8px 10px 8px 16px;}
+#ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:16px var(--hs-pad-card);}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head{display:contents;}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{grid-column:1;grid-row:1;margin:0;white-space:nowrap;}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-ann-new{grid-column:3;grid-row:1;margin:0;}
@@ -923,11 +922,10 @@ html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-a
    text runs, not pills, so a busy person still fits one line. The person
    colours follow saved custom tab colours. */
 :root{--member-boss:#003057;--member-dew:#A65614;--member-o:#C2410C;--member-junior:#14532D;}
-#ov-team{margin:0 0 var(--sp-4,16px);padding:8px 10px;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg,16px);box-shadow:var(--shadow);}
-.ov-team-head{display:flex;align-items:center;gap:10px;padding:2px 6px 4px;}
-.ov-team-title{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;}
-.ov-team-title i{font-size:18px;color:var(--navy);}
+#ov-team{margin:0 0 var(--hs-gap);background:var(--surface);}
+.ov-team-head{display:flex;align-items:center;gap:10px;padding:0 0 12px;}
+.ov-team-title{display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap;}
+
 .ov-team-sum{font-size:13px;font-weight:600;color:var(--muted);}
 .ov-team-next{display:block;flex:0 1 auto;min-width:0;margin-left:auto;font-size:13px;color:var(--muted);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -969,7 +967,7 @@ html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-a
 .tm-clear,.tm-soon{font-weight:600;color:var(--muted);}
 /* Sick days and the lieu balance, kept from the old Leave card: quiet, one line. */
 .tm-lv{grid-area:lv;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-html.dark .ov-team-title i{color:#8fb4dc;}
+
 html.dark .tm:hover{background:rgba(255,255,255,.05);}
 html.dark .tm-over{color:#fca5a5;}
 html.dark .tm-wait{color:#fcd34d;}
@@ -989,8 +987,8 @@ html.dark .tm-meet{color:#93c5fd;}
    setup note give way (Settings still connects a calendar); search, refresh and
    a next meeting stay; the deadline filters share the title line. */
 @media(max-width:600px){
-  #ov-team{padding:4px 6px;}
-  .ov-team-head{padding:2px 4px;}
+
+  .ov-team-head{padding:0 0 12px;}
   .ov-team-sum,.ov-team-done{white-space:nowrap;}
   .ov-team-sum-w,.nx-l{display:none;}
   /* A next meeting needs the room more than the week's done count. */
@@ -1007,14 +1005,14 @@ html.dark .tm-meet{color:#93c5fd;}
   .tm-s{display:inline;}
   .tm:nth-child(n+3)::after{left:6px;right:6px;}
   /* A 12px rhythm on a phone, so the first deadline clears the dock even at lunch. */
-  #ov-top,#ov-team{margin-bottom:12px;}
-  #panel-overview #ov-dl-card{padding-top:12px;}
+  #ov-top,#ov-team{margin-bottom:var(--hs-gap);}
+  #panel-overview #ov-dl-card{padding-top:16px;}
   #panel-overview #ov-dl-card>.ov-card-head{margin-bottom:8px;}
   #panel-overview .ov-dl-filters{flex-wrap:nowrap;margin-left:4px;}
   /* On a phone the announcement line keeps its icon, the text and its two buttons. */
-  #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:6px 6px 6px 12px;}
+  #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:16px var(--hs-pad-card);}
   #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{font-size:0!important;gap:0;}
-  #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title i{font-size:18px!important;}
+
   html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-foot{display:none;}
 }
 @media(max-width:600px){
@@ -1036,10 +1034,10 @@ html.dark .tm-meet{color:#93c5fd;}
 @media(max-width:600px){
   /* The name bar is one row (initial, name, role, colour button) and the three
      counters one short row below it; today's date gives way, the phone shows it. */
-  .tab-panel .member-head{flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px;padding:10px 12px;}
+  .tab-panel .member-head{flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px;}
   .member-head .member-avatar{flex:0 0 36px;width:36px;height:36px;font-size:17px;}
   .member-head .member-head-text{flex:1 1 0;min-width:0;display:flex;align-items:baseline;gap:8px;overflow-wrap:normal;}
-  .member-head .member-name{flex:0 0 auto;font-size:17px;line-height:1.2;}
+  .member-head .member-name{flex:0 0 auto;line-height:1.2;}
   .member-head .member-role{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;}
   .member-head .member-role i{vertical-align:-2px;margin-right:4px;}
   .member-head .member-head-extra{order:2;flex:0 0 auto;margin:0;padding:0;border:0;}
@@ -1050,7 +1048,7 @@ html.dark .tm-meet{color:#93c5fd;}
   .member-head .mh-stat{flex:0 0 auto;gap:5px;padding:4px 10px;white-space:nowrap;}
   /* My day: the due date sits under the task's name, on the left, clear of the
      round buttons on the right. */
-  .myday{padding:10px 12px;}
+
   .myday-chips{gap:6px;}
   .myday-row{flex-wrap:wrap;align-items:flex-start;row-gap:0;padding:6px 6px;line-height:1.35;}
   .myday-row i{margin-top:2px;}
@@ -1073,8 +1071,8 @@ html.dark .tm-meet{color:#93c5fd;}
 @media(max-width:360px){
   .member-head .mh-stat i{display:none;}
   .member-head .mh-stat{padding:4px 9px;}
-  .tab-panel .member-head{padding:8px 10px;row-gap:6px;}
-  .myday{padding:8px 10px;row-gap:6px;}
+  .tab-panel .member-head{row-gap:6px;}
+  .myday{row-gap:6px;}
   .myday-chip{padding:5px 9px;}
   .myday-row{padding:5px 4px;}
 }
@@ -1144,8 +1142,8 @@ html.dark .evu-amber{color:#fcd34d;}
 .member-head .member-role i{display:none;}
 /* Two left edges: the page edge for anything outside a card, and one inner
    edge 16px inside every card, for headings, rows and icons alike. */
-#panel-overview .ov-card{padding-left:16px;padding-right:16px;}
-#panel-overview .ov-more-toggle{padding-left:16px;padding-right:16px;}
+
+#panel-overview .ov-more-toggle{padding-left:var(--hs-pad-card);padding-right:var(--hs-pad-card);}
 .myday-list{margin-left:-8px;margin-right:-8px;}
 @media(min-width:601px){.tm{padding-left:6px;}}
 @media(max-width:600px){.myday-list{margin-left:-6px;margin-right:-6px;}}
@@ -1241,8 +1239,7 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
    name, the tab label and the tab bar) and fills no large area, so it never reads
    as a status. The name bar and the Event Hub bar are plain; primary buttons and
    the selected filter are the same navy on every tab. */
-html:not(.dark) .member-head{background:var(--surface)!important;background-image:none!important;}
-html:not(.dark) .evhub-head{background:transparent!important;background-image:none!important;}
+
 html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent{background:var(--navy,#003057)!important;background-image:none!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
 html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:hover{background:#00264a!important;border-color:#00264a!important;}
 html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
@@ -1267,7 +1264,7 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
 /* Step 51: the Overview, one heavy block and columns that end together */
 /* The Event Board holds the next events ("Coming up") above the shared tasks,
    whose filter now sits with them. */
-#evb-card .evb-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+#evb-card .evb-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 6px;}
 #evb-card .evb-soon{margin-bottom:16px;}
 #evb-card .evb-tasks-h .evb-sel{margin-left:auto;}
 #evb-card .evb-tasks-h :is(.evb-sel,.evb-done-toggle){text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;}
@@ -1276,7 +1273,7 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
 #ov-rc-card.rc-quiet .ov-rc-none-t{flex:1 1 100%;font-size:13px;color:var(--muted);}
 @media(max-width:600px){#evb-card .evb-tasks-h .evb-sel{margin-left:0;}}
 /* The band under the two columns. */
-#panel-overview .ov-wide{margin-top:var(--sp-5,20px);}
+#panel-overview .ov-wide{margin-top:0;}
 #panel-overview .ov-wide:empty{display:none;}
 
 /* Step 52: Team today, what needs Boss reads first */
@@ -1475,8 +1472,8 @@ html.dark .task-card:is(.tc-done,.tc-canceled) .mb-who{background:color-mix(in s
    starts at the card's edge like the label above it, and its hover tint
    reaches into the card's padding instead. */
 .ov-team-title{gap:8px;}
-.ov-team-title>i.ti:first-child{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
-  margin-right:2px;border-radius:var(--r-sm);background:var(--icon-chip);font-size:15px;}
+.ov-team-title>i.ti:first-child{display:inline-flex;align-items:center;justify-content:center;
+  margin-right:2px;}
 html:not(.dark) #ov-dl-card .ov-dl,
 html:not(.dark) #evb-card .evb-row{padding-left:0;padding-right:0;}
 html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);box-shadow:-11px 0 0 var(--surface-3),11px 0 0 var(--surface-3)!important;}
@@ -1581,10 +1578,8 @@ html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 /* Step 72b: gold belongs to the logo; red means overdue or canceled in light mode */
 html:not(.dark) body.theme-overview .tab-nav{--tab-ink:#003057;--tab-disc:#003057;--tab-on:#fff;}
 html:not(.dark) .tab-nav .tab-btn#tab-overview{color:rgba(255,255,255,.72)!important;}
-html:not(.dark) .cal-day.today,
-html:not(.dark) #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#003057!important;}
+
 html:not(.dark) .uxp-undo{color:#fff;font-weight:800;text-decoration:underline;}
-html:not(.dark) .pin-widget .widget-title>i,
 html:not(.dark) .note-pin-btn.pinned{color:#4b5563!important;}
 html:not(.dark) .pin-search:focus{border-color:#003057;box-shadow:0 0 0 3px rgba(0,48,87,.12);}
 html:not(.dark) .pin-act:hover{background:#003057;border-color:#003057;color:#fff;}
@@ -1620,11 +1615,8 @@ html:not(.dark) .sal-cell-label i{-webkit-text-fill-color:#4b5563;color:#4b5563;
 html:not(.dark) .salary-badge,html:not(.dark) .salary-dock .salary-badge.sb-pay,
 html:not(.dark) .meet-cd.urgent,html:not(.dark) #lunch-cfg .lc-day.on{background:#e5e7eb;color:#34445c;border-color:#4b5563;}
 
-
 /* Step 72c: quiet person widgets and Story email actions in light mode */
-html:not(.dark) .tab-panel .side-col .widget-title>i.ti:first-of-type{
-  color:#34445c!important;background:#e5e7eb!important;box-shadow:none!important;
-}
+
 html:not(.dark) .tab-panel .side-col .widget-head .btn,
 html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
 html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"],
@@ -1663,8 +1655,8 @@ html.dark .myday-chip.warn,html.dark .myday-chip.warn b,
 html.dark .rq-due.soon,html.dark .evc-cd.u-amber,html.dark .myday-row.warn i{color:#bdc7d5!important;}
 @media(max-width:980px){html.dark .mh-stat-soon i,html.dark .mh-stat-soon b{color:#bdc7d5!important;}}
 html.dark .myday-chip.warn{background:#293343;border-color:transparent;}
-html.dark .cal-day.today,html.dark #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#93b4d5!important;}
-html.dark .pin-widget .widget-title>i,html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
+
+html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
 html.dark .tab-panel,html.dark .salary-dock,html.dark #lunch-banner,html.dark #lunch-cfg{--gold:#93b4d5;--gold2:#bdc7d5;--gold-light:#293343;}
 html.dark .uxp-undo{color:#fff;}
 html.dark .cd-urgent{background:transparent!important;border:1.5px solid #93b4d5;box-sizing:border-box;}
@@ -1692,7 +1684,7 @@ html body .app-header{background:#003057!important;border-bottom:0!important;box
 html body .app-header::after{content:none!important;display:none!important;background:none!important;}
 html body .member-head .member-avatar{box-shadow:none!important;filter:none!important;}
 html body #quickadd-fab,html body #tc-fab{background:#003057!important;box-shadow:0 2px 6px #0003!important;}
-html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;gap:0;}
+html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);gap:0;}
 html body .tab-panel .side-col>.widget,
 html body .tab-panel .side-col>.widget:hover{background:transparent!important;border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;box-shadow:none!important;margin:0;}
 html body .tab-panel .side-col>.widget:first-child{border-top:0!important;}
@@ -1782,7 +1774,7 @@ html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
 .evhub,.evhub-body,.ev-past,.ev-grid-wrap,.ev-grid,#evb-card,#evb-soon,.ov-countdown,.ov-wide{min-width:0;}
 .ev-grid-wrap{position:relative;}
 .ev-grid{align-items:stretch;}
-.ev-chip-filled{border:0;border-radius:12px;min-width:0;}
+.ev-chip-filled{border:0;min-width:0;}
 .ev-chip-filled .ev-chip-del{background:#ffffff;color:#16202e;border:0;}
 .ev-chip-filled .ev-chip-del:hover{background:#16202e;color:#ffffff;}
 .ev-chip:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
@@ -1820,7 +1812,7 @@ html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
   .member-head .mh-stat b{font-size:18px;font-weight:800;color:var(--text);}
   .myday-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;width:100%;}
   .myday-column{min-width:0;}
-  .myday-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:0 8px 7px;}
+  .myday-label{margin:0 8px 7px;}
   .myday-empty{padding:7px 8px;font-size:13px;font-weight:600;color:var(--muted);}
   .myday-column .md-title{overflow-wrap:anywhere;}
 }
@@ -1828,3 +1820,93 @@ html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
   .myday-label,.myday-empty{display:none;}
 }
 @media(prefers-reduced-motion:reduce){.member-head button.mh-stat{transition:none;}}
+
+/* Step 102: shared card surfaces, spacing, titles and today's gold ring. */
+:root{
+  --hs-radius-card:16px; --hs-radius-tile:12px;
+  --hs-shadow-card:0 1px 2px rgba(16,36,62,.04),0 10px 24px -18px rgba(16,36,62,.22);
+  --hs-shadow-tile:0 1px 2px rgba(16,36,62,.05);
+  --hs-shadow-float:0 16px 40px -16px rgba(16,36,62,.34);
+  --hs-pad-card:20px; --hs-gap:16px;
+  --hs-icon-tile-bg:rgba(0,48,87,.06); --hs-icon-tile-ink:#003057;
+}
+html.dark{
+  --hs-shadow-card:0 1px 2px rgba(0,0,0,.30); --hs-shadow-tile:none;
+  --hs-shadow-float:0 16px 40px -16px rgba(0,0,0,.6);
+  --hs-icon-tile-bg:rgba(255,255,255,.08); --hs-icon-tile-ink:#cfe0f5;
+}
+@media(max-width:600px){ :root{ --hs-pad-card:16px; --hs-gap:12px; } }
+
+#panel-overview .ov-card,#ov-ann-card,#ov-team,#panel-overview .ov-more,
+.tab-panel .member-head,.tab-panel .myday,.tab-panel .evhub,
+html body .tab-panel .two-col>.side-col,
+.tab-panel .sub-panel:is([id$="-sub-events"],[id$="-sub-links"],[id$="-sub-notes"],[id$="-sub-sop"]),
+.tab-panel :is(.evc-card,.ews-head,.ews-card,.link-card,.note-card){
+  border-radius:var(--hs-radius-card);border:1px solid var(--border);box-shadow:var(--hs-shadow-card);
+}
+.tab-panel .member-head{background:var(--surface);background-image:none;min-height:40px;padding:16px var(--hs-pad-card);margin-bottom:var(--hs-gap);}
+.tab-panel .evhub-head{background:transparent;background-image:none;}
+.tab-panel .sub-panel:is([id$="-sub-events"],[id$="-sub-links"],[id$="-sub-notes"],[id$="-sub-sop"]){background:var(--surface);padding:16px var(--hs-pad-card);}
+.task-card{border-radius:var(--hs-radius-tile);box-shadow:var(--hs-shadow-tile);}
+.ev-chip{border-radius:var(--hs-radius-tile);}
+.modal,.confirm-box,.cmdk-box{border-radius:var(--hs-radius-card);box-shadow:var(--hs-shadow-float);}
+.ui-menu,.tc-pop,.tcp-pop,#uxp-bell-panel,#uxp-more-panel{border-radius:var(--hs-radius-tile);box-shadow:var(--hs-shadow-float);}
+
+/* The existing name row and Today slot remain two adjoining halves of one card. */
+.tab-panel .member-head:has(+[id$="-myday"]>.myday){
+  border-radius:var(--hs-radius-card) var(--hs-radius-card) 0 0;border-bottom:0;box-shadow:none;margin-bottom:0;
+}
+.tab-panel .member-head+[id$="-myday"]>.myday{
+  border-radius:0 0 var(--hs-radius-card) var(--hs-radius-card);border-top:1px solid var(--border);
+}
+.tab-panel .myday{padding:16px var(--hs-pad-card);margin-bottom:var(--hs-gap);}
+#panel-overview .ov-card,#ov-team{padding:16px var(--hs-pad-card) 20px;}
+#panel-overview .ov-card.uxp-collapsed{padding-bottom:16px;}
+.tab-panel .evhub-head{padding:16px var(--hs-pad-card) 12px;}
+.tab-panel .evhub-body{padding:16px var(--hs-pad-card) 20px;}
+#panel-overview .ov-more-toggle{padding:16px var(--hs-pad-card);border-radius:var(--hs-radius-card);}
+#panel-overview .ov-more-body{padding:0 var(--hs-pad-card) 20px;gap:var(--hs-gap);}
+.ov-team-head{padding:0 0 12px;}
+
+/* Existing grids and shelves keep their columns; only the space between cards changes. */
+.tab-panel .two-col,#panel-overview .ov-grid{gap:var(--hs-gap);}
+#ov-top,#ov-team{margin-bottom:var(--hs-gap);}
+#panel-overview .ov-card,.tab-panel .evhub,.tab-panel .sub-nav,
+.tab-panel :is(.ews-head,.ews-card){margin-bottom:var(--hs-gap);}
+#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--hs-gap);}
+#panel-overview .ov-more{margin:0;}
+.tab-panel :is(.evc-grid,.links-grid,.notes-grid,.sop-body){gap:var(--hs-gap);}
+
+#panel-overview .ov-card-head,.ov-team-head,.tab-panel .evhub-head,
+.tab-panel .side-col .widget-head{min-height:40px;align-items:center;}
+#panel-overview .ov-card-head{background:transparent;border-bottom:0;padding:0;margin-bottom:12px;}
+#panel-overview .ov-card-title,.ov-team-title,.tab-panel .widget-title,
+#panel-overview .ov-more-title,.uxp-sb-title{font-size:16px;font-weight:700;color:var(--text);}
+.tab-panel .evhub-title,.member-head .member-name{font-size:16px;font-weight:700;}
+#panel-overview .ov-card-title,.ov-team-title,.tab-panel .evhub-title,.tab-panel .widget-title{display:flex;align-items:center;gap:10px;min-height:40px;}
+#panel-overview .ov-card-title>i.ti:first-child,.ov-team-title>i.ti:first-child,
+.tab-panel .evhub-title>i.ti:first-child,.tab-panel .widget-title>i.ti:first-of-type,
+#panel-overview .ov-more-toggle>.ti:first-child{
+  display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 32px;
+  border-radius:10px;background:var(--hs-icon-tile-bg);color:var(--hs-icon-tile-ink);font-size:17px;box-shadow:none;margin-right:0;
+}
+.ov-team-sum,.ov-team-next,#panel-overview .ov-more-sum,.tab-panel .widget-sum{font-size:13px;color:var(--muted);}
+/* The announcement's grid remains one centred header row, including its preview. */
+#ov-ann-card:not(.ov-ann-all){min-height:40px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text{font-size:13px;color:var(--muted);}
+#panel-overview .ov-card-head>.ov-card-title{margin-right:auto;}
+.tab-panel .side-col .widget-head{--wh-name-x:56px;}
+@media(min-width:981px){.tab-panel .side-col .widget-head{--wh-name-x:87px;}}
+body.uxp-sb-collapsed .uxp-sb-title{display:none;}
+body.uxp-sb-collapsed .uxp-sb-head{padding:0;}
+
+.ov-dl-grp-t,.evb-sec-h,.myday-label{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+}
+#panel-overview .ov-dl-grp-t.od{color:var(--danger);}
+/* Boss's choice reverses the navy today ring from step 72b, in both themes. */
+.cal-day.today,#panel-overview .ov-cal-grid .cal-day.today{
+  background:#003057;color:#fff;box-shadow:0 0 0 2px var(--surface),0 0 0 4px #F0B323;
+}
+.cal-day.today.sel,#panel-overview .ov-cal-grid .cal-day.today.sel{outline:0;}
+.cal-grid,#panel-overview .ov-cal-grid{overflow:visible;padding:4px;gap:8px;}

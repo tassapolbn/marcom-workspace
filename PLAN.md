@@ -3199,7 +3199,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     passes 713 of 714 checks, with only the documented .aws and .codex
     sandbox exception. Browser checks remain with the reviewer.
 
-- [ ] **102. One set of cards, spacing and titles (decision 3)**
+- [x] **102. One set of cards, spacing and titles (decision 3)**
   - Files: `assets/workspace-ui.css` (one set of shared values in a new
     block), `index.html` (only where old rules must go so the shared values
     win), tests.
@@ -3214,6 +3214,40 @@ little gold, a gold ring round today's date on the calendars (decision 3).
   - Test: a rendered check that the cards on the Overview and a person tab
     share corners, border, spacing and header height; contrast scans clean in
     both themes.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-102.md): Cards now
+    share their corners, borders, soft shadows and spacing in both themes,
+    with matching title icons and small section labels. The person header
+    and Today stay joined, and the existing board and Today columns stay in
+    place. The sidebar starts with Widgets and Hide, keeping its existing
+    hide, show and iPhone drawer behaviour. Today's date has a gold ring on
+    every calendar, with room around it. This reverses the navy ring part of
+    step 72b at Boss's choice. Buttons, pills, tabs and fields keep their
+    existing appearance; only the gap below the sub-tabs changes.
+    Older rules changed or removed:
+    - The base and late Overview, redesign, premium, aurora, palette, refine
+      and white style layers no longer force card or dialog corners, borders
+      and shadows, including their stronger hover shadows. Task borders stay.
+    - The person header, Today and Event Hub lose their coloured left edges
+      and tinted or gradient bands. Event cards lose their decorative edge,
+      and the old Best note edge goes. Person identity colours stay.
+    - Earlier Overview, announcement, Team today, person header and Event Hub
+      padding rules now give way to the shared spacing. The extra gap above
+      Event Board goes; card stacks and the Overview columns share one gap.
+    - The older title sizes, 28px icon tiles and individual icon colours go,
+      including step 72c's widget tile override. Steps 51, 65 and 101 give
+      their small labels to one shared rule. Step 74's sidebar corner and
+      the sidebar header's empty margin go. Step 99 uses the shared tile corner.
+    - Dialog, menu and popover corners and shadows now come from the shared
+      values. Steps 72b and 73 lose their navy Today outlines; Today keeps
+      navy and white when selected, hovered or marked as sick leave.
+    Checked all four supplied screenshots, the old style layers, sidebar
+    title and hide/show behaviour, calendar ring space, responsive values,
+    retained layouts and text contrast calculations. Added 12 tests and
+    updated older appearance checks without dropping their behaviour checks.
+    Ran npm run test:ui and checked individual results: 725 of 726 pass,
+    including all 12 new tests, with only the documented ui-netlify sandbox
+    exception for .aws and .codex. Browser layout and contrast review remain
+    with the reviewer as instructed.
 
 - [ ] **103. One set of buttons, pills, tabs and fields**
   - Files: `assets/workspace-ui.css`, `index.html` (where old rules must go),
