@@ -20,7 +20,7 @@ test('step 78 opens on a full navy gradient in both themes, keeping first paint 
   assert.match(boot,/background:linear-gradient\(135deg,#00223C,#003057,#04406B\);color:#fff/);
   assert.doesNotMatch(boot,/88px|html.dark .boot-cover/);
   assert.match(boot,/html:not\(\.booted\),html.dark:not\(\.booted\)\{background:#00223C/);
-  assert.match(boot,/stroke:#003057/);
+  assert.match(boot,/\.boot-cover-logo\{width:240px;height:60px;background:var\(--hs-logo-white\) center\/contain no-repeat/);
   assert.match(boot,/prefers-reduced-motion:reduce/);
   for(const bg of ['00223C','003057','04406B'])for(const ink of ['ffffff','e9edf3','8fb4dc'])assert.ok(contrast(ink,bg)>=4.5);
 });

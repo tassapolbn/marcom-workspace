@@ -1187,7 +1187,6 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
   .app-header .header-top{flex-wrap:nowrap;padding-top:6px;padding-bottom:4px;}
   .app-header .app-logo{flex:0 1 auto;min-width:0;}
   .app-header .app-tagline{display:none;}
-  .app-header .logo-icon{width:32px;height:32px;}
   .app-header .header-right{width:auto;flex:1 1 auto;}
   .app-header .header-right .auth-banner{margin-right:0;}
   .app-header .auth-banner-em{display:none;}
@@ -1734,7 +1733,6 @@ html.dark .meet-cd.urgent,html.dark #lunch-cfg .lc-day.on{background:#293343;col
 /* Step 74: a flat header and one quiet sidebar */
 html body .app-header{background:#003057!important;border-bottom:0!important;box-shadow:none!important;}
 html body .app-header::after{content:none!important;display:none!important;background:none!important;}
-html body .logo-icon{background:#f0b323!important;box-shadow:none!important;}
 html body .member-head .member-avatar{box-shadow:none!important;filter:none!important;}
 html body #quickadd-fab,html body #tc-fab{background:#003057!important;box-shadow:0 2px 6px #0003!important;}
 html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;gap:0;}

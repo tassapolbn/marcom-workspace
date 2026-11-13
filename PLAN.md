@@ -3068,7 +3068,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     the documented sandbox exception for the local .aws and .codex folders in
     ui-netlify; all 20 brand tests pass.
 
-- [ ] **97. The school logo in the app (decision 2)**
+- [x] **97. The school logo in the app (decision 2)**
   - Files: `index.html` (header, loading screen, sign-in card),
     `assets/workspace-ui.css`, tests.
   - Change: the gold briefcase tile goes everywhere.
@@ -3086,6 +3086,22 @@ little gold, a gold ring round today's date on the calendars (decision 3).
   - Test: no briefcase tile left; the logo has a name for screen readers and
     its own proportions; the header is no taller than today at 1440 and 390;
     contrast scans clean.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-97.md): The header
+    and opening screen now show the school's white-and-gold logo immediately,
+    sharing one transparent 560 by 140 PNG of 9,453 bytes inside the page.
+    Computers show the full header logo with a thin dividing line; iPhone
+    shows the emblem beside the single-line Marcom Workspace name. The logo
+    becomes smaller when scrolling on computers and respects reduced motion.
+    Sign-in shows the colour logo above Marcom Workspace, on a white card in
+    both themes. Removed the old header tile, scroll, theme and landscape
+    rules, opening tile rules and sign-in tile rule, plus dark sign-in
+    overrides that would obscure the colour logo or reduce readability.
+    Added six brand tests and updated the older tile checks. Checked image
+    dimensions, size, transparency, single embedding, labels and source rules
+    for desktop, scrolling, iPhone and reduced motion. All 26 brand tests pass.
+    Ran npm run test:ui and checked individual results: 694 of 695 pass, with
+    only the documented ui-netlify sandbox exception for .aws and .codex.
+    Browser layout and contrast review remain with the reviewer as instructed.
 
 - [ ] **98. A tidy top and bottom on every page**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
