@@ -17,8 +17,11 @@ const shell=source.slice(shellStart,source.indexOf('  function buildShell(){',sh
 function escape(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 const TODAY='2026-10-26';
-/* new Date() is 11:30 on the test day; any other Date works as usual. */
-class FixedDate extends Date{constructor(...a){if(a.length)super(...a);else super(TODAY+'T11:30:00');}}
+/* new Date() and Date.now() are 11:30 on the test day; explicit dates work as usual. */
+class FixedDate extends Date{
+  constructor(...a){if(a.length)super(...a);else super(TODAY+'T11:30:00');}
+  static now(){return new FixedDate().getTime();}
+}
 
 /* tasks: each person's own share (what their tab shows); board: the team list,
    where a shared task appears once. Due dates are days from today. */

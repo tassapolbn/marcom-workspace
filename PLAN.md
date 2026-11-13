@@ -3036,7 +3036,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
 
 ## Steps
 
-- [ ] **96. The school logo files and the app's icons**
+- [x] **96. The school logo files and the app's icons**
   - Files: `assets/brand/` (new), `assets/icon-32.png`, `assets/icon-180.png`,
     `assets/icon-192.png`, `assets/icon-512.png`, `assets/favicon.svg`,
     `site.webmanifest`, `index.html` (the icon links only), tests.
@@ -3049,6 +3049,24 @@ little gold, a gold ring round today's date on the calendars (decision 3).
   - Test: every copy keeps the logo's proportions; the icons are square, navy,
     with the emblem centred inside a safe margin; the manifest lists them;
     all tests pass.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-96.md): The browser
+    and iPhone icons now show the school's white-and-gold emblem on navy, with
+    safe space around it. Smaller full logos and separate emblems are ready
+    for the next step, and the two original files are unchanged. Checked PNG
+    sizes, transparency, corner and emblem pixels, original file sizes and
+    hashes, icon links and masked icon settings. Fixed the test's clock without
+    changing the app. Compressed all eight PNGs as 8-bit palettes of at most
+    256 colours, keeping their dimensions, smooth transparent edges and exact
+    icon corners. The colour and white logos are now 28,583 and 20,034 bytes;
+    the colour and white emblems are 21,504 and 16,454 bytes; the 512, 192,
+    180 and 32px icons are 14,320, 4,363, 4,103 and 1,007 bytes. Downloads are
+    81% smaller overall. Compared every PNG with its previous version using
+    ImageMagick PSNR: all scored 43.4 to 54.4 dB, above the required 36 dB.
+    Checked the images side by side and added eight file-size limits plus
+    channel-depth checks. Added 20 tests in total for this step. Ran
+    npm run test:ui and checked individual results: 688 of 689 pass, with only
+    the documented sandbox exception for the local .aws and .codex folders in
+    ui-netlify; all 20 brand tests pass.
 
 - [ ] **97. The school logo in the app (decision 2)**
   - Files: `index.html` (header, loading screen, sign-in card),
