@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 
 const html=readFileSync('index.html','utf8');
 const css=readFileSync('assets/workspace-ui.css','utf8');
-const shared=css.slice(css.indexOf('/* Step 103:'));
+const shared=css.slice(css.indexOf('/* Step 103:'),css.indexOf('/* Step 104:'));
 const older=css.split('/* Step 103:')[0];
 const inline=[...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map(m=>m[1]).join('\n');
 const rules=s=>[...s.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([,selector,body])=>({selector:selector.trim(),body}));

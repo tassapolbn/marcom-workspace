@@ -3071,11 +3071,28 @@ function tcLingerRec(t,who){return (window.__tcLinger&&window.__tcLinger[who+'_'
 function tcLingerFrom(t,who){var L=tcLingerRec(t,who);return L?L.from:'';}
 const KB_STATUS_ORDER=['pending','in-progress','waiting','on-hold','done','canceled'];
 var _taskDrag={who:null,id:null};
+var _kbDropHint=null;
+function taskDropHintHide(){if(_kbDropHint)_kbDropHint.style.display='none';}
 function taskDragStart(e,who,id){_taskDrag={who:who,id:id};try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);}catch(_){}var c=e.currentTarget;if(c&&c.classList)c.classList.add('kb-dragging');}
-function taskDragEnd(e){var c=e.currentTarget;if(c&&c.classList)c.classList.remove('kb-dragging');document.querySelectorAll('.kb-col.kb-over').forEach(function(x){x.classList.remove('kb-over');});_taskDrag={who:null,id:null};}
-function taskColOver(e){e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(_){}var c=e.currentTarget;if(c&&c.classList)c.classList.add('kb-over');}
-function taskColLeave(e){var c=e.currentTarget;if(c&&c.classList&&!c.contains(e.relatedTarget))c.classList.remove('kb-over');}
-function taskColDrop(e,who,status){e.preventDefault();var c=e.currentTarget;if(c&&c.classList)c.classList.remove('kb-over');var d=_taskDrag;if(!d.id||d.who!==who)return;var t=(tasksOf(who)).find(function(x){return x.id===d.id;});if(t&&(t.status||'pending')===status)return;setTaskStatus(who,d.id,status);}
+function taskDragEnd(e){taskDropHintHide();var c=e.currentTarget;if(c&&c.classList)c.classList.remove('kb-dragging');document.querySelectorAll('.kb-col.kb-over').forEach(function(x){x.classList.remove('kb-over');});_taskDrag={who:null,id:null};}
+function taskColOver(e){
+  e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(_){}
+  var c=e.currentTarget;if(c&&c.classList)c.classList.add('kb-over');
+  if(!_taskDrag.id||!c||!c.querySelector||c.querySelector('.kb-dragging')){taskDropHintHide();return;}
+  var name=c.querySelector('.kb-col-name');if(!name){taskDropHintHide();return;}
+  if(!_kbDropHint){
+    _kbDropHint=document.createElement('div');_kbDropHint.id='kb-drop-hint';
+    _kbDropHint.setAttribute('role','status');_kbDropHint.setAttribute('aria-live','polite');
+    document.body.appendChild(_kbDropHint);
+  }
+  var hint=_kbDropHint,text='Move to '+name.textContent;
+  if(hint.textContent!==text)hint.textContent=text;
+  if(hint.style.display!=='block')hint.style.display='block';
+  hint.style.left=Math.max(8,Math.min(e.clientX+14,window.innerWidth-hint.offsetWidth-8))+'px';
+  hint.style.top=Math.max(8,Math.min(e.clientY+18,window.innerHeight-hint.offsetHeight-8))+'px';
+}
+function taskColLeave(e){var c=e.currentTarget;if(c&&c.classList&&!c.contains(e.relatedTarget)){c.classList.remove('kb-over');taskDropHintHide();}}
+function taskColDrop(e,who,status){e.preventDefault();taskDropHintHide();var c=e.currentTarget;if(c&&c.classList)c.classList.remove('kb-over');var d=_taskDrag;if(!d.id||d.who!==who)return;var t=(tasksOf(who)).find(function(x){return x.id===d.id;});if(t&&(t.status||'pending')===status)return;setTaskStatus(who,d.id,status);}
 function taskCardClick(e,who,id){ if(e.target&&e.target.closest&&e.target.closest('button,select,a,input,label,.tcard-sel'))return; openEdit(who,id); }
 window.__tcOpen={};
 window.tcToggleDetails=function(btn,key){
@@ -9887,6 +9904,7 @@ html.dark .oc-junior{background:#173323;color:#6fbf8f;}
   }
   window.evwsColDrop=function(e,status){
     e.preventDefault();
+    taskDropHintHide();
     var c=e.currentTarget;if(c&&c.classList)c.classList.remove('kb-over');
     var d=(typeof _taskDrag!=='undefined')?_taskDrag:null;
     if(!d||!d.id||!d.who)return;
@@ -14127,7 +14145,7 @@ html:not(.dark) .app-header{background:#003057!important;
   box-shadow:none;}
 
 /* the board stays frameless; cards carry the elevation */
-html:not(.dark) .kb-col,html:not(.dark) .kb-col[data-status]{background:transparent!important;box-shadow:none!important;}
+html:not(.dark) .kb-col:not(.kb-over),html:not(.dark) .kb-col[data-status]:not(.kb-over){background:transparent!important;box-shadow:none!important;}
 
 /* fields and rails need a hint of tone so they read on white */
 html:not(.dark) .form-input,html:not(.dark) .form-select,html:not(.dark) .form-textarea{

@@ -3283,7 +3283,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     title's icon tile hides at 340px and under (three small rules at the end
     of the step 103 block, with a test). 738 tests pass.
 
-- [ ] **104. Drop a card anywhere in a status column** (added 13 Nov at Boss's request)
+- [x] **104. Drop a card anywhere in a status column** (added 13 Nov at Boss's request)
   - Problem Boss reported: a card low down in a long column cannot be dragged
     to another status, because a short column ends where its last card ends
     and the space under it does not accept the drop (the short column's cards
@@ -3300,6 +3300,27 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     out of sight. Nothing changes on iPhone.
   - Test: unit tests for the rules and the label; Claude drags the lowest
     card of a long column sideways in a browser and checks the status changes.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-104.md): On screens
+    601px and wider, each status column now accepts drops down to the bottom
+    of the tallest column in its row. Both boards share a pointer label naming
+    the destination, hidden over the original column and cleared on leaving,
+    dropping or ending the drag. Phone sizing and the Done and Canceled shelves
+    stay as before. No older style rules needed changing. Added 13 tests for
+    sizing, both label themes, pointer placement, reuse and drag cleanup;
+    limited the step 103 tests to their own styles. Ran npm run test:ui:
+    750 of 751 tests pass; the only failure is the known sandbox-only Netlify
+    check for .aws and .codex folders. Browser drag checks remain for review.
+
+  - Reviewer's check (Claude, real mouse drags in a browser): before the
+    change the point under a short column hit the board and the drop failed;
+    now all four working columns are the same height (469px in the sample
+    data, cards unchanged), the lowest Pending card dropped under On Hold's
+    only card moves to On Hold, the label reads "Move to On Hold" and goes
+    away after the drop; the same at 820px (two columns) and in dark mode.
+    One correction made by the reviewer: in the light theme an older rule
+    (`html:not(.dark) .kb-col{background:transparent!important;...}`) hid the
+    highlight of the column under the pointer; it now leaves `.kb-over`
+    alone, so the highlight shows in both themes (with a test). 752 tests pass.
 
 - [ ] **105. Final check**
   - Files: `PLAN.md`, tests, before-and-after screenshots (not committed).
