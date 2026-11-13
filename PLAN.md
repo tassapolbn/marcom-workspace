@@ -3322,11 +3322,17 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     highlight of the column under the pointer; it now leaves `.kb-over`
     alone, so the highlight shows in both themes (with a test). 752 tests pass.
 
-- [ ] **105. Final check**
+- [x] **105. Final check**
   - Files: `PLAN.md`, tests, before-and-after screenshots (not committed).
   - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
     widths 320 to 440; before-and-after screenshots for Boss; then merge and
     deploy when Boss says so.
+  - Done (Claude, 13 Nov): 752 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844. iPhone widths
+    320, 360, 375, 390, 414, 430 and 440 on all five tabs in both themes (70
+    pages): no sideways scroll, no page errors. Real mouse drags move a card
+    to another status from the bottom of a long column. Before-and-after
+    screenshots sent to Boss. Waiting for Boss's word before merging.
 
 ## Decisions needed from Boss (plan 11)
 
