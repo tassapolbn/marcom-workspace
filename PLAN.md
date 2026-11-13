@@ -2989,3 +2989,176 @@ first person's tab only).
 4. **Shared cards already in the sheet (first person's tab only):** recommended,
    Refresh all adds the missing rows in the other people's tabs, shown in its
    summary before Apply; or only shared cards from now on get every row.
+
+# Plan 11 (13 Nov 2026): the school logo, and a tidier, better-looking app, for Boss to approve
+
+Boss asked (13 Nov) for two things: make the app more beautiful and better
+organised, and replace the app's own logo with the school logo wherever it
+suits the background colour. Boss supplied two logo files: the full-colour
+logo (navy and gold, for light backgrounds) and the white-and-gold logo (for
+dark backgrounds). As before, Claude plans and checks and Codex builds.
+
+Kept as Boss decided earlier: the tick on the left of each card; the Event
+Hub right under Today on person tabs; the Payday line where it is; no
+greeting; a plain navy header; the gold glowing payday circle; the navy
+loading screen.
+
+## What I found (screens checked at 1440x900 and on an iPhone screen)
+
+1. **The logo.** The app's own mark is a gold briefcase tile (header, loading
+   screen, sign-in) and an "M" (browser tab and iPhone home-screen icon). The
+   school logo appears only on the request form and the Team Board page.
+2. **The top and bottom of pages.** The Payday line sits alone under the
+   header; on the Overview a lone date line sits between the announcement and
+   Team today; the gaps between these rows differ; every page ends with an
+   empty band about 200px tall.
+3. **Events look different in each place.** In the Event Hub some tiles are
+   filled with the event's colour and others are white with a thin coloured
+   line. The Overview's "Coming up" shows loose numbers with wide gaps. On
+   iPhone the Event Hub's tiles fill most of a screen before the tasks.
+4. **The board.** Done drops under Pending as one narrow column on its own.
+5. **The person header.** Today uses the left third of a full-width card, and
+   the three numbers sit far away at the right.
+6. **Cards and panels are not alike.** Corners, inner spacing and header rows
+   differ from card to card; the sidebar has an empty strip at its top behind
+   "Hide sidebar".
+7. **Buttons and pills come in many sizes and styles** (New, Add, Timeline,
+   Details, the fold buttons, the filter pills), and the sub-tabs bar
+   stretches across the whole width.
+8. **Small slips.** On iPhone, Team today has a stray dot before "22 open"
+   and its refresh button is out of line. One older test fails since a few
+   days ago because it depends on today's date (a fault in the test, not in
+   the app): 668 of 669 pass.
+
+## Steps
+
+- [ ] **96. The school logo files and the app's icons**
+  - Files: `assets/brand/` (new), `assets/icon-32.png`, `assets/icon-180.png`,
+    `assets/icon-192.png`, `assets/icon-512.png`, `assets/favicon.svg`,
+    `site.webmanifest`, `index.html` (the icon links only), tests.
+  - Change: Boss's two logo files go into the project unchanged, with smaller
+    copies made from them for the screen and a copy of the emblem on its own
+    for small places (never stretched, recoloured or redrawn). The browser-tab
+    icon and the iPhone home-screen icon become the white-and-gold emblem on
+    the school's navy; the "M" icon goes. The older test that depends on
+    today's date is fixed.
+  - Test: every copy keeps the logo's proportions; the icons are square, navy,
+    with the emblem centred inside a safe margin; the manifest lists them;
+    all tests pass.
+
+- [ ] **97. The school logo in the app (decision 2)**
+  - Files: `index.html` (header, loading screen, sign-in card),
+    `assets/workspace-ui.css`, tests.
+  - Change: the gold briefcase tile goes everywhere.
+    - Header (navy): the white-and-gold logo at the left. On computers the
+      full logo (emblem and "HeadStart International School, Phuket"), a thin
+      line, then "Marcom Workspace" with "Marketing & Communications
+      Department" under it. On iPhone, where the row is narrow, the emblem
+      with "Marcom Workspace".
+    - Loading screen (navy): the white-and-gold logo in the centre, "Marcom
+      Workspace" under it, and the loading bar.
+    - Sign-in card (white): the full-colour logo above "Marcom Workspace".
+    - The request form and the Team Board page already carry the full-colour
+      logo and stay as they are.
+    - The logo is part of the page itself, so it shows from the first moment.
+  - Test: no briefcase tile left; the logo has a name for screen readers and
+    its own proportions; the header is no taller than today at 1440 and 390;
+    contrast scans clean.
+
+- [ ] **98. A tidy top and bottom on every page**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: on computers the Overview's date moves to the right end of the
+    Payday line (Payday stays where it is), so no lone date sits between the
+    announcement and Team today; the gaps between the header, that line and
+    the first card are even; the empty band at the bottom of every page
+    becomes a normal margin (iPhone keeps room for the tab bar). On iPhone,
+    Team today loses its stray dot and its refresh button lines up with the
+    title.
+  - Test: measured gaps at 1440; nothing between the announcement and Team
+    today; the bottom margin on computers is 64px or less.
+
+- [ ] **99. One look for events**
+  - Files: `index.html` (the Event Hub tiles and the Overview's Coming up),
+    `assets/workspace-ui.css`, tests.
+  - Change: every event tile is drawn the same way and the same size: filled
+    with the event's own colour, with its date, name and days left. An event
+    with a colour but no text colour gets white or dark text, whichever reads
+    better; an event with no colour uses navy. The Overview's "Coming up"
+    uses the same tiles instead of loose numbers (tapping one still opens the
+    event's tasks). On iPhone both are one row that scrolls sideways, so the
+    tasks on a person tab start about 190px higher.
+  - Test: every tile has the same height and parts at 1440 and 390; the text
+    of every demo event reads at 4.5:1 or better in both themes; on iPhone
+    the Event Hub is one row.
+
+- [ ] **100. The task board in two tidy rows (computers)**
+  - Files: `assets/workspace-ui.css` (`index.html` only if the board's markup
+    must change), tests.
+  - Change: on a person tab the four working columns (Pending, In Progress,
+    Waiting, On Hold) share the top row in equal widths; Done and Canceled
+    sit under them as full-width shelves with their cards side by side, so
+    Done is no longer a lone narrow column. Dragging a card to Done still
+    works; an empty Canceled stays hidden; iPhone is unchanged.
+  - Test: at 1440x900 with the sidebar shown and hidden, the working columns
+    are equal and Done spans the board; dragging a card to Done moves it.
+
+- [ ] **101. The person header and Today use the full width**
+  - Files: `index.html` (the person header and the Today panel),
+    `assets/workspace-ui.css`, tests.
+  - Change: on computers the three numbers (active, due soon, done) sit as
+    clear figures beside the name, and Today shows its two lists side by side
+    (Overdue on the left, Due today on the right) instead of one short list
+    in the left third. iPhone keeps one column. Nothing is removed.
+  - Test: at 1440 Today's two lists share the card's width; at 390 the header
+    is no taller than today; every row still opens its task.
+
+- [ ] **102. One set of cards, spacing and titles (decision 3)**
+  - Files: `assets/workspace-ui.css` (one set of shared values in a new
+    block), `index.html` (only where old rules must go so the shared values
+    win), tests.
+  - Change: every card, panel and dialog uses the same corners, border, soft
+    shadow and inner spacing; every card header is laid out the same way
+    (icon, title, short summary, actions at the right); the section labels
+    (Overdue, Today, Coming up, Shared tasks, the column names) share one
+    style; the gaps between cards are even. The sidebar gets a proper header
+    ("Widgets", with Hide at its right), so the empty strip goes. If chosen,
+    today's date on the calendars is ringed in gold, as the payday circle is.
+    Dark mode follows the same values.
+  - Test: a rendered check that the cards on the Overview and a person tab
+    share corners, border, spacing and header height; contrast scans clean in
+    both themes.
+
+- [ ] **103. One set of buttons, pills, tabs and fields**
+  - Files: `assets/workspace-ui.css`, `index.html` (where old rules must go),
+    tests.
+  - Change: three kinds of button (main: solid navy; second: outlined; quiet:
+    text or icon) with one height (36px on computers, 44px on touch screens),
+    one corner and one weight; filter pills and count chips one height; form
+    fields one height; one focus ring. The sub-tabs (All Tasks, Events, Links,
+    Notes, Templates) become a neat row at the left with the selected one
+    underlined, instead of a bar stretched across the page. Applied to the
+    header buttons, card actions, filters and dialog footers.
+  - Test: a rendered check lists one height and one corner per kind of
+    button; every touch target on iPhone is 44px or more; keyboard focus
+    shows on each.
+
+- [ ] **104. Final check**
+  - Files: `PLAN.md`, tests, before-and-after screenshots (not committed).
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; before-and-after screenshots for Boss; then merge and
+    deploy when Boss says so.
+
+## Decisions needed from Boss (plan 11)
+
+1. **The plan:** recommended, approve steps 96 to 104; or the logo only (96
+   and 97); or the logo and the tidy-up (96 to 101) without the restyle (102
+   and 103).
+2. **The logo in the header on computers:** recommended, the full school logo
+   with "Marcom Workspace" beside it; or the emblem alone, with "HeadStart
+   Marcom Workspace" in text as now.
+3. **Gold:** recommended, a little gold as the school's highlight: today's
+   date on the calendars is ringed in gold, as the payday circle is; or gold
+   stays on the logo and the payday circle only.
+
+Not asked, chosen to match the background as Boss said: the app's icon is
+the white-and-gold emblem on navy (the app's own colour).
