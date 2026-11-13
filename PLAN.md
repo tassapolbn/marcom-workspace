@@ -3157,7 +3157,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     ui-netlify sandbox exception for .aws and .codex. Browser measurements
     remain with the reviewer as instructed.
 
-- [ ] **100. The task board in two tidy rows (computers)**
+- [x] **100. The task board in two tidy rows (computers)**
   - Files: `assets/workspace-ui.css` (`index.html` only if the board's markup
     must change), tests.
   - Change: on a person tab the four working columns (Pending, In Progress,
@@ -3167,6 +3167,19 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     works; an empty Canceled stays hidden; iPhone is unchanged.
   - Test: at 1440x900 with the sidebar shown and hidden, the working columns
     are equal and Done spans the board; dragging a card to Done moves it.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-100.md): At 981px
+    and wider, the four working columns now share one row equally, with
+    Done and Canceled each spanning the board below and their cards side by
+    side in four equal columns. From 601px to 980px both layouts use two
+    columns; smaller screens keep their existing layout. Empty shelves stay
+    low and keep their drop room and highlight while dragging. Added five
+    tests covering the layouts, headings, counts, empty columns and dragging
+    onto Done through the existing handlers. No older rules or index.html
+    needed changing, and no older tests pinned the previous board grid.
+    Ran npm run test:ui and checked individual results: 706 of 707 pass,
+    with only the documented ui-netlify sandbox exception for .aws and
+    .codex. Browser checks in both themes with the sidebar shown and hidden
+    remain with the reviewer as instructed.
 
 - [ ] **101. The person header and Today use the full width**
   - Files: `index.html` (the person header and the Today panel),

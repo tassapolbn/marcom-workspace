@@ -1793,3 +1793,17 @@ html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
   .ev-chip:hover{transform:none;}
 }
 @media(prefers-reduced-motion:reduce){.ev-chip{transition:none;}}
+
+/* Step 100: equal working columns and full-width Done and Canceled shelves. */
+@media(min-width:601px){
+  .kanban-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+  .kb-col[data-status="done"],.kb-col[data-status="canceled"]{grid-column:1/-1;}
+  .kb-col[data-status="done"]>.kb-col-body,.kb-col[data-status="canceled"]>.kb-col-body{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;
+  }
+}
+@media(min-width:981px){
+  .kanban-board,.kb-col[data-status="done"]>.kb-col-body,.kb-col[data-status="canceled"]>.kb-col-body{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
