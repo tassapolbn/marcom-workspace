@@ -3103,7 +3103,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     only the documented ui-netlify sandbox exception for .aws and .codex.
     Browser layout and contrast review remain with the reviewer as instructed.
 
-- [ ] **98. A tidy top and bottom on every page**
+- [x] **98. A tidy top and bottom on every page**
   - Files: `index.html`, `assets/workspace-ui.css`, tests.
   - Change: on computers the Overview's date moves to the right end of the
     Payday line (Payday stays where it is), so no lone date sits between the
@@ -3114,6 +3114,19 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     title.
   - Test: measured gaps at 1440; nothing between the announcement and Team
     today; the bottom margin on computers is 64px or less.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-98.md): On computers,
+    today's date now sits at the right of the Payday line on every tab and
+    updates each minute, including at midnight and with salary details open.
+    Removed the separate Overview date and its old styles. The desktop line
+    is 40px tall with 8px above and below, announcements and Team today have
+    a 16px gap, and pages end with 56px of space. iPhone keeps its existing
+    room for the bottom controls; Team today's summary has no leading dot
+    and its 44px refresh button lines up with the title. Removed the old
+    phone heading layout and negative refresh margins. Added five tests and
+    updated older checks, including date rollover with salary details open
+    and closed. Ran npm run test:ui and checked individual results: 699 of
+    700 pass, with only the documented ui-netlify sandbox exception for
+    .aws and .codex. Browser measurements remain with the reviewer as instructed.
 
 - [ ] **99. One look for events**
   - Files: `index.html` (the Event Hub tiles and the Overview's Coming up),

@@ -903,9 +903,6 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
 /* The five number tiles are gone: their numbers already head the work list. The
    announcements stay first (Boss, 24 Oct) as one slim line, Team today is a
    strip of people showing only what needs attention, then the work list. */
-#panel-overview .ov-hello{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:10px;row-gap:2px;}
-#panel-overview .ov-topbar{margin-bottom:12px;}
-
 /* Announcements: the pinned or newest one on a single line; "All N" opens the rest. */
 #ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:8px 10px 8px 16px;}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head{display:contents;}
@@ -1002,18 +999,10 @@ html.dark .tm-meet{color:#93c5fd;}
 @media(max-width:600px){
   #ov-team{padding:4px 6px;}
   .ov-team-head{padding:2px 4px;}
-  /* One heading line: the total, the next meeting's time and title as far as it
-     fits, and refresh. */
-  .ov-team-head{gap:8px;}
-  .ov-team-title{flex:0 1 auto;min-width:0;flex-wrap:wrap;white-space:normal;}
-  .ov-team-next{flex:1 1 0;}
   .ov-team-sum,.ov-team-done{white-space:nowrap;}
   .ov-team-sum-w,.nx-l{display:none;}
   /* A next meeting needs the room more than the week's done count. */
   .ov-team-head:has(.nx-btn) .ov-team-done{display:none;}
-  /* Refresh keeps a 36px target without making the heading taller. */
-  .ov-team-head .ov-mini-btn{margin:-6px 0 -6px auto;}
-  .ov-team-next+.ov-mini-btn{margin-left:0;}
   /* Each person reads like a line of text: the name, then the flags, which wrap
      under the name instead of being cut off when a narrow phone runs out of room. */
   .tm{display:flex;align-items:flex-start;column-gap:7px;padding:5px 2px;line-height:22px;}
@@ -1025,7 +1014,6 @@ html.dark .tm-meet{color:#93c5fd;}
   .tm-open,.tm-w,.tm-lv{display:none;}
   .tm-s{display:inline;}
   .tm:nth-child(n+3)::after{left:6px;right:6px;}
-  #panel-overview .ov-hello{display:none;}
   /* A 12px rhythm on a phone, so the first deadline clears the dock even at lunch. */
   #ov-top,#ov-team{margin-bottom:12px;}
   #panel-overview #ov-dl-card{padding-top:12px;}
@@ -1267,8 +1255,6 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
   .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
   html.dark .header-right .cmdk-trigger{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.85);}
   .header-right .cmdk-trigger i{font-size:16px;}
-  /* The Overview's greeting gives way on a phone and its search box is gone. */
-  #panel-overview .ov-topbar{display:none;}
 }
 
 /* Step 49: person colours as small marks only */
@@ -1800,4 +1786,23 @@ html.dark body .salary-dock #salary-card .salary-days-big{color:#ffd569!importan
 html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
 @media(prefers-reduced-motion:reduce){
   html body .salary-dock #salary-card .sal-ring-fg{transition:none;}
+}
+
+/* Step 98: a tidy top and bottom on every page. */
+.uxp-sal-today{display:none;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
+@media(min-width:601px){
+  .salary-dock{margin-top:8px;}
+  .uxp-sal-bar{height:40px;flex-wrap:nowrap;align-items:center;margin:0;}
+  .uxp-sal-toggle{height:40px;min-height:40px;flex-shrink:0;}
+  .uxp-sal-today{display:block;order:1;flex-shrink:0;margin-left:auto;}
+  .tab-panel{padding-top:8px;padding-bottom:56px;}
+  #panel-overview .ov-more{margin-bottom:0;}
+}
+@media(max-width:600px){
+  .ov-team-head{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px 8px;}
+  .ov-team-title{grid-column:1;grid-row:1;min-width:0;white-space:normal;}
+  .ov-team-sum{grid-column:1/-1;grid-row:2;white-space:normal;}
+  .ov-team-sep{display:none;}
+  .ov-team-next{grid-column:1/-1;grid-row:3;margin-left:0;}
+  #panel-overview .ov-team-head>.ov-mini-btn{grid-column:2;grid-row:1;width:44px;height:44px;margin:0;}
 }

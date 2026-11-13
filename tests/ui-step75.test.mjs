@@ -47,7 +47,7 @@ test('compact payday says 1 day, plural days and Today without a bar',()=>{
   const paint=source('    function paint(force){','    /* The payday strip starts');
   for(const [days,expected] of [['0','Today'],['1','1 day'],['2','2 days']]){
     const b={setAttribute(){}};
-    vm.runInNewContext(paint+'paint(true);',{b,esc:String,document:{getElementById:id=>({textContent:id==='sal-days'?days:'Fri, 30 October'})}});
+    vm.runInNewContext(paint+'paint(true);',{b,today:{},esc:String,document:{getElementById:id=>({textContent:id==='sal-days'?days:'Fri, 30 October'})}});
     assert.ok(b.innerHTML.includes(expected));
     assert.doesNotMatch(b.innerHTML,/1 days|0 days|uxp-sal-mini/);
   }

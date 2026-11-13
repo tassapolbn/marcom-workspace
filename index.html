@@ -4867,10 +4867,6 @@ html.dark body.theme-overview{background:linear-gradient(170deg,#0c1422 0%,#0e15
 #tab-overview.a-active{color:#fff;border-bottom-color:var(--gold);}
 #tab-overview i{font-size:18px;}
 
-#panel-overview .ov-topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
-#panel-overview .ov-hello-title{font-size:20px;font-weight:800;letter-spacing:-0.4px;}
-#panel-overview .ov-hello-sub{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
-
 #panel-overview .ov-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);border:1px solid var(--border);padding:15px 16px;margin-bottom:16px;transition:var(--dm-trans);}
 #panel-overview .ov-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px;}
 #panel-overview .ov-card-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;letter-spacing:-.1px;}
@@ -4918,7 +4914,7 @@ html.dark #panel-overview .ov-st-ok{color:#5fcf85;}
 /* grid */
 #panel-overview .ov-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
 @media(max-width:880px){#panel-overview .ov-grid{grid-template-columns:1fr;}}
-@media(max-width:520px){#panel-overview .ov-topbar{flex-direction:column;align-items:stretch;}#panel-overview .ov-res{grid-template-columns:1fr;}}
+@media(max-width:520px){#panel-overview .ov-res{grid-template-columns:1fr;}}
 
 /* master calendar */
 #panel-overview .ov-cal-nav{display:flex;align-items:center;gap:6px;}
@@ -5028,8 +5024,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   var MEM=(typeof MEMBERS!=='undefined')?MEMBERS:{boss:{role:'',icon:'ti-user'},dew:{role:'',icon:'ti-palette'},o:{role:'',icon:'ti-camera'},junior:{role:'',icon:'ti-user-plus'}};
   var MORDER=(typeof MEMBER_ORDER!=='undefined')?MEMBER_ORDER:['boss','dew','o','junior'];
   var MSH=(typeof MSHORT!=='undefined')?MSHORT:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var MON=(typeof MONTHS!=='undefined')?MONTHS:['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var DOW=(typeof DAYS!=='undefined')?DAYS:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
   /* state */
   var ovCalY=new Date().getFullYear(), ovCalM=new Date().getMonth();
@@ -5084,11 +5078,8 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
    +      '<div class="ov-ann-list" id="ov-ann-list" tabindex="-1"></div>'
    +    '</div>'
    +'</div>'
-   +'<div class="ov-topbar">'
-   +  '<div class="ov-hello"><div class="ov-hello-sub" id="ov-datesub"></div></div>'
-   +'</div>'
    +'<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">'
-   +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today<span class="ov-team-sum" id="team-sum"></span></div><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
+   +  '<div class="ov-team-head"><div class="ov-team-title" id="ov-team-title"><i class="ti ti-users" aria-hidden="true"></i> Team today</div><span class="ov-team-sum" id="team-sum"></span><span class="ov-team-next" id="ov-team-next"></span><button type="button" class="ov-mini-btn" onclick="avlRefresh(true)" title="Refresh availability" aria-label="Refresh availability"><i class="ti ti-refresh"></i></button></div>'
    +  '<div class="ov-team-list" id="team-list"></div>'
    +'</section>'
    +'<div class="ov-grid">'
@@ -5367,7 +5358,7 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
         +'<span class="tm-st">'+bits.join('')+'</span>'
         +(leave?'<span class="tm-lv">'+esc(leave)+'</span>':'')+'</span></button>';
     }).join(''));
-    MarcomUI.setHTML(document.getElementById('team-sum'),' · '+total+' open<span class="ov-team-sum-w"> tasks</span>'
+    MarcomUI.setHTML(document.getElementById('team-sum'),'<span class="ov-team-sep" aria-hidden="true">· </span>'+total+' open<span class="ov-team-sum-w"> tasks</span>'
       +(doneWk?'<span class="ov-team-done"> · '+doneWk+' done this week</span>':'')
       +(unowned.length?' <button type="button" class="ov-no-owner-btn evb-warn" onclick="evbShowTask('+esc(JSON.stringify(unowned[0].id))+')">'+unowned.length+' with no owner</button>':''));
     var nx=nextMeeting(new Date()),nxEl=document.getElementById('ov-team-next');
@@ -5653,8 +5644,6 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
   /* ---------- master render ---------- */
   function renderOverview(){
     if(!document.getElementById('panel-overview'))return;
-    var sub=document.getElementById('ov-datesub');
-    if(sub){ var n=new Date(),dateLabel=DOW[n.getDay()]+', '+n.getDate()+' '+MON[n.getMonth()]+' '+n.getFullYear(); if(sub.textContent!==dateLabel)sub.textContent=dateLabel; }
     renderTeam(); calFilters(); renderCal(); renderDeadlines();
     renderCountdown(); renderActivity(); renderWM(); renderRes(); ovLayout();
     try{ if(window.ovDaily)window.ovDaily(); }catch(e){}
@@ -12032,6 +12021,9 @@ html.dark .uxp-mi i{color:#8fb4dc;}
       }
     };
     bar.appendChild(b);
+    var today=document.createElement('span');
+    today.className='uxp-sal-today'; today.id='uxp-sal-today';
+    bar.appendChild(today);
     /* Adopt the lunch notice if it was built first: one line, not two bands. */
     var lunch=document.getElementById('lunch-banner');
     if(lunch)bar.appendChild(lunch);
@@ -12039,6 +12031,8 @@ html.dark .uxp-mi i{color:#8fb4dc;}
     hdr.insertAdjacentElement('afterend',dock);
     dock.appendChild(sal);
     function paint(force){
+      var dateLabel=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      if(today.textContent!==dateLabel)today.textContent=dateLabel;
       var c=typeof force==='boolean'?force:document.body.classList.contains('uxp-sal-collapsed');
       var days=(document.getElementById('sal-days')||{}).textContent||'--';
       b.setAttribute('aria-expanded',c?'false':'true');

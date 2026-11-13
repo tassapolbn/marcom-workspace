@@ -24,8 +24,8 @@ test('the Overview shell puts every card in its column and folds the rest away',
   assert.doesNotMatch(main,/id="ov-cal-card"/,'the Master Calendar moved to the side column (step 51)');
   assert.ok(order(['ov-wm-card','ov-cd-card','ov-cal-card'],side));
   assert.doesNotMatch(side,/team-card/,'Team today left the side column for the strip above the work');
-  const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),barAt=shell.indexOf('class="ov-topbar"');
-  assert.ok(topAt>0&&annAt>topAt&&barAt>annAt,'announcements sit in the top slot before the greeting');
+  const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),teamAt=shell.indexOf('id="ov-team"');
+  assert.ok(topAt>0&&annAt>topAt&&teamAt>annAt,'announcements sit in the top slot before Team today');
   assert.doesNotMatch(side,/id="ov-ann-card"/);
   assert.ok(order(['ov-res-card','ov-act-card'],more));
   assert.match(shell,/class="ov-more ov-more-closed" id="ov-more"/,'Resources & more starts folded');
@@ -368,13 +368,14 @@ function px(sel,prop){
   assert.ok(m,sel+' has a '+prop);return +m[1];
 }
 
-test('every tab ends with room to scroll its last item clear of the floating buttons',()=>{
+test('on phones every tab ends with room to scroll its last item clear of the floating buttons',()=>{
   assert.match(step33,/:root\{--dock-h:0px;--float-lift:calc\(var\(--dock-h\) \+ env\(safe-area-inset-bottom,0px\)\);\}/,'one lift for the dock and the home bar, zero by default');
   const pad=+step33.match(/\.tab-panel\{padding-bottom:calc\((\d+)px \+ var\(--float-lift\)\);\}/)[1];
   /* Quick Add is the top of the stack; Team Chat sits below it. */
   const stackTop=px('.quickadd-fab','bottom')+px('.quickadd-fab','height');
   assert.ok(px('.chat-fab','bottom')+px('.chat-fab','height')<stackTop,'Team Chat sits below Quick Add');
   assert.ok(pad>stackTop,'the panel ends '+pad+'px up, clear of the '+stackTop+'px stack');
+  assert.doesNotMatch(media(stepBlock(98),'max-width:600px'),/\.tab-panel\{[^}]*padding-bottom/,'step 98 preserves this room on phones');
   /* Each panel is also the page container; this replaces its old bottom padding. */
   assert.match(source,/class="container tab-panel active" id="panel-boss"/);
   assert.ok(css26.indexOf('.tab-panel{padding-bottom')>css26.indexOf('.container{max-width:100%;padding:14px 12px 48px;}'),'the phone padding cannot win back');
@@ -497,8 +498,8 @@ const rule=(css,sel)=>{const i=css.indexOf(sel+'{');assert.ok(i>=0,sel+' has a r
 const media=(css,q)=>{const i=css.indexOf('@media('+q+'){');assert.ok(i>=0,q+' block exists');
   let depth=0,j=css.indexOf('{',i);for(;j<css.length;j++){if(css[j]==='{')depth++;else if(css[j]==='}'&&--depth===0)break;}return css.slice(i,j+1);};
 
-test('the Overview opens on the work: one announcement line, the greeting and search, Team today, then the work list',()=>{
-  const at=['id="ov-ann-card"','class="ov-topbar"','id="ov-team"','class="ov-grid"','id="ov-dl-card"'].map(s=>shell.indexOf(s));
+test('the Overview opens on the work: one announcement line, Team today, then the work list',()=>{
+  const at=['id="ov-ann-card"','id="ov-team"','class="ov-grid"','id="ov-dl-card"'].map(s=>shell.indexOf(s));
   at.forEach((n,i)=>assert.ok(n>0&&(i===0||n>at[i-1]),'out of order at '+i));
   assert.doesNotMatch(shell,/ov-stats|ov-stat\b/,'the five number tiles are gone');
   const render=slice('  function renderOverview(){','\n  }\n');
@@ -539,10 +540,10 @@ test('on a phone each person is one short line and the work list starts on the f
   assert.match(phone,/\.tm-open,\.tm-w,\.tm-lv\{display:none;\}/,'counts with icons; the words stay in the label');
   assert.match(phone,/\.ov-team-sum-w,\.nx-l\{display:none;\}/,'"21 open" and "14:00 Weekly sync" keep the heading to one line');
   assert.match(phone,/\.ov-team-head:has\(\.nx-btn\) \.ov-team-done\{display:none;\}/,'a next meeting takes the room of the done count');
-  assert.match(phone,/\.ov-team-next\{flex:1 1 0;\}/,'and only the room left beside the title');
+  assert.match(media(stepBlock(98),'max-width:600px'),/\.ov-team-next\{grid-column:1\/-1;grid-row:3;/,'the next meeting keeps its own row below the summary');
   assert.match(phone,/#ov-top,#ov-team\{margin-bottom:12px;\}/);
   assert.match(phone,/\.tm-s\{display:inline;\}/,'a flag without a count keeps a short word');
-  assert.match(phone,/#panel-overview \.ov-hello\{display:none;\}/,'the greeting gives way to the work');
+  assert.doesNotMatch(shell,/ov-hello|ov-datesub/,'the removed date block leaves the phone showing the work');
   assert.doesNotMatch(css26,/\.ov-team-note/,'the calendar setup note moved to Settings (step 64)');
   assert.doesNotMatch(phone,/\.ov-mini-btn[^{]*\{[^}]*display:none/,'refreshing availability stays on a phone');
   assert.doesNotMatch(phone,/\.ov-team-next[^{]*\{[^}]*display:none/,'so does the next meeting');
@@ -1003,7 +1004,7 @@ test('the header search lists the tabs you can see, by today\'s names, and what 
 test('one search on every screen: the header button on iPhone, no box on the Overview',()=>{
   const phone=media(step48,'max-width:600px');
   assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;[^}]*width:42px;height:42px;/,'the same size as the bell');
-  assert.match(phone,/#panel-overview \.ov-topbar\{display:none;\}/,'nothing left of the Overview\'s top bar on a phone');
+  assert.doesNotMatch(shell,/ov-topbar/,'the unused Overview top bar is removed');
   assert.doesNotMatch(source,/ov-search|doSearch|ovClearSearch/,'the Overview\'s own search is gone');
   assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)" aria-label="Search">/);
   assert.match(source,/placeholder="Search tasks, events, notes or links"/);
@@ -1538,7 +1539,8 @@ test('one greeting: My day on your own tab is "Today"',()=>{
   assert.doesNotMatch(own,/Good (morning|afternoon|evening)/);
   assert.match(myDay('dew',{tasks:[]}),/<span class="myday-greet">Dew's day<\/span>/,'someone else\'s tab keeps its name');
   assert.doesNotMatch(shell,/id="ov-greet"/,'the Overview greeting is removed');
-  assert.match(shell,/id="ov-datesub"/,'the date stays');
+  assert.match(source,/today\.className='uxp-sal-today'; today\.id='uxp-sal-today';/,'the date now belongs to every tab\'s payday line');
+  assert.doesNotMatch(shell,/id="ov-datesub"/,'no lone date remains on the Overview');
 });
 
 test('an empty status column is its header and its 0, with a drop area only while a card is dragged over it',()=>{
@@ -1814,7 +1816,7 @@ test('desktop Add Task follows the filters and Today dates follow task names',()
   assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:auto;flex:0 0 auto;/);
   assert.match(css,/background:#10243a!important;.*color:#fff!important/);
   assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
-  assert.match(source,/dateLabel=DOW\[n.getDay\(\)\]/);
+  assert.match(source,/dateLabel=new Date\(\)\.toLocaleDateString\('en-GB',\{weekday:'long',day:'numeric',month:'long',year:'numeric'\}\)/,'the shared payday line keeps the full British date');
   assert.doesNotMatch(slice('window.ovDaily=function(){','/* quick actions */'),/Good morning|Good afternoon|Good evening|ov-greet/);
 });
 
