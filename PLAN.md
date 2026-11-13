@@ -3181,7 +3181,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     .codex. Browser checks in both themes with the sidebar shown and hidden
     remain with the reviewer as instructed.
 
-- [ ] **101. The person header and Today use the full width**
+- [x] **101. The person header and Today use the full width**
   - Files: `index.html` (the person header and the Today panel),
     `assets/workspace-ui.css`, tests.
   - Change: on computers the three numbers (active, due soon, done) sit as
@@ -3190,6 +3190,14 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     in the left third. iPhone keeps one column. Nothing is removed.
   - Test: at 1440 Today's two lists share the card's width; at 390 the header
     is no taller than today; every row still opens its task.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-101.md): on
+    computers the three figures sit beside the person's name, and Today
+    fills the card with equal Overdue and Due today columns. Empty columns
+    have a quiet message; finished tasks keep their place. Tablets and
+    phones keep their existing layout. Checked task links, row limits,
+    counts, empty states and readable text in both themes. The UI suite
+    passes 713 of 714 checks, with only the documented .aws and .codex
+    sandbox exception. Browser checks remain with the reviewer.
 
 - [ ] **102. One set of cards, spacing and titles (decision 3)**
   - Files: `assets/workspace-ui.css` (one set of shared values in a new

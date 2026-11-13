@@ -568,15 +568,20 @@ test('what needs attention is written in the shared status inks, which read at A
 /* ===== Step 38: iPhone person tabs put the work above the dock ===== */
 const step38=stepBlock(38);
 const myDaySource=slice('  function tmr(){var n=new Date();n.setDate','  function renderMyDay(w){');
-function myDay(w,{tasks=[],hour=11,unread=[],own=false}={}){
+function myDay(w,{tasks=[],events=[],waiting=0,hour=11,unread=[],own=false}={}){
   const TODAY='2026-10-26';
   class At extends Date{constructor(...a){if(a.length)super(...a);else super(TODAY+'T'+String(hour).padStart(2,'0')+':30:00');}}
-  const window={__cur:own?{workspace:w}:{role:'admin'},__rcCounts:{unreadList:unread}};
+  const window={__cur:own?{workspace:w}:{role:'admin'},__rcCounts:{unreadList:unread,waiting}};
   const context=vm.createContext({window,Date:At,tdy:()=>TODAY,esc:s=>String(s),
-    memberName:x=>x[0].toUpperCase()+x.slice(1),tasksOf:()=>tasks,eventsOf:()=>[],fmtDate:d=>d,daysUntil:()=>1,
+    memberName:x=>x[0].toUpperCase()+x.slice(1),tasksOf:()=>tasks,eventsOf:()=>events,fmtDate:d=>d,daysUntil:()=>1,
     MEMBER_ORDER:['boss','dew','o','junior'],document:{}});
   vm.runInContext(myDaySource+'\nthis.myDayHTML=myDayHTML;',context);
   return context.myDayHTML(w);
+}
+function myDayColumn(html,group){
+  const match=html.match(new RegExp('<div class="myday-column myday-'+group+'"><div class="myday-label">([^<]+)</div>((?:<button[\\s\\S]*?</button>)+|<div class="myday-empty">[^<]+</div>)</div>'));
+  assert.ok(match,group+' column has a label and task rows or a quiet empty line');
+  return {label:match[1],rows:match[2]};
 }
 
 test('My day draws only the counts that are there, and never repeats "due today" as a focus line',()=>{
@@ -1705,11 +1710,18 @@ test('Today keeps completed rows in their original groups and positions with ope
   assert.match(after,/<b>2<\/b> overdue/);
   assert.match(after,/class="myday-chip ok"[^>]*><b>1<\/b> done today/);
   assert.equal((before.match(/class="myday-row /g)||[]).length,(after.match(/class="myday-row /g)||[]).length);
-  assert.ok(after.indexOf('First late')<after.indexOf('Second late'));
+  const late=myDayColumn(after,'overdue').rows;
+  assert.ok(late.indexOf('First late')<late.indexOf('Second late'));
+  assert.match(late,/class="myday-row done"/);
+  assert.doesNotMatch(late,/Today task/);
+  assert.match(myDayColumn(after,'today').rows,/Today task/);
   assert.doesNotMatch(after,/Third late/);
   Object.assign(tasks[3],{status:'done',doneOn:'2026-10-26'});
   const allDone=myDay('dew',{tasks:[tasks[0],tasks[3]]});
   assert.equal((allDone.match(/class="myday-row done"/g)||[]).length,2);
+  assert.match(myDayColumn(allDone,'overdue').rows,/class="myday-row done"[^>]*>[\s\S]*First late/);
+  assert.match(myDayColumn(allDone,'today').rows,/class="myday-row done"[^>]*>[\s\S]*Today task/);
+  assert.doesNotMatch(allDone,/All clear|myday-empty/,'finished rows still occupy both columns');
   assert.match(allDone,/<b>2<\/b> done today/);
   assert.doesNotMatch(allDone,/myday-chip (bad|warn)/);
   assert.doesNotMatch(myDay('dew',{tasks:[{...tasks[0],doneOn:'2026-10-25'}]}),/First late|done today/);
@@ -1870,4 +1882,119 @@ test('event tiles form one snapping row at 600px and keep their desktop grid',()
   assert.match(step99,/\.ev-grid\{align-items:stretch;\}/,'tiles have equal heights within a row');
   assert.match(step99,/\.ev-chip:focus-visible\{outline:2px solid var\(--focus-ink\);/);
   assert.match(media(step99,'prefers-reduced-motion:reduce'),/\.ev-chip\{transition:none;\}/);
+});
+
+/* Step 101: desktop identity figures and full-width Today groups. */
+test('Today labels both columns, limits each to two rows and counts all open tasks',()=>{
+  const tasks=['overdue','today'].flatMap((group)=>[1,2,3].map(n=>({
+    id:group+n,topic:group+' task '+n,status:'pending',
+    dueDate:group==='overdue'?'2026-10-25':'2026-10-26'
+  })));
+  const html=myDay('boss',{tasks}),opened=[];
+  assert.match(html,/class="myday-list"><div class="myday-columns">/);
+  for(const [group,label,count] of [['overdue','Overdue','overdue'],['today','Due today','due today']]){
+    const column=myDayColumn(html,group);
+    assert.equal(column.label,label);
+    assert.equal((column.rows.match(/<button /g)||[]).length,2);
+    assert.doesNotMatch(column.rows,/task 3|myday-empty/);
+    assert.ok(html.includes('<b>3</b> '+count+'</button>'),'the count includes the undisplayed third task');
+    for(const [,handler] of column.rows.matchAll(/onclick="([^"]+)"/g)){
+      vm.runInNewContext(handler,{openEdit:(w,id)=>opened.push([w,id])});
+    }
+  }
+  assert.deepEqual(opened,[['boss','overdue1'],['boss','overdue2'],['boss','today1'],['boss','today2']]);
+});
+
+test('Today gives a quiet line only to the empty column',()=>{
+  for(const [date,empty,filled,message] of [
+    ['2026-10-26','overdue','today','Nothing overdue'],
+    ['2026-10-25','today','overdue','Nothing due today']
+  ]){
+    const html=myDay('boss',{tasks:[{id:'a',status:'pending',topic:'Only task',dueDate:date}]});
+    assert.equal(myDayColumn(html,empty).rows,'<div class="myday-empty">'+message+'</div>');
+    assert.match(myDayColumn(html,filled).rows,/Only task/);
+    assert.equal((html.match(/class="myday-empty"/g)||[]).length,1);
+    assert.doesNotMatch(html,/All clear/);
+  }
+});
+
+test('Today keeps All clear alone when neither task group has rows',()=>{
+  const html=myDay('boss',{tasks:[
+    {id:'tomorrow',status:'pending',dueDate:'2026-10-27'},
+    {id:'old',status:'done',dueDate:'2026-10-25',doneOn:'2026-10-25'},
+    {id:'canceled',status:'canceled',dueDate:'2026-10-26'}
+  ]});
+  assert.match(html,/class="myday-list"><div class="myday-clear"><i class="ti ti-circle-check"><\/i>All clear for now\. A good moment to plan ahead\.<\/div><\/div><\/div>$/);
+  assert.doesNotMatch(html,/myday-columns|myday-column |myday-label|myday-empty/);
+});
+
+test('Today keeps one event and the role row after the columns, including without task rows',()=>{
+  for(const tasks of [[],[{id:'late',status:'pending',topic:'Late task',dueDate:'2026-10-25'}]]){
+    const html=myDay('boss',{tasks,waiting:2,events:[
+      {name:'Open Day',date:'2026-10-26'},
+      {name:'Second event',date:'2026-10-26'}
+    ]});
+    assert.match(html,/<button type="button" class="myday-row info" onclick="uxpGoto\('#boss-evhub-body'\)">/);
+    assert.match(html,/Open Day<span class="md-sub">event today<\/span><\/button><div class="myday-row warn" style="cursor:default;">/);
+    assert.match(html,/2 requests waiting for your approval or clarification/);
+    assert.doesNotMatch(html,/Second event|All clear/);
+    if(tasks.length){
+      assert.match(html,/<div class="myday-column myday-today"><div class="myday-label">Due today<\/div><div class="myday-empty">Nothing due today<\/div><\/div><\/div><button type="button" class="myday-row info"/,'the event and role are siblings of the grid');
+    }else assert.doesNotMatch(html,/myday-columns|myday-empty/,'empty task groups add no space before the event');
+  }
+});
+
+test('step 101 uses equal desktop columns and keeps the phone and tablet list unlabelled',()=>{
+  const css=stepBlock(101),desktop=media(css,'min-width:981px'),small=media(css,'max-width:980px');
+  const columns=rule(desktop,'.myday-columns');
+  for(const declaration of ['display:grid','grid-template-columns:repeat(2,minmax(0,1fr))','width:100%'])assert.ok(columns.includes(declaration));
+  assert.match(desktop,/\.myday-column\{min-width:0;\}/);
+  assert.match(desktop,/\.myday-column \.md-title\{overflow-wrap:anywhere;\}/);
+  assert.match(small,/\.myday-label,\.myday-empty\{display:none;\}/);
+  assert.doesNotMatch(small,/member-head|mh-stat|display:grid/,'the existing small-screen header and single list stay in place');
+  const outsideDesktop=css.replace(desktop,'');
+  assert.doesNotMatch(outsideDesktop,/\.myday-columns\{|\.member-head\{|\.member-head \.mh-stat\{/);
+  const label=rule(desktop,'.myday-label'),overview=rule(source,'#panel-overview .ov-dl-grp-t');
+  for(const declaration of ['font-size:11px','font-weight:700','color:var(--muted)','text-transform:uppercase','letter-spacing:.4px']){
+    assert.ok(label.includes(declaration)&&overview.includes(declaration),declaration+' matches the Overview group labels');
+  }
+});
+
+test('desktop stat figures sit 24px after the identity with dividers and the colour button at the end',()=>{
+  const css=stepBlock(101),desktop=media(css,'min-width:981px');
+  assert.match(desktop,/\.member-head\{column-gap:14px;\}/);
+  assert.match(rule(desktop,'.member-head .member-head-stats'),/margin-left:10px;gap:0;flex:0 0 auto;flex-wrap:nowrap;/,'14px gap plus 10px margin is 24px');
+  assert.match(desktop,/\.member-head \.member-head-extra\{margin-left:auto;\}/);
+  const stat=rule(desktop,'.member-head .mh-stat');
+  for(const declaration of ['background:transparent','border:0','font-size:13px','color:var(--muted)','white-space:nowrap'])assert.ok(stat.includes(declaration));
+  assert.match(desktop,/\.member-head \.mh-stat\+\.mh-stat\{[^}]*border-left:1px solid var\(--border\);/);
+  assert.match(desktop,/\.member-head \.mh-stat b\{font-size:18px;font-weight:800;color:var\(--text\);\}/);
+  assert.match(desktop,/\.member-head \.mh-stat i\{display:none;\}/);
+  assert.doesNotMatch(desktop,/!important|\.member-head\{[^}]*(?:padding|height)|member-avatar/,'the header keeps its height without stronger overrides');
+  assert.match(css26,/\.member-head button\.mh-stat:hover\{box-shadow:/);
+  assert.match(css26,/\.member-head button\.mh-stat:focus-visible\{outline:2px solid var\(--focus-ink\);/);
+  assert.match(media(css,'prefers-reduced-motion:reduce'),/\.member-head button\.mh-stat\{transition:none;\}/);
+  const c=vm.createContext({});
+  vm.runInContext(slice('  var STAT_CHIPS=','  document.addEventListener(\'click\''),c);
+  for(const [filter,label,title] of [['all','active','Show all tasks'],['soon','due soon','Show tasks due soon'],['done','done','Show done tasks']]){
+    assert.ok(c.STAT_CHIPS.includes('data-f="'+filter+'" title="'+title+'"'));
+    assert.ok(c.STAT_CHIPS.includes('<span class="mh-l">'+label+'</span>'),'the readable button name stays in the markup');
+  }
+  for(const step of [23,41,'72b',73]){
+    const old=css26.split('/* Step '+step+':')[1].split('/* Step ')[0],scoped=media(old,'max-width:980px');
+    assert.match(scoped,/\.mh-stat-soon b[^{}]*\{color:#[0-9a-f]{6}!important;\}/);
+    assert.doesNotMatch(old.replace(scoped,''),/\.mh-stat-soon [bi][^{]*\{[^}]*!important/,'the old stat ink cannot override desktop figures');
+  }
+});
+
+test('step 101 figures, labels and quiet lines use readable theme inks',()=>{
+  const desktop=media(stepBlock(101),'min-width:981px');
+  for(const selector of ['.member-head .mh-stat','.myday-label','.myday-empty'])assert.match(rule(desktop,selector),/color:var\(--muted\)/);
+  assert.match(rule(desktop,'.member-head .mh-stat b'),/color:var\(--text\)/);
+  assert.match(source,/--text:#101A2B;--muted:#55637A;/);
+  assert.match(source,/--text:#EAF0F8;/);
+  assert.match(css26,/html.dark\{--muted:#a3b1c4;/);
+  for(const [ink,bgs] of [['#101A2B',['#ffffff','#eef1f5']],['#55637A',['#ffffff','#eef1f5']],['#EAF0F8',['#26374b','#192231']],['#a3b1c4',['#26374b','#192231']]]){
+    for(const bg of bgs)assert.ok(contrast(ink,bg)>=4.5,ink+' on '+bg+' meets 4.5:1');
+  }
 });

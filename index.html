@@ -12326,13 +12326,16 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
       +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><i class="ti ti-clock" aria-hidden="true"></i><b>'+openToday+'</b> due today</button>':'')
       +(finished?'<button type="button" class="myday-chip ok" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+finished+'</b> done today</button>':'')
       +((w==='dew'||w==='o')&&myNew?'<button type="button" class="myday-chip info" onclick="uxpGoto(\'#panel-'+w+' .st-rc\')"><b>'+myNew+'</b> new request'+(myNew>1?'s':'')+'</button>':'');
-    var rows='';
+    var overdueRows='',todayRows='';
     overdue.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'bad')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-alert-triangle')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'was due '+esc(fdt(x.dueDate)))+'</span></button>';
+      overdueRows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'bad')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-alert-triangle')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'was due '+esc(fdt(x.dueDate)))+'</span></button>';
     });
     dueToday.slice(0,2).forEach(function(x){
-      rows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-clock')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
+      todayRows+='<button type="button" class="myday-row '+(x.status==='done'?'done':'warn')+'" onclick="openEdit(\''+w+'\',\''+x.id+'\')"><i class="ti '+(x.status==='done'?'ti-circle-check':'ti-clock')+'"></i><span class="md-title">'+esc(x.topic||x.title||'Task')+'</span><span class="md-sub">'+(x.status==='done'?'done':'due today')+'</span></button>';
     });
+    var rows=(overdue.length||dueToday.length)?'<div class="myday-columns">'
+      +'<div class="myday-column myday-overdue"><div class="myday-label">Overdue</div>'+(overdueRows||'<div class="myday-empty">Nothing overdue</div>')+'</div>'
+      +'<div class="myday-column myday-today"><div class="myday-label">Due today</div>'+(todayRows||'<div class="myday-empty">Nothing due today</div>')+'</div></div>':'';
     evToday.slice(0,1).forEach(function(e){
       rows+='<button type="button" class="myday-row info" onclick="uxpGoto(\'#'+w+'-evhub-body\')"><i class="ti ti-confetti"></i>'+esc(e.name||'Event')+'<span class="md-sub">event today</span></button>';
     });

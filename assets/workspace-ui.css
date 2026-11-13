@@ -653,7 +653,7 @@ html.dark .task-card.tc-canceled{opacity:.88;}
 /* Small coloured labels. */
 html.dark [id$="sick-mode-label"]{color:#fb7185!important;}
 html.dark button[onclick^="confirmReset"]{color:#fda4af!important;}
-html.dark .mh-stat-soon b{color:#f6879d!important;}
+@media(max-width:980px){html.dark .mh-stat-soon b{color:#f6879d!important;}}
 html.dark #panel-overview .ov-pri{color:#a3adba!important;}
 html.dark #panel-overview .ov-pri.high{color:#f08a8a!important;}
 html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#f59e0b;}
@@ -1132,7 +1132,7 @@ html:not(.dark) .evu-amber{color:var(--st-waiting-ink,#7d5406);}
 html.dark .evu-amber{color:#fcd34d;}
 /* Due soon or today is close, not trouble: amber. Only overdue is red. */
 .mh-stat-soon i,.mh-stat-soon b{color:var(--st-waiting-ink,#7d5406);}
-html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
+@media(max-width:980px){html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}}
 .fpill .pill-dot{background:var(--st-waiting,#a97614);}
 /* A due date that is not close is just a date. */
 .task-card .task-meta .mb-date{color:var(--muted);}
@@ -1592,8 +1592,8 @@ html:not(.dark) .task-card .mb-high,
 html:not(.dark) #panel-overview .ov-pri.high{background:transparent!important;color:#34445c!important;font-weight:800;}
 html:not(.dark) .myday-chip.warn{background:#e5e7eb;border-color:transparent;}
 html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b,
-html:not(.dark) .mh-stat-soon i,html:not(.dark) .mh-stat-soon b,
 html:not(.dark) .rq-due.soon,html:not(.dark) .evc-cd.u-amber{color:#34445c!important;}
+@media(max-width:980px){html:not(.dark) .mh-stat-soon i,html:not(.dark) .mh-stat-soon b{color:#34445c!important;}}
 html:not(.dark) .cd-urgent{background:transparent!important;border:1.5px solid #003057;box-sizing:border-box;}
 html:not(.dark) .cal-day.today .cd-urgent{border-color:#fff;}
 html:not(.dark) .cal-day.sick-day,html:not(.dark) .cal-day.dayoff{background:#e5e7eb;color:#34445c;}
@@ -1659,8 +1659,9 @@ html.dark .kb-col[data-status="on-hold"]{border-top-color:var(--st-hold);}
 html.dark .kb-col[data-status="done"]{border-top-color:var(--st-done);}
 html.dark .kb-col[data-status="canceled"]{border-top-color:var(--st-cancel);}
 html.dark .task-card .mb-high,html.dark #panel-overview .ov-pri.high{background:transparent!important;color:#bdc7d5!important;}
-html.dark .myday-chip.warn,html.dark .myday-chip.warn b,html.dark .mh-stat-soon i,html.dark .mh-stat-soon b,
+html.dark .myday-chip.warn,html.dark .myday-chip.warn b,
 html.dark .rq-due.soon,html.dark .evc-cd.u-amber,html.dark .myday-row.warn i{color:#bdc7d5!important;}
+@media(max-width:980px){html.dark .mh-stat-soon i,html.dark .mh-stat-soon b{color:#bdc7d5!important;}}
 html.dark .myday-chip.warn{background:#293343;border-color:transparent;}
 html.dark .cal-day.today,html.dark #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#93b4d5!important;}
 html.dark .pin-widget .widget-title>i,html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
@@ -1807,3 +1808,23 @@ html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
     grid-template-columns:repeat(4,minmax(0,1fr));
   }
 }
+
+/* Step 101: figures beside the person and two full-width Today columns. */
+@media(min-width:981px){
+  .member-head{column-gap:14px;}
+  .member-head .member-head-stats{margin-left:10px;gap:0;flex:0 0 auto;flex-wrap:nowrap;justify-content:flex-start;}
+  .member-head .member-head-extra{margin-left:auto;}
+  .member-head .mh-stat{background:transparent;border:0;border-radius:4px;padding:4px 0;gap:6px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
+  .member-head .mh-stat+.mh-stat{margin-left:16px;padding-left:16px;border-left:1px solid var(--border);}
+  .member-head .mh-stat i{display:none;}
+  .member-head .mh-stat b{font-size:18px;font-weight:800;color:var(--text);}
+  .myday-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;width:100%;}
+  .myday-column{min-width:0;}
+  .myday-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:0 8px 7px;}
+  .myday-empty{padding:7px 8px;font-size:13px;font-weight:600;color:var(--muted);}
+  .myday-column .md-title{overflow-wrap:anywhere;}
+}
+@media(max-width:980px){
+  .myday-label,.myday-empty{display:none;}
+}
+@media(prefers-reduced-motion:reduce){.member-head button.mh-stat{transition:none;}}
