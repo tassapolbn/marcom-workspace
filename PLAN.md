@@ -3249,7 +3249,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     exception for .aws and .codex. Browser layout and contrast review remain
     with the reviewer as instructed.
 
-- [ ] **103. One set of buttons, pills, tabs and fields**
+- [x] **103. One set of buttons, pills, tabs and fields**
   - Files: `assets/workspace-ui.css`, `index.html` (where old rules must go),
     tests.
   - Change: three kinds of button (main: solid navy; second: outlined; quiet:
@@ -3262,6 +3262,26 @@ little gold, a gold ring round today's date on the calendars (decision 3).
   - Test: a rendered check lists one height and one corner per kind of
     button; every touch target on iPhone is 44px or more; keyboard focus
     shows on each.
+
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-103.md): Buttons,
+    filters, count chips, tabs and fields now share their sizes and shapes in
+    both themes. Selected tabs have an underline, keyboard focus is consistent,
+    and touch controls keep a full target. Widget row titles are smaller and
+    task cards use the shared 12px corner. Removed older rounded, gradient,
+    glow, field and selected-tab overrides, including inline sizing and saved
+    light theme action colours. Checked behaviour, contrast, touch sizes and
+    the shared styles: 736 of 737 tests pass. The only failure is the known
+    sandbox publishing check for .aws and .codex; browser review stays with
+    the reviewer as instructed.
+
+  - Reviewer's check (Claude, in a browser): buttons 36px and 30px with
+    10px corners on computers, 44px on iPhone; pills 30px; sub-tabs
+    underlined; fields 44px; zero contrast failures on all five tabs in both
+    themes at 1440 and 390. One correction made by the reviewer: on iPhone
+    the taller buttons pushed "Event Hub" onto two lines, so the title now
+    keeps one line, Timeline shows its icon only at 380px and under, and the
+    title's icon tile hides at 340px and under (three small rules at the end
+    of the step 103 block, with a test). 738 tests pass.
 
 - [ ] **104. Final check**
   - Files: `PLAN.md`, tests, before-and-after screenshots (not committed).

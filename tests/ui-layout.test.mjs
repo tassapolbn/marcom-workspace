@@ -999,7 +999,8 @@ test('the header search lists the tabs you can see, by today\'s names, and what 
 
 test('one search on every screen: the header button on iPhone, no box on the Overview',()=>{
   const phone=media(step48,'max-width:600px');
-  assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;[^}]*width:42px;height:42px;/,'the same size as the bell');
+  assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;/);
+  assert.match(stepBlock(103),/\.header-right \.cmdk-trigger\{width:var\(--hs-ctl-h\);/,'the same touch size as the theme toggle');
   assert.doesNotMatch(shell,/ov-topbar/,'the unused Overview top bar is removed');
   assert.doesNotMatch(source,/ov-search|doSearch|ovClearSearch/,'the Overview\'s own search is gone');
   assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)" aria-label="Search">/);
@@ -1012,9 +1013,9 @@ const step49=stepBlock(49);
 test('in light mode a person colour fills no large area: plain name and Event Hub bars, navy buttons',()=>{
   assert.match(stepBlock(102),/\.tab-panel \.member-head\{background:var\(--surface\);background-image:none;/);
   assert.match(stepBlock(102),/\.tab-panel \.evhub-head\{background:transparent;background-image:none;\}/);
-  assert.match(step49,/html:not\(\.dark\) :is\(#panel-boss,#panel-dew,#panel-o,#panel-junior\) \.btn-accent\{background:var\(--navy,#003057\)!important;[^}]*color:#fff!important;\}/,
+  assert.match(stepBlock(103),/\.btn-accent,[^{]+\{\s*background:var\(--hs-btn-main\);[^}]*color:#fff;/,
     'Add Task and the other primary buttons are the same navy on every tab');
-  assert.match(step49,/html:not\(\.dark\) \.tab-panel \.fpill\.act-accent\{background:var\(--navy,#003057\)!important;/,'so is the selected filter');
+  assert.match(stepBlock(103),/\.fpill:is\(\.act-navy,\.act-accent,\.act-coral\)[^{]*\{background:#003057;/,'so is the selected filter');
   assert.doesNotMatch(css26,/html:not\(\.dark\) #panel-(boss|dew|o) \.btn-accent\{background:#(366a9c|a25816|b73d0b)/,'no person-coloured button left in light mode');
   assert.ok(contrast('#ffffff','#003057')>=4.5&&contrast('#ffffff','#00264a')>=4.5,'white reads on the navy and its hover');
   assert.doesNotMatch(step49,/html\.dark/,'dark mode keeps its colours');
@@ -1060,7 +1061,8 @@ test('the row stays hidden until "⋯"; in a status column the status menu waits
   assert.match(step50,/\.task-card \.task-foot \.tc-row-sel\{display:none;\}/);
   assert.match(step50,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
   assert.match(step50,/\.kb-col \.task-card \.task-foot \.tc-row-sel\{display:inline-flex;\}/);
-  assert.match(media(step50,'max-width:600px'),/\.task-card \.tc-acts-btn\{width:40px;height:40px;\}/,'a full touch target on iPhone');
+  assert.match(stepBlock(103),/\.task-card \.tc-acts-btn\{min-width:44px;\}/,'a full touch target on iPhone');
+  assert.match(stepBlock(103),/\.task-card \.tc-acts-btn,[^{]*\{min-height:44px;/);
   assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:0;/,'"⋯" beside Details on the left');
 });
 
@@ -1802,7 +1804,7 @@ test('desktop Add Task follows the filters and Today dates follow task names',()
   const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8').split('/* Step 71:')[1];
   assert.match(css,/@media\(min-width:981px\)/);
   assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:auto;flex:0 0 auto;/);
-  assert.match(css,/background:#10243a!important;.*color:#fff!important/);
+  assert.match(stepBlock(103),/html.dark \.tab-panel \.btn-accent\{background:#10243a;color:#fff;/);
   assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
   assert.match(source,/dateLabel=new Date\(\)\.toLocaleDateString\('en-GB',\{weekday:'long',day:'numeric',month:'long',year:'numeric'\}\)/,'the shared payday line keeps the full British date');
   assert.doesNotMatch(slice('window.ovDaily=function(){','/* quick actions */'),/Good morning|Good afternoon|Good evening|ov-greet/);
@@ -1864,9 +1866,10 @@ test('step 72c quiet widget tiles and outline actions meet AA contrast',()=>{
   const block=stepBlock('72c');
   assert.match(stepBlock(102),/\.tab-panel \.widget-title>i\.ti:first-of-type/);
   assert.match(stepBlock(102),/background:var\(--hs-icon-tile-bg\);color:var\(--hs-icon-tile-ink\)/);
-  assert.match(block,/\.widget-head \.btn/);
-  assert.match(block,/\.task-card \.story-email-btn/);
-  assert.match(block,/background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important/);
+  const shared=stepBlock(103);
+  assert.match(shared,/\.widget-head \.btn/);
+  assert.match(shared,/\.btn-ghost,\.task-link,\.task-card \.tc-more/);
+  assert.match(shared,/background:var\(--surface\);border:1px solid var\(--hs-btn-line\);color:var\(--text\);font-weight:600;box-shadow:none;/);
   assert.doesNotMatch(block,/member-name|member-role|headname/);
   for(const bg of ['#ffffff','#e5e7eb','#EFF3F9']) assert.ok(contrast('#34445c',bg)>=4.5);
   assert.match(source,/class="task-link role-btn story-email-btn" onclick="openStoryEmail/);

@@ -49,6 +49,9 @@ test('phones get finger-sized buttons and no text under 11px',()=>{
   const phone=block.slice(block.indexOf('@media(max-width:640px)'));
   assert.match(phone,/\.ov-fpill[^{]*\.filter-tabs \.fpill[^{]*\{min-height:36px;\}/);
   assert.match(phone,/\.tcard-sel,\.tcard-move,\.role-btn\)\{min-height:32px;\}/);
+  const shared=css.split('/* Step 103:')[1];
+  assert.match(shared,/@media\(max-width:600px\),\(pointer:coarse\)/);
+  assert.match(shared,/select:is\(\.tcard-sel,\.tcard-move\)\{min-height:44px;/);
   assert.match(phone,/\.ev-chip>\.ev-chip-del\{width:32px;height:32px;/);
   assert.match(phone,/\.ev-chip-date,\.ev-chip-name\{padding-right:34px;\}/,'chip text leaves room for the bigger delete button');
   assert.match(phone,/:is\(\.ev-chip-date,\.meet-label,\.ov-pri[^{]*\{font-size:11px!important;\}/);

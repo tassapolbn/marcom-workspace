@@ -41,7 +41,8 @@ test('step 76 mobile polish keeps labels and Widgets visible, with quiet list li
   assert.match(css,/\.task-card \.task-topic\{text-wrap:pretty;/);
   assert.match(css,/min-height:0;height:auto;padding:3px 0/);
   assert.match(css,/\.mh-l\{position:static;width:auto;height:auto/);
-  assert.match(css,/\.sub-nav\{gap:0;padding:4px 0;overflow:visible/);
+  assert.match(css,/\.sub-nav\{\s*display:flex;flex-wrap:nowrap;justify-content:flex-start;gap:0;padding:0;[^}]*overflow-x:auto;/);
+  assert.match(css,/\.sub-nav \.sub-tab\{[^{]*?height:40px;/);
   assert.match(css,/body::after\{content:'';position:fixed;z-index:389/);
   assert.match(css,/\.ov-ann-list\{display:flex;flex-direction:column;gap:6px/);
   assert.match(slice('function openAdd(', 'function openEdit('),/getElementById\('m-topic'\)\.focus\(\{preventScroll:true\}\)/);

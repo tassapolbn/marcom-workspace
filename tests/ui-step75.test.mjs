@@ -58,6 +58,6 @@ test('Request Centre labels and quiet controls follow step 75',()=>{
   assert.equal((rc.match(/Open request form<\/button>/g)||[]).length,2);
   assert.equal((rc.match(/Copy form link<\/button>/g)||[]).length,2);
   assert.match(css,/\.tcard-move\{flex:0 0 auto;min-width:100px/);
-  assert.match(css,/\.tc-more:is\(\.open,:hover\)\{background:var\(--gray-light\);color:var\(--muted\)/);
+  assert.match(css,/\.tc-more:is\(\.open,:hover\),[^{]*\{\s*background:var\(--hs-btn-hover\);color:var\(--text\)/);
   assert.match(css,/\.fpill\[data-f="soon"\] \.pill-dot\{background:var\(--muted\)/);
 });

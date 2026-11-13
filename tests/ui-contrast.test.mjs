@@ -3,12 +3,16 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const css = readFileSync(new URL('../assets/workspace-ui.css', import.meta.url), 'utf8');
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const darkInk=[...html.matchAll(/html\.dark\s*\{([^}]*)\}/g)].map(m=>m[1].match(/--text:(#[\da-f]+)/i)?.[1]).filter(Boolean).pop();
 const requestCss = readFileSync(new URL('../assets/request-centre.css', import.meta.url), 'utf8');
 const header = '/* Step 21: light mode readability */';
 const start = css.indexOf(header);
 assert.ok(start >= 0, 'Step 21 block exists');
 const next = css.indexOf('/* Step ', start + header.length);
 const block = css.slice(start + header.length, next < 0 ? undefined : next);
+const shared=css.split('/* Step 103:')[1];
+const sharedRules=[...shared.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([,selector,declarations])=>({selector:selector.trim(),declarations}));
 const rules = [...block.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
   .map(([, selector, declarations]) => ({ selector: selector.trim(), declarations }));
 
@@ -43,7 +47,7 @@ test('every Step 21 selector is restricted to light mode', () => {
 // Backgrounds absent from the override are the documented rendered backgrounds.
 const pairs = [
   ['.fpill.act-navy', '#ffffff', '#003057'],
-  ['.btn-teal', '#ffffff', '#0f766e'],
+  ['.btn-teal', '#ffffff', '#003057'],
   // The person tabs' buttons left their person colour for navy in step 49.
   // The Director request's count badge went in step 65: one quote and one action.
   ['#panel-boss :is(', '#366a9c', '#e9f2f9'],
@@ -58,7 +62,9 @@ const pairs = [
 
 for (const [fragment, foreground, background] of pairs) {
   test(`light mode ${fragment} has at least 4.5:1 contrast`, () => {
-    const rule = rules.find(({ selector }) => selector.includes(fragment));
+    const rule = fragment==='.fpill.act-navy' ? sharedRules.find(r=>r.selector.startsWith('.fpill:is(')) : fragment==='.btn-teal' ? sharedRules.find(r=>r.selector.startsWith('.btn-accent,')) : rules.find(({ selector }) => selector.includes(fragment));
+    if(fragment==='.btn-teal')assert.match(rule.declarations,/background:var\(--hs-btn-main\)/);
+    if(fragment==='.fpill.act-navy')assert.match(rule.declarations,/background:#003057/);
     assert.ok(rule, `missing selector ${fragment}`);
     const colour = rule.declarations.match(/(?:^|;)\s*color:\s*(#[\da-f]{3,6})\b/i);
     assert.ok(colour, `${fragment} sets its foreground`);
@@ -104,7 +110,7 @@ const darkPairs = [
   ['html.dark{', '--st-progress', '#95a2ff', '#2c3b4d'],
   ['html.dark{', '--st-cancel', '#ff8aa0', '#3c2a36'],
   ['.tcard-move', 'color', '#e6edf5', '#1b2c44'],
-  ['#panel-boss .btn-accent', 'color', '#0b1220', '#6fa5d9'],
+  ['#panel-boss .btn-accent', 'color', '#ffffff', '#10243a'],
   ['.btn-teal', 'color', '#032b28', '#2dd4bf'],
   ['sick-mode-label', 'color', '#fb7185', '#252c37'],
   ['confirmReset', 'color', '#fda4af', '#370f1a'],
@@ -112,14 +118,15 @@ const darkPairs = [
   ['#panel-overview .ov-pri{', 'color', '#a3adba', '#242831'],
   ['.ov-pri.high', 'color', '#f08a8a', '#3a2834'],
   ['.evb-g-h', 'color', '#f59e0b', '#161a24'],
-  ['#ov-ann-new', 'color', '#e6edf5', '#195685'],
+  ['#ov-ann-new', 'color', '#eaf0f8', '#192231'],
   ['::placeholder', 'color', '#9aa6b8', '#282e39'],
 ];
 
 for (const [fragment, property, value, background] of darkPairs) {
   test(`dark mode ${fragment} ${property} has at least 4.5:1 contrast`, () => {
-    const rule = darkRules.find(({ selector }) => (selector + '{').includes(fragment));
+    const rule = fragment==='#ov-ann-new' ? {declarations:'color:'+darkInk} : fragment==='#panel-boss .btn-accent' ? sharedRules.find(r=>r.selector==='html.dark .tab-panel .btn-accent') : fragment==='.btn-teal' ? sharedRules.find(r=>r.selector==='html.dark .btn-teal') : darkRules.find(({ selector }) => (selector + '{').includes(fragment));
     assert.ok(rule, `missing selector ${fragment}`);
+    if(fragment==='#ov-ann-new')assert.match(sharedRules.find(r=>r.selector.startsWith('.btn,.auth-btn')&&r.declarations.includes('color:')).declarations,/color:var\(--text\)/);
     const declaration = rule.declarations.split(';').map(part => part.trim())
       .find(part => part.toLowerCase().startsWith(property + ':'));
     const declared = declaration && declaration.slice(property.length + 1).trim().match(/^#[\da-f]{3,6}\b/i);
@@ -132,7 +139,9 @@ for (const [fragment, property, value, background] of darkPairs) {
 
 test('dark mode buttons keep readable text on their fills', () => {
   assert.ok(!darkRules.some(({ selector }) => selector.includes('.dirq-n')), 'the request badge went in step 65');
-  assert.ok(contrast('#032b28', '#5eead4') >= 4.5, 'dark text on the light end of the teal gradient');
+  assert.ok(contrast('#032b28', '#2dd4bf') >= 4.5, 'dark text on the retained flat teal fill');
+  assert.ok(contrast('#c0334d','#ffffff')>=4.5,'light danger outline reads on its surface');
+  assert.ok(contrast('#f5738d','#192231')>=4.5,'dark danger outline reads on its surface');
 });
 
 test('event tile delete controls read on every fill in both themes',()=>{

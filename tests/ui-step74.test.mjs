@@ -20,7 +20,7 @@ test('step 74 shares the sidebar surface and exposes handles on touch and keyboa
   assert.match(css,/\.widget-head:focus-within \.uxp-wh-drag\{opacity:1/);
   assert.match(css,/\.widget-head>button:not\(\.uxp-wh-drag\)\{display:none/);
   assert.match(css,/\.widget-head>\.btn:last-of-type\{display:inline-flex/);
-  assert.match(css,/html.dark body[^}]*\.widget-head \.btn,[\s\S]*?background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important/);
+  assert.match(fs.readFileSync('assets/workspace-ui.css','utf8').split('/* Step 103:')[1],/\.widget-head \.btn,[\s\S]*?background:var\(--surface\);border:1px solid var\(--hs-btn-line\);color:var\(--text\);/);
 });
 test('touch reorder moves and saves a row, restores focus and cancels cleanly',()=>{
   const handlers={}, classes=new Set(); let captured=false,saved=0,focused=0,cleared=0,moved;

@@ -13,7 +13,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   color:#fff!important;border-bottom-color:#f0b323!important;background:rgba(255,255,255,.13)!important;
 }
 .tab-nav .tab-btn:not(.a-active){border-bottom-color:transparent!important;}
-.icon-btn{color:var(--muted);}
+
 .salary-dock .sal-cell-label i{color:currentColor;-webkit-text-fill-color:currentColor;}
 .salary-dock .sal-cell-sub i{color:inherit;}
 
@@ -29,7 +29,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 .two-col>*{min-width:0;}
 .stats-row{grid-template-columns:repeat(3,minmax(0,1fr));}
 .stat-box{min-width:0;}
-.sub-nav{overflow-x:auto;}
+
 .sub-tab{white-space:nowrap;}
 .member-head-text{min-width:0;overflow-wrap:anywhere;}
 .task-actions{flex-wrap:wrap;max-width:100%;}
@@ -65,8 +65,8 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .salary-dock .salary-days-big{font-size:25px;}
   .salary-dock .sal-cell:nth-of-type(5){grid-column:2;grid-row:2;}
   .salary-dock .salary-badge{font-size:10px;padding:5px 7px;}
-  .sub-nav{gap:4px;padding:5px;}
-  .sub-tab{flex:0 0 auto;min-height:42px;padding:9px 12px;}
+  .sub-nav{gap:4px;}
+
   .stats-row{gap:8px;}
   .stat-box{padding:14px 10px;flex-direction:column;align-items:flex-start;gap:8px;}
   .stat-main{flex-direction:column;align-items:flex-start;gap:4px;}
@@ -359,7 +359,7 @@ html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-mor
 /* Compact Overview cards. */
 /* Announcements: the composer opens from New. */
 #ov-ann-card .ov-card-head{gap:8px;}
-#ov-ann-card .ov-ann-new{margin-left:auto;display:inline-flex;align-items:center;gap:5px;width:auto;padding:0 10px;font-size:12px;font-weight:700;}
+#ov-ann-card .ov-ann-new{margin-left:auto;width:auto;}
 #ov-ann-card.ov-ann-closed .ov-ann-compose{display:none;}
 #panel-overview .ov-more-link{
   display:block;width:100%;margin-top:6px;padding:7px 10px;border:0;border-radius:8px;background:transparent;
@@ -538,18 +538,11 @@ html:not(.dark) body:is(.theme-overview,.theme-boss,.theme-dew,.theme-o,.theme-j
 }
 
 /* 2. Controls */
-.btn{border-radius:10px!important;font-weight:700;transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease,transform 80ms ease;}
-.btn-sm{border-radius:var(--r-sm)!important;}
-html:not(.dark) .btn-navy{background:var(--navy)!important;color:#fff!important;box-shadow:0 1px 2px rgba(0,48,87,.25),0 6px 14px -8px rgba(0,48,87,.5)!important;}
-html:not(.dark) .btn-navy:hover{background:#0A4170!important;}
-.btn-ghost{border:1px solid var(--card-border)!important;}
-html:not(.dark) .btn-ghost:hover{background:var(--gray-light)!important;}
-.form-input,.form-select,.form-textarea{
-  border-radius:var(--r-md)!important;background:var(--field)!important;border:1px solid var(--field-border)!important;
-  font-size:var(--fs-md);transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+.btn{transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease,transform 80ms ease;}
+
+.form-input,.form-select,.form-textarea{background:var(--field)!important;transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
 }
-.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--navy)!important;box-shadow:var(--ring)!important;}
-html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textarea:focus{border-color:#9bd6ff!important;}
+
 .form-label{font-size:var(--fs-xs);font-weight:700;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
 .fpill,.ov-fpill{transition:background var(--t-fast) ease,color var(--t-fast) ease,border-color var(--t-fast) ease;}
 
@@ -597,8 +590,7 @@ body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
 #ov-top .ov-ann-item:hover{transform:translateY(-1px);}
 
 /* Step 21: light mode readability */
-html:not(.dark) .fpill.act-navy{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
-html:not(.dark) .btn-teal{background:linear-gradient(135deg,#0f766e,#115e59)!important;color:#fff!important;}
+
 html:not(.dark) .kb-col .kb-col-count{background:#fff!important;}
 html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member-role i,.mh-greet){color:#366a9c!important;}
 html:not(.dark) #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#a25816!important;}
@@ -644,10 +636,9 @@ html.dark{--muted:#a3b1c4;--st-progress:#95a2ff;--st-cancel:#ff8aa0;}
 /* The Move dropdown on task cards kept light mode's navy text and arrow. */
 html.dark .tcard-move{color:#e6edf5;border-color:rgba(255,255,255,.28);background-color:rgba(255,255,255,.08);background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e6edf5' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");}
 /* Dew, O and Eye: the selected filter sits on a tint of their colour, so its text uses the light shade. */
-html.dark .tab-panel .fpill.act-accent{color:var(--accent-ondark,#fcd34d)!important;}
+
 /* Today's date and the bright buttons take dark text. */
-html.dark #panel-boss .btn-accent{color:#0b1220!important;}
-html.dark .btn-teal{background:linear-gradient(135deg,#5eead4,#2dd4bf)!important;color:#032b28!important;}
+
 /* Canceled cards fade less, so their small coloured labels stay readable. */
 html.dark .task-card.tc-canceled{opacity:.88;}
 /* Small coloured labels. */
@@ -657,7 +648,7 @@ html.dark button[onclick^="confirmReset"]{color:#fda4af!important;}
 html.dark #panel-overview .ov-pri{color:#a3adba!important;}
 html.dark #panel-overview .ov-pri.high{color:#f08a8a!important;}
 html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#f59e0b;}
-html.dark #ov-ann-new{color:#e6edf5!important;}
+
 /* Field hints. */
 html.dark body:not(.request-mode) :is(input,textarea)::placeholder{color:#9aa6b8!important;opacity:1;}
 
@@ -1104,7 +1095,7 @@ html.dark .tm-meet{color:#93c5fd;}
 /* The other actions wait in a quiet row at the foot. */
 .task-card .task-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
 .task-card .task-foot .task-acts{display:flex;align-items:center;gap:2px;margin-left:auto;}
-.task-card .task-foot .icon-btn{padding:4px;color:var(--muted);}
+
 .task-card .tc-open-hint{display:none;}
 /* Inside a status column the column already names the status: no coloured rail. */
 /* An older layer forces a 5px rail with !important, so this answers in kind. */
@@ -1229,7 +1220,7 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
 /* Step 48: one search that finds everything */
 @media(max-width:600px){
   /* The header search is one tap away on every tab, beside the bell. */
-  .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
+  .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;padding:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
   html.dark .header-right .cmdk-trigger{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.85);}
   .header-right .cmdk-trigger i{font-size:16px;}
 }
@@ -1240,10 +1231,6 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
    as a status. The name bar and the Event Hub bar are plain; primary buttons and
    the selected filter are the same navy on every tab. */
 
-html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent{background:var(--navy,#003057)!important;background-image:none!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
-html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:hover{background:#00264a!important;border-color:#00264a!important;}
-html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
-
 /* Step 50: task cards are calm at rest */
 /* At rest a card is its tick and name, one line of facts, and one bar: Details
    and "⋯" together on the left. "⋯" opens the action row under it, the same way
@@ -1251,15 +1238,15 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
    row that appeared on hover would make the cards below jump under the pointer. */
 .task-card .tc-bar{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px;}
 .task-card .tc-bar .tc-more{margin:0;}
-.task-card .tc-acts-btn{margin-left:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
-.task-card .tc-acts-btn:hover,.task-card .tc-acts-btn:focus-visible,.task-card.acts-open .tc-acts-btn{background:var(--surface-3,rgba(16,24,40,.06));color:var(--text);}
+.task-card .tc-acts-btn{margin-left:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;}
+
 .task-card:not(.acts-open) .task-foot{display:none;}
 /* The status menu sits on the facts line, except in a status column: the column
    names the status, so the menu waits in the action row. */
 .task-card .task-foot .tc-row-sel{display:none;}
 .kb-col .task-card .task-meta .tcard-sel{display:none;}
 .kb-col .task-card .task-foot .tc-row-sel{display:inline-flex;}
-@media(max-width:600px){.task-card .tc-acts-btn{width:40px;height:40px;}}
+@media(max-width:600px){}
 
 /* Step 51: the Overview, one heavy block and columns that end together */
 /* The Event Board holds the next events ("Coming up") above the shared tasks,
@@ -1570,7 +1557,7 @@ html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 @media(min-width:981px){
   .tab-panel .filter-tabs{align-items:center;}
   .tab-panel .filter-tabs .addtask-bar{margin-left:auto;flex:0 0 auto;}
-  html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;min-height:36px;padding:8px 14px;background:#10243a!important;border:1px solid #10243a!important;color:#fff!important;box-shadow:none!important;white-space:nowrap;}
+  html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;white-space:nowrap;}
   .tab-panel .myday-row .md-title{flex:0 1 auto;min-width:0;}
   .tab-panel .myday-row .md-sub{margin-left:0;flex:0 0 auto;}
 }
@@ -1615,20 +1602,7 @@ html:not(.dark) .sal-cell-label i{-webkit-text-fill-color:#4b5563;color:#4b5563;
 html:not(.dark) .salary-badge,html:not(.dark) .salary-dock .salary-badge.sb-pay,
 html:not(.dark) .meet-cd.urgent,html:not(.dark) #lunch-cfg .lc-day.on{background:#e5e7eb;color:#34445c;border-color:#4b5563;}
 
-/* Step 72c: quiet person widgets and Story email actions in light mode */
-
-html:not(.dark) .tab-panel .side-col .widget-head .btn,
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"],
-html:not(.dark) .task-card .story-email-btn{
-  color:#34445c!important;background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important;
-}
-html:not(.dark) .tab-panel .side-col .widget-head .btn:hover,
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"]:hover,
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]:hover,
-html:not(.dark) .task-card .story-email-btn:hover{
-  color:#34445c!important;background:#e5e7eb!important;filter:none;
-}
+/* Step 72c: widget icons now use step 102; outline actions use step 103. */
 
 /* Step 73: dark mode keeps the light mode colour meanings */
 html.dark{--st-pending:#a3b1c4;--st-progress:#93b4f5;--st-waiting:#f0b86e;--st-hold:#c0a5f0;--st-done:#86d9a0;--st-cancel:#fda4a4;--st-overdue:#fda4a4;--st-archived:#a3b1c4;}
@@ -1642,8 +1616,7 @@ html.dark .tab-nav .tab-btn#tab-dew:not(.a-active){color:#e8ad80!important;}
 html.dark .tab-nav .tab-btn#tab-o:not(.a-active){color:#f4a080!important;}
 html.dark .tab-nav .tab-btn#tab-junior:not(.a-active){color:#8ad4a4!important;}
 /* Extra specificity keeps saved person colours on identities, away from actions. */
-html.dark body :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent,
-html.dark body .tab-panel .filter-tabs .fpill:is(.act-accent,.act-navy){background:#10243a!important;border-color:#647e9a!important;color:#fff!important;box-shadow:none!important;}
+
 html.dark .kb-col[data-status="pending"]{border-top-color:var(--st-pending);}
 html.dark .kb-col[data-status="in-progress"]{border-top-color:var(--st-progress);}
 html.dark .kb-col[data-status="waiting"]{border-top-color:var(--st-waiting);}
@@ -1700,14 +1673,11 @@ html body .tab-panel .side-col .uxp-wh-drag{display:inline-flex;opacity:1;touch-
 }
 html body .tab-panel .side-col>.widget.uxp-drop-above{border-top:2px solid var(--focus-ink)!important;}
 html body .tab-panel .side-col>.widget.uxp-drop-below{border-bottom:2px solid var(--focus-ink)!important;}
-html.dark body .tab-panel .side-col .widget-head .btn,
-html.dark body .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
-html.dark body .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]{background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important;box-shadow:none!important;}
-html.dark body .tab-panel .side-col .widget-head .btn:hover{background:#293343!important;filter:none;}
+
 
 /* Step 75: quiet card controls and fewer repeated signals. */
 html body .task-card .tcard-move{flex:0 0 auto;min-width:100px;width:auto;max-width:150px;}
-html body .task-card .tc-more:is(.open,:hover){background:var(--gray-light);color:var(--muted);border-color:var(--border);box-shadow:none;}
+
 html body .fpill[data-f="soon"] .pill-dot{background:var(--muted);}
 #ov-rc-card .ov-rc-btns{flex-wrap:wrap;}
 #ov-rc-card .ov-rc-btns>.btn{min-width:max-content;}
@@ -1728,9 +1698,9 @@ html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .o
   .member-head .mh-stat+.mh-stat::before{content:'·';margin:0 7px;color:var(--muted);}
   .member-head .mh-stat i{display:none;}
   .member-head .mh-stat .mh-l{position:static;width:auto;height:auto;margin:0;padding:0;overflow:visible;clip:auto;white-space:nowrap;}
-  .tab-panel .sub-nav{gap:0;padding:4px 0;overflow:visible;justify-content:space-between;}
+  .tab-panel .sub-nav{gap:0;}
   .tab-panel .sub-nav::after{content:none;}
-  .tab-panel .sub-nav :is(.sub-tab,.uxp-drawer-btn){font-size:10px;padding:7px 4px;gap:2px;margin:0;min-width:0;}
+  .tab-panel .sub-nav :is(.sub-tab,.uxp-drawer-btn){margin:0;min-width:0;}
   .tab-panel .sub-nav .sub-tab i,.tab-panel .sub-nav .uxp-drawer-btn i{display:none;}
   body::after{content:'';position:fixed;z-index:389;left:0;right:0;bottom:0;height:115px;pointer-events:none;
     background:linear-gradient(transparent,var(--bg) 65%);}
@@ -1910,3 +1880,136 @@ body.uxp-sb-collapsed .uxp-sb-head{padding:0;}
 }
 .cal-day.today.sel,#panel-overview .ov-cal-grid .cal-day.today.sel{outline:0;}
 .cal-grid,#panel-overview .ov-cal-grid{overflow:visible;padding:4px;gap:8px;}
+
+/* Step 103: shared buttons, pills, sub-tabs, fields and keyboard focus. */
+:root{ --hs-ctl-h:36px; --hs-ctl-h-sm:30px; --hs-ctl-radius:10px; --hs-pill-h:30px; --hs-field-h:44px;
+  --hs-btn-main:#003057; --hs-btn-main-hover:#0b3f6b; --hs-btn-line:#cfd8e3; --hs-btn-hover:rgba(0,48,87,.06);
+  --hs-focus:0 0 0 3px rgba(0,48,87,.18); }
+html.dark{ --hs-btn-line:rgba(255,255,255,.18); --hs-btn-hover:rgba(255,255,255,.08); --hs-focus:0 0 0 3px rgba(143,180,220,.35); }
+@media(max-width:600px),(pointer:coarse){ :root{ --hs-ctl-h:44px; --hs-ctl-h-sm:40px; } }
+
+.btn,.auth-btn,.task-link,.icon-btn:not(.tc-sheet-btn),.uxp-col-btn,.task-card .tc-acts-btn,.task-card .tc-more,
+.gcal-refresh,.cal-arrow,#panel-overview .ov-mini-btn,.evhub-btn{display:inline-flex;}
+.btn,.auth-btn,.task-link,.icon-btn,.uxp-col-btn,.task-card .tc-acts-btn,.task-card .tc-more,
+.gcal-refresh,.cal-arrow,#panel-overview .ov-mini-btn,.evhub-btn{
+  align-items:center;justify-content:center;gap:6px;height:var(--hs-ctl-h);min-height:0;
+  padding:0 14px;border-radius:var(--hs-ctl-radius);font-size:13.5px;line-height:1;white-space:nowrap;
+  border:1px solid var(--hs-btn-line);background:var(--surface);color:var(--text);font-weight:600;box-shadow:none;
+}
+.btn-sm,.task-card .tc-more,.task-card .tc-acts-btn{
+  height:var(--hs-ctl-h-sm);padding:0 11px;font-size:13px;
+}
+.btn i,.auth-btn i,.task-link i,.icon-btn i,.uxp-col-btn i,.tc-acts-btn i,.tc-more i,
+.gcal-refresh i,.cal-arrow i,#panel-overview .ov-mini-btn i,.evhub-btn i{font-size:16px;}
+.btn-accent,.btn-navy,.btn-coral,.btn-teal,.btn-gold,.auth-btn{
+  background:var(--hs-btn-main);background-image:none;border-color:transparent;color:#fff;font-weight:700;box-shadow:none;
+}
+.btn-accent:hover,.btn-navy:hover,.btn-coral:hover,.btn-teal:hover,.btn-gold:hover,.auth-btn:hover{
+  background:var(--hs-btn-main-hover);box-shadow:none;filter:none;
+}
+/* Retain the current dark fills, with a flat finish. */
+html.dark .btn-accent{background:var(--accent);color:var(--accent-on,#fff);}
+html.dark .btn-navy,html.dark .btn-gold{background:#f0b323;color:#0b1220;}
+html.dark .btn-coral{background:var(--coral);}
+html.dark .btn-teal{background:#2dd4bf;color:#032b28;}
+html.dark .tab-panel .btn-accent{background:#10243a;color:#fff;}
+html.dark :is(.btn-accent,.btn-navy,.btn-coral,.btn-teal,.btn-gold):hover{filter:brightness(1.08);}
+.btn-ghost,.task-link,.task-card .tc-more,.tab-panel .side-col .widget-head .btn,
+.tab-panel .sick-widget button[onclick^="addSickDay"]{
+  background:var(--surface);border:1px solid var(--hs-btn-line);color:var(--text);font-weight:600;box-shadow:none;
+}
+.btn-ghost:hover,.task-link:hover,.task-card .tc-more:is(.open,:hover),#panel-overview .ov-ann-new:hover,.evhub-btn:not(.icon-only):hover,
+.tab-panel .side-col .widget-head .btn:hover,.tab-panel .sick-widget button[onclick^="addSickDay"]:hover{
+  background:var(--hs-btn-hover);color:var(--text);filter:none;
+}
+.icon-btn,.uxp-col-btn,.task-card .tc-acts-btn,.gcal-refresh,.cal-arrow,
+#panel-overview .ov-mini-btn:not(.ov-ann-new),.evhub-btn.icon-only{
+  width:var(--hs-ctl-h);min-width:var(--hs-ctl-h);padding:0;border:0;background:transparent;color:var(--muted);
+}
+.task-card .tc-acts-btn{width:var(--hs-ctl-h-sm);min-width:var(--hs-ctl-h-sm);}
+.icon-btn:hover,.uxp-col-btn:hover,.task-card .tc-acts-btn:hover,.task-card.acts-open .tc-acts-btn,
+.gcal-refresh:hover,.cal-arrow:hover,#panel-overview .ov-mini-btn:not(.ov-ann-new):hover,.evhub-btn.icon-only:hover{
+  background:var(--hs-btn-hover);color:var(--text);
+}
+.btn-danger,.uxp-btn-danger{background:var(--surface);color:var(--danger);border:1px solid var(--danger);font-weight:600;}
+.btn-danger:hover,.uxp-btn-danger:hover{background:var(--hs-btn-hover);color:var(--danger);}
+.dm-toggle,.cmdk-trigger{height:var(--hs-ctl-h);min-height:0;border-radius:var(--hs-ctl-radius);}
+.dm-toggle{width:var(--hs-ctl-h);min-width:var(--hs-ctl-h);}
+@media(max-width:600px){.header-right .cmdk-trigger{width:var(--hs-ctl-h);}}
+button:disabled,.btn.disabled,[aria-disabled="true"]{opacity:.5;pointer-events:none;cursor:not-allowed;}
+
+.fpill,#panel-overview .ov-fpill{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--hs-pill-h);padding:0 12px;
+  border-radius:999px;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;
+  background:var(--surface);border:1px solid var(--hs-btn-line);color:var(--muted);box-shadow:none;
+}
+.fpill:hover,#panel-overview .ov-fpill:hover{background:var(--hs-btn-hover);color:var(--text);}
+.fpill:is(.act-navy,.act-accent,.act-coral),#panel-overview .ov-fpill.on{background:#003057;border-color:#003057;color:#fff;box-shadow:none;}
+html.dark .fpill:is(.act-navy,.act-accent,.act-coral),html.dark #panel-overview .ov-fpill.on{
+  background:#10243a;border-color:#647e9a;color:#fff;
+}
+.kb-col-count,#panel-overview .ov-dl-count,.sub-tab :is(.badge,.count),.wf-count,.widget :is(.count,.widget-count){
+  display:inline-flex;align-items:center;justify-content:center;height:22px;min-width:22px;padding:0 6px;
+  border-radius:999px;font-size:12px;font-weight:700;line-height:1;
+}
+
+.tab-panel .sub-nav{
+  display:flex;flex-wrap:nowrap;justify-content:flex-start;gap:0;padding:0;background:transparent;
+  border:0;border-bottom:1px solid var(--border);border-radius:0;box-shadow:none;overflow-x:auto;
+}
+.tab-panel .sub-nav .uxp-drawer-btn{height:40px;padding:0 14px;font-size:13.5px;border-radius:0;}
+.tab-panel .sub-nav .sub-tab{
+  position:relative;flex:0 0 auto;height:40px;min-height:0;padding:0 14px;font-size:13.5px;font-weight:600;
+  color:var(--muted);background:transparent;border:0;border-radius:0;box-shadow:none;white-space:nowrap;
+}
+.tab-panel .sub-nav .sub-tab:hover{color:var(--text);}
+.tab-panel .sub-nav .sub-tab.act{color:#003057;background:transparent;font-weight:700;box-shadow:none;}
+.tab-panel .sub-nav .sub-tab.act::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:#003057;
+}
+html.dark .tab-panel .sub-nav .sub-tab.act{color:#cfe0f5;}
+html.dark .tab-panel .sub-nav .sub-tab.act::after{background:#8fb4dc;}
+
+html body :is(.form-input,.form-select,.form-textarea,select,.auth-field input,.notes-search,.trq-input,.tc-gif-input,.gcal-url-input,.co-time-input),
+html body :is(.modal,.uxp-modal,.widget,[role="dialog"]) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+html body textarea{
+  height:var(--hs-field-h);border-radius:var(--hs-ctl-radius);border:1px solid var(--hs-btn-line);font-size:14px;padding:0 12px;
+}
+html body :is(textarea,.form-textarea){height:auto;min-height:88px;padding:10px 12px;}
+html body .notes-search{padding-left:37px;}
+html body :is(.form-input,.form-select,.form-textarea,select,.auth-field input,.notes-search,.trq-input,.tc-gif-input,.gcal-url-input,.co-time-input):focus,
+html body :is(.modal,.uxp-modal,.widget,[role="dialog"]) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):focus,
+html body textarea:focus{border-color:#003057;box-shadow:var(--hs-focus);outline:none;}
+/* Status, design and Move to menus retain their colours and arrow icons. */
+html body select:is(.tcard-sel,.tcard-move){
+  height:var(--hs-ctl-h-sm);min-height:0;padding:0 24px 0 11px;font-size:13px;line-height:1;border-radius:var(--hs-ctl-radius);
+}
+html body select:is(.tcard-sel,.tcard-move):focus{box-shadow:none;}
+html body .app-header :is(.dm-toggle,.cmdk-trigger):focus-visible,
+html body :is(button,a,[tabindex],.fpill,.ov-fpill,.sub-tab,.task-card,.ev-chip,select.tcard-sel,select.tcard-move):focus-visible{
+  outline:2px solid var(--focus-ink,#1d4ed8);outline-offset:2px;
+}
+.tab-panel .side-col .widget-title{font-size:14.5px;font-weight:700;}
+@media(max-width:600px),(pointer:coarse){
+  /* Compact controls keep a full touch target; desktop pills never shrink a phone target. */
+  .btn,.auth-btn,.task-link,.icon-btn,.uxp-col-btn,.task-card .tc-more,.task-card .tc-acts-btn,
+  .gcal-refresh,.cal-arrow,#panel-overview .ov-mini-btn,.evhub-btn,
+  html body select:is(.tcard-sel,.tcard-move){min-height:44px;}
+  .task-card .tc-acts-btn{min-width:44px;}
+  .fpill,#panel-overview .ov-fpill{height:44px;min-height:44px;}
+  .tab-panel .sub-nav .sub-tab,.tab-panel .sub-nav .uxp-drawer-btn{height:44px;min-height:44px;}
+}
+@media(max-width:600px){
+  /* The Event Hub title stays on one line beside its three 44px buttons on iPhone. */
+  .tab-panel .evhub-title{white-space:nowrap;flex:0 0 auto;}
+  .tab-panel .evhub-tools{gap:4px;flex:0 0 auto;}
+  .tab-panel .evhub-btn.eh-tl-btn{padding:0 10px;}
+}
+@media(max-width:380px){
+  /* Narrow iPhones: Timeline shows its icon only; the word stays in the button for screen readers. */
+  .tab-panel .evhub-btn.eh-tl-btn{width:44px;padding:0;gap:0;font-size:0;}
+  .tab-panel .evhub-btn.eh-tl-btn i{font-size:16px;}
+}
+@media(max-width:340px){
+  .tab-panel .evhub-title>i.ti:first-child{display:none;}
+}

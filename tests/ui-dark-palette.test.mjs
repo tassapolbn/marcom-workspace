@@ -25,7 +25,7 @@ test('Dew keeps a brown hue and primary actions stay navy with custom colours',(
  const [r,g,b]=accent.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16));
  const hue=60*(g-b)/(r-b);
  assert.ok(hue>=15&&hue<35,`orange-brown hue ${hue}`);
- assert.match(block,/filter-tabs \.fpill:is\(\.act-accent,\.act-navy\)\{background:#10243a!important/);
+ assert.match(css.split('/* Step 103:')[1],/html.dark \.fpill:is\(\.act-navy,\.act-accent,\.act-coral\)[^{]*\{\s*background:#10243a;[^}]*color:#fff;/);
  assert.match(html,/css\+='html.dark body.theme-'\+w\+.*background:#10243a!important/);
 });
 test('dark event task groups and day agendas are flat; today has the approved gold ring',()=>{
