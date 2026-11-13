@@ -3128,7 +3128,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     700 pass, with only the documented ui-netlify sandbox exception for
     .aws and .codex. Browser measurements remain with the reviewer as instructed.
 
-- [ ] **99. One look for events**
+- [x] **99. One look for events**
   - Files: `index.html` (the Event Hub tiles and the Overview's Coming up),
     `assets/workspace-ui.css`, tests.
   - Change: every event tile is drawn the same way and the same size: filled
@@ -3141,6 +3141,21 @@ little gold, a gold ring round today's date on the calendars (decision 3).
   - Test: every tile has the same height and parts at 1440 and 390; the text
     of every demo event reads at 4.5:1 or better in both themes; on iPhone
     the Event Hub is one row.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-99.md): Event Hub
+    and Coming up now share filled tiles with the date, event name and time
+    left. Events without a saved text colour choose readable white or dark
+    text; events without a valid colour use navy and white. Both themes keep
+    the same colours. iPhone shows one row that scrolls inside its card, with
+    a soft hint at the right edge, bringing the tasks closer. Tiles open by
+    keyboard as well as by click; event navigation, deletion and folded past
+    events remain available. Removed the old unfilled styles, coloured top
+    lines, dark colour overrides, single-event line layout, two-column phone
+    grid and loose Coming up rows. Checked contrast calculations, shared tile
+    parts, event order and the next eight, Today and Tomorrow wording, click
+    fallbacks, keyboard behaviour and responsive CSS. Ran npm run test:ui and
+    checked individual results: 701 of 702 pass, with only the documented
+    ui-netlify sandbox exception for .aws and .codex. Browser measurements
+    remain with the reviewer as instructed.
 
 - [ ] **100. The task board in two tidy rows (computers)**
   - Files: `assets/workspace-ui.css` (`index.html` only if the board's markup

@@ -276,12 +276,17 @@ test('Coming up tries the event group and falls back to the person only without 
   const el = {innerHTML: ''};
   const calls = [];
   const c = vm.createContext({document: {getElementById: () => el}, MORDER: ['boss'],
-    eOf: () => [{name: 'School Open Day', date: '2026-11-02'}], dU: () => 4,
-    esc: escapeHTML, fdt: d => d, evTextAttrs: () => '', evDeleteButtonHTML: () => '',
+    eOf: () => [{name: 'School Open Day', date: '2099-11-02'}], dU: () => 4,
+    escHtml: escapeHTML, fmtDate: d => d, evDeleteButtonHTML: () => '',
     MarcomUI: {setHTML: (node, html) => {node.innerHTML = html;}},
     evbShowEvent: name => {calls.push(name); return true;}, ovGoto: who => calls.push(who)});
   c.window = c;
-  vm.runInContext(countdown+';renderCountdown();', c);
+  const tiles=page.slice(page.indexOf('function evTileColours('),page.indexOf('function evHubHTML('));
+  const colours=page.slice(page.indexOf('function evOkClr('),page.indexOf('const EV_TEXT_COLORS'));
+  const time=page.slice(page.indexOf('function evCountdown('),page.indexOf('function evSorted('));
+  vm.runInContext(time+colours+tiles+countdown+';renderCountdown();', c);
+  assert.match(el.innerHTML,/class="ev-grid"/);
+  assert.match(el.innerHTML,/class="ev-chip ev-chip-filled"/);
   const handler = decode(el.innerHTML.match(/onclick="([^"]+)"/)[1]);
   vm.runInContext(handler, c);
   assert.deepEqual(calls, ['School Open Day']);

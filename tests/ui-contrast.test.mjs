@@ -109,7 +109,6 @@ const darkPairs = [
   ['sick-mode-label', 'color', '#fb7185', '#252c37'],
   ['confirmReset', 'color', '#fda4af', '#370f1a'],
   ['.mh-stat-soon b', 'color', '#f6879d', '#3f3a31'],
-  ['.ov-cdn-tag', 'color', '#fbbf24', '#2c2208'],
   ['#panel-overview .ov-pri{', 'color', '#a3adba', '#242831'],
   ['.ov-pri.high', 'color', '#f08a8a', '#3a2834'],
   ['.evb-g-h', 'color', '#f59e0b', '#161a24'],
@@ -134,4 +133,11 @@ for (const [fragment, property, value, background] of darkPairs) {
 test('dark mode buttons keep readable text on their fills', () => {
   assert.ok(!darkRules.some(({ selector }) => selector.includes('.dirq-n')), 'the request badge went in step 65');
   assert.ok(contrast('#032b28', '#5eead4') >= 4.5, 'dark text on the light end of the teal gradient');
+});
+
+test('event tile delete controls read on every fill in both themes',()=>{
+  const step99=css.slice(css.indexOf('/* Step 99:'));
+  assert.match(step99,/\.ev-chip-filled \.ev-chip-del\{background:#ffffff;color:#16202e;border:0;\}/);
+  assert.match(step99,/\.ev-chip-filled \.ev-chip-del:hover\{background:#16202e;color:#ffffff;\}/);
+  assert.ok(contrast('#16202e','#ffffff')>=4.5);
 });

@@ -687,16 +687,11 @@ html.dark .cob-close{background:rgba(255,255,255,0.08);}
 .ev-tl-cd{font-size:11.5px;font-weight:700;margin-top:1px;}
 .ev-skel{height:62px;border-radius:12px;margin-bottom:8px;background:linear-gradient(90deg,var(--gray-light) 25%,var(--border) 37%,var(--gray-light) 63%);background-size:400% 100%;animation:skel 1.3s ease infinite;}
 .ev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
-.ev-chip{border:1px solid var(--border);border-top:3px solid var(--gray-mid);border-radius:12px;padding:10px 11px;cursor:pointer;transition:transform .12s,box-shadow .15s;min-height:90px;display:flex;flex-direction:column;background:var(--surface);}
+.ev-chip{padding:10px 11px;cursor:pointer;transition:transform .12s,box-shadow .15s;min-height:90px;display:flex;flex-direction:column;}
 .ev-chip:hover{transform:translateY(-2px);box-shadow:0 9px 22px -12px rgba(31,58,95,0.35);}
 .ev-chip-date{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
 .ev-chip-name{font-size:12.5px;font-weight:700;line-height:1.3;margin-top:4px;flex:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .ev-chip-cd{font-size:11.5px;font-weight:800;margin-top:7px;}
-.evt-green{border-top-color:var(--green);}
-.evt-amber{border-top-color:var(--amber);}
-.evt-red{border-top-color:var(--danger);}
-.evt-grey{border-top-color:var(--gray-mid);}
-@media(max-width:480px){.ev-grid{grid-template-columns:repeat(2,1fr);}}
 
 /* ===== WEATHER ===== */
 .wx-widget{border-left:3px solid #2563eb;}
@@ -4415,30 +4410,42 @@ function evShort(ms){
   return Math.max(1,Math.floor(ms/60000))+' min';
 }
 function evSorted(who){return [...eventsOf(who)].sort((a,b)=>new Date(a.date+'T'+(a.time||'23:59'))-new Date(b.date+'T'+(b.time||'23:59')));}
+/* Step 99: one filled tile in both event lists, with readable text in either theme. */
+function evTileColours(ev){
+  if(!evOkClr(ev.color))return {fill:'#003057',text:'#ffffff'};
+  var text=evOkClr(ev.textColor)?ev.textColor:'';
+  if(!text){
+    function lum(hex){
+      var rgb=[1,3,5].map(function(i){var v=parseInt(hex.slice(i,i+2),16)/255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+      return 0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2];
+    }
+    function contrast(ink){var a=lum(ev.color),b=lum(ink);return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);}
+    var white=contrast('#ffffff'),dark=contrast('#16202e');
+    text=white>=4.5?'#ffffff':dark>=4.5?'#16202e':white>=dark?'#ffffff':'#16202e';
+  }
+  return {fill:evFill(ev.color,text),text:text};
+}
+function evTileKey(e){
+  if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.currentTarget.click();}
+}
+function evTileHTML(ev,who,options){
+  options=options||{};
+  var cd=evCountdown(ev),colours=evTileColours(ev);
+  var action=options.action||('evChipClick('+JSON.stringify(ev.id)+','+JSON.stringify(who)+')');
+  var label=options.days===undefined?evShort(cd.ms):options.days===0?'Today':options.days===1?'Tomorrow':options.days+' days';
+  var ink=' style="color:'+colours.text+';"';
+  return '<div class="ev-chip ev-chip-filled'+(cd.ms<0?' ev-chip-past':'')+'" style="background:'+colours.fill+';color:'+colours.text+';" role="button" tabindex="0" onkeydown="evTileKey(event)" onclick="'+escHtml(action)+'">'
+    +'<div class="ev-chip-date"'+ink+'>'+escHtml(evChipDate(ev))+'</div>'
+    +'<div class="ev-chip-name"'+ink+'>'+escHtml(ev.name||'Untitled')+'</div>'
+    +'<div class="ev-chip-cd"'+ink+'>'+label+'</div>'
+    +evDeleteButtonHTML(ev,who)+'</div>';
+}
 function evHubHTML(evs,who){
   var upcoming=[],past=[];
   evs.forEach(function(ev){(evCountdown(ev).ms<0?past:upcoming).push(ev);});
   upcoming.sort(function(a,b){return evCountdown(a).ms-evCountdown(b).ms;});
   past.sort(function(a,b){return evCountdown(b).ms-evCountdown(a).ms;});
-  function chips(items,isPast){
-    var html='';
-    items.forEach(function(ev){
-      var cd=evCountdown(ev),u=evUrgency(cd.ms);
-      var clr=evOkClr(ev.color)?ev.color:'',tc=(clr&&evOkClr(ev.textColor))?ev.textColor:'';
-      var chipStyle='';
-      /* Step 59: a filled tile is the event's colour edge to edge; the fade it had
-         towards the bottom dropped its lower text below 4.5:1. */
-      if(clr)chipStyle=tc?('border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'):('border-top-color:'+clr+';background:linear-gradient(180deg,'+evTint(clr,0.08)+',var(--surface) 60%);');
-      /* ev-chip-filled: the event has its own text colour, so it is a coloured
-         tile in every theme; its text is chosen for that fill (step 44). */
-      html+='<div class="ev-chip evt-'+u+(tc?' ev-chip-filled':'')+(isPast?' ev-chip-past':'')+'"'+(chipStyle?' style="'+chipStyle+'"':'')+' onclick="evChipClick('+escHtml(JSON.stringify(ev.id))+','+escHtml(JSON.stringify(who))+')">'
-        +'<div class="ev-chip-date"'+(tc?' style="color:'+tc+';"':'')+'>'+evChipDate(ev)+'</div>'
-        +'<div class="ev-chip-name"'+(tc?' style="color:'+tc+';"':'')+'>'+escHtml(ev.name||'Untitled')+'</div>'
-        +'<div class="ev-chip-cd evu-'+u+'"'+(tc?' style="color:'+tc+';"':'')+'>'+evShort(cd.ms)+'</div>'
-        +evDeleteButtonHTML(ev,who)+'</div>';
-    });
-    return html;
-  }
+  function chips(items){return items.map(function(ev){return evTileHTML(ev,who);}).join('');}
   var html='';
   if(evTimelineMode){
     html='<div class="ev-timeline">';
@@ -4453,11 +4460,11 @@ function evHubHTML(evs,who){
     });
     html+='</div>';
   }else{
-    html='<div class="ev-grid">'+chips(upcoming,false)+'</div>';
+    html='<div class="ev-grid-wrap"><div class="ev-grid">'+chips(upcoming)+'</div></div>';
   }
   if(past.length){
     html+='<button type="button" class="ev-past-toggle" aria-expanded="'+!!evPastOpen[who]+'" onclick="toggleEvPast('+escHtml(JSON.stringify(who))+',this)">Past events ('+past.length+') <i class="ti ti-chevron-down"></i></button>'
-      +'<div class="ev-past'+(evPastOpen[who]?'':' ev-past-closed')+'">'+chips(past,true)
+      +'<div class="ev-past'+(evPastOpen[who]?'':' ev-past-closed')+'"><div class="ev-grid-wrap"><div class="ev-grid">'+chips(past)+'</div></div>'
       +'<button type="button" class="ev-past-clear" onclick="clearPastEvents('+escHtml(JSON.stringify(who))+')">Clear past events</button></div>';
   }
   return html;
@@ -4954,25 +4961,6 @@ html.dark #panel-overview .ov-st-ok{color:#5fcf85;}
 #panel-overview .ov-pri{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--gray-light);color:var(--muted);flex-shrink:0;}
 #panel-overview .ov-pri.high{background:var(--danger-light);color:var(--danger);}
 #panel-overview .ov-pri.low{background:var(--blue-light);color:var(--blue);}
-
-/* countdown */
-#panel-overview .ov-cdn{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:background .12s;}
-#panel-overview .ov-cdn:last-child{margin-bottom:0;}
-#panel-overview .ov-cdn:hover{background:var(--gray-light);}
-#panel-overview .ov-cdn.urg{border-color:rgba(220,38,38,.35);}
-#panel-overview .ov-cdn.soon{border-color:rgba(230,164,23,.4);}
-#panel-overview .ov-cdn-d{width:46px;text-align:center;flex-shrink:0;}
-#panel-overview .ov-cdn-n{font-size:22px;font-weight:800;line-height:1;letter-spacing:-1px;color:var(--navy);}
-html.dark #panel-overview .ov-cdn-n{color:#8fb4dc;}
-#panel-overview .ov-cdn.urg .ov-cdn-n{color:var(--danger);}
-#panel-overview .ov-cdn-u{font-size:10px;color:var(--muted);margin-top:2px;}
-#panel-overview .ov-cdn-b{flex:1;min-width:0;}
-#panel-overview .ov-cdn-name{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#panel-overview .ov-cdn-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-#panel-overview .ov-cdn-tag{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--navy-light);color:var(--navy);flex-shrink:0;}
-#panel-overview .ov-cdn.urg .ov-cdn-tag{background:var(--danger-light);color:var(--danger);}
-#panel-overview .ov-cdn.soon .ov-cdn-tag{background:var(--gold-light);color:#92400e;}
-html.dark #panel-overview .ov-cdn-tag{color:#8fb4dc;}
 
 /* activity */
 #panel-overview .ov-act{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
@@ -5505,14 +5493,10 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
     MORDER.forEach(function(w){ eOf(w).forEach(function(e){ if(e.date){ var d=dU(e.date); if(d!==null&&d>=0)arr.push({w:w,e:e,d:d}); } }); });
     arr.sort(function(a,b){ return a.d-b.d; });
     if(!arr.length){ MarcomUI.setHTML(el,'<div class="ov-empty-sm">No upcoming events.</div>'); return; }
-    MarcomUI.setHTML(el,arr.slice(0,8).map(function(it){
-      /* Step 64: the big number says how many days; a word only where it adds one. */
-      var lbl=it.d===0?'Today':(it.d===1?'Tomorrow':'');
-      var urg=it.d<=7?' soon':'';
-      return '<div class="ov-cdn'+urg+'" onclick="if(!window.evbShowEvent||!evbShowEvent('+esc(JSON.stringify(it.e.name||''))+'))ovGoto(\''+it.w+'\')"><div class="ov-cdn-d"><div'+evTextAttrs('ov-cdn-n',it.e.color)+'>'+it.d+'</div><div class="ov-cdn-u">'+(it.d===1?'day':'days')+'</div></div>'
-        +'<div class="ov-cdn-b"><div class="ov-cdn-name">'+esc(it.e.name||'Event')+'</div><div class="ov-cdn-sub">'+fdt(it.e.date)+'</div></div>'
-        +(lbl?'<div class="ov-cdn-tag">'+lbl+'</div>':'')+evDeleteButtonHTML(it.e,'boss')+'</div>';
-    }).join(''));
+    MarcomUI.setHTML(el,'<div class="ev-grid-wrap"><div class="ev-grid">'+arr.slice(0,8).map(function(it){
+      var action='if(!window.evbShowEvent||!evbShowEvent('+JSON.stringify(it.e.name||'')+'))ovGoto('+JSON.stringify(it.w)+')';
+      return evTileHTML(it.e,'boss',{action:action,days:it.d});
+    }).join('')+'</div></div>');
   }
 
   /* ---------- recent activity (real timestamps only) ---------- */
@@ -5756,7 +5740,6 @@ html.dark #panel-overview .ov-st-leave,html.dark #panel-overview .ov-lv-pill.lie
 html.dark #panel-overview .ov-st-sick,html.dark #panel-overview .ov-lv-pill.sick{color:#e84f70 !important;}
 html.dark #panel-overview .ov-pri.high{color:#e45858 !important;}
 html.dark #panel-overview .ov-pri.low{color:#6d96f2 !important;}
-html.dark #panel-overview .ov-cdn-tag.soon{color:#b67f5e !important;}
 html:not(.dark){--muted:#667182;}
 body.theme-dew{--accent-ink:#b16018;}
 html.dark body.theme-dew{--accent-ondark:#e07a1f;}

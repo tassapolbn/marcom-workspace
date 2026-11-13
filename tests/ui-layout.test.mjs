@@ -261,9 +261,9 @@ test('Team Announcements reads like every other card',()=>{
   assert.match(step28,/\.ov-ann>\.ov-card-head \.ov-card-title\{color:var\(--text\);font-size:14px;font-weight:700;/);
 });
 
-test('event chips have room for their names, and phones keep two columns',()=>{
+test('event chips have room for their names on computers',()=>{
   assert.match(step28,/@media\(min-width:481px\)\{\.ev-grid\{grid-template-columns:repeat\(auto-fill,minmax\(176px,1fr\)\);\}\}/);
-  assert.match(source,/@media\(max-width:480px\)\{\.ev-grid\{grid-template-columns:repeat\(2,1fr\);\}\}/,'the phone grid is unchanged');
+  assert.doesNotMatch(source,/@media\(max-width:480px\)\{\.ev-grid/,'Step 99 replaces the two-column phone grid');
 });
 
 /* ===== Step 29 (the triage tiles) was undone by Step 37: the tiles are gone. ===== */
@@ -338,20 +338,16 @@ test('kanban counts are written in ink, and body text is at least 13px',()=>{
 const step32=stepBlock(32);
 
 test('boxes inside a card become rows separated by hairlines',()=>{
-  /* The countdown rows follow their list wherever it sits (step 51: inside the Event Board). */
-  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) \.ov-countdown \.ov-cdn\{([^}]*)\}/);
-  assert.ok(rows,'Upcoming Deadlines, Event Board and countdown rows share one rule');
+  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g\{([^}]*)\}/);
+  assert.ok(rows,'Upcoming Deadlines and Event Board rows share one rule');
   for(const want of [/border:0!important/,/border-radius:0!important/,/box-shadow:none!important/,/border-top:1px solid var\(--border\)!important/])
     assert.match(rows[1],want);
-  assert.match(step32,/\.ov-cdn:first-of-type\{border-top-color:transparent!important;\}/,'no hairline above the first row');
+  assert.match(step32,/\.evb-g:first-of-type\{border-top-color:transparent!important;\}/,'no hairline above the first row');
   assert.match(step32,/#ov-cal-card \.ov-cal-detail\{border:0!important;border-radius:0!important;/,'the day agenda is a section, not a card');
 });
 
 test('what carries meaning survives the flattening',()=>{
-  /* A chip with its own text colour keeps its fill (step 44), so only plain chips flatten. */
-  const chip=step32.match(/\.evhub \.ev-chip:not\(\.ev-chip-filled\)\{([^}]*)\}/)[1];
-  assert.doesNotMatch(chip,/border-top/,'an event chip keeps its urgency rule');
-  assert.doesNotMatch(chip,/border:0/,'only the side and bottom edges go');
+  assert.doesNotMatch(step32,/\.ev-chip/,'Step 99 filled tiles are separate from flattened task groups');
   const dirq=step32.match(/\.task-card \.dirq\{([^}]*)\}/)[1];
   assert.doesNotMatch(dirq,/border-left/,'a Director request keeps its amber rail');
   assert.doesNotMatch(dirq,/background/,'and its amber tint');
@@ -756,16 +752,15 @@ test('inside a status column a card has no coloured rail, and a long name may ta
 /* ===== Step 41: gold back to the brand; red only for trouble ===== */
 const step41=stepBlock(41);
 
-test('an event countdown is amber within a week, calm before that, grey when past, and never red',()=>{
+test('a Timeline countdown is amber within a week, calm before that, grey when past, and never red',()=>{
   const context=vm.createContext({});
   vm.runInContext(slice('function evUrgency(ms){','\nfunction evCountLabel(')+'\nthis.evUrgency=evUrgency;',context);
   const day=86400000;
   assert.equal(context.evUrgency(-1),'grey');
   assert.equal(context.evUrgency(0.5*day),'amber');
-  assert.equal(context.evUrgency(7.6*day),'amber','"7 days" on the label is amber, as on the Overview');
+  assert.equal(context.evUrgency(7.6*day),'amber','"7 days" on the label is amber');
   assert.equal(context.evUrgency(8.1*day),'calm');
   assert.equal(context.evUrgency(40*day),'calm');
-  assert.match(source,/var urg=it\.d<=7\?' soon':'';/,'the Overview countdown uses the same week');
 });
 
 test('a task due today or soon is not red; only overdue work is',()=>{
@@ -785,7 +780,6 @@ test('gold stays with the brand: payday, lunch, ADMIN and the calendar\'s events
   assert.match(step41,/#lunch-banner \.lb-ico\{background:var\(--navy,#003057\);\}/);
   assert.match(step41,/\.auth-banner-role\{background:transparent;color:rgba\(255,255,255,\.9\);box-shadow:inset 0 0 0 1px rgba\(255,255,255,\.45\);\}/,'ADMIN is a quiet outline');
   assert.match(step41,/#panel-overview \.ov-cd-ev\{background:var\(--teal,#0d9488\);\}/);
-  assert.match(step41,/#panel-overview \.ov-cdn\.soon \.ov-cdn-tag\{background:var\(--amber-light\);color:var\(--st-waiting-ink,#7d5406\);\}/);
   assert.match(step41,/\.evc-cd\.u-calm\{background:var\(--navy-light\);color:var\(--navy,#003057\);\}/);
   assert.doesNotMatch(step41,/var\(--gold|#f0b323|#e6a417/i,'the step itself adds no gold');
 });
@@ -806,11 +800,9 @@ test('headings and rows share two left edges: the page edge and one inner edge i
   assert.match(media(step42,'min-width:601px'),/\.tm\{padding-left:6px;\}/,'Team today\'s initials line up with its heading');
 });
 
-test('the Event Hub fits its events: tiles share the row and a single event is one slim line',()=>{
+test('event tiles share the row on computers and keep one design for a single event',()=>{
   assert.match(media(step42,'min-width:481px'),/\.ev-grid\{grid-template-columns:repeat\(auto-fit,minmax\(176px,1fr\)\);\}/);
-  const one=rule(step42,'.ev-grid>.ev-chip:only-child');
-  for(const want of [/grid-column:1\/-1/,/flex-direction:row/,/align-items:center/,/min-height:0/])assert.match(one,want);
-  assert.match(step42,/\.ev-grid>\.ev-chip:only-child \.ev-chip-del\{top:50%;transform:translateY\(-50%\);\}/,'its delete button stays reachable at the end of the line');
+  assert.doesNotMatch(css26,/\.ev-grid>\.ev-chip:only-child/,'a lone event keeps the same tile parts and height');
 });
 
 test('a phone on its side gets a two-row header instead of three',()=>{
@@ -844,17 +836,12 @@ test('small fixes from the second review',()=>{
 /* ===== Step 44: event colours the team chose stay readable ===== */
 const step44=stepBlock(44);
 
-test('an event with its own text colour keeps its coloured tile in light mode',()=>{
-  /* Any rule that clears a chip's fill must skip filled chips, or their white or
-     cream text lands on white (Boss's report, 28 Oct). */
-  const chipSel=/\.ev-chip(?![\w-])/;
+test('all event tiles keep their fill and text colours in both themes',()=>{
   const clears=[...css26.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter(([,sel,decl])=>chipSel.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
-  assert.ok(clears.length>=1,'plain chips are still flat rows (step 32)');
-  for(const [,sel] of clears)for(const part of sel.split(/,(?![^()]*\))/))
-    if(chipSel.test(part)&&!part.trim().startsWith('html.dark'))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone in light mode');
-  assert.match(step44,/html:not\(\.dark\) \.evhub \.ev-chip\.ev-chip-filled\{border:0;border-radius:12px;\}/,'a filled chip is a neat tile');
-  assert.match(source,/\(tc\?' ev-chip-filled':''\)/,'only an event with a text colour is marked filled');
+    .filter(([,sel,decl])=>/\.ev-chip(?![\w-])/.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
+  assert.equal(clears.length,0,'no rule clears a filled tile');
+  assert.doesNotMatch(css26,/html\.dark[^{}]*ev-chip[^{}]*\{[^}]*color:[^}]*!important/,'dark mode respects the helper colours');
+  assert.match(stepBlock(99),/\.ev-chip-filled\{border:0;border-radius:12px;min-width:0;\}/);
 });
 
 test("a task label on a coloured event keeps the event's own colours",()=>{
@@ -906,7 +893,6 @@ const step46=stepBlock(46);
 test('in light mode only, an event colour too light for text shows its darker shade',()=>{
   assert.match(step46,/html:not\(\.dark\) \.ev-ink\{color:var\(--evc-ink\)!important;\}/);
   assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink(?![\w-])/,'the darker shade is for light mode only');
-  assert.doesNotMatch(source,/class="ov-cdn-n"'\+\(\(it\.e\.color/,'the countdown number goes through evTextAttrs');
 });
 
 
@@ -1098,7 +1084,6 @@ test('with two columns the Event Board runs full width under them; in one column
   assert.match(layout,/if\(!oneCol\)ovPlace\(document\.getElementById\('ov-wide'\),LAYOUT\.wide\);/);
   assert.match(source,/ovColMq\.addEventListener\('change',function\(\)\{ovLayout\(\);\}\)/,'turning an iPad moves it with the columns');
   assert.ok(shell.indexOf('id="ov-wide"')>shell.indexOf('class="ov-col-side"'),'the band comes after both columns');
-  assert.match(step51,/#evb-soon \.ov-countdown\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(280px,1fr\)\);/,'"Coming up" is a grid when it has room');
   assert.match(step51,/#panel-overview \.ov-wide:empty\{display:none;\}/);
 });
 
@@ -1481,21 +1466,6 @@ test('the search sheet closes with a real button: "ESC" on computers, "Cancel" o
   assert.match(source,/inp\.placeholder=\(window\.matchMedia&&matchMedia\('\(max-width:600px\)'\)\.matches\)\?'Tasks, events, notes, links':'Search tasks, events, notes or links';/,'beside Cancel a phone gets the short placeholder');
 });
 
-test('a countdown row says its days once: the big number, with a word only for today and tomorrow',()=>{
-  const fn=slice('  function renderCountdown(){','\n  }\n')+'\n  }';
-  const el={};const c=vm.createContext({document:{getElementById:()=>el},MarcomUI:{setHTML:(n,h)=>{n.html=h;}},MORDER:['boss'],
-    eOf:()=>[{id:'a',name:'Fair',date:'d0'},{id:'b',name:'Book Week',date:'d1'},{id:'c',name:'Sports Day',date:'d5'}],
-    dU:d=>({d0:0,d1:1,d5:5})[d],esc:s=>s,fdt:s=>s,evTextAttrs:cls=>' class="'+cls+'"',evDeleteButtonHTML:()=>'<button class="ev-chip-del"></button>'});
-  vm.runInContext(fn+'\nthis.renderCountdown=renderCountdown;',c);
-  c.renderCountdown();
-  const rows=el.html.split(/(?=<div class="ov-cdn(?: soon)?" onclick)/);
-  assert.equal(rows.length,3);
-  assert.match(rows[0],/>0<\/div><div class="ov-cdn-u">days<\/div>.*<div class="ov-cdn-tag">Today<\/div>/);
-  assert.match(rows[1],/>1<\/div><div class="ov-cdn-u">day<\/div>.*<div class="ov-cdn-tag">Tomorrow<\/div>/,'one day, singular');
-  assert.match(rows[2],/>5<\/div><div class="ov-cdn-u">days<\/div>/);
-  assert.doesNotMatch(rows[2],/ov-cdn-tag/,'no "5 days" pill beside the 5');
-});
-
 test('the payday panel says the days left once: the ring, with no count of days gone, second bar or badge',()=>{
   const strip=slice('<div class="salary-strip" id="salary-card">','<div id="sal-badge"></div>');
   assert.match(strip,/class="salary-days-big" id="sal-days"/,'the ring and its number stay');
@@ -1579,7 +1549,7 @@ test('deadline rows are buttons: Tab reaches them and Enter or Space opens the t
 test('one set of left edges: every card title after the same chip, and flat rows starting at the card edge',()=>{
   assert.match(step65,/\.ov-team-title>i\.ti:first-child\{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/,'Team today wears the chip the other titles wear');
   assert.match(css26,/\.ov-card-title>i\.ti:first-child,\.widget-title>i\.ti:first-of-type\{\s*display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/);
-  assert.match(step65,/html:not\(\.dark\) #ov-dl-card \.ov-dl,\nhtml:not\(\.dark\) #panel-overview \.ov-countdown \.ov-cdn,\nhtml:not\(\.dark\) #evb-card \.evb-row\{padding-left:0;padding-right:0;\}/);
+  assert.match(step65,/html:not\(\.dark\) #ov-dl-card \.ov-dl,\nhtml:not\(\.dark\) #evb-card \.evb-row\{padding-left:0;padding-right:0;\}/);
   assert.match(step65,/box-shadow:-11px 0 0 var\(--surface-3\),11px 0 0 var\(--surface-3\)!important;/,'the hover tint reaches into the card padding');
   assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g-h\{width:calc\(100% \+ 24px\);margin-left:-12px;margin-right:-12px;\}/);
   assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g\{overflow:visible;\}/,'the fold animation still clips while it runs (ui-motion sets it inline)');
@@ -1882,4 +1852,22 @@ test('step 72c quiet widget tiles and outline actions meet AA contrast',()=>{
   assert.doesNotMatch(block,/member-name|member-role|headname/);
   for(const bg of ['#ffffff','#e5e7eb','#EFF3F9']) assert.ok(contrast('#34445c',bg)>=4.5);
   assert.match(source,/class="task-link role-btn story-email-btn" onclick="openStoryEmail/);
+});
+
+/* Step 99: the shared event grid scrolls inside its card on iPhone. */
+test('event tiles form one snapping row at 600px and keep their desktop grid',()=>{
+  const step99=stepBlock(99),phone=media(step99,'max-width:600px');
+  const grid=rule(phone,'.ev-grid');
+  for(const declaration of ['display:flex','flex-wrap:nowrap','overflow-x:auto','scroll-snap-type:x proximity','gap:10px','scrollbar-width:none'])
+    assert.ok(grid.includes(declaration),declaration);
+  assert.match(phone,/\.ev-grid::-webkit-scrollbar\{display:none;\}/);
+  const tile=rule(phone,'.ev-grid>.ev-chip');
+  for(const declaration of ['flex:0 0 150px','width:150px','min-height:84px','scroll-snap-align:start'])assert.ok(tile.includes(declaration),declaration);
+  assert.match(phone,/\.ev-grid-wrap::after\{[^}]*background:linear-gradient\(to right,transparent,var\(--surface\)\);pointer-events:none;/);
+  assert.match(step99,/\.evhub,\.evhub-body,\.ev-past,\.ev-grid-wrap,\.ev-grid,#evb-card,#evb-soon,\.ov-countdown,\.ov-wide\{min-width:0;\}/);
+  assert.match(css26,/\.two-col>\*\{min-width:0;\}/,'the person column can shrink around the scrolling row');
+  assert.match(source,/\.ev-grid\{display:grid;/,'computers keep the grid');
+  assert.match(step99,/\.ev-grid\{align-items:stretch;\}/,'tiles have equal heights within a row');
+  assert.match(step99,/\.ev-chip:focus-visible\{outline:2px solid var\(--focus-ink\);/);
+  assert.match(media(step99,'prefers-reduced-motion:reduce'),/\.ev-chip\{transition:none;\}/);
 });
