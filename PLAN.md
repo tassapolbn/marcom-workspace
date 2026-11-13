@@ -2990,7 +2990,7 @@ first person's tab only).
    Refresh all adds the missing rows in the other people's tabs, shown in its
    summary before Apply; or only shared cards from now on get every row.
 
-# Plan 11 (13 Nov 2026): the school logo, and a tidier, better-looking app, for Boss to approve
+# Plan 11 (13 Nov 2026): the school logo, and a tidier, better-looking app, approved by Boss
 
 Boss asked (13 Nov) for two things: make the app more beautiful and better
 organised, and replace the app's own logo with the school logo wherever it
@@ -3002,6 +3002,10 @@ Kept as Boss decided earlier: the tick on the left of each card; the Event
 Hub right under Today on person tabs; the Payday line where it is; no
 greeting; a plain navy header; the gold glowing payday circle; the navy
 loading screen.
+
+Approved by Boss on 13 Nov: every step (96 to 104); the full school logo in
+the header on computers, with "Marcom Workspace" beside it (decision 2); a
+little gold, a gold ring round today's date on the calendars (decision 3).
 
 ## What I found (screens checked at 1440x900 and on an iPhone screen)
 
