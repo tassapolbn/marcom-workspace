@@ -3283,7 +3283,25 @@ little gold, a gold ring round today's date on the calendars (decision 3).
     title's icon tile hides at 340px and under (three small rules at the end
     of the step 103 block, with a test). 738 tests pass.
 
-- [ ] **104. Final check**
+- [ ] **104. Drop a card anywhere in a status column** (added 13 Nov at Boss's request)
+  - Problem Boss reported: a card low down in a long column cannot be dragged
+    to another status, because a short column ends where its last card ends
+    and the space under it does not accept the drop (the short column's cards
+    are far above, out of sight).
+  - Cause: `.kanban-board{align-items:start}` makes every column only as tall
+    as its own cards, and the drop target is the column box.
+  - Files: `assets/workspace-ui.css` (new step 104 block), `index.html`
+    (`taskColOver`, `taskColLeave`, `taskDragEnd`, the two drop handlers),
+    tests.
+  - Change: at 601px and wider the working columns stretch to the height of
+    their row, so the whole column under a status name accepts a drop at any
+    height. While a card is dragged over another column, a small label by the
+    pointer says "Move to (status)", since the column's name may be scrolled
+    out of sight. Nothing changes on iPhone.
+  - Test: unit tests for the rules and the label; Claude drags the lowest
+    card of a long column sideways in a browser and checks the status changes.
+
+- [ ] **105. Final check**
   - Files: `PLAN.md`, tests, before-and-after screenshots (not committed).
   - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
     widths 320 to 440; before-and-after screenshots for Boss; then merge and
