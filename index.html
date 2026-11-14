@@ -322,12 +322,6 @@ html.dark .mb-together{color:#5fcf85;}
 /* MENU WIDGET */
 .menu-widget{border-left:3px solid var(--gold);}
 
-.menu-week-sel{font-size:11px;font-weight:700;border:1.5px solid var(--border);border-radius:8px;padding:5px 8px;background:var(--surface);color:var(--text);font-family:inherit;cursor:pointer;outline:none;}
-.menu-days{display:flex;gap:4px;margin-bottom:11px;}
-.menu-day-pill{flex:1;font-size:11px;font-weight:700;padding:7px 0;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;text-align:center;transition:all 0.12s;}
-.menu-day-pill:hover{border-color:var(--gold2);}
-.menu-day-pill.act{background:var(--gold);color:#3a2a00;border-color:var(--gold);}
-.menu-day-pill.today-pill{border-color:var(--gold2);}
 .menu-date{font-size:11px;color:var(--muted);text-align:center;margin-bottom:9px;font-weight:600;}
 .menu-row{padding:8px 0;border-bottom:1px solid var(--border);}
 .menu-row:last-child{border-bottom:none;}
@@ -3896,7 +3890,7 @@ function renderMenu(){
   if(!menuSelectedDay)menuSelectedDay=todayDay||'mon';
   const day=menuSelectedDay;
   document.getElementById('menu-days').innerHTML=MENU_DAYS.map(d=>
-    `<div class="menu-day-pill ${d===day?'act':''} ${d===todayDay?'today-pill':''}" onclick="changeMenuDay('${d}')">${MENU_DAY_NAMES[d]}</div>`
+    `<div class="menu-day-pill ${d===day?'act':''} ${d===todayDay?'today-pill':''}" role="button" tabindex="0" aria-pressed="${d===day?'true':'false'}"${d===todayDay?' aria-current="date"':''} onclick="changeMenuDay('${d}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();changeMenuDay('${d}');}">${MENU_DAY_NAMES[d]}</div>`
   ).join('');
   const isToday=day===todayDay;
   document.getElementById('menu-date').textContent=(isToday?'Today, ':'')+MENU_DAY_FULL[day]+' \u00b7 Week '+week;

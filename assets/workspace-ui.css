@@ -2026,3 +2026,29 @@ html body :is(button,a,[tabindex],.fpill,.ov-fpill,.sub-tab,.task-card,.ev-chip,
   max-width:calc(100vw - 16px);box-sizing:border-box;
 }
 html.dark #kb-drop-hint{background:#cfe0f5;color:#0b1a2b;}
+
+/* Step 106: readable menu day pills and a compact week picker. */
+.menu-days{display:flex;gap:6px;margin-bottom:11px;}
+.menu-day-pill{
+  display:flex;align-items:center;justify-content:center;flex:1;min-width:0;
+  height:var(--hs-pill-h);padding:0;border-radius:var(--hs-ctl-radius);
+  font-size:12.5px;font-weight:600;line-height:1;text-align:center;cursor:pointer;
+  background:var(--surface);border:1px solid var(--hs-btn-line);color:var(--muted);box-shadow:none;
+}
+.menu-day-pill:not(.act):hover{background:var(--hs-btn-hover);color:var(--text);}
+.menu-day-pill.today-pill:not(.act){border:1.5px solid #F0B323;color:var(--text);font-weight:700;}
+.menu-day-pill.act{background:#003057;border-color:#003057;color:#fff;font-weight:700;}
+html.dark .menu-day-pill.act{background:#10243a;border-color:#647e9a;color:#fff;}
+/* Match the specificity of the shared field rule so this picker stays compact. */
+html body select.menu-week-sel{
+  height:var(--hs-ctl-h-sm);min-height:0;padding:0 11px;border-radius:var(--hs-ctl-radius);
+  border:1px solid var(--hs-btn-line);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+}
+html body .menu-day-pill:focus-visible,html body select.menu-week-sel:focus-visible{
+  outline:2px solid var(--focus-ink,#1d4ed8);outline-offset:2px;box-shadow:none;
+}
+@media(max-width:600px),(pointer:coarse){
+  .menu-day-pill,html body select.menu-week-sel{height:44px;min-height:44px;}
+}
+@media(prefers-reduced-motion:reduce){.menu-day-pill{transition:none;}}

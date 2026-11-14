@@ -3378,7 +3378,7 @@ again).
 
 ## Steps
 
-- [ ] **106. The selected day reads clearly**
+- [x] **106. The selected day reads clearly**
   - Files: `assets/workspace-ui.css` (new step 106 block), `index.html`
     (lines 326 to 330 at their source), tests.
   - Change: the selected day is solid navy with white text (dark theme: the
@@ -3390,6 +3390,22 @@ again).
     control look of step 103.
   - Test: unit tests for the rules; Claude measures the contrast in both
     themes in a browser (4.5 to 1 or better) and the iPhone height.
+  - Done (2026-11-14, built by Codex from .codex-tasks/step-106.md): The
+    selected menu day now matches the selected filter colours in both themes,
+    with white text at 13.46 to 1 contrast in light mode and 15.72 to 1 in
+    dark mode. Today's button has a gold border when another day is selected.
+    Day buttons and the compact week picker have 44px touch targets, and day
+    buttons support keyboard selection, visible focus and screen readers.
+    Removed the older picker, day row, day button, hover, selected and today
+    rules from index.html; the existing shared transition stays. Bounded the
+    step 104 style checks at step 106. All 11 new checks pass. Ran npm run
+    test:ui: 45 of 46 test files pass; the only failure is the known sandbox
+    Netlify check for .aws and .codex. Browser review remains with the reviewer.
+
+  - Reviewer's check (Claude, in a browser): the selected day is white on
+    navy, 13.46 to 1 in the light theme (was 1.03) and 15.72 in the dark
+    theme; the day buttons are 30px on computers and 44px on iPhone; the
+    week picker is compact. 763 tests pass.
 
 - [ ] **107. The app counts the menu weeks, and Boss can set the week**
   - Files: `index.html` (`renderMenu`, `changeMenuWeek`, a small new helper,

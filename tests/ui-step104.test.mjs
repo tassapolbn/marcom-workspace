@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
-const step104=css.slice(css.indexOf('/* Step 104:'));
+const step104=css.slice(css.indexOf('/* Step 104:'),css.indexOf('/* Step 106:'));
 function source(start,end){
   const a=html.indexOf(start),b=html.indexOf(end,a);
   assert.ok(a>=0&&b>a,'source exists: '+start);
