@@ -17,8 +17,11 @@ const shell=source.slice(shellStart,source.indexOf('  function buildShell(){',sh
 function escape(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 const TODAY='2026-10-26';
-/* new Date() is 11:30 on the test day; any other Date works as usual. */
-class FixedDate extends Date{constructor(...a){if(a.length)super(...a);else super(TODAY+'T11:30:00');}}
+/* new Date() and Date.now() are 11:30 on the test day; explicit dates work as usual. */
+class FixedDate extends Date{
+  constructor(...a){if(a.length)super(...a);else super(TODAY+'T11:30:00');}
+  static now(){return new FixedDate().getTime();}
+}
 
 /* tasks: each person's own share (what their tab shows); board: the team list,
    where a shared task appears once. Due dates are days from today. */
@@ -53,7 +56,7 @@ test('Team today has one cell per person with their own open count; the total co
   assert.match(c[0],/<span class="tm-open">5 open<\/span>/);
   assert.match(c[1],/<span class="tm-open">3 open<\/span>/,'a shared task counts for each person, done work never');
   assert.match(c[3],/<span class="tm-open">0 open<\/span>/);
-  assert.equal(nodes['team-sum'].innerHTML,' \u00b7 8 open<span class="ov-team-sum-w"> tasks</span>','the shared task is counted once in the total');
+  assert.equal(nodes['team-sum'].innerHTML,'<span class="ov-team-sep" aria-hidden="true">· </span>8 open<span class="ov-team-sum-w"> tasks</span>','the shared task is counted once in the total');
   assert.doesNotMatch(nodes['team-list'].innerHTML,/team-lvl|team-bar|Low|Medium|High/,'no workload level or bar');
 });
 
@@ -62,7 +65,7 @@ test('the heading counts the work finished in the last 7 days, a shared task onc
   const shared={status:'done',doneAt:recent};
   let nodes=team({tasks:{boss:[shared,{status:'done',doneAt:old},{status:'pending'}],dew:[shared,{status:'done',doneAt:recent}]},
     board:{boss:[shared,{status:'done',doneAt:old},{status:'pending'}],dew:[{status:'done',doneAt:recent}]}});
-  assert.equal(nodes['team-sum'].innerHTML,' \u00b7 1 open<span class="ov-team-sum-w"> tasks</span><span class="ov-team-done"> \u00b7 2 done this week</span>');
+  assert.equal(nodes['team-sum'].innerHTML,'<span class="ov-team-sep" aria-hidden="true">· </span>1 open<span class="ov-team-sum-w"> tasks</span><span class="ov-team-done"> \u00b7 2 done this week</span>');
   nodes=team({tasks:{boss:[{status:'done',doneAt:old},{status:'done'}]}});
   assert.doesNotMatch(nodes['team-sum'].innerHTML,/done/);
 });
@@ -148,11 +151,11 @@ test('the next meeting today shows in the heading once, even when two people sha
   assert.equal(nodes['ov-team-next'].innerHTML,'','nothing later today leaves the heading quiet');
 });
 
-test('the Overview shell has one Team today section between the greeting and the work, and none of the old cards',()=>{
+test('the Overview shell has one Team today section between announcements and the work, and none of the old cards',()=>{
   assert.equal((shell.match(/id="ov-team"/g)||[]).length,1);
   assert.match(shell,/<section class="ov-team" id="ov-team" aria-labelledby="ov-team-title">/);
-  const order=['id="ov-top"','class="ov-topbar"','id="ov-team"','class="ov-grid"'].map(s=>shell.indexOf(s));
-  assert.ok(order.every((x,i)=>x>0&&(i===0||x>order[i-1])),'announcements, greeting and search, Team today, then the work');
+  const order=['id="ov-top"','id="ov-team"','class="ov-grid"'].map(s=>shell.indexOf(s));
+  assert.ok(order.every((x,i)=>x>0&&(i===0||x>order[i-1])),'announcements, Team today, then the work');
   assert.doesNotMatch(shell,/id="team-card"/);
   assert.doesNotMatch(shell,/ov-avail-card/);
   assert.doesNotMatch(shell,/Workload Heatmap/);

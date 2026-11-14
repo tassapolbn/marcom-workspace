@@ -47,7 +47,7 @@ test('compact payday says 1 day, plural days and Today without a bar',()=>{
   const paint=source('    function paint(force){','    /* The payday strip starts');
   for(const [days,expected] of [['0','Today'],['1','1 day'],['2','2 days']]){
     const b={setAttribute(){}};
-    vm.runInNewContext(paint+'paint(true);',{b,esc:String,document:{getElementById:id=>({textContent:id==='sal-days'?days:'Fri, 30 October'})}});
+    vm.runInNewContext(paint+'paint(true);',{b,today:{},esc:String,document:{getElementById:id=>({textContent:id==='sal-days'?days:'Fri, 30 October'})}});
     assert.ok(b.innerHTML.includes(expected));
     assert.doesNotMatch(b.innerHTML,/1 days|0 days|uxp-sal-mini/);
   }
@@ -58,6 +58,6 @@ test('Request Centre labels and quiet controls follow step 75',()=>{
   assert.equal((rc.match(/Open request form<\/button>/g)||[]).length,2);
   assert.equal((rc.match(/Copy form link<\/button>/g)||[]).length,2);
   assert.match(css,/\.tcard-move\{flex:0 0 auto;min-width:100px/);
-  assert.match(css,/\.tc-more:is\(\.open,:hover\)\{background:var\(--gray-light\);color:var\(--muted\)/);
+  assert.match(css,/\.tc-more:is\(\.open,:hover\),[^{]*\{\s*background:var\(--hs-btn-hover\);color:var\(--text\)/);
   assert.match(css,/\.fpill\[data-f="soon"\] \.pill-dot\{background:var\(--muted\)/);
 });

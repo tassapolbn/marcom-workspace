@@ -4,10 +4,10 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const html=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('assets/workspace-ui.css','utf8').split('/* Step 74:')[1].split('/* Step 75:')[0];
-test('step 74 uses flat header, logo, avatars and floating actions in both themes',()=>{
+test('step 74 uses flat header, avatars and floating actions in both themes',()=>{
   assert.match(css,/html body \.app-header\{background:#003057!important;[^}]*box-shadow:none!important/);
   assert.match(css,/\.app-header::after\{content:none!important;display:none!important;background:none!important/);
-  assert.match(css,/\.logo-icon\{background:#f0b323!important;box-shadow:none!important/);
+  assert.doesNotMatch(css,/\.logo-icon/);
   assert.match(css,/\.member-avatar\{box-shadow:none!important;filter:none!important/);
   assert.match(css,/#quickadd-fab,html body #tc-fab\{background:#003057!important/);
   assert.doesNotMatch(css,/gradient\(/);
@@ -20,7 +20,7 @@ test('step 74 shares the sidebar surface and exposes handles on touch and keyboa
   assert.match(css,/\.widget-head:focus-within \.uxp-wh-drag\{opacity:1/);
   assert.match(css,/\.widget-head>button:not\(\.uxp-wh-drag\)\{display:none/);
   assert.match(css,/\.widget-head>\.btn:last-of-type\{display:inline-flex/);
-  assert.match(css,/html.dark body[^}]*\.widget-head \.btn,[\s\S]*?background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important/);
+  assert.match(fs.readFileSync('assets/workspace-ui.css','utf8').split('/* Step 103:')[1],/\.widget-head \.btn,[\s\S]*?background:var\(--surface\);border:1px solid var\(--hs-btn-line\);color:var\(--text\);/);
 });
 test('touch reorder moves and saves a row, restores focus and cancels cleanly',()=>{
   const handlers={}, classes=new Set(); let captured=false,saved=0,focused=0,cleared=0,moved;
@@ -39,7 +39,7 @@ test('touch reorder moves and saves a row, restores focus and cancels cleanly',(
 test('original inline style layers cannot restore header, logo or round-button gradients and glows',()=>{
   const styles=[...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map(m=>m[1]).join('\n').replace(/\/\*[\s\S]*?\*\//g,'');
   const rules=[...styles.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
-  for(const target of ['.app-header','.app-header::after','.logo-icon','.quickadd-fab','.chat-fab','#quickadd-fab','#tc-fab','.member-avatar']){
+  for(const target of ['.app-header','.app-header::after','.app-logo-mark','.quickadd-fab','.chat-fab','#quickadd-fab','#tc-fab','.member-avatar']){
     const matching=rules.filter(([,selectors])=>selectors.split(',').some(s=>s.trim().endsWith(target)||s.trim().endsWith(target+':hover')));
     if(target.startsWith('.')) assert.ok(matching.length,`source rules found for ${target}`);
     for(const [,selector,body] of matching){

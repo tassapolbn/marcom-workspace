@@ -12,7 +12,7 @@ function extract(start, end) {
   return source.slice(begin, finish);
 }
 const helpers = extract('function eventRefById(', 'function createTaskForEvent(');
-const hub = extract('function evHubHTML(', 'function renderEvHub(');
+const hub = extract('function evTileColours(', 'function renderEvHub(');
 const countdown = extract('  function renderCountdown(){', '  /* ---------- recent activity');
 const workspace = extract('  function wsHeadHTML(', '  function wsTabsHTML(');
 const escapeHTML = value => String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -238,7 +238,7 @@ test('delete buttons escape names and ids, stop propagation, and overview keeps 
   c.MarcomUI = { setHTML: (el, value) => { rendered = value; } };
   vm.runInContext(countdown, c);
   c.renderCountdown();
-  assert.ok(rendered.endsWith(html + '</div>'));
+  assert.ok(rendered.endsWith(html + '</div></div></div>'));
 });
 
 test('workspace returns to event list only after a successful delete', async () => {
@@ -275,23 +275,32 @@ test('dialog updates and deletes legacy events in their own collection; new even
   assert.equal(state.adds[0].name, 'school_events');
 });
 
-test('a chip with its own text colour is marked as a coloured tile', () => {
+test('every hub tile is filled, has the same three parts and escapes names', () => {
   const { context: c } = fixture();
-  /* The real colour helpers, instead of the stub that ignores colours. */
   vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
-  const html = c.evHubHTML([
+  const events = [
     { id: 'tile', name: 'Tile', date: '2099-01-01', color: '#d6336c', textColor: '#ffffff' },
-    { id: 'tint', name: 'Tint', date: '2099-01-02', color: '#0d9488' },
-    { id: 'plain', name: 'Plain', date: '2099-01-03' },
-  ], 'boss');
-  const chip = name => html.split('<div class="ev-chip ').find(part => part.includes('>' + name + '<'));
-  assert.match(chip('Tile'), /^evt-\w+ ev-chip-filled"/, 'a fill with its own text colour');
-  assert.match(chip('Tile'), /border-top-color:#d6336c;background:#d6336c;"/, 'the event colour edge to edge, no fade (step 59)');
-  assert.match(chip('Tile'), /class="ev-chip-date" style="color:#ffffff;">/, 'the date at full strength (step 59)');
-  assert.match(chip('Tile'), /class="ev-chip-name" style="color:#ffffff;"/);
-  assert.doesNotMatch(chip('Tint'), /ev-chip-filled/, 'a colour alone stays a flat row in light mode');
-  assert.match(chip('Tint'), /border-top-color:#0d9488/);
-  assert.doesNotMatch(chip('Plain'), /ev-chip-filled|style=/);
+    { id: 'blue', name: 'School Open Day', date: '2099-01-02', color: '#4B8FD0' },
+    { id: 'teal', name: 'Book Week', date: '2099-01-03', color: '#0d9488' },
+    { id: 'plain', name: 'Plain <event>', date: '2099-01-04' },
+    { id: 'invalid', name: 'Invalid', date: '2099-01-05', color: 'red' },
+  ];
+  const html = c.evHubHTML(events, 'boss');
+  const tiles = html.match(/<div class="ev-chip ev-chip-filled"[\s\S]*?<\/button><\/div>/g);
+  assert.equal(tiles.length, events.length);
+  events.forEach((ev, i) => {
+    assert.equal(tiles[i], c.evTileHTML(ev, 'boss'), 'the hub uses the shared helper');
+    const colours = c.evTileColours(ev);
+    for (const part of ['date', 'name', 'cd'])
+      assert.ok(tiles[i].includes('class="ev-chip-' + part + '" style="color:' + colours.text + ';"'));
+    assert.match(tiles[i], /role="button" tabindex="0" onkeydown="evTileKey\(event\)"/);
+    assert.ok(tiles[i].includes(escapeHTML(ev.name)));
+    assert.doesNotMatch(tiles[i], /linear-gradient|border-top/);
+  });
+  let opened;
+  c.evChipClick = (...args) => { opened = args; };
+  vm.runInContext(decode(tiles[1].match(/onclick="([^"]+)"/)[1]), c);
+  assert.deepEqual(opened, ['blue', 'boss']);
 });
 
 /* Step 46: an event colour used as text reads on white in light mode. */
@@ -316,8 +325,8 @@ test('every event colour has a shade that reads on white, and a readable colour 
       assert.ok(b.every((v, i) => Math.abs(v - a[i] * k) <= 1), ink + ' keeps the hue of ' + hex);
     }
   }
-  assert.equal(c.evTextAttrs('ov-cdn-n', ''), ' class="ov-cdn-n"');
-  assert.match(c.evTextAttrs('ov-cdn-n', '#1f3a5f'), /^ class="ov-cdn-n ev-ink-d" style="color:#1f3a5f;--evc-ink-d:#[0-9a-f]{6};"$/,
+  assert.equal(c.evTextAttrs('ev-tl-name', ''), ' class="ev-tl-name"');
+  assert.match(c.evTextAttrs('ev-tl-name', '#1f3a5f'), /^ class="ev-tl-name ev-ink-d" style="color:#1f3a5f;--evc-ink-d:#[0-9a-f]{6};"$/,
     'navy reads on white, so no light-mode shade (its dark-mode shade is step 57)');
   assert.match(c.evTextAttrs('ev-tl-name', '#e6a417'), /^ class="ev-tl-name ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};"$/);
 });
@@ -342,7 +351,7 @@ test('every event colour has a shade that reads on the dark card, and a readable
   }
   assert.match(c.evTextAttrs('ev-tl-name', '#e05a3d'), /^ class="ev-tl-name ev-ink ev-ink-d" style="color:#e05a3d;--evc-ink:#[0-9a-f]{6};--evc-ink-d:#[0-9a-f]{6};"$/,
     'coral needs a darker shade on white and a lighter one on the dark card');
-  assert.doesNotMatch(c.evTextAttrs('ov-cdn-n', '#e6a417'), /ev-ink-d/, 'amber already reads on the dark card');
+  assert.doesNotMatch(c.evTextAttrs('ev-tl-name', '#e6a417'), /ev-ink-d/, 'amber already reads on the dark card');
 });
 
 /* Step 59: a tile, label or event-day bar filled with the event's colour under its own text colour. */
@@ -368,12 +377,12 @@ test('every event fill reads at 4.5:1 under the text colour the team chose, keep
   }
   assert.equal(c.evFill('#d6336c', '#ffffff'), '#d6336c', 'pink with white text already reads (4.62:1)');
   assert.equal(c.evFill('', '#ffffff'), '', 'no colour, no fill');
-  for (const use of [`if(t)st=' style="background:'+evFill(c,t)+';color:'+t+';"';`, "border-top-color:'+evFill(clr,tc)+';background:'+evFill(clr,tc)+';'",
+  for (const use of [`if(t)st=' style="background:'+evFill(c,t)+';color:'+t+';"';`, "return {fill:evFill(ev.color,text),text:text};",
     'const bg=t?evFill(base,t):evTint(base,0.14);', "background:'+evFill(_ec,_et)+';color:'+_et"])
     assert.ok(source.includes(use), 'the card label, the tile, the form preview and the event-day bar all use it: ' + use);
 });
 
-test('the Timeline names and the Overview countdown numbers use the readable shade', () => {
+test('Timeline names use readable shades and Overview uses the shared filled tiles', () => {
   const { context: c } = fixture();
   vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
   c.evTimelineMode = true;
@@ -389,7 +398,71 @@ test('the Timeline names and the Overview countdown numbers use the readable sha
   c.document = { getElementById: () => ({}) };
   vm.runInContext(countdown, c);
   c.renderCountdown();
-  assert.match(rendered, /<div class="ov-cdn-n ev-ink" style="color:#e6a417;--evc-ink:#[0-9a-f]{6};">3</);
-  assert.match(rendered, /<div class="ov-cdn-n ev-ink-d" style="color:#1f3a5f;--evc-ink-d:#[0-9a-f]{6};">3</);
+  assert.ok(rendered.includes(c.evTileHTML(amber,'boss',{action:'if(!window.evbShowEvent||!evbShowEvent("Teacher Day"))ovGoto("boss")',days:3})));
+  assert.ok(rendered.includes(c.evTileHTML(navy,'boss',{action:'if(!window.evbShowEvent||!evbShowEvent("Concert"))ovGoto("boss")',days:3})));
 });
 
+
+test('tile colours meet AA for automatic text, navy fallbacks and existing saved pairs', () => {
+  const { context: c } = fixture();
+  vm.runInContext(extract('function evOkClr(', 'const EV_TEXT_COLORS'), c);
+  for (const color of presets.concat(['#4B8FD0','#0d9488','#808080','#ffffff','#000000'])) {
+    const out = c.evTileColours({color});
+    assert.ok(ratio(out.fill,out.text)>=4.5, color+' gives '+ratio(out.fill,out.text));
+    const white = ratio(color,'#ffffff'), dark = ratio(color,'#16202e');
+    assert.equal(out.text,white>=4.5?'#ffffff':dark>=4.5?'#16202e':white>=dark?'#ffffff':'#16202e');
+    if (Math.max(white,dark)>=4.5) assert.equal(out.fill,color,'a readable original fill stays');
+    const invalidText = c.evTileColours({color,textColor:'invalid'});
+    assert.deepEqual(plain(invalidText),plain(out));
+  }
+  for (const color of [undefined,'','red','#fff','#12345g'])
+    assert.deepEqual(plain(c.evTileColours({color,textColor:'#16202e'})),{fill:'#003057',text:'#ffffff'});
+  for (const color of presets) for (const textColor of ['#ffffff','#16202e','#fdf3da']) {
+    const out = c.evTileColours({color,textColor});
+    assert.equal(out.fill,c.evFill(color,textColor),'existing pairs keep the same fill');
+    assert.equal(out.text,textColor);
+    assert.ok(ratio(out.fill,out.text)>=4.5);
+  }
+});
+
+test('Coming up keeps the next eight, calendar day wording, safe click and keyboard activation', () => {
+  const { context: c } = fixture();
+  let rendered;
+  const events = Array.from({length:10},(_,i)=>({id:'e'+i,name:i===0?'Fair \"<&':('Event '+i),date:'2099-01-'+String(i+1).padStart(2,'0')}));
+  c.MORDER=['boss','dew'];
+  c.eOf=w=>w==='dew'?[...events].reverse():[];
+  c.dU=date=>Number(date.slice(-2))-1;
+  c.MarcomUI={setHTML:(el,html)=>{rendered=html;}};
+  vm.runInContext(countdown,c);
+  c.renderCountdown();
+  assert.match(rendered,/^<div class="ev-grid-wrap"><div class="ev-grid">/);
+  const tiles = rendered.match(/<div class="ev-chip ev-chip-filled"[\s\S]*?<\/button><\/div>/g);
+  assert.equal(tiles.length,8);
+  assert.doesNotMatch(rendered,/Event 8|Event 9/);
+  for(const [i,label] of ['Today','Tomorrow','2 days','3 days','4 days','5 days','6 days','7 days'].entries())
+    assert.ok(tiles[i].includes('>'+label+'</div>'));
+  const handler=decode(tiles[0].match(/onclick="([^"]+)"/)[1]);
+  const opened=[],fallback=[];
+  c.ovGoto=w=>fallback.push(w);
+  c.evbShowEvent=name=>{opened.push(name);return true;};
+  vm.runInContext(handler,c);
+  assert.deepEqual(opened,[events[0].name]);
+  assert.deepEqual(fallback,[]);
+  c.evbShowEvent=()=>false;
+  vm.runInContext(handler,c);
+  delete c.evbShowEvent;
+  vm.runInContext(handler,c);
+  assert.deepEqual(fallback,['dew','dew']);
+  let prevented=0,clicks=0;
+  const tile={click:()=>clicks++};
+  for(const key of ['Enter',' ','Tab','a'])c.evTileKey({key,target:tile,currentTarget:tile,preventDefault:()=>prevented++});
+  c.evTileKey({key:'Enter',target:{},currentTarget:tile,preventDefault:()=>prevented++});
+  assert.equal(clicks,2,'Enter and Space activate; a nested delete button does not activate the tile');
+  assert.equal(prevented,2,'Space prevents page scrolling');
+  assert.equal(c.evShort(86400000),'1 day');
+  assert.equal(c.evShort(5*86400000),'5 days');
+  c.eOf=()=>[{date:'past'},{date:'invalid'},{}];
+  c.dU=date=>date==='past'?-1:null;
+  c.renderCountdown();
+  assert.match(rendered,/No upcoming events/);
+});

@@ -24,8 +24,8 @@ test('the Overview shell puts every card in its column and folds the rest away',
   assert.doesNotMatch(main,/id="ov-cal-card"/,'the Master Calendar moved to the side column (step 51)');
   assert.ok(order(['ov-wm-card','ov-cd-card','ov-cal-card'],side));
   assert.doesNotMatch(side,/team-card/,'Team today left the side column for the strip above the work');
-  const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),barAt=shell.indexOf('class="ov-topbar"');
-  assert.ok(topAt>0&&annAt>topAt&&barAt>annAt,'announcements sit in the top slot before the greeting');
+  const topAt=shell.indexOf('id="ov-top"'),annAt=shell.indexOf('id="ov-ann-card"'),teamAt=shell.indexOf('id="ov-team"');
+  assert.ok(topAt>0&&annAt>topAt&&teamAt>annAt,'announcements sit in the top slot before Team today');
   assert.doesNotMatch(side,/id="ov-ann-card"/);
   assert.ok(order(['ov-res-card','ov-act-card'],more));
   assert.match(shell,/class="ov-more ov-more-closed" id="ov-more"/,'Resources & more starts folded');
@@ -224,13 +224,14 @@ test('a member tab greets once, and the greeting and counts share one line',()=>
   assert.match(step27,/\.myday-list\{flex:1 1 100%;/,'the focus list runs full width below');
 });
 
-test('in light mode the two cards read as one, keeping the member colour wash',()=>{
-  const head=step27.match(/html:not\(\.dark\) \.member-head\{([^}]*)\}/)[1];
-  const day=step27.match(/html:not\(\.dark\) \.myday\{([^}]*)\}/)[1];
-  assert.match(head,/border-radius:16px 16px 0 0!important/,'rounded on top only');
-  assert.match(day,/border-radius:0 0 16px 16px!important/,'rounded on the bottom only');
-  assert.match(head,/margin-bottom:0!important/,'no gap between them');
-  assert.doesNotMatch(head,/background/,'the 12% wash of the member colour is kept, it says whose desk this is');
+test('the name and Today halves read as one plain card in both themes',()=>{
+  const shared=stepBlock(102);
+  const head=rule(shared,'.tab-panel .member-head:has(+[id$="-myday"]>.myday)');
+  const day=rule(shared,'.tab-panel .member-head+[id$="-myday"]>.myday');
+  assert.match(head,/border-radius:var\(--hs-radius-card\) var\(--hs-radius-card\) 0 0/,'rounded on top only');
+  assert.match(day,/border-radius:0 0 var\(--hs-radius-card\) var\(--hs-radius-card\)/,'rounded on the bottom only');
+  assert.match(head,/margin-bottom:0/,'no gap between them');
+  assert.match(shared,/\.tab-panel \.member-head\{background:var\(--surface\);background-image:none/,'the person colour stays on the identity');
 });
 
 /* ===== Step 28: one card language ===== */
@@ -241,29 +242,32 @@ test('in light mode every card shares one calm shadow, and raised things keep th
   assert.ok(tokens,'the light shadow tokens are set');
   assert.doesNotMatch(tokens[1],/12px 30px/,'the floating card shadow is gone');
   assert.equal(tokens[1],'0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)','cards use the calm design-refresh shadow');
-  assert.match(step28,/:is\(\.task-card,\.evc-card,\.rq-card\):hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'hover still deepens as a card lifts');
+  assert.match(step28,/\.rq-card:hover[^{]*\{box-shadow:var\(--shadow-hover\)!important;\}/,'request hover keeps its lift');
+  assert.match(stepBlock(102),/\.task-card\{border-radius:var\(--hs-radius-tile\);box-shadow:var\(--hs-shadow-tile\);\}/,'task tiles use the shared quiet shadow');
   /* The Overview's search results floated above the page here; that box went in step 48. */
 });
 
 test('cards share one radius, decorative rails go and meaningful rails stay',()=>{
-  assert.match(step28,/\.task-card,#panel-overview \.ov-more\{border-radius:var\(--r-lg,16px\)!important;\}/);
-  assert.match(step28,/\.evhub\{border-left-width:1px!important;/,'Event Hub loses its decorative rail');
+  assert.match(stepBlock(102),/\.task-card\{border-radius:var\(--hs-radius-tile\)/);
+  assert.match(stepBlock(102),/#panel-overview \.ov-more,[\s\S]*?border-radius:var\(--hs-radius-card\)/);
+  assert.match(stepBlock(102),/\.tab-panel \.evhub,[\s\S]*?border:1px solid var\(--border\)/,'Event Hub loses its decorative rail');
   assert.match(step28,/\.ov-ann-item:not\(\.pinned\)\{border-left:1px solid var\(--border\);\}/,'plain announcements lose theirs');
   assert.doesNotMatch(step28,/\.ov-ann-item\.pinned\{[^}]*border-left/,'a pinned announcement keeps its rail: only pinned items have one');
   assert.doesNotMatch(step28,/\.task-card[^{]*\{[^}]*border-left/,'task status rails are untouched');
 });
 
 test('Team Announcements reads like every other card',()=>{
-  const head=step28.match(/#panel-overview \.ov-ann>\.ov-card-head\{([^}]*)\}/)[1];
-  assert.match(head,/background:none/,'no navy band');
+  const shared=stepBlock(102);
+  const head=rule(shared,'#panel-overview .ov-card-head');
+  assert.match(head,/background:transparent/,'no navy band');
   assert.match(head,/border-bottom:0/,'no gold rule');
-  assert.match(head,/margin:0 0 12px/,'the same spacing as the other card heads');
-  assert.match(step28,/\.ov-ann>\.ov-card-head \.ov-card-title\{color:var\(--text\);font-size:14px;font-weight:700;/);
+  assert.match(head,/margin-bottom:12px/,'the same spacing as the other card heads');
+  assert.match(shared,/#panel-overview \.ov-card-title,[\s\S]*?font-size:16px;font-weight:700;color:var\(--text\)/);
 });
 
-test('event chips have room for their names, and phones keep two columns',()=>{
+test('event chips have room for their names on computers',()=>{
   assert.match(step28,/@media\(min-width:481px\)\{\.ev-grid\{grid-template-columns:repeat\(auto-fill,minmax\(176px,1fr\)\);\}\}/);
-  assert.match(source,/@media\(max-width:480px\)\{\.ev-grid\{grid-template-columns:repeat\(2,1fr\);\}\}/,'the phone grid is unchanged');
+  assert.doesNotMatch(source,/@media\(max-width:480px\)\{\.ev-grid/,'Step 99 replaces the two-column phone grid');
 });
 
 /* ===== Step 29 (the triage tiles) was undone by Step 37: the tiles are gone. ===== */
@@ -338,20 +342,16 @@ test('kanban counts are written in ink, and body text is at least 13px',()=>{
 const step32=stepBlock(32);
 
 test('boxes inside a card become rows separated by hairlines',()=>{
-  /* The countdown rows follow their list wherever it sits (step 51: inside the Event Board). */
-  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g,\s*html:not\(\.dark\) \.ov-countdown \.ov-cdn\{([^}]*)\}/);
-  assert.ok(rows,'Upcoming Deadlines, Event Board and countdown rows share one rule');
+  const rows=step32.match(/html:not\(\.dark\) #ov-dl-card \.ov-dl,\s*html:not\(\.dark\) #evb-card \.evb-g\{([^}]*)\}/);
+  assert.ok(rows,'Upcoming Deadlines and Event Board rows share one rule');
   for(const want of [/border:0!important/,/border-radius:0!important/,/box-shadow:none!important/,/border-top:1px solid var\(--border\)!important/])
     assert.match(rows[1],want);
-  assert.match(step32,/\.ov-cdn:first-of-type\{border-top-color:transparent!important;\}/,'no hairline above the first row');
+  assert.match(step32,/\.evb-g:first-of-type\{border-top-color:transparent!important;\}/,'no hairline above the first row');
   assert.match(step32,/#ov-cal-card \.ov-cal-detail\{border:0!important;border-radius:0!important;/,'the day agenda is a section, not a card');
 });
 
 test('what carries meaning survives the flattening',()=>{
-  /* A chip with its own text colour keeps its fill (step 44), so only plain chips flatten. */
-  const chip=step32.match(/\.evhub \.ev-chip:not\(\.ev-chip-filled\)\{([^}]*)\}/)[1];
-  assert.doesNotMatch(chip,/border-top/,'an event chip keeps its urgency rule');
-  assert.doesNotMatch(chip,/border:0/,'only the side and bottom edges go');
+  assert.doesNotMatch(step32,/\.ev-chip/,'Step 99 filled tiles are separate from flattened task groups');
   const dirq=step32.match(/\.task-card \.dirq\{([^}]*)\}/)[1];
   assert.doesNotMatch(dirq,/border-left/,'a Director request keeps its amber rail');
   assert.doesNotMatch(dirq,/background/,'and its amber tint');
@@ -368,13 +368,14 @@ function px(sel,prop){
   assert.ok(m,sel+' has a '+prop);return +m[1];
 }
 
-test('every tab ends with room to scroll its last item clear of the floating buttons',()=>{
+test('on phones every tab ends with room to scroll its last item clear of the floating buttons',()=>{
   assert.match(step33,/:root\{--dock-h:0px;--float-lift:calc\(var\(--dock-h\) \+ env\(safe-area-inset-bottom,0px\)\);\}/,'one lift for the dock and the home bar, zero by default');
   const pad=+step33.match(/\.tab-panel\{padding-bottom:calc\((\d+)px \+ var\(--float-lift\)\);\}/)[1];
   /* Quick Add is the top of the stack; Team Chat sits below it. */
   const stackTop=px('.quickadd-fab','bottom')+px('.quickadd-fab','height');
   assert.ok(px('.chat-fab','bottom')+px('.chat-fab','height')<stackTop,'Team Chat sits below Quick Add');
   assert.ok(pad>stackTop,'the panel ends '+pad+'px up, clear of the '+stackTop+'px stack');
+  assert.doesNotMatch(media(stepBlock(98),'max-width:600px'),/\.tab-panel\{[^}]*padding-bottom/,'step 98 preserves this room on phones');
   /* Each panel is also the page container; this replaces its old bottom padding. */
   assert.match(source,/class="container tab-panel active" id="panel-boss"/);
   assert.ok(css26.indexOf('.tab-panel{padding-bottom')>css26.indexOf('.container{max-width:100%;padding:14px 12px 48px;}'),'the phone padding cannot win back');
@@ -497,8 +498,8 @@ const rule=(css,sel)=>{const i=css.indexOf(sel+'{');assert.ok(i>=0,sel+' has a r
 const media=(css,q)=>{const i=css.indexOf('@media('+q+'){');assert.ok(i>=0,q+' block exists');
   let depth=0,j=css.indexOf('{',i);for(;j<css.length;j++){if(css[j]==='{')depth++;else if(css[j]==='}'&&--depth===0)break;}return css.slice(i,j+1);};
 
-test('the Overview opens on the work: one announcement line, the greeting and search, Team today, then the work list',()=>{
-  const at=['id="ov-ann-card"','class="ov-topbar"','id="ov-team"','class="ov-grid"','id="ov-dl-card"'].map(s=>shell.indexOf(s));
+test('the Overview opens on the work: one announcement line, Team today, then the work list',()=>{
+  const at=['id="ov-ann-card"','id="ov-team"','class="ov-grid"','id="ov-dl-card"'].map(s=>shell.indexOf(s));
   at.forEach((n,i)=>assert.ok(n>0&&(i===0||n>at[i-1]),'out of order at '+i));
   assert.doesNotMatch(shell,/ov-stats|ov-stat\b/,'the five number tiles are gone');
   const render=slice('  function renderOverview(){','\n  }\n');
@@ -539,10 +540,10 @@ test('on a phone each person is one short line and the work list starts on the f
   assert.match(phone,/\.tm-open,\.tm-w,\.tm-lv\{display:none;\}/,'counts with icons; the words stay in the label');
   assert.match(phone,/\.ov-team-sum-w,\.nx-l\{display:none;\}/,'"21 open" and "14:00 Weekly sync" keep the heading to one line');
   assert.match(phone,/\.ov-team-head:has\(\.nx-btn\) \.ov-team-done\{display:none;\}/,'a next meeting takes the room of the done count');
-  assert.match(phone,/\.ov-team-next\{flex:1 1 0;\}/,'and only the room left beside the title');
-  assert.match(phone,/#ov-top,#ov-team\{margin-bottom:12px;\}/);
+  assert.match(media(stepBlock(98),'max-width:600px'),/\.ov-team-next\{grid-column:1\/-1;grid-row:3;/,'the next meeting keeps its own row below the summary');
+  assert.match(phone,/#ov-top,#ov-team\{margin-bottom:var\(--hs-gap\);\}/);
   assert.match(phone,/\.tm-s\{display:inline;\}/,'a flag without a count keeps a short word');
-  assert.match(phone,/#panel-overview \.ov-hello\{display:none;\}/,'the greeting gives way to the work');
+  assert.doesNotMatch(shell,/ov-hello|ov-datesub/,'the removed date block leaves the phone showing the work');
   assert.doesNotMatch(css26,/\.ov-team-note/,'the calendar setup note moved to Settings (step 64)');
   assert.doesNotMatch(phone,/\.ov-mini-btn[^{]*\{[^}]*display:none/,'refreshing availability stays on a phone');
   assert.doesNotMatch(phone,/\.ov-team-next[^{]*\{[^}]*display:none/,'so does the next meeting');
@@ -571,15 +572,20 @@ test('what needs attention is written in the shared status inks, which read at A
 /* ===== Step 38: iPhone person tabs put the work above the dock ===== */
 const step38=stepBlock(38);
 const myDaySource=slice('  function tmr(){var n=new Date();n.setDate','  function renderMyDay(w){');
-function myDay(w,{tasks=[],hour=11,unread=[],own=false}={}){
+function myDay(w,{tasks=[],events=[],waiting=0,hour=11,unread=[],own=false}={}){
   const TODAY='2026-10-26';
   class At extends Date{constructor(...a){if(a.length)super(...a);else super(TODAY+'T'+String(hour).padStart(2,'0')+':30:00');}}
-  const window={__cur:own?{workspace:w}:{role:'admin'},__rcCounts:{unreadList:unread}};
+  const window={__cur:own?{workspace:w}:{role:'admin'},__rcCounts:{unreadList:unread,waiting}};
   const context=vm.createContext({window,Date:At,tdy:()=>TODAY,esc:s=>String(s),
-    memberName:x=>x[0].toUpperCase()+x.slice(1),tasksOf:()=>tasks,eventsOf:()=>[],fmtDate:d=>d,daysUntil:()=>1,
+    memberName:x=>x[0].toUpperCase()+x.slice(1),tasksOf:()=>tasks,eventsOf:()=>events,fmtDate:d=>d,daysUntil:()=>1,
     MEMBER_ORDER:['boss','dew','o','junior'],document:{}});
   vm.runInContext(myDaySource+'\nthis.myDayHTML=myDayHTML;',context);
   return context.myDayHTML(w);
+}
+function myDayColumn(html,group){
+  const match=html.match(new RegExp('<div class="myday-column myday-'+group+'"><div class="myday-label">([^<]+)</div>((?:<button[\\s\\S]*?</button>)+|<div class="myday-empty">[^<]+</div>)</div>'));
+  assert.ok(match,group+' column has a label and task rows or a quiet empty line');
+  return {label:match[1],rows:match[2]};
 }
 
 test('My day draws only the counts that are there, and never repeats "due today" as a focus line',()=>{
@@ -755,16 +761,15 @@ test('inside a status column a card has no coloured rail, and a long name may ta
 /* ===== Step 41: gold back to the brand; red only for trouble ===== */
 const step41=stepBlock(41);
 
-test('an event countdown is amber within a week, calm before that, grey when past, and never red',()=>{
+test('a Timeline countdown is amber within a week, calm before that, grey when past, and never red',()=>{
   const context=vm.createContext({});
   vm.runInContext(slice('function evUrgency(ms){','\nfunction evCountLabel(')+'\nthis.evUrgency=evUrgency;',context);
   const day=86400000;
   assert.equal(context.evUrgency(-1),'grey');
   assert.equal(context.evUrgency(0.5*day),'amber');
-  assert.equal(context.evUrgency(7.6*day),'amber','"7 days" on the label is amber, as on the Overview');
+  assert.equal(context.evUrgency(7.6*day),'amber','"7 days" on the label is amber');
   assert.equal(context.evUrgency(8.1*day),'calm');
   assert.equal(context.evUrgency(40*day),'calm');
-  assert.match(source,/var urg=it\.d<=7\?' soon':'';/,'the Overview countdown uses the same week');
 });
 
 test('a task due today or soon is not red; only overdue work is',()=>{
@@ -784,7 +789,6 @@ test('gold stays with the brand: payday, lunch, ADMIN and the calendar\'s events
   assert.match(step41,/#lunch-banner \.lb-ico\{background:var\(--navy,#003057\);\}/);
   assert.match(step41,/\.auth-banner-role\{background:transparent;color:rgba\(255,255,255,\.9\);box-shadow:inset 0 0 0 1px rgba\(255,255,255,\.45\);\}/,'ADMIN is a quiet outline');
   assert.match(step41,/#panel-overview \.ov-cd-ev\{background:var\(--teal,#0d9488\);\}/);
-  assert.match(step41,/#panel-overview \.ov-cdn\.soon \.ov-cdn-tag\{background:var\(--amber-light\);color:var\(--st-waiting-ink,#7d5406\);\}/);
   assert.match(step41,/\.evc-cd\.u-calm\{background:var\(--navy-light\);color:var\(--navy,#003057\);\}/);
   assert.doesNotMatch(step41,/var\(--gold|#f0b323|#e6a417/i,'the step itself adds no gold');
 });
@@ -798,18 +802,16 @@ test('the header no longer repeats the selected tab, and the role line no longer
 });
 
 test('headings and rows share two left edges: the page edge and one inner edge in every card',()=>{
-  assert.match(step42,/#panel-overview \.ov-card\{padding-left:16px;padding-right:16px;\}/,'every Overview card writes from the same inner edge');
-  assert.match(step42,/#panel-overview \.ov-more-toggle\{padding-left:16px;padding-right:16px;\}/);
+  assert.match(stepBlock(102),/#panel-overview \.ov-card,#ov-team\{padding:16px var\(--hs-pad-card\) 20px;\}/,'every Overview card writes from the same responsive inner edge');
+  assert.match(step42,/#panel-overview \.ov-more-toggle\{padding-left:var\(--hs-pad-card\);padding-right:var\(--hs-pad-card\);\}/);
   assert.match(step42,/\.myday-list\{margin-left:-8px;margin-right:-8px;\}/,'today\'s rows start under "Dew\'s day", their hover still has room');
   assert.match(media(step42,'max-width:600px'),/\.myday-list\{margin-left:-6px;margin-right:-6px;\}/);
   assert.match(media(step42,'min-width:601px'),/\.tm\{padding-left:6px;\}/,'Team today\'s initials line up with its heading');
 });
 
-test('the Event Hub fits its events: tiles share the row and a single event is one slim line',()=>{
+test('event tiles share the row on computers and keep one design for a single event',()=>{
   assert.match(media(step42,'min-width:481px'),/\.ev-grid\{grid-template-columns:repeat\(auto-fit,minmax\(176px,1fr\)\);\}/);
-  const one=rule(step42,'.ev-grid>.ev-chip:only-child');
-  for(const want of [/grid-column:1\/-1/,/flex-direction:row/,/align-items:center/,/min-height:0/])assert.match(one,want);
-  assert.match(step42,/\.ev-grid>\.ev-chip:only-child \.ev-chip-del\{top:50%;transform:translateY\(-50%\);\}/,'its delete button stays reachable at the end of the line');
+  assert.doesNotMatch(css26,/\.ev-grid>\.ev-chip:only-child/,'a lone event keeps the same tile parts and height');
 });
 
 test('a phone on its side gets a two-row header instead of three',()=>{
@@ -843,17 +845,13 @@ test('small fixes from the second review',()=>{
 /* ===== Step 44: event colours the team chose stay readable ===== */
 const step44=stepBlock(44);
 
-test('an event with its own text colour keeps its coloured tile in light mode',()=>{
-  /* Any rule that clears a chip's fill must skip filled chips, or their white or
-     cream text lands on white (Boss's report, 28 Oct). */
-  const chipSel=/\.ev-chip(?![\w-])/;
+test('all event tiles keep their fill and text colours in both themes',()=>{
   const clears=[...css26.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
-    .filter(([,sel,decl])=>chipSel.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
-  assert.ok(clears.length>=1,'plain chips are still flat rows (step 32)');
-  for(const [,sel] of clears)for(const part of sel.split(/,(?![^()]*\))/))
-    if(chipSel.test(part)&&!part.trim().startsWith('html.dark'))assert.match(part,/:not\(\.ev-chip-filled\)/,part.trim()+' must leave filled chips alone in light mode');
-  assert.match(step44,/html:not\(\.dark\) \.evhub \.ev-chip\.ev-chip-filled\{border:0;border-radius:12px;\}/,'a filled chip is a neat tile');
-  assert.match(source,/\(tc\?' ev-chip-filled':''\)/,'only an event with a text colour is marked filled');
+    .filter(([,sel,decl])=>/\.ev-chip(?![\w-])/.test(sel)&&/background:\s*(transparent|none|var\(--surface\))/.test(decl));
+  assert.equal(clears.length,0,'no rule clears a filled tile');
+  assert.doesNotMatch(css26,/html\.dark[^{}]*ev-chip[^{}]*\{[^}]*color:[^}]*!important/,'dark mode respects the helper colours');
+  assert.match(stepBlock(99),/\.ev-chip-filled\{border:0;min-width:0;\}/);
+  assert.match(stepBlock(102),/\.ev-chip\{border-radius:var\(--hs-radius-tile\);\}/);
 });
 
 test("a task label on a coloured event keeps the event's own colours",()=>{
@@ -905,7 +903,6 @@ const step46=stepBlock(46);
 test('in light mode only, an event colour too light for text shows its darker shade',()=>{
   assert.match(step46,/html:not\(\.dark\) \.ev-ink\{color:var\(--evc-ink\)!important;\}/);
   assert.doesNotMatch(css26,/html\.dark[^{]*\.ev-ink(?![\w-])/,'the darker shade is for light mode only');
-  assert.doesNotMatch(source,/class="ov-cdn-n"'\+\(\(it\.e\.color/,'the countdown number goes through evTextAttrs');
 });
 
 
@@ -1002,8 +999,9 @@ test('the header search lists the tabs you can see, by today\'s names, and what 
 
 test('one search on every screen: the header button on iPhone, no box on the Overview',()=>{
   const phone=media(step48,'max-width:600px');
-  assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;[^}]*width:42px;height:42px;/,'the same size as the bell');
-  assert.match(phone,/#panel-overview \.ov-topbar\{display:none;\}/,'nothing left of the Overview\'s top bar on a phone');
+  assert.match(phone,/\.header-right \.cmdk-trigger\{display:inline-flex;/);
+  assert.match(stepBlock(103),/\.header-right \.cmdk-trigger\{width:var\(--hs-ctl-h\);/,'the same touch size as the theme toggle');
+  assert.doesNotMatch(shell,/ov-topbar/,'the unused Overview top bar is removed');
   assert.doesNotMatch(source,/ov-search|doSearch|ovClearSearch/,'the Overview\'s own search is gone');
   assert.match(source,/<button class="cmdk-trigger" onclick="openCmdk\(\)" title="Search and commands \(Ctrl K\)" aria-label="Search">/);
   assert.match(source,/placeholder="Search tasks, events, notes or links"/);
@@ -1013,11 +1011,11 @@ test('one search on every screen: the header button on iPhone, no box on the Ove
 const step49=stepBlock(49);
 
 test('in light mode a person colour fills no large area: plain name and Event Hub bars, navy buttons',()=>{
-  assert.match(step49,/html:not\(\.dark\) \.member-head\{background:var\(--surface\)!important;background-image:none!important;\}/);
-  assert.match(step49,/html:not\(\.dark\) \.evhub-head\{background:transparent!important;background-image:none!important;\}/);
-  assert.match(step49,/html:not\(\.dark\) :is\(#panel-boss,#panel-dew,#panel-o,#panel-junior\) \.btn-accent\{background:var\(--navy,#003057\)!important;[^}]*color:#fff!important;\}/,
+  assert.match(stepBlock(102),/\.tab-panel \.member-head\{background:var\(--surface\);background-image:none;/);
+  assert.match(stepBlock(102),/\.tab-panel \.evhub-head\{background:transparent;background-image:none;\}/);
+  assert.match(stepBlock(103),/\.btn-accent,[^{]+\{\s*background:var\(--hs-btn-main\);[^}]*color:#fff;/,
     'Add Task and the other primary buttons are the same navy on every tab');
-  assert.match(step49,/html:not\(\.dark\) \.tab-panel \.fpill\.act-accent\{background:var\(--navy,#003057\)!important;/,'so is the selected filter');
+  assert.match(stepBlock(103),/\.fpill:is\(\.act-navy,\.act-accent,\.act-coral\)[^{]*\{background:#003057;/,'so is the selected filter');
   assert.doesNotMatch(css26,/html:not\(\.dark\) #panel-(boss|dew|o) \.btn-accent\{background:#(366a9c|a25816|b73d0b)/,'no person-coloured button left in light mode');
   assert.ok(contrast('#ffffff','#003057')>=4.5&&contrast('#ffffff','#00264a')>=4.5,'white reads on the navy and its hover');
   assert.doesNotMatch(step49,/html\.dark/,'dark mode keeps its colours');
@@ -1030,7 +1028,7 @@ test('at rest a card ends in one bar, Details and "⋯"; the action row and the 
   const html=card(sample);
   const bar=html.slice(html.indexOf('<div class="tc-bar">'),html.indexOf('<div class="task-foot">'));
   assert.match(bar,/^<div class="tc-bar"><button type="button" class="tc-more" aria-expanded="false" onclick="event\.stopPropagation\(\);tcToggleDetails\(this,'dew_t1'\)">/,'Details on the left');
-  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" beside Details');
+  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><select class="tcard-sel tc-quick-sel"[^]*?<\/select><\/div>$/,'"⋯" beside Details, followed by the touch-only status menu');
   const foot=html.slice(html.indexOf('<div class="task-foot">'),html.indexOf('<div class="tc-details'));
   assert.match(foot,/^<div class="task-foot"><select class="tcard-sel tc-row-sel" title="Task status"/,'the row can carry the status menu for a status column');
   for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
@@ -1063,7 +1061,8 @@ test('the row stays hidden until "⋯"; in a status column the status menu waits
   assert.match(step50,/\.task-card \.task-foot \.tc-row-sel\{display:none;\}/);
   assert.match(step50,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
   assert.match(step50,/\.kb-col \.task-card \.task-foot \.tc-row-sel\{display:inline-flex;\}/);
-  assert.match(media(step50,'max-width:600px'),/\.task-card \.tc-acts-btn\{width:40px;height:40px;\}/,'a full touch target on iPhone');
+  assert.match(stepBlock(103),/\.task-card \.tc-acts-btn\{min-width:44px;\}/,'a full touch target on iPhone');
+  assert.match(stepBlock(103),/\.task-card \.tc-acts-btn,[^{]*\{min-height:44px;/);
   assert.match(step50,/\.task-card \.tc-acts-btn\{margin-left:0;/,'"⋯" beside Details on the left');
 });
 
@@ -1097,7 +1096,6 @@ test('with two columns the Event Board runs full width under them; in one column
   assert.match(layout,/if\(!oneCol\)ovPlace\(document\.getElementById\('ov-wide'\),LAYOUT\.wide\);/);
   assert.match(source,/ovColMq\.addEventListener\('change',function\(\)\{ovLayout\(\);\}\)/,'turning an iPad moves it with the columns');
   assert.ok(shell.indexOf('id="ov-wide"')>shell.indexOf('class="ov-col-side"'),'the band comes after both columns');
-  assert.match(step51,/#evb-soon \.ov-countdown\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(280px,1fr\)\);/,'"Coming up" is a grid when it has room');
   assert.match(step51,/#panel-overview \.ov-wide:empty\{display:none;\}/);
 });
 
@@ -1480,21 +1478,6 @@ test('the search sheet closes with a real button: "ESC" on computers, "Cancel" o
   assert.match(source,/inp\.placeholder=\(window\.matchMedia&&matchMedia\('\(max-width:600px\)'\)\.matches\)\?'Tasks, events, notes, links':'Search tasks, events, notes or links';/,'beside Cancel a phone gets the short placeholder');
 });
 
-test('a countdown row says its days once: the big number, with a word only for today and tomorrow',()=>{
-  const fn=slice('  function renderCountdown(){','\n  }\n')+'\n  }';
-  const el={};const c=vm.createContext({document:{getElementById:()=>el},MarcomUI:{setHTML:(n,h)=>{n.html=h;}},MORDER:['boss'],
-    eOf:()=>[{id:'a',name:'Fair',date:'d0'},{id:'b',name:'Book Week',date:'d1'},{id:'c',name:'Sports Day',date:'d5'}],
-    dU:d=>({d0:0,d1:1,d5:5})[d],esc:s=>s,fdt:s=>s,evTextAttrs:cls=>' class="'+cls+'"',evDeleteButtonHTML:()=>'<button class="ev-chip-del"></button>'});
-  vm.runInContext(fn+'\nthis.renderCountdown=renderCountdown;',c);
-  c.renderCountdown();
-  const rows=el.html.split(/(?=<div class="ov-cdn(?: soon)?" onclick)/);
-  assert.equal(rows.length,3);
-  assert.match(rows[0],/>0<\/div><div class="ov-cdn-u">days<\/div>.*<div class="ov-cdn-tag">Today<\/div>/);
-  assert.match(rows[1],/>1<\/div><div class="ov-cdn-u">day<\/div>.*<div class="ov-cdn-tag">Tomorrow<\/div>/,'one day, singular');
-  assert.match(rows[2],/>5<\/div><div class="ov-cdn-u">days<\/div>/);
-  assert.doesNotMatch(rows[2],/ov-cdn-tag/,'no "5 days" pill beside the 5');
-});
-
 test('the payday panel says the days left once: the ring, with no count of days gone, second bar or badge',()=>{
   const strip=slice('<div class="salary-strip" id="salary-card">','<div id="sal-badge"></div>');
   assert.match(strip,/class="salary-days-big" id="sal-days"/,'the ring and its number stay');
@@ -1538,7 +1521,8 @@ test('one greeting: My day on your own tab is "Today"',()=>{
   assert.doesNotMatch(own,/Good (morning|afternoon|evening)/);
   assert.match(myDay('dew',{tasks:[]}),/<span class="myday-greet">Dew's day<\/span>/,'someone else\'s tab keeps its name');
   assert.doesNotMatch(shell,/id="ov-greet"/,'the Overview greeting is removed');
-  assert.match(shell,/id="ov-datesub"/,'the date stays');
+  assert.match(source,/today\.className='uxp-sal-today'; today\.id='uxp-sal-today';/,'the date now belongs to every tab\'s payday line');
+  assert.doesNotMatch(shell,/id="ov-datesub"/,'no lone date remains on the Overview');
 });
 
 test('an empty status column is its header and its 0, with a drop area only while a card is dragged over it',()=>{
@@ -1575,9 +1559,10 @@ test('deadline rows are buttons: Tab reaches them and Enter or Space opens the t
 });
 
 test('one set of left edges: every card title after the same chip, and flat rows starting at the card edge',()=>{
-  assert.match(step65,/\.ov-team-title>i\.ti:first-child\{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/,'Team today wears the chip the other titles wear');
-  assert.match(css26,/\.ov-card-title>i\.ti:first-child,\.widget-title>i\.ti:first-of-type\{\s*display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;/);
-  assert.match(step65,/html:not\(\.dark\) #ov-dl-card \.ov-dl,\nhtml:not\(\.dark\) #panel-overview \.ov-countdown \.ov-cdn,\nhtml:not\(\.dark\) #evb-card \.evb-row\{padding-left:0;padding-right:0;\}/);
+  const shared=stepBlock(102),tile=shared.slice(shared.indexOf('#panel-overview .ov-card-title>i.ti:first-child'),shared.indexOf('.ov-team-sum,.ov-team-next'));
+  for(const selector of ['.ov-card-title>i.ti:first-child','.ov-team-title>i.ti:first-child','.widget-title>i.ti:first-of-type'])assert.ok(tile.includes(selector));
+  assert.match(tile,/width:32px;height:32px;flex:0 0 32px;/,'every title uses the same icon tile');
+  assert.match(step65,/html:not\(\.dark\) #ov-dl-card \.ov-dl,\nhtml:not\(\.dark\) #evb-card \.evb-row\{padding-left:0;padding-right:0;\}/);
   assert.match(step65,/box-shadow:-11px 0 0 var\(--surface-3\),11px 0 0 var\(--surface-3\)!important;/,'the hover tint reaches into the card padding');
   assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g-h\{width:calc\(100% \+ 24px\);margin-left:-12px;margin-right:-12px;\}/);
   assert.match(step65,/html:not\(\.dark\) #evb-card \.evb-g\{overflow:visible;\}/,'the fold animation still clips while it runs (ui-motion sets it inline)');
@@ -1600,17 +1585,21 @@ test('folded Overview cards are excluded from the last-card grow rule',()=>{
   assert.doesNotMatch(desk,/>\.ov-card:last-child\{flex-grow:1;\}/);
 });
 
-test('"⋯" sits beside Details or below the tick without adding a row',()=>{
+test('on desktop "⋯" sits beside Details or below the tick without adding a row',()=>{
   const withDetails=card(sample);
   assert.match(withDetails,/<div class="tc-bar"><button type="button" class="tc-more"[^]*?<\/button><button type="button" class="tc-acts-btn"/,'Details and "⋯" share the bar');
   assert.doesNotMatch(withDetails.slice(withDetails.indexOf('<div class="task-meta">'),withDetails.indexOf('tc-open-hint')),/tc-acts-btn/);
   const bare=card({...sample,description:'',links:[]});
-  assert.doesNotMatch(bare,/class="tc-bar"/,'no footer row without details');
+  assert.doesNotMatch(bare,/class="tc-bar"/,'no in-flow desktop footer row without details');
   const meta=bare.slice(bare.indexOf('<div class="task-meta">'),bare.indexOf('<i class="ti ti-arrow-up-right tc-open-hint"'));
-  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/span><\/div><div class="role-x">/,'its keyboard position follows the facts');
+  assert.ok(bare.indexOf('tc-acts-btn')>bare.indexOf('task-meta')&&bare.indexOf('tc-acts-btn')<bare.indexOf('role-x'),'its keyboard position still follows the facts, before the role controls');
+  assert.match(bare,/<div class="tc-bar tc-facts-end"><button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button>/,'the same actions button moves with the bar');
   assert.equal((bare.match(/tc-acts-btn/g)||[]).length,1);
   const step68=stepBlock(68);
-  assert.match(meta,/<span class="tc-facts-end"><button/,'the bare card has an actions group in the tick column');
+  assert.match(bare,/<div class="tc-body"><div class="task-meta">/,'the bare card anchors its actions at the top of the facts');
+  assert.match(meta,/<\/select><\/div><div class="role-x">/,'the bar precedes the role controls in keyboard order');
+  assert.match(stepBlock(108),/\.task-card \.tc-body\{position:relative;\}/);
+  assert.match(stepBlock(108),/\.task-card \.tc-bar\.tc-facts-end\{left:0;margin:0;min-height:0;\}/,'the bar stays beneath the tick with no desktop height');
   assert.match(step68,/\.task-card \.tc-facts-end\{position:absolute;top:0;left:calc\(-1 \* var\(--tc-name-inset\)\);width:calc\(var\(--tc-name-inset\) - 10px\);display:flex;justify-content:center;\}/);
   assert.match(step68,/\.task-card \.task-meta\{position:relative;margin-left:var\(--tc-name-inset\);\}/);
   assert.doesNotMatch(step68,/flex-basis:100%/,'actions add no row of their own');
@@ -1733,11 +1722,18 @@ test('Today keeps completed rows in their original groups and positions with ope
   assert.match(after,/<b>2<\/b> overdue/);
   assert.match(after,/class="myday-chip ok"[^>]*><b>1<\/b> done today/);
   assert.equal((before.match(/class="myday-row /g)||[]).length,(after.match(/class="myday-row /g)||[]).length);
-  assert.ok(after.indexOf('First late')<after.indexOf('Second late'));
+  const late=myDayColumn(after,'overdue').rows;
+  assert.ok(late.indexOf('First late')<late.indexOf('Second late'));
+  assert.match(late,/class="myday-row done"/);
+  assert.doesNotMatch(late,/Today task/);
+  assert.match(myDayColumn(after,'today').rows,/Today task/);
   assert.doesNotMatch(after,/Third late/);
   Object.assign(tasks[3],{status:'done',doneOn:'2026-10-26'});
   const allDone=myDay('dew',{tasks:[tasks[0],tasks[3]]});
   assert.equal((allDone.match(/class="myday-row done"/g)||[]).length,2);
+  assert.match(myDayColumn(allDone,'overdue').rows,/class="myday-row done"[^>]*>[\s\S]*First late/);
+  assert.match(myDayColumn(allDone,'today').rows,/class="myday-row done"[^>]*>[\s\S]*Today task/);
+  assert.doesNotMatch(allDone,/All clear|myday-empty/,'finished rows still occupy both columns');
   assert.match(allDone,/<b>2<\/b> done today/);
   assert.doesNotMatch(allDone,/myday-chip (bad|warn)/);
   assert.doesNotMatch(myDay('dew',{tasks:[{...tasks[0],doneOn:'2026-10-25'}]}),/First late|done today/);
@@ -1812,9 +1808,9 @@ test('desktop Add Task follows the filters and Today dates follow task names',()
   const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8').split('/* Step 71:')[1];
   assert.match(css,/@media\(min-width:981px\)/);
   assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:auto;flex:0 0 auto;/);
-  assert.match(css,/background:#10243a!important;.*color:#fff!important/);
+  assert.match(stepBlock(103),/html.dark \.tab-panel \.btn-accent\{background:#10243a;color:#fff;/);
   assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
-  assert.match(source,/dateLabel=DOW\[n.getDay\(\)\]/);
+  assert.match(source,/dateLabel=new Date\(\)\.toLocaleDateString\('en-GB',\{weekday:'long',day:'numeric',month:'long',year:'numeric'\}\)/,'the shared payday line keeps the full British date');
   assert.doesNotMatch(slice('window.ovDaily=function(){','/* quick actions */'),/Good morning|Good afternoon|Good evening|ov-greet/);
 });
 
@@ -1872,12 +1868,147 @@ test('Reset Year asks before deleting sick records',()=>{
 
 test('step 72c quiet widget tiles and outline actions meet AA contrast',()=>{
   const block=stepBlock('72c');
-  assert.match(block,/\.side-col \.widget-title>i\.ti:first-of-type/);
-  assert.match(block,/color:#34445c!important;background:#e5e7eb!important/);
-  assert.match(block,/\.widget-head \.btn/);
-  assert.match(block,/\.task-card \.story-email-btn/);
-  assert.match(block,/background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important/);
+  assert.match(stepBlock(102),/\.tab-panel \.widget-title>i\.ti:first-of-type/);
+  assert.match(stepBlock(102),/background:var\(--hs-icon-tile-bg\);color:var\(--hs-icon-tile-ink\)/);
+  const shared=stepBlock(103);
+  assert.match(shared,/\.widget-head \.btn/);
+  assert.match(shared,/\.btn-ghost,\.task-link,\.task-card \.tc-more/);
+  assert.match(shared,/background:var\(--surface\);border:1px solid var\(--hs-btn-line\);color:var\(--text\);font-weight:600;box-shadow:none;/);
   assert.doesNotMatch(block,/member-name|member-role|headname/);
   for(const bg of ['#ffffff','#e5e7eb','#EFF3F9']) assert.ok(contrast('#34445c',bg)>=4.5);
   assert.match(source,/class="task-link role-btn story-email-btn" onclick="openStoryEmail/);
+});
+
+/* Step 99: the shared event grid scrolls inside its card on iPhone. */
+test('event tiles form one snapping row at 600px and keep their desktop grid',()=>{
+  const step99=stepBlock(99),phone=media(step99,'max-width:600px');
+  const grid=rule(phone,'.ev-grid');
+  for(const declaration of ['display:flex','flex-wrap:nowrap','overflow-x:auto','scroll-snap-type:x proximity','gap:10px','scrollbar-width:none'])
+    assert.ok(grid.includes(declaration),declaration);
+  assert.match(phone,/\.ev-grid::-webkit-scrollbar\{display:none;\}/);
+  const tile=rule(phone,'.ev-grid>.ev-chip');
+  for(const declaration of ['flex:0 0 150px','width:150px','min-height:84px','scroll-snap-align:start'])assert.ok(tile.includes(declaration),declaration);
+  assert.match(phone,/\.ev-grid-wrap::after\{[^}]*background:linear-gradient\(to right,transparent,var\(--surface\)\);pointer-events:none;/);
+  assert.match(step99,/\.evhub,\.evhub-body,\.ev-past,\.ev-grid-wrap,\.ev-grid,#evb-card,#evb-soon,\.ov-countdown,\.ov-wide\{min-width:0;\}/);
+  assert.match(css26,/\.two-col>\*\{min-width:0;\}/,'the person column can shrink around the scrolling row');
+  assert.match(source,/\.ev-grid\{display:grid;/,'computers keep the grid');
+  assert.match(step99,/\.ev-grid\{align-items:stretch;\}/,'tiles have equal heights within a row');
+  assert.match(step99,/\.ev-chip:focus-visible\{outline:2px solid var\(--focus-ink\);/);
+  assert.match(media(step99,'prefers-reduced-motion:reduce'),/\.ev-chip\{transition:none;\}/);
+});
+
+/* Step 101: desktop identity figures and full-width Today groups. */
+test('Today labels both columns, limits each to two rows and counts all open tasks',()=>{
+  const tasks=['overdue','today'].flatMap((group)=>[1,2,3].map(n=>({
+    id:group+n,topic:group+' task '+n,status:'pending',
+    dueDate:group==='overdue'?'2026-10-25':'2026-10-26'
+  })));
+  const html=myDay('boss',{tasks}),opened=[];
+  assert.match(html,/class="myday-list"><div class="myday-columns">/);
+  for(const [group,label,count] of [['overdue','Overdue','overdue'],['today','Due today','due today']]){
+    const column=myDayColumn(html,group);
+    assert.equal(column.label,label);
+    assert.equal((column.rows.match(/<button /g)||[]).length,2);
+    assert.doesNotMatch(column.rows,/task 3|myday-empty/);
+    assert.ok(html.includes('<b>3</b> '+count+'</button>'),'the count includes the undisplayed third task');
+    for(const [,handler] of column.rows.matchAll(/onclick="([^"]+)"/g)){
+      vm.runInNewContext(handler,{openEdit:(w,id)=>opened.push([w,id])});
+    }
+  }
+  assert.deepEqual(opened,[['boss','overdue1'],['boss','overdue2'],['boss','today1'],['boss','today2']]);
+});
+
+test('Today gives a quiet line only to the empty column',()=>{
+  for(const [date,empty,filled,message] of [
+    ['2026-10-26','overdue','today','Nothing overdue'],
+    ['2026-10-25','today','overdue','Nothing due today']
+  ]){
+    const html=myDay('boss',{tasks:[{id:'a',status:'pending',topic:'Only task',dueDate:date}]});
+    assert.equal(myDayColumn(html,empty).rows,'<div class="myday-empty">'+message+'</div>');
+    assert.match(myDayColumn(html,filled).rows,/Only task/);
+    assert.equal((html.match(/class="myday-empty"/g)||[]).length,1);
+    assert.doesNotMatch(html,/All clear/);
+  }
+});
+
+test('Today keeps All clear alone when neither task group has rows',()=>{
+  const html=myDay('boss',{tasks:[
+    {id:'tomorrow',status:'pending',dueDate:'2026-10-27'},
+    {id:'old',status:'done',dueDate:'2026-10-25',doneOn:'2026-10-25'},
+    {id:'canceled',status:'canceled',dueDate:'2026-10-26'}
+  ]});
+  assert.match(html,/class="myday-list"><div class="myday-clear"><i class="ti ti-circle-check"><\/i>All clear for now\. A good moment to plan ahead\.<\/div><\/div><\/div>$/);
+  assert.doesNotMatch(html,/myday-columns|myday-column |myday-label|myday-empty/);
+});
+
+test('Today keeps one event and the role row after the columns, including without task rows',()=>{
+  for(const tasks of [[],[{id:'late',status:'pending',topic:'Late task',dueDate:'2026-10-25'}]]){
+    const html=myDay('boss',{tasks,waiting:2,events:[
+      {name:'Open Day',date:'2026-10-26'},
+      {name:'Second event',date:'2026-10-26'}
+    ]});
+    assert.match(html,/<button type="button" class="myday-row info" onclick="uxpGoto\('#boss-evhub-body'\)">/);
+    assert.match(html,/Open Day<span class="md-sub">event today<\/span><\/button><div class="myday-row warn" style="cursor:default;">/);
+    assert.match(html,/2 requests waiting for your approval or clarification/);
+    assert.doesNotMatch(html,/Second event|All clear/);
+    if(tasks.length){
+      assert.match(html,/<div class="myday-column myday-today"><div class="myday-label">Due today<\/div><div class="myday-empty">Nothing due today<\/div><\/div><\/div><button type="button" class="myday-row info"/,'the event and role are siblings of the grid');
+    }else assert.doesNotMatch(html,/myday-columns|myday-empty/,'empty task groups add no space before the event');
+  }
+});
+
+test('step 101 uses equal desktop columns and keeps the phone and tablet list unlabelled',()=>{
+  const css=stepBlock(101),desktop=media(css,'min-width:981px'),small=media(css,'max-width:980px');
+  const columns=rule(desktop,'.myday-columns');
+  for(const declaration of ['display:grid','grid-template-columns:repeat(2,minmax(0,1fr))','width:100%'])assert.ok(columns.includes(declaration));
+  assert.match(desktop,/\.myday-column\{min-width:0;\}/);
+  assert.match(desktop,/\.myday-column \.md-title\{overflow-wrap:anywhere;\}/);
+  assert.match(small,/\.myday-label,\.myday-empty\{display:none;\}/);
+  assert.doesNotMatch(small,/member-head|mh-stat|display:grid/,'the existing small-screen header and single list stay in place');
+  const outsideDesktop=css.replace(desktop,'');
+  assert.doesNotMatch(outsideDesktop,/\.myday-columns\{|\.member-head\{|\.member-head \.mh-stat\{/);
+  const labels=rule(stepBlock(102),'.ov-dl-grp-t,.evb-sec-h,.myday-label');
+  for(const declaration of ['font-size:11.5px','font-weight:700','color:var(--muted)','text-transform:uppercase','letter-spacing:.06em']){
+    assert.ok(labels.includes(declaration),declaration+' is shared with the Overview group labels');
+  }
+});
+
+test('desktop stat figures sit 24px after the identity with dividers and the colour button at the end',()=>{
+  const css=stepBlock(101),desktop=media(css,'min-width:981px');
+  assert.match(desktop,/\.member-head\{column-gap:14px;\}/);
+  assert.match(rule(desktop,'.member-head .member-head-stats'),/margin-left:10px;gap:0;flex:0 0 auto;flex-wrap:nowrap;/,'14px gap plus 10px margin is 24px');
+  assert.match(desktop,/\.member-head \.member-head-extra\{margin-left:auto;\}/);
+  const stat=rule(desktop,'.member-head .mh-stat');
+  for(const declaration of ['background:transparent','border:0','font-size:13px','color:var(--muted)','white-space:nowrap'])assert.ok(stat.includes(declaration));
+  assert.match(desktop,/\.member-head \.mh-stat\+\.mh-stat\{[^}]*border-left:1px solid var\(--border\);/);
+  assert.match(desktop,/\.member-head \.mh-stat b\{font-size:18px;font-weight:800;color:var\(--text\);\}/);
+  assert.match(desktop,/\.member-head \.mh-stat i\{display:none;\}/);
+  assert.doesNotMatch(desktop,/!important|\.member-head\{[^}]*(?:padding|height)|member-avatar/,'the header keeps its height without stronger overrides');
+  assert.match(css26,/\.member-head button\.mh-stat:hover\{box-shadow:/);
+  assert.match(css26,/\.member-head button\.mh-stat:focus-visible\{outline:2px solid var\(--focus-ink\);/);
+  assert.match(media(css,'prefers-reduced-motion:reduce'),/\.member-head button\.mh-stat\{transition:none;\}/);
+  const c=vm.createContext({});
+  vm.runInContext(slice('  var STAT_CHIPS=','  document.addEventListener(\'click\''),c);
+  for(const [filter,label,title] of [['all','active','Show all tasks'],['soon','due soon','Show tasks due soon'],['done','done','Show done tasks']]){
+    assert.ok(c.STAT_CHIPS.includes('data-f="'+filter+'" title="'+title+'"'));
+    assert.ok(c.STAT_CHIPS.includes('<span class="mh-l">'+label+'</span>'),'the readable button name stays in the markup');
+  }
+  for(const step of [23,41,'72b',73]){
+    const old=css26.split('/* Step '+step+':')[1].split('/* Step ')[0],scoped=media(old,'max-width:980px');
+    assert.match(scoped,/\.mh-stat-soon b[^{}]*\{color:#[0-9a-f]{6}!important;\}/);
+    assert.doesNotMatch(old.replace(scoped,''),/\.mh-stat-soon [bi][^{]*\{[^}]*!important/,'the old stat ink cannot override desktop figures');
+  }
+});
+
+test('step 101 figures, labels and quiet lines use readable theme inks',()=>{
+  const desktop=media(stepBlock(101),'min-width:981px');
+  for(const selector of ['.member-head .mh-stat','.myday-empty'])assert.match(rule(desktop,selector),/color:var\(--muted\)/);
+  assert.match(rule(desktop,'.member-head .mh-stat b'),/color:var\(--text\)/);
+  assert.match(rule(stepBlock(102),'.ov-dl-grp-t,.evb-sec-h,.myday-label'),/color:var\(--muted\)/);
+  assert.match(source,/--text:#101A2B;--muted:#55637A;/);
+  assert.match(source,/--text:#EAF0F8;/);
+  assert.match(css26,/html.dark\{--muted:#a3b1c4;/);
+  for(const [ink,bgs] of [['#101A2B',['#ffffff','#eef1f5']],['#55637A',['#ffffff','#eef1f5']],['#EAF0F8',['#26374b','#192231']],['#a3b1c4',['#26374b','#192231']]]){
+    for(const bg of bgs)assert.ok(contrast(ink,bg)>=4.5,ink+' on '+bg+' meets 4.5:1');
+  }
 });

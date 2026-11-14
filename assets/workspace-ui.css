@@ -13,7 +13,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   color:#fff!important;border-bottom-color:#f0b323!important;background:rgba(255,255,255,.13)!important;
 }
 .tab-nav .tab-btn:not(.a-active){border-bottom-color:transparent!important;}
-.icon-btn{color:var(--muted);}
+
 .salary-dock .sal-cell-label i{color:currentColor;-webkit-text-fill-color:currentColor;}
 .salary-dock .sal-cell-sub i{color:inherit;}
 
@@ -29,7 +29,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 .two-col>*{min-width:0;}
 .stats-row{grid-template-columns:repeat(3,minmax(0,1fr));}
 .stat-box{min-width:0;}
-.sub-nav{overflow-x:auto;}
+
 .sub-tab{white-space:nowrap;}
 .member-head-text{min-width:0;overflow-wrap:anywhere;}
 .task-actions{flex-wrap:wrap;max-width:100%;}
@@ -65,15 +65,15 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
   .salary-dock .salary-days-big{font-size:25px;}
   .salary-dock .sal-cell:nth-of-type(5){grid-column:2;grid-row:2;}
   .salary-dock .salary-badge{font-size:10px;padding:5px 7px;}
-  .sub-nav{gap:4px;padding:5px;}
-  .sub-tab{flex:0 0 auto;min-height:42px;padding:9px 12px;}
+  .sub-nav{gap:4px;}
+
   .stats-row{gap:8px;}
   .stat-box{padding:14px 10px;flex-direction:column;align-items:flex-start;gap:8px;}
   .stat-main{flex-direction:column;align-items:flex-start;gap:4px;}
   .stat-num{font-size:26px;}
   .stat-desc{max-width:100%;margin-left:0;text-align:left;font-size:11px;}
   .stat-ic{width:32px;height:32px;font-size:18px;}
-  .member-head{padding:14px;gap:10px;}
+  .member-head{gap:10px;}
   .member-head-stats{justify-content:flex-start;margin-left:0;}
   .widget-head{flex-wrap:wrap;gap:8px;}
   .widget-head .cal-nav-mini{margin-left:auto;}
@@ -97,7 +97,7 @@ html.dark .tab-nav .tab-btn:is(#tab-overview,#tab-boss,#tab-best,#tab-dew,#tab-o
 #panel-overview .ov-cal-grid .cal-day:not(.empty):hover{border-color:var(--gray-mid);}
 #panel-overview .ov-cal-grid .cal-day.today{background:var(--navy);color:#fff;}
 #panel-overview .ov-cal-grid .cal-day.sel{outline:2px solid var(--focus-ink);outline-offset:-2px;}
-#panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:var(--gold);}
+
 #panel-overview .ov-cal-grid .ov-dots{height:6px;margin-top:4px;gap:3px;}
 #panel-overview .ov-cal-grid .cal-day.today .ov-cd{background:#fff;}
 html.dark #panel-overview .ov-calendar-card .ov-cd-dl{background:#9bd6ff;}
@@ -194,8 +194,7 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 @keyframes task-draft-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 /* Shared dropdown surfaces and discrete enter/exit motion. */
 .ui-menu{
-  position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:14px;
-  box-shadow:0 4px 12px rgba(0,0,0,.08),0 16px 40px rgba(0,0,0,.12);
+  position:absolute;background:var(--surface);border:1px solid var(--border);
   padding:6px;min-width:200px;z-index:640;display:none;
 }
 .ui-menu.open{display:block;}
@@ -228,11 +227,10 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
   cursor:pointer;opacity:0;transition:opacity 120ms;
 }
 .ev-chip:hover .ev-chip-del,.ev-chip:focus-within .ev-chip-del,
-.ov-cdn:hover .ev-chip-del,.ov-cdn:focus-within .ev-chip-del,
 .ev-tl-item:hover .ev-chip-del,.ev-tl-item:focus-within .ev-chip-del{opacity:1;}
 .ev-chip-del:hover{background:var(--danger-light);color:var(--danger);}
 .ev-chip-del:focus-visible{outline:2px solid var(--danger);outline-offset:2px;}
-.ov-cdn>.ev-chip-del,.ev-tl-item>.ev-chip-del{position:static;margin-left:auto;}
+.ev-tl-item>.ev-chip-del{position:static;margin-left:auto;}
 .ev-tl-item{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;}
 .ev-tl-date,.ev-tl-name,.ev-tl-cd{grid-column:1;}
 .ev-tl-item>.ev-chip-del{grid-column:2;grid-row:1 / 4;align-self:start;}
@@ -243,16 +241,15 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 }
 .ev-past-toggle i{transition:transform 200ms;}
 .ev-past-toggle[aria-expanded="true"] i{transform:rotate(180deg);}
-.ev-past{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px;}
+.ev-past{margin-top:10px;}
 .ev-past.ev-past-closed{display:none;}
 .ev-chip-past{opacity:.72;}
 .ev-chip-past:hover{opacity:1;}
 .ev-past-clear{
-  grid-column:1 / -1;justify-self:start;padding:5px 8px;border:0;border-radius:6px;
+  margin-top:10px;padding:5px 8px;border:0;border-radius:6px;
   background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
 }
 .ev-past-clear:hover,.ews-del:hover{background:var(--danger-light);color:var(--danger);}
-@media(max-width:480px){.ev-past{grid-template-columns:repeat(2,1fr);}}
 @media(prefers-reduced-motion:reduce){.ev-chip-del,.ev-past-toggle i{transition:none;}}
 
 /* Compact shared Event Board with remembered event folds. */
@@ -313,7 +310,6 @@ html.dark .task-draft-banner{background:rgba(240,179,35,.14);border-color:rgba(2
 #modal .role-closed .role-body{display:none;}
 @media(prefers-reduced-motion:reduce){#modal .role-fold .role-chevron{transition:none;}}
 
-
 /* The Upcoming Deadlines filter. */
 #panel-overview #ov-dl-card .ov-card-head{flex-wrap:wrap;gap:8px;}
 #panel-overview .ov-dl-filters{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;}
@@ -328,16 +324,15 @@ html.dark #panel-overview .ov-dl-more:hover,html.dark #panel-overview .ov-dl-mor
 #ov-dl-title:focus-visible{outline:2px solid var(--focus-ink);outline-offset:3px;}
 
 /* Overview layout: a folded "Resources & more" section for less-used cards. */
-#panel-overview .ov-more{margin:8px 0 24px;border:1px solid var(--border);border-radius:18px;background:var(--surface);}
+#panel-overview .ov-more{margin:0;background:var(--surface);}
 #panel-overview .ov-more-toggle{
-  display:flex;align-items:center;gap:10px;width:100%;padding:14px 18px;border:0;border-radius:18px;
+  display:flex;align-items:center;gap:10px;width:100%;padding:16px var(--hs-pad-card);border:0;border-radius:var(--hs-radius-card);
   background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;
 }
 #panel-overview .ov-more-toggle:hover{background:var(--gray-light);}
 #panel-overview .ov-more-toggle:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
-#panel-overview .ov-more-toggle>.ti:first-child{font-size:18px;color:var(--navy);}
-html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
-#panel-overview .ov-more-title{font-size:14px;font-weight:800;white-space:nowrap;}
+
+#panel-overview .ov-more-title{white-space:nowrap;}
 #panel-overview .ov-more-sum{
   flex:1;min-width:0;color:var(--muted);font-size:12px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -345,14 +340,14 @@ html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
 #panel-overview .ov-more-chev{transition:transform 200ms ease;}
 #panel-overview .ov-more-toggle[aria-expanded="true"] .ov-more-chev{transform:rotate(180deg);}
 #panel-overview .ov-more-body{
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;padding:4px 16px 16px;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--hs-gap);align-items:start;padding:0 var(--hs-pad-card) 20px;
 }
 #panel-overview .ov-more.ov-more-closed .ov-more-body{display:none;}
 #panel-overview .ov-more-body>*{margin:0!important;min-width:0;}
 #panel-overview .ov-more-body>#sscal-card{grid-column:1 / -1;}
 @media(max-width:1100px){#panel-overview .ov-more-body{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:700px){
-  #panel-overview .ov-more-body{grid-template-columns:minmax(0,1fr);padding:4px 10px 12px;}
+  #panel-overview .ov-more-body{grid-template-columns:minmax(0,1fr);padding:0 var(--hs-pad-card) 20px;}
   #panel-overview .ov-more-sum{display:none;}
 }
 #panel-overview #ov-wm-card[hidden]{display:none!important;}
@@ -364,7 +359,7 @@ html.dark #panel-overview .ov-more-toggle>.ti:first-child{color:#9bd6ff;}
 /* Compact Overview cards. */
 /* Announcements: the composer opens from New. */
 #ov-ann-card .ov-card-head{gap:8px;}
-#ov-ann-card .ov-ann-new{margin-left:auto;display:inline-flex;align-items:center;gap:5px;width:auto;padding:0 10px;font-size:12px;font-weight:700;}
+#ov-ann-card .ov-ann-new{margin-left:auto;width:auto;}
 #ov-ann-card.ov-ann-closed .ov-ann-compose{display:none;}
 #panel-overview .ov-more-link{
   display:block;width:100%;margin-top:6px;padding:7px 10px;border:0;border-radius:8px;background:transparent;
@@ -381,8 +376,8 @@ html.dark #panel-overview .ov-more-link:hover,html.dark #panel-overview .ov-more
 #ov-resx-card .ov-resx-tab.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(16,24,40,.12);}
 html.dark #ov-resx-card .ov-resx-tab.on{background:rgba(255,255,255,.12);}
 #ov-resx-card .ov-resx-tab:focus-visible{outline:2px solid var(--focus-ink);outline-offset:1px;}
-#ov-resx-card .ov-resx-panel>.ov-card{border:0!important;box-shadow:none!important;background:transparent!important;padding:0!important;margin:0!important;}
-#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head{justify-content:flex-end;min-height:0;margin-bottom:6px;}
+#ov-resx-card .ov-resx-panel>.ov-card{background:transparent!important;margin:0!important;}
+#ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head{justify-content:flex-end;margin-bottom:6px;}
 #ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head .ov-card-title,
 #ov-resx-card .ov-resx-panel>.ov-card>.ov-card-head .uxp-col-btn{display:none;}
 /* Today's Menu: today only, in two columns. */
@@ -437,7 +432,7 @@ body.uxp-sb-entering .tab-panel .two-col>.side-col>*:not(.uxp-sb-head):not(.uxp-
 @media(max-width:980px){
   .tab-panel .two-col>.side-col{
     position:fixed;top:0;right:0;bottom:0;z-index:650;width:min(420px,92vw);overflow-y:auto;overscroll-behavior:contain;
-    padding:0 14px 24px;background:var(--bg,#fff);box-shadow:-24px 0 60px -24px rgba(0,0,0,.5);
+    padding:0 14px 24px;background:var(--bg,#fff);
     transform:translateX(105%);visibility:hidden;
     transition:transform 260ms cubic-bezier(.2,.8,.2,1),visibility 0s linear 260ms;
   }
@@ -516,47 +511,43 @@ html.dark{
 /* 1. Page and cards */
 html:not(.dark) body:not(.request-mode),
 html:not(.dark) body:is(.theme-overview,.theme-boss,.theme-dew,.theme-o,.theme-junior):not(.request-mode){background:var(--canvas)!important;}
-.ov-card,.widget,.stat-box,.member-head{
+.ov-card,.member-head{
+  transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
+}
+.widget,.stat-box{
   border-radius:var(--r-lg)!important;border:1px solid var(--card-border)!important;
   box-shadow:var(--card-shadow)!important;
   transition:box-shadow var(--t-med) var(--ease),border-color var(--t-med) var(--ease);
 }
-#panel-overview .ov-card{padding:var(--sp-4) var(--sp-5);margin-bottom:var(--sp-4);}
+#panel-overview .ov-card{margin-bottom:var(--hs-gap);}
 @media(hover:hover){
-  #panel-overview .ov-card:hover,.tab-panel .side-col>.widget:hover{box-shadow:var(--card-shadow-hover)!important;}
+  .tab-panel .side-col>.widget:hover{box-shadow:var(--card-shadow-hover)!important;}
 }
-.task-card{border-radius:14px!important;}
+
 .kb-col{border-radius:var(--r-lg)!important;}
-#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--sp-4);}
-#panel-overview .ov-grid{gap:var(--sp-5);}
+#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--hs-gap);}
+#panel-overview .ov-grid{gap:var(--hs-gap);}
 
 /* Card headers and titles */
 .ov-card-head,.widget-head{gap:var(--sp-3);}
 #panel-overview .ov-card-head{margin-bottom:var(--sp-3);}
-.ov-card-title,.widget-title{font-size:var(--fs-md);font-weight:700;letter-spacing:-.1px;}
+.ov-card-title,.widget-title{letter-spacing:-.1px;}
 .ov-card-title>i.ti:first-child,.widget-title>i.ti:first-of-type{
-  display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
-  margin-right:2px;border-radius:var(--r-sm);background:var(--icon-chip);font-size:15px;
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-right:2px;
 }
 
 /* 2. Controls */
-.btn{border-radius:10px!important;font-weight:700;transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease,transform 80ms ease;}
-.btn-sm{border-radius:var(--r-sm)!important;}
-html:not(.dark) .btn-navy{background:var(--navy)!important;color:#fff!important;box-shadow:0 1px 2px rgba(0,48,87,.25),0 6px 14px -8px rgba(0,48,87,.5)!important;}
-html:not(.dark) .btn-navy:hover{background:#0A4170!important;}
-.btn-ghost{border:1px solid var(--card-border)!important;}
-html:not(.dark) .btn-ghost:hover{background:var(--gray-light)!important;}
-.form-input,.form-select,.form-textarea{
-  border-radius:var(--r-md)!important;background:var(--field)!important;border:1px solid var(--field-border)!important;
-  font-size:var(--fs-md);transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
+.btn{transition:background var(--t-fast) ease,border-color var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease,transform 80ms ease;}
+
+.form-input,.form-select,.form-textarea{background:var(--field)!important;transition:border-color var(--t-fast) ease,box-shadow var(--t-fast) ease;
 }
-.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--navy)!important;box-shadow:var(--ring)!important;}
-html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textarea:focus{border-color:#9bd6ff!important;}
+
 .form-label{font-size:var(--fs-xs);font-weight:700;letter-spacing:.3px;color:var(--muted);margin-bottom:6px;}
 .fpill,.ov-fpill{transition:background var(--t-fast) ease,color var(--t-fast) ease,border-color var(--t-fast) ease;}
 
 /* Dialogs */
-.modal{border-radius:20px!important;}
+
 .modal-header{border-bottom:1px solid var(--card-border);}
 .modal-footer{border-top:1px solid var(--card-border);}
 
@@ -570,7 +561,7 @@ html.dark .form-input:focus,html.dark .form-select:focus,html.dark .form-textare
 .sub-nav .sub-tab{transition:background var(--t-fast) ease,color var(--t-fast) ease,box-shadow var(--t-fast) ease;}
 
 /* 4. Numbers line up */
-.stat-num,.ov-cdn-n,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
+.stat-num,.ov-rc-num,.lieu-num,.sick-num,.pc-bal-num,.mh-stat b,.ov-dl-count{font-variant-numeric:tabular-nums;}
 
 @media(prefers-reduced-motion:reduce){
   .ov-card,.widget,.stat-box,.btn,.form-input,.form-select,.form-textarea,.tab-nav .tab-btn,.sub-nav .sub-tab,.fpill,.ov-fpill{transition:none!important;}
@@ -599,8 +590,7 @@ body .tab-panel .two-col>.side-col>.widget[hidden]{display:none!important;}
 #ov-top .ov-ann-item:hover{transform:translateY(-1px);}
 
 /* Step 21: light mode readability */
-html:not(.dark) .fpill.act-navy{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
-html:not(.dark) .btn-teal{background:linear-gradient(135deg,#0f766e,#115e59)!important;color:#fff!important;}
+
 html:not(.dark) .kb-col .kb-col-count{background:#fff!important;}
 html:not(.dark) #panel-boss :is(#boss-headname,.member-name,.member-role,.member-role i,.mh-greet){color:#366a9c!important;}
 html:not(.dark) #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:#a25816!important;}
@@ -627,7 +617,7 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #panel-overview :is(.ov-fpill,.ov-mini-btn,.cal-arrow,.ov-ann-act,.menu-week-toggle,.ov-dl-more,.ov-more-link),
   .tab-panel :is(.filter-tabs .fpill,.mh-stat,.evhub-btn,.uxp-drawer-btn){min-height:36px;}
   #panel-overview :is(.ov-mini-btn,.cal-arrow,.ov-ann-act),.tab-panel .evhub-btn.icon-only{min-width:36px;justify-content:center;}
-  .ov-cdn>.ev-chip-del,.ev-tl-item>.ev-chip-del{width:36px;height:36px;}
+  .ev-tl-item>.ev-chip-del{width:36px;height:36px;}
   .ev-chip>.ev-chip-del{width:32px;height:32px;top:4px;right:4px;}
   .ev-chip-date,.ev-chip-name{padding-right:34px;}
   .tab-panel :is(.tcard-sel,.tcard-move,.role-btn){min-height:32px;}
@@ -637,7 +627,7 @@ html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#
   #evb-card .ov-card-title>span{flex-basis:100%;}
   #evb-card>.ov-card-head>.uxp-col-btn{order:1;}
   #evb-card>.ov-card-head>#evb-filter,#evb-card>.ov-card-head>.evb-done-toggle{order:2;}
-  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.ov-cdn-u,.ov-cdn-tag,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h){font-size:11px!important;}
+  :is(.ev-chip-date,.meet-label,.ov-pri,.ov-dl-count,.dzsel-tag,.ov-act-t,.ov-res-go,.ov-leg,.mb,.dirq-h){font-size:11px!important;}
 }
 
 /* Step 23: dark mode readability */
@@ -646,21 +636,19 @@ html.dark{--muted:#a3b1c4;--st-progress:#95a2ff;--st-cancel:#ff8aa0;}
 /* The Move dropdown on task cards kept light mode's navy text and arrow. */
 html.dark .tcard-move{color:#e6edf5;border-color:rgba(255,255,255,.28);background-color:rgba(255,255,255,.08);background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e6edf5' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");}
 /* Dew, O and Eye: the selected filter sits on a tint of their colour, so its text uses the light shade. */
-html.dark .tab-panel .fpill.act-accent{color:var(--accent-ondark,#fcd34d)!important;}
+
 /* Today's date and the bright buttons take dark text. */
-html.dark #panel-boss .btn-accent{color:#0b1220!important;}
-html.dark .btn-teal{background:linear-gradient(135deg,#5eead4,#2dd4bf)!important;color:#032b28!important;}
+
 /* Canceled cards fade less, so their small coloured labels stay readable. */
 html.dark .task-card.tc-canceled{opacity:.88;}
 /* Small coloured labels. */
 html.dark [id$="sick-mode-label"]{color:#fb7185!important;}
 html.dark button[onclick^="confirmReset"]{color:#fda4af!important;}
-html.dark .mh-stat-soon b{color:#f6879d!important;}
-html.dark #panel-overview .ov-cdn-tag{color:#fbbf24!important;}
+@media(max-width:980px){html.dark .mh-stat-soon b{color:#f6879d!important;}}
 html.dark #panel-overview .ov-pri{color:#a3adba!important;}
 html.dark #panel-overview .ov-pri.high{color:#f08a8a!important;}
 html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#f59e0b;}
-html.dark #ov-ann-new{color:#e6edf5!important;}
+
 /* Field hints. */
 html.dark body:not(.request-mode) :is(input,textarea)::placeholder{color:#9aa6b8!important;opacity:1;}
 
@@ -703,11 +691,10 @@ html.dark #lunch-banner .lb-close:hover,html.dark #lunch-banner .lb-close:focus-
    .none only when nothing is booked, so a real meeting still shows as before. */
 .meet-card.none{display:none;}
 /* Light mode: the header card and the my-day card read as one card, who then
-   today, with one hairline border, one radius and one light shadow. The header
-   keeps its 12% wash of the member's own colour: it says whose desk this is.
-   Older shared card rules force radius, shadow and spacing with !important. */
-html:not(.dark) .member-head{border-bottom:0;border-radius:16px 16px 0 0!important;box-shadow:none!important;margin-bottom:0!important;}
-html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba(16,24,40,.06);border-radius:0 0 16px 16px!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05)!important;}
+   today, with one hairline border, one radius and one light shadow.
+   Step 102 now joins these halves in both themes with the shared card values. */
+
+html:not(.dark) .myday{border-top-color:var(--border);}
 
 /* Step 28: one card language */
 /* One card everywhere: white surface, hairline border, one 16px radius and one
@@ -717,18 +704,18 @@ html:not(.dark) .myday{border:1px solid rgba(16,24,40,.08);border-top-color:rgba
    raised names its own elevation. */
 html:not(.dark){--shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);--shadow-hover:0 2px 4px rgba(16,24,40,.05),0 10px 22px -8px rgba(16,24,40,.14);}
 /* Raised on purpose: hover still deepens as cards lift, and search results float. */
-html:not(.dark) :is(.task-card,.evc-card,.rq-card):hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
+html:not(.dark) .rq-card:hover,html:not(.dark) #panel-overview .ov-res-card:hover{box-shadow:var(--shadow-hover)!important;}
 /* One card radius: task cards were 14px and the Resources fold 18px. */
-.task-card,#panel-overview .ov-more{border-radius:var(--r-lg,16px)!important;}
+
 /* Decorative side rails go. Rails that carry meaning stay: task status, a pinned
    announcement and a Director request. */
-.evhub{border-left-width:1px!important;border-left-color:var(--border)!important;}
+
 #panel-overview .ov-ann-item:not(.pinned){border-left:1px solid var(--border);}
 html:not(.dark) #panel-overview .ov-ann-item.pinned{box-shadow:var(--shadow);}
 /* Team Announcements loses its navy header and reads like every other card. */
-html:not(.dark) #panel-overview .ov-ann>.ov-card-head{background:none;margin:0 0 12px;padding:0;border-bottom:0;}
-html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title{color:var(--text);font-size:14px;font-weight:700;letter-spacing:normal;}
-html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title i{color:var(--navy);font-size:18px;}
+
+html:not(.dark) #panel-overview .ov-ann>.ov-card-head .ov-card-title{letter-spacing:normal;}
+
 /* Removing Event Hub's 4px rail widened its grid just enough to add a column at
    1440, shrinking chips to the 150px minimum, where names like "School Open Day"
    wrap. That minimum was already too tight at other widths, so it rises to 176px.
@@ -765,15 +752,12 @@ html:not(.dark) .task-card:is(.tc-done,.tc-canceled){opacity:1;background-color:
 html:not(.dark) .kb-col[data-status] .kb-col-count{color:var(--c-ink,var(--c))!important;}
 
 /* Step 32: flatten the nested cards */
-/* Boxes inside a box become rows inside the card, separated by hairlines. What
-   carries meaning stays: a chip's urgency rule, a pinned announcement's gold, a
-   Director request's amber. Light mode. */
+/* Nested task groups become rows separated by hairlines in light mode.
+   Pinned announcements and Director requests keep their meaningful colours. */
 html:not(.dark) #ov-dl-card .ov-dl,
-html:not(.dark) #evb-card .evb-g,
-html:not(.dark) .ov-countdown .ov-cdn{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
+html:not(.dark) #evb-card .evb-g{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent;border-top:1px solid var(--border)!important;}
 html:not(.dark) #ov-dl-card .ov-dl:first-of-type,
-html:not(.dark) #evb-card .evb-g:first-of-type,
-html:not(.dark) .ov-countdown .ov-cdn:first-of-type{border-top-color:transparent!important;}
+html:not(.dark) #evb-card .evb-g:first-of-type{border-top-color:transparent!important;}
 /* Rows still answer the pointer, without a box around them. */
 html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);}
 /* The day agenda is a section of the calendar card, not a card within it. */
@@ -781,8 +765,6 @@ html:not(.dark) #ov-cal-card .ov-cal-detail{border:0!important;border-radius:0!i
 /* Announcements sit side by side as plain blocks; a pinned one keeps its gold. */
 html:not(.dark) #panel-overview .ov-ann-item{border:0!important;box-shadow:none!important;background:transparent;border-radius:0;padding-left:0;padding-right:0;}
 html:not(.dark) #panel-overview .ov-ann-item.pinned{background:var(--gold-light);border-left:3px solid var(--gold2)!important;border-radius:8px;padding-left:12px;padding-right:12px;}
-/* Event Hub chips keep their urgency rule, without a box around each date. */
-html:not(.dark) .evhub .ev-chip:not(.ev-chip-filled){border-left:0!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;}
 /* A Director request is a tinted section at the foot of its task, not a card. */
 html:not(.dark) .task-card .dirq{border-top:1px solid #f0d8b6!important;border-right:0!important;border-bottom:0!important;border-radius:0!important;box-shadow:none!important;}
 
@@ -903,11 +885,8 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
 /* The five number tiles are gone: their numbers already head the work list. The
    announcements stay first (Boss, 24 Oct) as one slim line, Team today is a
    strip of people showing only what needs attention, then the work list. */
-#panel-overview .ov-hello{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:10px;row-gap:2px;}
-#panel-overview .ov-topbar{margin-bottom:12px;}
-
 /* Announcements: the pinned or newest one on a single line; "All N" opens the rest. */
-#ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:8px 10px 8px 16px;}
+#ov-ann-card:not(.ov-ann-all){display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;column-gap:14px;row-gap:10px;padding:16px var(--hs-pad-card);}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head{display:contents;}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{grid-column:1;grid-row:1;margin:0;white-space:nowrap;}
 #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-ann-new{grid-column:3;grid-row:1;margin:0;}
@@ -934,11 +913,10 @@ html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-a
    text runs, not pills, so a busy person still fits one line. The person
    colours follow saved custom tab colours. */
 :root{--member-boss:#003057;--member-dew:#A65614;--member-o:#C2410C;--member-junior:#14532D;}
-#ov-team{margin:0 0 var(--sp-4,16px);padding:8px 10px;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg,16px);box-shadow:var(--shadow);}
-.ov-team-head{display:flex;align-items:center;gap:10px;padding:2px 6px 4px;}
-.ov-team-title{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;}
-.ov-team-title i{font-size:18px;color:var(--navy);}
+#ov-team{margin:0 0 var(--hs-gap);background:var(--surface);}
+.ov-team-head{display:flex;align-items:center;gap:10px;padding:0 0 12px;}
+.ov-team-title{display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap;}
+
 .ov-team-sum{font-size:13px;font-weight:600;color:var(--muted);}
 .ov-team-next{display:block;flex:0 1 auto;min-width:0;margin-left:auto;font-size:13px;color:var(--muted);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -980,7 +958,7 @@ html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-empty-sm{padding:0;text-a
 .tm-clear,.tm-soon{font-weight:600;color:var(--muted);}
 /* Sick days and the lieu balance, kept from the old Leave card: quiet, one line. */
 .tm-lv{grid-area:lv;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-html.dark .ov-team-title i{color:#8fb4dc;}
+
 html.dark .tm:hover{background:rgba(255,255,255,.05);}
 html.dark .tm-over{color:#fca5a5;}
 html.dark .tm-wait{color:#fcd34d;}
@@ -1000,20 +978,12 @@ html.dark .tm-meet{color:#93c5fd;}
    setup note give way (Settings still connects a calendar); search, refresh and
    a next meeting stay; the deadline filters share the title line. */
 @media(max-width:600px){
-  #ov-team{padding:4px 6px;}
-  .ov-team-head{padding:2px 4px;}
-  /* One heading line: the total, the next meeting's time and title as far as it
-     fits, and refresh. */
-  .ov-team-head{gap:8px;}
-  .ov-team-title{flex:0 1 auto;min-width:0;flex-wrap:wrap;white-space:normal;}
-  .ov-team-next{flex:1 1 0;}
+
+  .ov-team-head{padding:0 0 12px;}
   .ov-team-sum,.ov-team-done{white-space:nowrap;}
   .ov-team-sum-w,.nx-l{display:none;}
   /* A next meeting needs the room more than the week's done count. */
   .ov-team-head:has(.nx-btn) .ov-team-done{display:none;}
-  /* Refresh keeps a 36px target without making the heading taller. */
-  .ov-team-head .ov-mini-btn{margin:-6px 0 -6px auto;}
-  .ov-team-next+.ov-mini-btn{margin-left:0;}
   /* Each person reads like a line of text: the name, then the flags, which wrap
      under the name instead of being cut off when a narrow phone runs out of room. */
   .tm{display:flex;align-items:flex-start;column-gap:7px;padding:5px 2px;line-height:22px;}
@@ -1025,16 +995,15 @@ html.dark .tm-meet{color:#93c5fd;}
   .tm-open,.tm-w,.tm-lv{display:none;}
   .tm-s{display:inline;}
   .tm:nth-child(n+3)::after{left:6px;right:6px;}
-  #panel-overview .ov-hello{display:none;}
   /* A 12px rhythm on a phone, so the first deadline clears the dock even at lunch. */
-  #ov-top,#ov-team{margin-bottom:12px;}
-  #panel-overview #ov-dl-card{padding-top:12px;}
+  #ov-top,#ov-team{margin-bottom:var(--hs-gap);}
+  #panel-overview #ov-dl-card{padding-top:16px;}
   #panel-overview #ov-dl-card>.ov-card-head{margin-bottom:8px;}
   #panel-overview .ov-dl-filters{flex-wrap:nowrap;margin-left:4px;}
   /* On a phone the announcement line keeps its icon, the text and its two buttons. */
-  #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:6px 6px 6px 12px;}
+  #ov-ann-card:not(.ov-ann-all){column-gap:10px;padding:16px var(--hs-pad-card);}
   #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title{font-size:0!important;gap:0;}
-  #ov-ann-card:not(.ov-ann-all)>.ov-card-head .ov-card-title i{font-size:18px!important;}
+
   html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-foot{display:none;}
 }
 @media(max-width:600px){
@@ -1056,10 +1025,10 @@ html.dark .tm-meet{color:#93c5fd;}
 @media(max-width:600px){
   /* The name bar is one row (initial, name, role, colour button) and the three
      counters one short row below it; today's date gives way, the phone shows it. */
-  .tab-panel .member-head{flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px;padding:10px 12px;}
+  .tab-panel .member-head{flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px;}
   .member-head .member-avatar{flex:0 0 36px;width:36px;height:36px;font-size:17px;}
   .member-head .member-head-text{flex:1 1 0;min-width:0;display:flex;align-items:baseline;gap:8px;overflow-wrap:normal;}
-  .member-head .member-name{flex:0 0 auto;font-size:17px;line-height:1.2;}
+  .member-head .member-name{flex:0 0 auto;line-height:1.2;}
   .member-head .member-role{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;}
   .member-head .member-role i{vertical-align:-2px;margin-right:4px;}
   .member-head .member-head-extra{order:2;flex:0 0 auto;margin:0;padding:0;border:0;}
@@ -1070,7 +1039,7 @@ html.dark .tm-meet{color:#93c5fd;}
   .member-head .mh-stat{flex:0 0 auto;gap:5px;padding:4px 10px;white-space:nowrap;}
   /* My day: the due date sits under the task's name, on the left, clear of the
      round buttons on the right. */
-  .myday{padding:10px 12px;}
+
   .myday-chips{gap:6px;}
   .myday-row{flex-wrap:wrap;align-items:flex-start;row-gap:0;padding:6px 6px;line-height:1.35;}
   .myday-row i{margin-top:2px;}
@@ -1093,8 +1062,8 @@ html.dark .tm-meet{color:#93c5fd;}
 @media(max-width:360px){
   .member-head .mh-stat i{display:none;}
   .member-head .mh-stat{padding:4px 9px;}
-  .tab-panel .member-head{padding:8px 10px;row-gap:6px;}
-  .myday{padding:8px 10px;row-gap:6px;}
+  .tab-panel .member-head{row-gap:6px;}
+  .myday{row-gap:6px;}
   .myday-chip{padding:5px 9px;}
   .myday-row{padding:5px 4px;}
 }
@@ -1126,7 +1095,7 @@ html.dark .tm-meet{color:#93c5fd;}
 /* The other actions wait in a quiet row at the foot. */
 .task-card .task-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
 .task-card .task-foot .task-acts{display:flex;align-items:center;gap:2px;margin-left:auto;}
-.task-card .task-foot .icon-btn{padding:4px;color:var(--muted);}
+
 .task-card .tc-open-hint{display:none;}
 /* Inside a status column the column already names the status: no coloured rail. */
 /* An older layer forces a 5px rail with !important, so this answers in kind. */
@@ -1144,19 +1113,15 @@ html.dark #lunch-banner .lb-ico{background:#8fb4dc;}
 .auth-banner-role{background:transparent;color:rgba(255,255,255,.9);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);}
 /* An event on the master calendar wears the event teal, as event chips do. */
 #panel-overview .ov-cd-ev{background:var(--teal,#0d9488);}
-/* Countdowns use one scale on every tab: amber within a week, calm before that. */
-#panel-overview .ov-cdn.soon .ov-cdn-tag{background:var(--amber-light);color:var(--st-waiting-ink,#7d5406);}
-html.dark #panel-overview .ov-cdn.soon .ov-cdn-tag{color:#fcd34d!important;}
+/* Timeline and list countdowns keep the shared urgency scale. */
 .evu-calm{color:var(--navy,#003057);}
-.evt-calm{border-top-color:var(--border-strong,#d6dbe4);}
 .evc-cd.u-calm{background:var(--navy-light);color:var(--navy,#003057);}
 html.dark .evu-calm,html.dark .evc-cd.u-calm{color:#8fb4dc;}
 html:not(.dark) .evu-amber{color:var(--st-waiting-ink,#7d5406);}
-html:not(.dark) .evt-amber{border-top-color:var(--st-waiting,#a97614);}
 html.dark .evu-amber{color:#fcd34d;}
 /* Due soon or today is close, not trouble: amber. Only overdue is red. */
 .mh-stat-soon i,.mh-stat-soon b{color:var(--st-waiting-ink,#7d5406);}
-html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
+@media(max-width:980px){html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}}
 .fpill .pill-dot{background:var(--st-waiting,#a97614);}
 /* A due date that is not close is just a date. */
 .task-card .task-meta .mb-date{color:var(--muted);}
@@ -1168,26 +1133,19 @@ html.dark .mh-stat-soon b,html.dark .mh-stat-soon i{color:#fcd34d!important;}
 .member-head .member-role i{display:none;}
 /* Two left edges: the page edge for anything outside a card, and one inner
    edge 16px inside every card, for headings, rows and icons alike. */
-#panel-overview .ov-card{padding-left:16px;padding-right:16px;}
-#panel-overview .ov-more-toggle{padding-left:16px;padding-right:16px;}
+
+#panel-overview .ov-more-toggle{padding-left:var(--hs-pad-card);padding-right:var(--hs-pad-card);}
 .myday-list{margin-left:-8px;margin-right:-8px;}
 @media(min-width:601px){.tm{padding-left:6px;}}
 @media(max-width:600px){.myday-list{margin-left:-6px;margin-right:-6px;}}
-/* The Event Hub fits its events: the tiles share the row, and a single event
-   is one slim line instead of a small tile in a wide card. */
+/* Event tiles share the available space on computers. */
 @media(min-width:481px){.ev-grid{grid-template-columns:repeat(auto-fit,minmax(176px,1fr));}}
-.ev-grid>.ev-chip:only-child{grid-column:1/-1;flex-direction:row;align-items:center;gap:14px;min-height:0;padding-right:46px;}
-.ev-grid>.ev-chip:only-child .ev-chip-date,.ev-grid>.ev-chip:only-child .ev-chip-name{padding-right:0;}
-.ev-grid>.ev-chip:only-child .ev-chip-name{flex:1 1 auto;min-width:0;margin-top:0;}
-.ev-grid>.ev-chip:only-child .ev-chip-cd{margin-top:0;white-space:nowrap;}
-.ev-grid>.ev-chip:only-child .ev-chip-del{top:50%;transform:translateY(-50%);}
 /* A phone or small tablet on its side: the header is two slim rows, the
    brand with its controls and then the tabs, instead of three. */
 @media(max-height:500px) and (min-width:601px){
   .app-header .header-top{flex-wrap:nowrap;padding-top:6px;padding-bottom:4px;}
   .app-header .app-logo{flex:0 1 auto;min-width:0;}
   .app-header .app-tagline{display:none;}
-  .app-header .logo-icon{width:32px;height:32px;}
   .app-header .header-right{width:auto;flex:1 1 auto;}
   .app-header .header-right .auth-banner{margin-right:0;}
   .app-header .auth-banner-em{display:none;}
@@ -1218,10 +1176,7 @@ body:not(.hdr-scrolled) .app-header{box-shadow:inset 0 1px 0 rgba(255,255,255,.0
 .tm-lv:empty{display:none;}
 
 /* Step 44: event colours the team chose stay readable */
-/* An event with its own text colour keeps its coloured tile in light mode too,
-   as in dark mode and before step 32, so white or cream text sits on its own
-   colour. Events without one stay flat rows (step 32). */
-html:not(.dark) .evhub .ev-chip.ev-chip-filled{border:0;border-radius:12px;}
+/* Filled event tiles now share the Step 99 rules in both themes. */
 
 /* Step 45: the Revisions buttons on iPhone */
 /* The filled colour follows a mouse pointer. A touch screen keeps :hover after a
@@ -1265,11 +1220,9 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
 /* Step 48: one search that finds everything */
 @media(max-width:600px){
   /* The header search is one tap away on every tab, beside the bell. */
-  .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:11px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
+  .header-right .cmdk-trigger{display:inline-flex;align-items:center;justify-content:center;width:42px;padding:0;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);}
   html.dark .header-right .cmdk-trigger{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:rgba(255,255,255,.85);}
   .header-right .cmdk-trigger i{font-size:16px;}
-  /* The Overview's greeting gives way on a phone and its search box is gone. */
-  #panel-overview .ov-topbar{display:none;}
 }
 
 /* Step 49: person colours as small marks only */
@@ -1277,11 +1230,6 @@ html:not(.dark) .ev-ink{color:var(--evc-ink)!important;}
    name, the tab label and the tab bar) and fills no large area, so it never reads
    as a status. The name bar and the Event Hub bar are plain; primary buttons and
    the selected filter are the same navy on every tab. */
-html:not(.dark) .member-head{background:var(--surface)!important;background-image:none!important;}
-html:not(.dark) .evhub-head{background:transparent!important;background-image:none!important;}
-html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent{background:var(--navy,#003057)!important;background-image:none!important;border-color:var(--navy,#003057)!important;color:#fff!important;}
-html:not(.dark) :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent:hover{background:#00264a!important;border-color:#00264a!important;}
-html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!important;border-color:var(--navy,#003057)!important;color:#fff!important;box-shadow:none;}
 
 /* Step 50: task cards are calm at rest */
 /* At rest a card is its tick and name, one line of facts, and one bar: Details
@@ -1290,20 +1238,20 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
    row that appeared on hover would make the cards below jump under the pointer. */
 .task-card .tc-bar{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px;}
 .task-card .tc-bar .tc-more{margin:0;}
-.task-card .tc-acts-btn{margin-left:0;display:inline-flex;align-items:center;justify-content:center;width:32px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:16px;cursor:pointer;}
-.task-card .tc-acts-btn:hover,.task-card .tc-acts-btn:focus-visible,.task-card.acts-open .tc-acts-btn{background:var(--surface-3,rgba(16,24,40,.06));color:var(--text);}
+.task-card .tc-acts-btn{margin-left:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;}
+
 .task-card:not(.acts-open) .task-foot{display:none;}
 /* The status menu sits on the facts line, except in a status column: the column
    names the status, so the menu waits in the action row. */
 .task-card .task-foot .tc-row-sel{display:none;}
 .kb-col .task-card .task-meta .tcard-sel{display:none;}
 .kb-col .task-card .task-foot .tc-row-sel{display:inline-flex;}
-@media(max-width:600px){.task-card .tc-acts-btn{width:40px;height:40px;}}
+@media(max-width:600px){}
 
 /* Step 51: the Overview, one heavy block and columns that end together */
 /* The Event Board holds the next events ("Coming up") above the shared tasks,
    whose filter now sits with them. */
-#evb-card .evb-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+#evb-card .evb-sec-h{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 6px;}
 #evb-card .evb-soon{margin-bottom:16px;}
 #evb-card .evb-tasks-h .evb-sel{margin-left:auto;}
 #evb-card .evb-tasks-h :is(.evb-sel,.evb-done-toggle){text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;}
@@ -1311,11 +1259,9 @@ html:not(.dark) .tab-panel .fpill.act-accent{background:var(--navy,#003057)!impo
 #ov-rc-card.rc-quiet .ov-rc-none{grid-column:1 / -1;display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;}
 #ov-rc-card.rc-quiet .ov-rc-none-t{flex:1 1 100%;font-size:13px;color:var(--muted);}
 @media(max-width:600px){#evb-card .evb-tasks-h .evb-sel{margin-left:0;}}
-/* The band under the two columns, and "Coming up" as a grid when it has room. */
-#panel-overview .ov-wide{margin-top:var(--sp-5,20px);}
+/* The band under the two columns. */
+#panel-overview .ov-wide{margin-top:0;}
 #panel-overview .ov-wide:empty{display:none;}
-#evb-soon .ov-countdown{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));column-gap:28px;}
-html:not(.dark) #evb-soon .ov-countdown .ov-cdn{border-top:0!important;}
 
 /* Step 52: Team today, what needs Boss reads first */
 /* Overdue reads strongest, waiting next, on hold quietest; a person with nothing
@@ -1513,13 +1459,11 @@ html.dark .task-card:is(.tc-done,.tc-canceled) .mb-who{background:color-mix(in s
    starts at the card's edge like the label above it, and its hover tint
    reaches into the card's padding instead. */
 .ov-team-title{gap:8px;}
-.ov-team-title>i.ti:first-child{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;
-  margin-right:2px;border-radius:var(--r-sm);background:var(--icon-chip);font-size:15px;}
+.ov-team-title>i.ti:first-child{display:inline-flex;align-items:center;justify-content:center;
+  margin-right:2px;}
 html:not(.dark) #ov-dl-card .ov-dl,
-html:not(.dark) #panel-overview .ov-countdown .ov-cdn,
 html:not(.dark) #evb-card .evb-row{padding-left:0;padding-right:0;}
-html:not(.dark) #ov-dl-card .ov-dl:hover,
-html:not(.dark) #panel-overview .ov-countdown .ov-cdn:hover{background:var(--surface-3);box-shadow:-11px 0 0 var(--surface-3),11px 0 0 var(--surface-3)!important;}
+html:not(.dark) #ov-dl-card .ov-dl:hover{background:var(--surface-3);box-shadow:-11px 0 0 var(--surface-3),11px 0 0 var(--surface-3)!important;}
 html:not(.dark) #evb-card .evb-g{overflow:visible;}
 html:not(.dark) #evb-card .evb-g-h{width:calc(100% + 24px);margin-left:-12px;margin-right:-12px;}
 html:not(.dark) #evb-card .evb-more{margin-left:-10px;}
@@ -1613,7 +1557,7 @@ html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 @media(min-width:981px){
   .tab-panel .filter-tabs{align-items:center;}
   .tab-panel .filter-tabs .addtask-bar{margin-left:auto;flex:0 0 auto;}
-  html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;min-height:36px;padding:8px 14px;background:#10243a!important;border:1px solid #10243a!important;color:#fff!important;box-shadow:none!important;white-space:nowrap;}
+  html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;white-space:nowrap;}
   .tab-panel .myday-row .md-title{flex:0 1 auto;min-width:0;}
   .tab-panel .myday-row .md-sub{margin-left:0;flex:0 0 auto;}
 }
@@ -1621,10 +1565,8 @@ html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 /* Step 72b: gold belongs to the logo; red means overdue or canceled in light mode */
 html:not(.dark) body.theme-overview .tab-nav{--tab-ink:#003057;--tab-disc:#003057;--tab-on:#fff;}
 html:not(.dark) .tab-nav .tab-btn#tab-overview{color:rgba(255,255,255,.72)!important;}
-html:not(.dark) .cal-day.today,
-html:not(.dark) #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#003057!important;}
+
 html:not(.dark) .uxp-undo{color:#fff;font-weight:800;text-decoration:underline;}
-html:not(.dark) .pin-widget .widget-title>i,
 html:not(.dark) .note-pin-btn.pinned{color:#4b5563!important;}
 html:not(.dark) .pin-search:focus{border-color:#003057;box-shadow:0 0 0 3px rgba(0,48,87,.12);}
 html:not(.dark) .pin-act:hover{background:#003057;border-color:#003057;color:#fff;}
@@ -1632,9 +1574,8 @@ html:not(.dark) .task-card .mb-high,
 html:not(.dark) #panel-overview .ov-pri.high{background:transparent!important;color:#34445c!important;font-weight:800;}
 html:not(.dark) .myday-chip.warn{background:#e5e7eb;border-color:transparent;}
 html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b,
-html:not(.dark) .mh-stat-soon i,html:not(.dark) .mh-stat-soon b,
 html:not(.dark) .rq-due.soon,html:not(.dark) .evc-cd.u-amber{color:#34445c!important;}
-html:not(.dark) #panel-overview .ov-cdn.soon .ov-cdn-tag{background:#e5e7eb;color:#34445c;}
+@media(max-width:980px){html:not(.dark) .mh-stat-soon i,html:not(.dark) .mh-stat-soon b{color:#34445c!important;}}
 html:not(.dark) .cd-urgent{background:transparent!important;border:1.5px solid #003057;box-sizing:border-box;}
 html:not(.dark) .cal-day.today .cd-urgent{border-color:#fff;}
 html:not(.dark) .cal-day.sick-day,html:not(.dark) .cal-day.dayoff{background:#e5e7eb;color:#34445c;}
@@ -1661,23 +1602,7 @@ html:not(.dark) .sal-cell-label i{-webkit-text-fill-color:#4b5563;color:#4b5563;
 html:not(.dark) .salary-badge,html:not(.dark) .salary-dock .salary-badge.sb-pay,
 html:not(.dark) .meet-cd.urgent,html:not(.dark) #lunch-cfg .lc-day.on{background:#e5e7eb;color:#34445c;border-color:#4b5563;}
 
-
-/* Step 72c: quiet person widgets and Story email actions in light mode */
-html:not(.dark) .tab-panel .side-col .widget-title>i.ti:first-of-type{
-  color:#34445c!important;background:#e5e7eb!important;box-shadow:none!important;
-}
-html:not(.dark) .tab-panel .side-col .widget-head .btn,
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"],
-html:not(.dark) .task-card .story-email-btn{
-  color:#34445c!important;background:transparent!important;border:1px solid #34445c!important;box-shadow:none!important;
-}
-html:not(.dark) .tab-panel .side-col .widget-head .btn:hover,
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="confirmReset"]:hover,
-html:not(.dark) .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]:hover,
-html:not(.dark) .task-card .story-email-btn:hover{
-  color:#34445c!important;background:#e5e7eb!important;filter:none;
-}
+/* Step 72c: widget icons now use step 102; outline actions use step 103. */
 
 /* Step 73: dark mode keeps the light mode colour meanings */
 html.dark{--st-pending:#a3b1c4;--st-progress:#93b4f5;--st-waiting:#f0b86e;--st-hold:#c0a5f0;--st-done:#86d9a0;--st-cancel:#fda4a4;--st-overdue:#fda4a4;--st-archived:#a3b1c4;}
@@ -1691,8 +1616,7 @@ html.dark .tab-nav .tab-btn#tab-dew:not(.a-active){color:#e8ad80!important;}
 html.dark .tab-nav .tab-btn#tab-o:not(.a-active){color:#f4a080!important;}
 html.dark .tab-nav .tab-btn#tab-junior:not(.a-active){color:#8ad4a4!important;}
 /* Extra specificity keeps saved person colours on identities, away from actions. */
-html.dark body :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .btn-accent,
-html.dark body .tab-panel .filter-tabs .fpill:is(.act-accent,.act-navy){background:#10243a!important;border-color:#647e9a!important;color:#fff!important;box-shadow:none!important;}
+
 html.dark .kb-col[data-status="pending"]{border-top-color:var(--st-pending);}
 html.dark .kb-col[data-status="in-progress"]{border-top-color:var(--st-progress);}
 html.dark .kb-col[data-status="waiting"]{border-top-color:var(--st-waiting);}
@@ -1700,25 +1624,22 @@ html.dark .kb-col[data-status="on-hold"]{border-top-color:var(--st-hold);}
 html.dark .kb-col[data-status="done"]{border-top-color:var(--st-done);}
 html.dark .kb-col[data-status="canceled"]{border-top-color:var(--st-cancel);}
 html.dark .task-card .mb-high,html.dark #panel-overview .ov-pri.high{background:transparent!important;color:#bdc7d5!important;}
-html.dark .myday-chip.warn,html.dark .myday-chip.warn b,html.dark .mh-stat-soon i,html.dark .mh-stat-soon b,
-html.dark .rq-due.soon,html.dark .evc-cd.u-amber,html.dark .myday-row.warn i,
-html.dark #panel-overview .ov-cdn.soon .ov-cdn-tag{color:#bdc7d5!important;}
+html.dark .myday-chip.warn,html.dark .myday-chip.warn b,
+html.dark .rq-due.soon,html.dark .evc-cd.u-amber,html.dark .myday-row.warn i{color:#bdc7d5!important;}
+@media(max-width:980px){html.dark .mh-stat-soon i,html.dark .mh-stat-soon b{color:#bdc7d5!important;}}
 html.dark .myday-chip.warn{background:#293343;border-color:transparent;}
-html.dark .cal-day.today,html.dark #panel-overview .ov-cal-grid .cal-day.today.sel{outline-color:#93b4d5!important;}
-html.dark .pin-widget .widget-title>i,html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
+
+html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
 html.dark .tab-panel,html.dark .salary-dock,html.dark #lunch-banner,html.dark #lunch-cfg{--gold:#93b4d5;--gold2:#bdc7d5;--gold-light:#293343;}
 html.dark .uxp-undo{color:#fff;}
 html.dark .cd-urgent{background:transparent!important;border:1.5px solid #93b4d5;box-sizing:border-box;}
-html.dark .evhub .ev-chip,html.dark #evb-card .evb-g,html.dark #evb-card .evb-row,
+html.dark #evb-card .evb-g,html.dark #evb-card .evb-row,
 html.dark #ov-cal-card .ov-cal-detail,html.dark .cal-detail{border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
-html.dark .evhub .ev-chip.ev-chip-filled{color:var(--text)!important;}
-html.dark .evhub .ev-chip.ev-chip-filled :is(.ev-chip-date,.ev-chip-name,.ev-chip-cd){color:var(--text)!important;}
 html.dark #panel-dew :is(#dew-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title),
 html.dark #panel-o :is(#o-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title),
 html.dark #panel-junior :is(#junior-headname,.member-name,.member-role,.member-role i,.mh-greet,.evhub-title){color:var(--accent-ondark)!important;}
 html.dark body.theme-overview .tab-nav{--tab-disc:#93b4d5;}
-html.dark .salary-dock .salary-days-big,html.dark .uxp-chip.warn .uxp-chip-n,
-html.dark #panel-overview .ov-cdn-tag,html.dark #evb-card .evb-g.unassigned .evb-g-h,
+html.dark .salary-dock .salary-days-big,html.dark .uxp-chip.warn .uxp-chip-n,html.dark #evb-card .evb-g.unassigned .evb-g-h,
 html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#bdc7d5!important;}
 html.dark #lunch-banner{background:#1b2c44;color:#bdc7d5;border-color:var(--border);}
 html.dark #lunch-banner .lb-close{color:#bdc7d5;}
@@ -1734,10 +1655,9 @@ html.dark .meet-cd.urgent,html.dark #lunch-cfg .lc-day.on{background:#293343;col
 /* Step 74: a flat header and one quiet sidebar */
 html body .app-header{background:#003057!important;border-bottom:0!important;box-shadow:none!important;}
 html body .app-header::after{content:none!important;display:none!important;background:none!important;}
-html body .logo-icon{background:#f0b323!important;box-shadow:none!important;}
 html body .member-head .member-avatar{box-shadow:none!important;filter:none!important;}
 html body #quickadd-fab,html body #tc-fab{background:#003057!important;box-shadow:0 2px 6px #0003!important;}
-html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;gap:0;}
+html body .tab-panel .two-col>.side-col{background:var(--surface);border:1px solid var(--border);gap:0;}
 html body .tab-panel .side-col>.widget,
 html body .tab-panel .side-col>.widget:hover{background:transparent!important;border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;box-shadow:none!important;margin:0;}
 html body .tab-panel .side-col>.widget:first-child{border-top:0!important;}
@@ -1753,14 +1673,11 @@ html body .tab-panel .side-col .uxp-wh-drag{display:inline-flex;opacity:1;touch-
 }
 html body .tab-panel .side-col>.widget.uxp-drop-above{border-top:2px solid var(--focus-ink)!important;}
 html body .tab-panel .side-col>.widget.uxp-drop-below{border-bottom:2px solid var(--focus-ink)!important;}
-html.dark body .tab-panel .side-col .widget-head .btn,
-html.dark body .tab-panel .side-col .sick-widget button[onclick^="confirmReset"],
-html.dark body .tab-panel .side-col .sick-widget button[onclick^="addSickDay"]{background:transparent!important;color:#bdc7d5!important;border:1px solid #bdc7d5!important;box-shadow:none!important;}
-html.dark body .tab-panel .side-col .widget-head .btn:hover{background:#293343!important;filter:none;}
+
 
 /* Step 75: quiet card controls and fewer repeated signals. */
 html body .task-card .tcard-move{flex:0 0 auto;min-width:100px;width:auto;max-width:150px;}
-html body .task-card .tc-more:is(.open,:hover){background:var(--gray-light);color:var(--muted);border-color:var(--border);box-shadow:none;}
+
 html body .fpill[data-f="soon"] .pill-dot{background:var(--muted);}
 #ov-rc-card .ov-rc-btns{flex-wrap:wrap;}
 #ov-rc-card .ov-rc-btns>.btn{min-width:max-content;}
@@ -1781,9 +1698,9 @@ html body :is(#evb-card .evb-more,#panel-overview .ov-dl-more,#panel-overview .o
   .member-head .mh-stat+.mh-stat::before{content:'·';margin:0 7px;color:var(--muted);}
   .member-head .mh-stat i{display:none;}
   .member-head .mh-stat .mh-l{position:static;width:auto;height:auto;margin:0;padding:0;overflow:visible;clip:auto;white-space:nowrap;}
-  .tab-panel .sub-nav{gap:0;padding:4px 0;overflow:visible;justify-content:space-between;}
+  .tab-panel .sub-nav{gap:0;}
   .tab-panel .sub-nav::after{content:none;}
-  .tab-panel .sub-nav :is(.sub-tab,.uxp-drawer-btn){font-size:10px;padding:7px 4px;gap:2px;margin:0;min-width:0;}
+  .tab-panel .sub-nav :is(.sub-tab,.uxp-drawer-btn){margin:0;min-width:0;}
   .tab-panel .sub-nav .sub-tab i,.tab-panel .sub-nav .uxp-drawer-btn i{display:none;}
   body::after{content:'';position:fixed;z-index:389;left:0;right:0;bottom:0;height:115px;pointer-events:none;
     background:linear-gradient(transparent,var(--bg) 65%);}
@@ -1803,3 +1720,377 @@ html.dark body .salary-dock #salary-card .salary-days-label{color:#e9edf3;}
 @media(prefers-reduced-motion:reduce){
   html body .salary-dock #salary-card .sal-ring-fg{transition:none;}
 }
+
+/* Step 98: a tidy top and bottom on every page. */
+.uxp-sal-today{display:none;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
+@media(min-width:601px){
+  .salary-dock{margin-top:8px;}
+  .uxp-sal-bar{height:40px;flex-wrap:nowrap;align-items:center;margin:0;}
+  .uxp-sal-toggle{height:40px;min-height:40px;flex-shrink:0;}
+  .uxp-sal-today{display:block;order:1;flex-shrink:0;margin-left:auto;}
+  .tab-panel{padding-top:8px;padding-bottom:56px;}
+  #panel-overview .ov-more{margin-bottom:0;}
+}
+@media(max-width:600px){
+  .ov-team-head{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px 8px;}
+  .ov-team-title{grid-column:1;grid-row:1;min-width:0;white-space:normal;}
+  .ov-team-sum{grid-column:1/-1;grid-row:2;white-space:normal;}
+  .ov-team-sep{display:none;}
+  .ov-team-next{grid-column:1/-1;grid-row:3;margin-left:0;}
+  #panel-overview .ov-team-head>.ov-mini-btn{grid-column:2;grid-row:1;width:44px;height:44px;margin:0;}
+}
+
+/* Step 99: shared filled event tiles, with one scrolling row on iPhone. */
+.evhub,.evhub-body,.ev-past,.ev-grid-wrap,.ev-grid,#evb-card,#evb-soon,.ov-countdown,.ov-wide{min-width:0;}
+.ev-grid-wrap{position:relative;}
+.ev-grid{align-items:stretch;}
+.ev-chip-filled{border:0;min-width:0;}
+.ev-chip-filled .ev-chip-del{background:#ffffff;color:#16202e;border:0;}
+.ev-chip-filled .ev-chip-del:hover{background:#16202e;color:#ffffff;}
+.ev-chip:focus-visible{outline:2px solid var(--focus-ink);outline-offset:2px;}
+@media(max-width:600px){
+  .ev-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;gap:10px;scrollbar-width:none;padding:3px;}
+  .ev-grid::-webkit-scrollbar{display:none;}
+  .ev-grid>.ev-chip{box-sizing:border-box;flex:0 0 150px;width:150px;min-height:84px;scroll-snap-align:start;}
+  .ev-grid-wrap::after{content:"";position:absolute;top:0;right:0;bottom:0;width:18px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none;}
+  .ev-chip:hover{transform:none;}
+}
+@media(prefers-reduced-motion:reduce){.ev-chip{transition:none;}}
+
+/* Step 100: equal working columns and full-width Done and Canceled shelves. */
+@media(min-width:601px){
+  .kanban-board{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+  .kb-col[data-status="done"],.kb-col[data-status="canceled"]{grid-column:1/-1;}
+  .kb-col[data-status="done"]>.kb-col-body,.kb-col[data-status="canceled"]>.kb-col-body{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;
+  }
+}
+@media(min-width:981px){
+  .kanban-board,.kb-col[data-status="done"]>.kb-col-body,.kb-col[data-status="canceled"]>.kb-col-body{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+
+/* Step 101: figures beside the person and two full-width Today columns. */
+@media(min-width:981px){
+  .member-head{column-gap:14px;}
+  .member-head .member-head-stats{margin-left:10px;gap:0;flex:0 0 auto;flex-wrap:nowrap;justify-content:flex-start;}
+  .member-head .member-head-extra{margin-left:auto;}
+  .member-head .mh-stat{background:transparent;border:0;border-radius:4px;padding:4px 0;gap:6px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
+  .member-head .mh-stat+.mh-stat{margin-left:16px;padding-left:16px;border-left:1px solid var(--border);}
+  .member-head .mh-stat i{display:none;}
+  .member-head .mh-stat b{font-size:18px;font-weight:800;color:var(--text);}
+  .myday-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;width:100%;}
+  .myday-column{min-width:0;}
+  .myday-label{margin:0 8px 7px;}
+  .myday-empty{padding:7px 8px;font-size:13px;font-weight:600;color:var(--muted);}
+  .myday-column .md-title{overflow-wrap:anywhere;}
+}
+@media(max-width:980px){
+  .myday-label,.myday-empty{display:none;}
+}
+@media(prefers-reduced-motion:reduce){.member-head button.mh-stat{transition:none;}}
+
+/* Step 102: shared card surfaces, spacing, titles and today's gold ring. */
+:root{
+  --hs-radius-card:16px; --hs-radius-tile:12px;
+  --hs-shadow-card:0 1px 2px rgba(16,36,62,.04),0 10px 24px -18px rgba(16,36,62,.22);
+  --hs-shadow-tile:0 1px 2px rgba(16,36,62,.05);
+  --hs-shadow-float:0 16px 40px -16px rgba(16,36,62,.34);
+  --hs-pad-card:20px; --hs-gap:16px;
+  --hs-icon-tile-bg:rgba(0,48,87,.06); --hs-icon-tile-ink:#003057;
+}
+html.dark{
+  --hs-shadow-card:0 1px 2px rgba(0,0,0,.30); --hs-shadow-tile:none;
+  --hs-shadow-float:0 16px 40px -16px rgba(0,0,0,.6);
+  --hs-icon-tile-bg:rgba(255,255,255,.08); --hs-icon-tile-ink:#cfe0f5;
+}
+@media(max-width:600px){ :root{ --hs-pad-card:16px; --hs-gap:12px; } }
+
+#panel-overview .ov-card,#ov-ann-card,#ov-team,#panel-overview .ov-more,
+.tab-panel .member-head,.tab-panel .myday,.tab-panel .evhub,
+html body .tab-panel .two-col>.side-col,
+.tab-panel .sub-panel:is([id$="-sub-events"],[id$="-sub-links"],[id$="-sub-notes"],[id$="-sub-sop"]),
+.tab-panel :is(.evc-card,.ews-head,.ews-card,.link-card,.note-card){
+  border-radius:var(--hs-radius-card);border:1px solid var(--border);box-shadow:var(--hs-shadow-card);
+}
+.tab-panel .member-head{background:var(--surface);background-image:none;min-height:40px;padding:16px var(--hs-pad-card);margin-bottom:var(--hs-gap);}
+.tab-panel .evhub-head{background:transparent;background-image:none;}
+.tab-panel .sub-panel:is([id$="-sub-events"],[id$="-sub-links"],[id$="-sub-notes"],[id$="-sub-sop"]){background:var(--surface);padding:16px var(--hs-pad-card);}
+.task-card{border-radius:var(--hs-radius-tile);box-shadow:var(--hs-shadow-tile);}
+.ev-chip{border-radius:var(--hs-radius-tile);}
+.modal,.confirm-box,.cmdk-box{border-radius:var(--hs-radius-card);box-shadow:var(--hs-shadow-float);}
+.ui-menu,.tc-pop,.tcp-pop,#uxp-bell-panel,#uxp-more-panel{border-radius:var(--hs-radius-tile);box-shadow:var(--hs-shadow-float);}
+
+/* The existing name row and Today slot remain two adjoining halves of one card. */
+.tab-panel .member-head:has(+[id$="-myday"]>.myday){
+  border-radius:var(--hs-radius-card) var(--hs-radius-card) 0 0;border-bottom:0;box-shadow:none;margin-bottom:0;
+}
+.tab-panel .member-head+[id$="-myday"]>.myday{
+  border-radius:0 0 var(--hs-radius-card) var(--hs-radius-card);border-top:1px solid var(--border);
+}
+.tab-panel .myday{padding:16px var(--hs-pad-card);margin-bottom:var(--hs-gap);}
+#panel-overview .ov-card,#ov-team{padding:16px var(--hs-pad-card) 20px;}
+#panel-overview .ov-card.uxp-collapsed{padding-bottom:16px;}
+.tab-panel .evhub-head{padding:16px var(--hs-pad-card) 12px;}
+.tab-panel .evhub-body{padding:16px var(--hs-pad-card) 20px;}
+#panel-overview .ov-more-toggle{padding:16px var(--hs-pad-card);border-radius:var(--hs-radius-card);}
+#panel-overview .ov-more-body{padding:0 var(--hs-pad-card) 20px;gap:var(--hs-gap);}
+.ov-team-head{padding:0 0 12px;}
+
+/* Existing grids and shelves keep their columns; only the space between cards changes. */
+.tab-panel .two-col,#panel-overview .ov-grid{gap:var(--hs-gap);}
+#ov-top,#ov-team{margin-bottom:var(--hs-gap);}
+#panel-overview .ov-card,.tab-panel .evhub,.tab-panel .sub-nav,
+.tab-panel :is(.ews-head,.ews-card){margin-bottom:var(--hs-gap);}
+#panel-overview .ov-col-main>.ov-card,#panel-overview .ov-col-side>.ov-card{margin-bottom:var(--hs-gap);}
+#panel-overview .ov-more{margin:0;}
+.tab-panel :is(.evc-grid,.links-grid,.notes-grid,.sop-body){gap:var(--hs-gap);}
+
+#panel-overview .ov-card-head,.ov-team-head,.tab-panel .evhub-head,
+.tab-panel .side-col .widget-head{min-height:40px;align-items:center;}
+#panel-overview .ov-card-head{background:transparent;border-bottom:0;padding:0;margin-bottom:12px;}
+#panel-overview .ov-card-title,.ov-team-title,.tab-panel .widget-title,
+#panel-overview .ov-more-title,.uxp-sb-title{font-size:16px;font-weight:700;color:var(--text);}
+.tab-panel .evhub-title,.member-head .member-name{font-size:16px;font-weight:700;}
+#panel-overview .ov-card-title,.ov-team-title,.tab-panel .evhub-title,.tab-panel .widget-title{display:flex;align-items:center;gap:10px;min-height:40px;}
+#panel-overview .ov-card-title>i.ti:first-child,.ov-team-title>i.ti:first-child,
+.tab-panel .evhub-title>i.ti:first-child,.tab-panel .widget-title>i.ti:first-of-type,
+#panel-overview .ov-more-toggle>.ti:first-child{
+  display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 32px;
+  border-radius:10px;background:var(--hs-icon-tile-bg);color:var(--hs-icon-tile-ink);font-size:17px;box-shadow:none;margin-right:0;
+}
+.ov-team-sum,.ov-team-next,#panel-overview .ov-more-sum,.tab-panel .widget-sum{font-size:13px;color:var(--muted);}
+/* The announcement's grid remains one centred header row, including its preview. */
+#ov-ann-card:not(.ov-ann-all){min-height:40px;}
+html #panel-overview #ov-ann-card:not(.ov-ann-all) .ov-ann-text{font-size:13px;color:var(--muted);}
+#panel-overview .ov-card-head>.ov-card-title{margin-right:auto;}
+.tab-panel .side-col .widget-head{--wh-name-x:56px;}
+@media(min-width:981px){.tab-panel .side-col .widget-head{--wh-name-x:87px;}}
+body.uxp-sb-collapsed .uxp-sb-title{display:none;}
+body.uxp-sb-collapsed .uxp-sb-head{padding:0;}
+
+.ov-dl-grp-t,.evb-sec-h,.myday-label{
+  font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+}
+#panel-overview .ov-dl-grp-t.od{color:var(--danger);}
+/* Boss's choice reverses the navy today ring from step 72b, in both themes. */
+.cal-day.today,#panel-overview .ov-cal-grid .cal-day.today{
+  background:#003057;color:#fff;box-shadow:0 0 0 2px var(--surface),0 0 0 4px #F0B323;
+}
+.cal-day.today.sel,#panel-overview .ov-cal-grid .cal-day.today.sel{outline:0;}
+.cal-grid,#panel-overview .ov-cal-grid{overflow:visible;padding:4px;gap:8px;}
+
+/* Step 103: shared buttons, pills, sub-tabs, fields and keyboard focus. */
+:root{ --hs-ctl-h:36px; --hs-ctl-h-sm:30px; --hs-ctl-radius:10px; --hs-pill-h:30px; --hs-field-h:44px;
+  --hs-btn-main:#003057; --hs-btn-main-hover:#0b3f6b; --hs-btn-line:#cfd8e3; --hs-btn-hover:rgba(0,48,87,.06);
+  --hs-focus:0 0 0 3px rgba(0,48,87,.18); }
+html.dark{ --hs-btn-line:rgba(255,255,255,.18); --hs-btn-hover:rgba(255,255,255,.08); --hs-focus:0 0 0 3px rgba(143,180,220,.35); }
+@media(max-width:600px),(pointer:coarse){ :root{ --hs-ctl-h:44px; --hs-ctl-h-sm:40px; } }
+
+.btn,.auth-btn,.task-link,.icon-btn:not(.tc-sheet-btn),.uxp-col-btn,.task-card .tc-acts-btn,.task-card .tc-more,
+.gcal-refresh,.cal-arrow,#panel-overview .ov-mini-btn,.evhub-btn{display:inline-flex;}
+.btn,.auth-btn,.task-link,.icon-btn,.uxp-col-btn,.task-card .tc-acts-btn,.task-card .tc-more,
+.gcal-refresh,.cal-arrow,#panel-overview .ov-mini-btn,.evhub-btn{
+  align-items:center;justify-content:center;gap:6px;height:var(--hs-ctl-h);min-height:0;
+  padding:0 14px;border-radius:var(--hs-ctl-radius);font-size:13.5px;line-height:1;white-space:nowrap;
+  border:1px solid var(--hs-btn-line);background:var(--surface);color:var(--text);font-weight:600;box-shadow:none;
+}
+.btn-sm,.task-card .tc-more,.task-card .tc-acts-btn{
+  height:var(--hs-ctl-h-sm);padding:0 11px;font-size:13px;
+}
+.btn i,.auth-btn i,.task-link i,.icon-btn i,.uxp-col-btn i,.tc-acts-btn i,.tc-more i,
+.gcal-refresh i,.cal-arrow i,#panel-overview .ov-mini-btn i,.evhub-btn i{font-size:16px;}
+.btn-accent,.btn-navy,.btn-coral,.btn-teal,.btn-gold,.auth-btn{
+  background:var(--hs-btn-main);background-image:none;border-color:transparent;color:#fff;font-weight:700;box-shadow:none;
+}
+.btn-accent:hover,.btn-navy:hover,.btn-coral:hover,.btn-teal:hover,.btn-gold:hover,.auth-btn:hover{
+  background:var(--hs-btn-main-hover);box-shadow:none;filter:none;
+}
+/* Retain the current dark fills, with a flat finish. */
+html.dark .btn-accent{background:var(--accent);color:var(--accent-on,#fff);}
+html.dark .btn-navy,html.dark .btn-gold{background:#f0b323;color:#0b1220;}
+html.dark .btn-coral{background:var(--coral);}
+html.dark .btn-teal{background:#2dd4bf;color:#032b28;}
+html.dark .tab-panel .btn-accent{background:#10243a;color:#fff;}
+html.dark :is(.btn-accent,.btn-navy,.btn-coral,.btn-teal,.btn-gold):hover{filter:brightness(1.08);}
+.btn-ghost,.task-link,.task-card .tc-more,.tab-panel .side-col .widget-head .btn,
+.tab-panel .sick-widget button[onclick^="addSickDay"]{
+  background:var(--surface);border:1px solid var(--hs-btn-line);color:var(--text);font-weight:600;box-shadow:none;
+}
+.btn-ghost:hover,.task-link:hover,.task-card .tc-more:is(.open,:hover),#panel-overview .ov-ann-new:hover,.evhub-btn:not(.icon-only):hover,
+.tab-panel .side-col .widget-head .btn:hover,.tab-panel .sick-widget button[onclick^="addSickDay"]:hover{
+  background:var(--hs-btn-hover);color:var(--text);filter:none;
+}
+.icon-btn,.uxp-col-btn,.task-card .tc-acts-btn,.gcal-refresh,.cal-arrow,
+#panel-overview .ov-mini-btn:not(.ov-ann-new),.evhub-btn.icon-only{
+  width:var(--hs-ctl-h);min-width:var(--hs-ctl-h);padding:0;border:0;background:transparent;color:var(--muted);
+}
+.task-card .tc-acts-btn{width:var(--hs-ctl-h-sm);min-width:var(--hs-ctl-h-sm);}
+.icon-btn:hover,.uxp-col-btn:hover,.task-card .tc-acts-btn:hover,.task-card.acts-open .tc-acts-btn,
+.gcal-refresh:hover,.cal-arrow:hover,#panel-overview .ov-mini-btn:not(.ov-ann-new):hover,.evhub-btn.icon-only:hover{
+  background:var(--hs-btn-hover);color:var(--text);
+}
+.btn-danger,.uxp-btn-danger{background:var(--surface);color:var(--danger);border:1px solid var(--danger);font-weight:600;}
+.btn-danger:hover,.uxp-btn-danger:hover{background:var(--hs-btn-hover);color:var(--danger);}
+.dm-toggle,.cmdk-trigger{height:var(--hs-ctl-h);min-height:0;border-radius:var(--hs-ctl-radius);}
+.dm-toggle{width:var(--hs-ctl-h);min-width:var(--hs-ctl-h);}
+@media(max-width:600px){.header-right .cmdk-trigger{width:var(--hs-ctl-h);}}
+button:disabled,.btn.disabled,[aria-disabled="true"]{opacity:.5;pointer-events:none;cursor:not-allowed;}
+
+.fpill,#panel-overview .ov-fpill{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--hs-pill-h);padding:0 12px;
+  border-radius:999px;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;
+  background:var(--surface);border:1px solid var(--hs-btn-line);color:var(--muted);box-shadow:none;
+}
+.fpill:hover,#panel-overview .ov-fpill:hover{background:var(--hs-btn-hover);color:var(--text);}
+.fpill:is(.act-navy,.act-accent,.act-coral),#panel-overview .ov-fpill.on{background:#003057;border-color:#003057;color:#fff;box-shadow:none;}
+html.dark .fpill:is(.act-navy,.act-accent,.act-coral),html.dark #panel-overview .ov-fpill.on{
+  background:#10243a;border-color:#647e9a;color:#fff;
+}
+.kb-col-count,#panel-overview .ov-dl-count,.sub-tab :is(.badge,.count),.wf-count,.widget :is(.count,.widget-count){
+  display:inline-flex;align-items:center;justify-content:center;height:22px;min-width:22px;padding:0 6px;
+  border-radius:999px;font-size:12px;font-weight:700;line-height:1;
+}
+
+.tab-panel .sub-nav{
+  display:flex;flex-wrap:nowrap;justify-content:flex-start;gap:0;padding:0;background:transparent;
+  border:0;border-bottom:1px solid var(--border);border-radius:0;box-shadow:none;overflow-x:auto;
+}
+.tab-panel .sub-nav .uxp-drawer-btn{height:40px;padding:0 14px;font-size:13.5px;border-radius:0;}
+.tab-panel .sub-nav .sub-tab{
+  position:relative;flex:0 0 auto;height:40px;min-height:0;padding:0 14px;font-size:13.5px;font-weight:600;
+  color:var(--muted);background:transparent;border:0;border-radius:0;box-shadow:none;white-space:nowrap;
+}
+.tab-panel .sub-nav .sub-tab:hover{color:var(--text);}
+.tab-panel .sub-nav .sub-tab.act{color:#003057;background:transparent;font-weight:700;box-shadow:none;}
+.tab-panel .sub-nav .sub-tab.act::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:#003057;
+}
+html.dark .tab-panel .sub-nav .sub-tab.act{color:#cfe0f5;}
+html.dark .tab-panel .sub-nav .sub-tab.act::after{background:#8fb4dc;}
+
+html body :is(.form-input,.form-select,.form-textarea,select,.auth-field input,.notes-search,.trq-input,.tc-gif-input,.gcal-url-input,.co-time-input),
+html body :is(.modal,.uxp-modal,.widget,[role="dialog"]) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+html body textarea{
+  height:var(--hs-field-h);border-radius:var(--hs-ctl-radius);border:1px solid var(--hs-btn-line);font-size:14px;padding:0 12px;
+}
+html body :is(textarea,.form-textarea){height:auto;min-height:88px;padding:10px 12px;}
+html body .notes-search{padding-left:37px;}
+html body :is(.form-input,.form-select,.form-textarea,select,.auth-field input,.notes-search,.trq-input,.tc-gif-input,.gcal-url-input,.co-time-input):focus,
+html body :is(.modal,.uxp-modal,.widget,[role="dialog"]) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):focus,
+html body textarea:focus{border-color:#003057;box-shadow:var(--hs-focus);outline:none;}
+/* Status, design and Move to menus retain their colours and arrow icons. */
+html body select:is(.tcard-sel,.tcard-move){
+  height:var(--hs-ctl-h-sm);min-height:0;padding:0 24px 0 11px;font-size:13px;line-height:1;border-radius:var(--hs-ctl-radius);
+}
+html body select:is(.tcard-sel,.tcard-move):focus{box-shadow:none;}
+html body .app-header :is(.dm-toggle,.cmdk-trigger):focus-visible,
+html body :is(button,a,[tabindex],.fpill,.ov-fpill,.sub-tab,.task-card,.ev-chip,select.tcard-sel,select.tcard-move):focus-visible{
+  outline:2px solid var(--focus-ink,#1d4ed8);outline-offset:2px;
+}
+.tab-panel .side-col .widget-title{font-size:14.5px;font-weight:700;}
+@media(max-width:600px),(pointer:coarse){
+  /* Compact controls keep a full touch target; desktop pills never shrink a phone target. */
+  .btn,.auth-btn,.task-link,.icon-btn,.uxp-col-btn,.task-card .tc-more,.task-card .tc-acts-btn,
+  .gcal-refresh,.cal-arrow,#panel-overview .ov-mini-btn,.evhub-btn,
+  html body select:is(.tcard-sel,.tcard-move){min-height:44px;}
+  .task-card .tc-acts-btn{min-width:44px;}
+  .fpill,#panel-overview .ov-fpill{height:44px;min-height:44px;}
+  .tab-panel .sub-nav .sub-tab,.tab-panel .sub-nav .uxp-drawer-btn{height:44px;min-height:44px;}
+}
+@media(max-width:600px){
+  /* The Event Hub title stays on one line beside its three 44px buttons on iPhone. */
+  .tab-panel .evhub-title{white-space:nowrap;flex:0 0 auto;}
+  .tab-panel .evhub-tools{gap:4px;flex:0 0 auto;}
+  .tab-panel .evhub-btn.eh-tl-btn{padding:0 10px;}
+}
+@media(max-width:380px){
+  /* Narrow iPhones: Timeline shows its icon only; the word stays in the button for screen readers. */
+  .tab-panel .evhub-btn.eh-tl-btn{width:44px;padding:0;gap:0;font-size:0;}
+  .tab-panel .evhub-btn.eh-tl-btn i{font-size:16px;}
+}
+@media(max-width:340px){
+  .tab-panel .evhub-title>i.ti:first-child{display:none;}
+}
+
+/* Step 104: full-height status drop areas and a shared pointer label. */
+@media(min-width:601px){
+  .kanban-board{align-items:stretch;}
+  .kb-col>.kb-col-body{flex:1 1 auto;}
+}
+#kb-drop-hint{
+  display:none;position:fixed;pointer-events:none;z-index:10001;
+  background:#003057;color:#fff;font-size:12.5px;font-weight:700;
+  padding:6px 10px;border-radius:8px;box-shadow:var(--hs-shadow-float);
+  max-width:calc(100vw - 16px);box-sizing:border-box;
+}
+html.dark #kb-drop-hint{background:#cfe0f5;color:#0b1a2b;}
+
+/* Step 106: readable menu day pills and a compact week picker. */
+.menu-days{display:flex;gap:6px;margin-bottom:11px;}
+.menu-day-pill{
+  display:flex;align-items:center;justify-content:center;flex:1;min-width:0;
+  height:var(--hs-pill-h);padding:0;border-radius:var(--hs-ctl-radius);
+  font-size:12.5px;font-weight:600;line-height:1;text-align:center;cursor:pointer;
+  background:var(--surface);border:1px solid var(--hs-btn-line);color:var(--muted);box-shadow:none;
+}
+.menu-day-pill:not(.act):hover{background:var(--hs-btn-hover);color:var(--text);}
+.menu-day-pill.today-pill:not(.act){border:1.5px solid #F0B323;color:var(--text);font-weight:700;}
+.menu-day-pill.act{background:#003057;border-color:#003057;color:#fff;font-weight:700;}
+html.dark .menu-day-pill.act{background:#10243a;border-color:#647e9a;color:#fff;}
+/* Match the specificity of the shared field rule so this picker stays compact. */
+html body select.menu-week-sel{
+  height:var(--hs-ctl-h-sm);min-height:0;padding:0 11px;border-radius:var(--hs-ctl-radius);
+  border:1px solid var(--hs-btn-line);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+}
+html body .menu-day-pill:focus-visible,html body select.menu-week-sel:focus-visible{
+  outline:2px solid var(--focus-ink,#1d4ed8);outline-offset:2px;box-shadow:none;
+}
+@media(max-width:600px),(pointer:coarse){
+  .menu-day-pill,html body select.menu-week-sel{height:44px;min-height:44px;}
+}
+@media(prefers-reduced-motion:reduce){.menu-day-pill{transition:none;}}
+
+/* Step 107: counted menu weeks, a viewing note and Boss's week setting. */
+.menu-week-note{font-size:12.5px;color:var(--muted);text-align:center;margin-bottom:8px;line-height:1.5;}
+.menu-week-note:empty{display:none;}
+.menu-week-actions{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;}
+.menu-week-back,.menu-week-set{
+  display:inline-flex;align-items:center;justify-content:center;min-width:0;max-width:100%;
+  height:var(--hs-ctl-h-sm);padding:0 11px;border-radius:var(--hs-ctl-radius);
+  font-family:inherit;font-size:12.5px;font-weight:600;line-height:1.25;cursor:pointer;box-shadow:none;
+}
+.menu-week-back{border:0;background:transparent;color:#003057;}
+.menu-week-back:hover{text-decoration:underline;}
+html.dark .menu-week-back{color:#cfe0f5;}
+.menu-week-set{background:var(--surface);color:var(--text);border:1px solid var(--hs-btn-line);}
+.menu-week-set:hover{background:var(--hs-btn-hover);color:var(--text);}
+@media(max-width:600px),(pointer:coarse){
+  .menu-week-back,.menu-week-set{height:44px;min-height:44px;}
+}
+
+/* Step 108: one-tap board status on touch, beside Details and more actions. */
+/* A bare card's bar stays out of the desktop flow, anchored where its facts
+   begin. The hidden menu adds neither height nor a keyboard stop. */
+.task-card .tc-body{position:relative;}
+.task-card .tc-bar.tc-facts-end{left:0;margin:0;min-height:0;}
+.task-card .tc-quick-sel{display:none;}
+@media(max-width:600px),(pointer:coarse){
+  .kb-col .task-card .tc-body{display:flex;flex-direction:column;}
+  .kb-col .task-card .tc-bar{
+    display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:8px;
+    position:static;width:auto;min-width:0;margin:10px 0 0;
+  }
+  .kb-col .task-card .tc-bar.tc-facts-end{order:1;grid-template-columns:auto minmax(0,1fr);}
+  .kb-col .task-card select.tc-quick-sel{
+    display:inline-flex;justify-self:end;width:128px;min-width:min(108px,100%);max-width:100%;
+    height:var(--hs-ctl-h-sm);min-height:44px;border-radius:var(--hs-ctl-radius);font-size:13px;font-weight:700;
+  }
+  .kb-col .task-card .task-foot .tc-row-sel{display:none;}
+}
+/* The status menu's text reads at 4.5 to 1 in the light theme: the three lighter status colours use their darker inks. */
+html:not(.dark) .kb-col[data-status="pending"] select.tc-quick-sel{color:var(--st-pending-ink,#4a5866)!important;}
+html:not(.dark) .kb-col[data-status="waiting"] select.tc-quick-sel{color:var(--st-waiting-ink,#7d5406)!important;}
+html:not(.dark) .kb-col[data-status="on-hold"] select.tc-quick-sel{color:var(--st-hold-ink,#584079)!important;}

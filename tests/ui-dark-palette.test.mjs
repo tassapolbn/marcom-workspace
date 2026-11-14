@@ -8,7 +8,11 @@ const palette={pending:'#a3b1c4',progress:'#93b4f5',waiting:'#f0b86e',hold:'#c0a
 function lum(hex){const a=hex.match(/[a-f\d]{2}/gi).map(v=>{const s=parseInt(v,16)/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4;});return a[0]*.2126+a[1]*.7152+a[2]*.0722;}
 test('Step 73 is scoped to dark mode and defines one semantic status palette',()=>{
  for(const [name,value] of Object.entries(palette)) assert.ok(block.includes(`--st-${name}:${value};`));
- for(const [,selector] of block.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{/g)) assert.ok(selector.trim().startsWith('html.dark'));
+ const selectors=[...block.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{/g)].map(([,selector])=>selector.trim());
+ for(const selector of selectors){
+   if(selector.startsWith('@')) assert.equal(selector,'@media(max-width:980px)','only the tablet and phone stat colours need a media wrapper');
+   else for(const part of selector.split(/,(?![^()]*\))/)) assert.ok(part.trim().startsWith('html.dark'),part);
+ }
 });
 test('dark status and identity text pass AA on raised cards',()=>{
  // CSS uses a translucent white card over #0A0E18; also check the
@@ -21,12 +25,14 @@ test('Dew keeps a brown hue and primary actions stay navy with custom colours',(
  const [r,g,b]=accent.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16));
  const hue=60*(g-b)/(r-b);
  assert.ok(hue>=15&&hue<35,`orange-brown hue ${hue}`);
- assert.match(block,/filter-tabs \.fpill:is\(\.act-accent,\.act-navy\)\{background:#10243a!important/);
+ assert.match(css.split('/* Step 103:')[1],/html.dark \.fpill:is\(\.act-navy,\.act-accent,\.act-coral\)[^{]*\{\s*background:#10243a;[^}]*color:#fff;/);
  assert.match(html,/css\+='html.dark body.theme-'\+w\+.*background:#10243a!important/);
 });
-test('dark events and day agendas are flat and priority and today stay neutral',()=>{
- assert.match(block,/\.ev-chip,html.dark #evb-card \.evb-g/);
+test('dark event task groups and day agendas are flat; today has the approved gold ring',()=>{
+ assert.match(block,/html.dark #evb-card \.evb-g,html.dark #evb-card \.evb-row/);
  assert.match(block,/\.cal-detail\{border:0!important;.*border-radius:0!important;background:transparent!important;box-shadow:none!important/);
  assert.match(block,/\.ov-pri.high\{background:transparent!important;color:#bdc7d5!important/);
- assert.match(block,/today.sel\{outline-color:#93b4d5!important/);
+ const shared=css.split('/* Step 102:')[1];
+ assert.match(shared,/\.cal-day.today,#panel-overview \.ov-cal-grid \.cal-day.today\{\s*background:#003057;color:#fff;box-shadow:0 0 0 2px var\(--surface\),0 0 0 4px #F0B323;/);
+ assert.doesNotMatch(block,/today.sel\{outline-color:/);
 });

@@ -233,7 +233,7 @@ const server = http.createServer(async (request, response) => {
       response.setHeader('Content-Type', 'text/html; charset=utf-8');
       return response.end(html);
     }
-    if (/^\/assets\/[\w.-]+$/.test(url.pathname) || url.pathname === '/site.webmanifest') {
+    if (/^\/assets\/(?:brand\/)?[\w.-]+$/.test(url.pathname) || url.pathname === '/site.webmanifest') {
       const filepath = path.join(root, url.pathname.slice(1));
       const mime = { '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webmanifest': 'application/manifest+json' }[path.extname(filepath)] || 'application/octet-stream';
       response.setHeader('Content-Type', mime); return response.end(await fs.readFile(filepath));

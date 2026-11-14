@@ -2989,3 +2989,546 @@ first person's tab only).
 4. **Shared cards already in the sheet (first person's tab only):** recommended,
    Refresh all adds the missing rows in the other people's tabs, shown in its
    summary before Apply; or only shared cards from now on get every row.
+
+# Plan 11 (13 Nov 2026): the school logo, and a tidier, better-looking app, approved by Boss
+
+Boss asked (13 Nov) for two things: make the app more beautiful and better
+organised, and replace the app's own logo with the school logo wherever it
+suits the background colour. Boss supplied two logo files: the full-colour
+logo (navy and gold, for light backgrounds) and the white-and-gold logo (for
+dark backgrounds). As before, Claude plans and checks and Codex builds.
+
+Kept as Boss decided earlier: the tick on the left of each card; the Event
+Hub right under Today on person tabs; the Payday line where it is; no
+greeting; a plain navy header; the gold glowing payday circle; the navy
+loading screen.
+
+Approved by Boss on 13 Nov: every step (96 to 104); the full school logo in
+the header on computers, with "Marcom Workspace" beside it (decision 2); a
+little gold, a gold ring round today's date on the calendars (decision 3).
+
+## What I found (screens checked at 1440x900 and on an iPhone screen)
+
+1. **The logo.** The app's own mark is a gold briefcase tile (header, loading
+   screen, sign-in) and an "M" (browser tab and iPhone home-screen icon). The
+   school logo appears only on the request form and the Team Board page.
+2. **The top and bottom of pages.** The Payday line sits alone under the
+   header; on the Overview a lone date line sits between the announcement and
+   Team today; the gaps between these rows differ; every page ends with an
+   empty band about 200px tall.
+3. **Events look different in each place.** In the Event Hub some tiles are
+   filled with the event's colour and others are white with a thin coloured
+   line. The Overview's "Coming up" shows loose numbers with wide gaps. On
+   iPhone the Event Hub's tiles fill most of a screen before the tasks.
+4. **The board.** Done drops under Pending as one narrow column on its own.
+5. **The person header.** Today uses the left third of a full-width card, and
+   the three numbers sit far away at the right.
+6. **Cards and panels are not alike.** Corners, inner spacing and header rows
+   differ from card to card; the sidebar has an empty strip at its top behind
+   "Hide sidebar".
+7. **Buttons and pills come in many sizes and styles** (New, Add, Timeline,
+   Details, the fold buttons, the filter pills), and the sub-tabs bar
+   stretches across the whole width.
+8. **Small slips.** On iPhone, Team today has a stray dot before "22 open"
+   and its refresh button is out of line. One older test fails since a few
+   days ago because it depends on today's date (a fault in the test, not in
+   the app): 668 of 669 pass.
+
+## Steps
+
+- [x] **96. The school logo files and the app's icons**
+  - Files: `assets/brand/` (new), `assets/icon-32.png`, `assets/icon-180.png`,
+    `assets/icon-192.png`, `assets/icon-512.png`, `assets/favicon.svg`,
+    `site.webmanifest`, `index.html` (the icon links only), tests.
+  - Change: Boss's two logo files go into the project unchanged, with smaller
+    copies made from them for the screen and a copy of the emblem on its own
+    for small places (never stretched, recoloured or redrawn). The browser-tab
+    icon and the iPhone home-screen icon become the white-and-gold emblem on
+    the school's navy; the "M" icon goes. The older test that depends on
+    today's date is fixed.
+  - Test: every copy keeps the logo's proportions; the icons are square, navy,
+    with the emblem centred inside a safe margin; the manifest lists them;
+    all tests pass.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-96.md): The browser
+    and iPhone icons now show the school's white-and-gold emblem on navy, with
+    safe space around it. Smaller full logos and separate emblems are ready
+    for the next step, and the two original files are unchanged. Checked PNG
+    sizes, transparency, corner and emblem pixels, original file sizes and
+    hashes, icon links and masked icon settings. Fixed the test's clock without
+    changing the app. Compressed all eight PNGs as 8-bit palettes of at most
+    256 colours, keeping their dimensions, smooth transparent edges and exact
+    icon corners. The colour and white logos are now 28,583 and 20,034 bytes;
+    the colour and white emblems are 21,504 and 16,454 bytes; the 512, 192,
+    180 and 32px icons are 14,320, 4,363, 4,103 and 1,007 bytes. Downloads are
+    81% smaller overall. Compared every PNG with its previous version using
+    ImageMagick PSNR: all scored 43.4 to 54.4 dB, above the required 36 dB.
+    Checked the images side by side and added eight file-size limits plus
+    channel-depth checks. Added 20 tests in total for this step. Ran
+    npm run test:ui and checked individual results: 688 of 689 pass, with only
+    the documented sandbox exception for the local .aws and .codex folders in
+    ui-netlify; all 20 brand tests pass.
+
+- [x] **97. The school logo in the app (decision 2)**
+  - Files: `index.html` (header, loading screen, sign-in card),
+    `assets/workspace-ui.css`, tests.
+  - Change: the gold briefcase tile goes everywhere.
+    - Header (navy): the white-and-gold logo at the left. On computers the
+      full logo (emblem and "HeadStart International School, Phuket"), a thin
+      line, then "Marcom Workspace" with "Marketing & Communications
+      Department" under it. On iPhone, where the row is narrow, the emblem
+      with "Marcom Workspace".
+    - Loading screen (navy): the white-and-gold logo in the centre, "Marcom
+      Workspace" under it, and the loading bar.
+    - Sign-in card (white): the full-colour logo above "Marcom Workspace".
+    - The request form and the Team Board page already carry the full-colour
+      logo and stay as they are.
+    - The logo is part of the page itself, so it shows from the first moment.
+  - Test: no briefcase tile left; the logo has a name for screen readers and
+    its own proportions; the header is no taller than today at 1440 and 390;
+    contrast scans clean.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-97.md): The header
+    and opening screen now show the school's white-and-gold logo immediately,
+    sharing one transparent 560 by 140 PNG of 9,453 bytes inside the page.
+    Computers show the full header logo with a thin dividing line; iPhone
+    shows the emblem beside the single-line Marcom Workspace name. The logo
+    becomes smaller when scrolling on computers and respects reduced motion.
+    Sign-in shows the colour logo above Marcom Workspace, on a white card in
+    both themes. Removed the old header tile, scroll, theme and landscape
+    rules, opening tile rules and sign-in tile rule, plus dark sign-in
+    overrides that would obscure the colour logo or reduce readability.
+    Added six brand tests and updated the older tile checks. Checked image
+    dimensions, size, transparency, single embedding, labels and source rules
+    for desktop, scrolling, iPhone and reduced motion. All 26 brand tests pass.
+    Ran npm run test:ui and checked individual results: 694 of 695 pass, with
+    only the documented ui-netlify sandbox exception for .aws and .codex.
+    Browser layout and contrast review remain with the reviewer as instructed.
+
+- [x] **98. A tidy top and bottom on every page**
+  - Files: `index.html`, `assets/workspace-ui.css`, tests.
+  - Change: on computers the Overview's date moves to the right end of the
+    Payday line (Payday stays where it is), so no lone date sits between the
+    announcement and Team today; the gaps between the header, that line and
+    the first card are even; the empty band at the bottom of every page
+    becomes a normal margin (iPhone keeps room for the tab bar). On iPhone,
+    Team today loses its stray dot and its refresh button lines up with the
+    title.
+  - Test: measured gaps at 1440; nothing between the announcement and Team
+    today; the bottom margin on computers is 64px or less.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-98.md): On computers,
+    today's date now sits at the right of the Payday line on every tab and
+    updates each minute, including at midnight and with salary details open.
+    Removed the separate Overview date and its old styles. The desktop line
+    is 40px tall with 8px above and below, announcements and Team today have
+    a 16px gap, and pages end with 56px of space. iPhone keeps its existing
+    room for the bottom controls; Team today's summary has no leading dot
+    and its 44px refresh button lines up with the title. Removed the old
+    phone heading layout and negative refresh margins. Added five tests and
+    updated older checks, including date rollover with salary details open
+    and closed. Ran npm run test:ui and checked individual results: 699 of
+    700 pass, with only the documented ui-netlify sandbox exception for
+    .aws and .codex. Browser measurements remain with the reviewer as instructed.
+
+- [x] **99. One look for events**
+  - Files: `index.html` (the Event Hub tiles and the Overview's Coming up),
+    `assets/workspace-ui.css`, tests.
+  - Change: every event tile is drawn the same way and the same size: filled
+    with the event's own colour, with its date, name and days left. An event
+    with a colour but no text colour gets white or dark text, whichever reads
+    better; an event with no colour uses navy. The Overview's "Coming up"
+    uses the same tiles instead of loose numbers (tapping one still opens the
+    event's tasks). On iPhone both are one row that scrolls sideways, so the
+    tasks on a person tab start about 190px higher.
+  - Test: every tile has the same height and parts at 1440 and 390; the text
+    of every demo event reads at 4.5:1 or better in both themes; on iPhone
+    the Event Hub is one row.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-99.md): Event Hub
+    and Coming up now share filled tiles with the date, event name and time
+    left. Events without a saved text colour choose readable white or dark
+    text; events without a valid colour use navy and white. Both themes keep
+    the same colours. iPhone shows one row that scrolls inside its card, with
+    a soft hint at the right edge, bringing the tasks closer. Tiles open by
+    keyboard as well as by click; event navigation, deletion and folded past
+    events remain available. Removed the old unfilled styles, coloured top
+    lines, dark colour overrides, single-event line layout, two-column phone
+    grid and loose Coming up rows. Checked contrast calculations, shared tile
+    parts, event order and the next eight, Today and Tomorrow wording, click
+    fallbacks, keyboard behaviour and responsive CSS. Ran npm run test:ui and
+    checked individual results: 701 of 702 pass, with only the documented
+    ui-netlify sandbox exception for .aws and .codex. Browser measurements
+    remain with the reviewer as instructed.
+
+- [x] **100. The task board in two tidy rows (computers)**
+  - Files: `assets/workspace-ui.css` (`index.html` only if the board's markup
+    must change), tests.
+  - Change: on a person tab the four working columns (Pending, In Progress,
+    Waiting, On Hold) share the top row in equal widths; Done and Canceled
+    sit under them as full-width shelves with their cards side by side, so
+    Done is no longer a lone narrow column. Dragging a card to Done still
+    works; an empty Canceled stays hidden; iPhone is unchanged.
+  - Test: at 1440x900 with the sidebar shown and hidden, the working columns
+    are equal and Done spans the board; dragging a card to Done moves it.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-100.md): At 981px
+    and wider, the four working columns now share one row equally, with
+    Done and Canceled each spanning the board below and their cards side by
+    side in four equal columns. From 601px to 980px both layouts use two
+    columns; smaller screens keep their existing layout. Empty shelves stay
+    low and keep their drop room and highlight while dragging. Added five
+    tests covering the layouts, headings, counts, empty columns and dragging
+    onto Done through the existing handlers. No older rules or index.html
+    needed changing, and no older tests pinned the previous board grid.
+    Ran npm run test:ui and checked individual results: 706 of 707 pass,
+    with only the documented ui-netlify sandbox exception for .aws and
+    .codex. Browser checks in both themes with the sidebar shown and hidden
+    remain with the reviewer as instructed.
+
+- [x] **101. The person header and Today use the full width**
+  - Files: `index.html` (the person header and the Today panel),
+    `assets/workspace-ui.css`, tests.
+  - Change: on computers the three numbers (active, due soon, done) sit as
+    clear figures beside the name, and Today shows its two lists side by side
+    (Overdue on the left, Due today on the right) instead of one short list
+    in the left third. iPhone keeps one column. Nothing is removed.
+  - Test: at 1440 Today's two lists share the card's width; at 390 the header
+    is no taller than today; every row still opens its task.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-101.md): on
+    computers the three figures sit beside the person's name, and Today
+    fills the card with equal Overdue and Due today columns. Empty columns
+    have a quiet message; finished tasks keep their place. Tablets and
+    phones keep their existing layout. Checked task links, row limits,
+    counts, empty states and readable text in both themes. The UI suite
+    passes 713 of 714 checks, with only the documented .aws and .codex
+    sandbox exception. Browser checks remain with the reviewer.
+
+- [x] **102. One set of cards, spacing and titles (decision 3)**
+  - Files: `assets/workspace-ui.css` (one set of shared values in a new
+    block), `index.html` (only where old rules must go so the shared values
+    win), tests.
+  - Change: every card, panel and dialog uses the same corners, border, soft
+    shadow and inner spacing; every card header is laid out the same way
+    (icon, title, short summary, actions at the right); the section labels
+    (Overdue, Today, Coming up, Shared tasks, the column names) share one
+    style; the gaps between cards are even. The sidebar gets a proper header
+    ("Widgets", with Hide at its right), so the empty strip goes. If chosen,
+    today's date on the calendars is ringed in gold, as the payday circle is.
+    Dark mode follows the same values.
+  - Test: a rendered check that the cards on the Overview and a person tab
+    share corners, border, spacing and header height; contrast scans clean in
+    both themes.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-102.md): Cards now
+    share their corners, borders, soft shadows and spacing in both themes,
+    with matching title icons and small section labels. The person header
+    and Today stay joined, and the existing board and Today columns stay in
+    place. The sidebar starts with Widgets and Hide, keeping its existing
+    hide, show and iPhone drawer behaviour. Today's date has a gold ring on
+    every calendar, with room around it. This reverses the navy ring part of
+    step 72b at Boss's choice. Buttons, pills, tabs and fields keep their
+    existing appearance; only the gap below the sub-tabs changes.
+    Older rules changed or removed:
+    - The base and late Overview, redesign, premium, aurora, palette, refine
+      and white style layers no longer force card or dialog corners, borders
+      and shadows, including their stronger hover shadows. Task borders stay.
+    - The person header, Today and Event Hub lose their coloured left edges
+      and tinted or gradient bands. Event cards lose their decorative edge,
+      and the old Best note edge goes. Person identity colours stay.
+    - Earlier Overview, announcement, Team today, person header and Event Hub
+      padding rules now give way to the shared spacing. The extra gap above
+      Event Board goes; card stacks and the Overview columns share one gap.
+    - The older title sizes, 28px icon tiles and individual icon colours go,
+      including step 72c's widget tile override. Steps 51, 65 and 101 give
+      their small labels to one shared rule. Step 74's sidebar corner and
+      the sidebar header's empty margin go. Step 99 uses the shared tile corner.
+    - Dialog, menu and popover corners and shadows now come from the shared
+      values. Steps 72b and 73 lose their navy Today outlines; Today keeps
+      navy and white when selected, hovered or marked as sick leave.
+    Checked all four supplied screenshots, the old style layers, sidebar
+    title and hide/show behaviour, calendar ring space, responsive values,
+    retained layouts and text contrast calculations. Added 12 tests and
+    updated older appearance checks without dropping their behaviour checks.
+    Ran npm run test:ui and checked individual results: 725 of 726 pass,
+    including all 12 new tests, with only the documented ui-netlify sandbox
+    exception for .aws and .codex. Browser layout and contrast review remain
+    with the reviewer as instructed.
+
+- [x] **103. One set of buttons, pills, tabs and fields**
+  - Files: `assets/workspace-ui.css`, `index.html` (where old rules must go),
+    tests.
+  - Change: three kinds of button (main: solid navy; second: outlined; quiet:
+    text or icon) with one height (36px on computers, 44px on touch screens),
+    one corner and one weight; filter pills and count chips one height; form
+    fields one height; one focus ring. The sub-tabs (All Tasks, Events, Links,
+    Notes, Templates) become a neat row at the left with the selected one
+    underlined, instead of a bar stretched across the page. Applied to the
+    header buttons, card actions, filters and dialog footers.
+  - Test: a rendered check lists one height and one corner per kind of
+    button; every touch target on iPhone is 44px or more; keyboard focus
+    shows on each.
+
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-103.md): Buttons,
+    filters, count chips, tabs and fields now share their sizes and shapes in
+    both themes. Selected tabs have an underline, keyboard focus is consistent,
+    and touch controls keep a full target. Widget row titles are smaller and
+    task cards use the shared 12px corner. Removed older rounded, gradient,
+    glow, field and selected-tab overrides, including inline sizing and saved
+    light theme action colours. Checked behaviour, contrast, touch sizes and
+    the shared styles: 736 of 737 tests pass. The only failure is the known
+    sandbox publishing check for .aws and .codex; browser review stays with
+    the reviewer as instructed.
+
+  - Reviewer's check (Claude, in a browser): buttons 36px and 30px with
+    10px corners on computers, 44px on iPhone; pills 30px; sub-tabs
+    underlined; fields 44px; zero contrast failures on all five tabs in both
+    themes at 1440 and 390. One correction made by the reviewer: on iPhone
+    the taller buttons pushed "Event Hub" onto two lines, so the title now
+    keeps one line, Timeline shows its icon only at 380px and under, and the
+    title's icon tile hides at 340px and under (three small rules at the end
+    of the step 103 block, with a test). 738 tests pass.
+
+- [x] **104. Drop a card anywhere in a status column** (added 13 Nov at Boss's request)
+  - Problem Boss reported: a card low down in a long column cannot be dragged
+    to another status, because a short column ends where its last card ends
+    and the space under it does not accept the drop (the short column's cards
+    are far above, out of sight).
+  - Cause: `.kanban-board{align-items:start}` makes every column only as tall
+    as its own cards, and the drop target is the column box.
+  - Files: `assets/workspace-ui.css` (new step 104 block), `index.html`
+    (`taskColOver`, `taskColLeave`, `taskDragEnd`, the two drop handlers),
+    tests.
+  - Change: at 601px and wider the working columns stretch to the height of
+    their row, so the whole column under a status name accepts a drop at any
+    height. While a card is dragged over another column, a small label by the
+    pointer says "Move to (status)", since the column's name may be scrolled
+    out of sight. Nothing changes on iPhone.
+  - Test: unit tests for the rules and the label; Claude drags the lowest
+    card of a long column sideways in a browser and checks the status changes.
+  - Done (2026-11-13, built by Codex from .codex-tasks/step-104.md): On screens
+    601px and wider, each status column now accepts drops down to the bottom
+    of the tallest column in its row. Both boards share a pointer label naming
+    the destination, hidden over the original column and cleared on leaving,
+    dropping or ending the drag. Phone sizing and the Done and Canceled shelves
+    stay as before. No older style rules needed changing. Added 13 tests for
+    sizing, both label themes, pointer placement, reuse and drag cleanup;
+    limited the step 103 tests to their own styles. Ran npm run test:ui:
+    750 of 751 tests pass; the only failure is the known sandbox-only Netlify
+    check for .aws and .codex folders. Browser drag checks remain for review.
+
+  - Reviewer's check (Claude, real mouse drags in a browser): before the
+    change the point under a short column hit the board and the drop failed;
+    now all four working columns are the same height (469px in the sample
+    data, cards unchanged), the lowest Pending card dropped under On Hold's
+    only card moves to On Hold, the label reads "Move to On Hold" and goes
+    away after the drop; the same at 820px (two columns) and in dark mode.
+    One correction made by the reviewer: in the light theme an older rule
+    (`html:not(.dark) .kb-col{background:transparent!important;...}`) hid the
+    highlight of the column under the pointer; it now leaves `.kb-over`
+    alone, so the highlight shows in both themes (with a test). 752 tests pass.
+
+- [x] **105. Final check**
+  - Files: `PLAN.md`, tests, before-and-after screenshots (not committed).
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; before-and-after screenshots for Boss; then merge and
+    deploy when Boss says so.
+  - Done (Claude, 13 Nov): 752 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844. iPhone widths
+    320, 360, 375, 390, 414, 430 and 440 on all five tabs in both themes (70
+    pages): no sideways scroll, no page errors. Real mouse drags move a card
+    to another status from the bottom of a long column. Before-and-after
+    screenshots sent to Boss. Waiting for Boss's word before merging.
+
+## Decisions needed from Boss (plan 11)
+
+1. **The plan:** recommended, approve steps 96 to 104; or the logo only (96
+   and 97); or the logo and the tidy-up (96 to 101) without the restyle (102
+   and 103).
+2. **The logo in the header on computers:** recommended, the full school logo
+   with "Marcom Workspace" beside it; or the emblem alone, with "HeadStart
+   Marcom Workspace" in text as now.
+3. **Gold:** recommended, a little gold as the school's highlight: today's
+   date on the calendars is ringed in gold, as the payday circle is; or gold
+   stays on the logo and the payday circle only.
+
+Not asked, chosen to match the background as Boss said: the app's icon is
+the white-and-gold emblem on navy (the app's own colour).
+
+# Plan 12 (14 Nov 2026): the lunch menu's day buttons and its week count, approved by Boss
+
+Boss asked for two things on Today's Menu: fix the colour of the selected
+day, and make it possible to set the current week so the app counts on from
+there (after a school holiday the weeks shift and the menu must be set
+again).
+
+## Findings
+
+1. **The selected day cannot be read in the light theme.** `.menu-day-pill.act`
+   (line 329 of `index.html`) is `background:var(--gold);color:#3a2a00`. In
+   the light theme `--gold` is navy inside the panels, so the selected day is
+   dark brown text on navy: contrast 1.03 to 1 (measured), against the 4.5
+   needed. In the dark theme it reads (6.44) but is not one of the app's
+   colours. The contrast scans missed it because the day buttons only show
+   after "Whole week" is pressed inside the folded Resources section.
+2. **The day buttons are 29px tall on iPhone**, under the 44px touch size the
+   rest of the app uses since step 103.
+3. **The app does not count weeks at all today.** The week comes from the
+   picker and is kept on each device (`localStorage` key `bb_menu_week`,
+   Week 1 until someone changes it). So every Monday each person must change
+   the picker by hand, and two people can see different weeks.
+4. Team settings live in the database under `dept_settings/team`, which
+   everyone signed in can read and only an admin (Boss) can write
+   (`firestore.rules` line 209). The lunch-time banner already keeps its
+   settings there.
+
+## Steps
+
+- [x] **106. The selected day reads clearly**
+  - Files: `assets/workspace-ui.css` (new step 106 block), `index.html`
+    (lines 326 to 330 at their source), tests.
+  - Change: the selected day is solid navy with white text (dark theme: the
+    pale blue with dark text that selected filter pills use), like the other
+    selected pills of step 103. Today's own button, when another day is
+    selected, has a gold border (the same gold as the ring round today on
+    the calendars). The buttons are 30px tall on computers and 44px on
+    iPhone, with the step 103 corner. The week picker takes the compact
+    control look of step 103.
+  - Test: unit tests for the rules; Claude measures the contrast in both
+    themes in a browser (4.5 to 1 or better) and the iPhone height.
+  - Done (2026-11-14, built by Codex from .codex-tasks/step-106.md): The
+    selected menu day now matches the selected filter colours in both themes,
+    with white text at 13.46 to 1 contrast in light mode and 15.72 to 1 in
+    dark mode. Today's button has a gold border when another day is selected.
+    Day buttons and the compact week picker have 44px touch targets, and day
+    buttons support keyboard selection, visible focus and screen readers.
+    Removed the older picker, day row, day button, hover, selected and today
+    rules from index.html; the existing shared transition stays. Bounded the
+    step 104 style checks at step 106. All 11 new checks pass. Ran npm run
+    test:ui: 45 of 46 test files pass; the only failure is the known sandbox
+    Netlify check for .aws and .codex. Browser review remains with the reviewer.
+
+  - Reviewer's check (Claude, in a browser): the selected day is white on
+    navy, 13.46 to 1 in the light theme (was 1.03) and 15.72 in the dark
+    theme; the day buttons are 30px on computers and 44px on iPhone; the
+    week picker is compact. 763 tests pass.
+
+- [x] **107. The app counts the menu weeks, and Boss can set the week**
+  - Files: `index.html` (`renderMenu`, `changeMenuWeek`, a small new helper,
+    the listener on `dept_settings/team`), `assets/workspace-ui.css`, tests.
+  - Change:
+    - The app works out this week's menu by itself: Week 1, 2, 3, 4, then 1
+      again, moving on every Monday. Everyone sees the same week.
+    - It counts from a starting point kept with the team settings: the week
+      number and the Monday it was set for (`menuWeek:{week,monday}` in
+      `dept_settings/team`, with a copy on the device so it works at once
+      and offline).
+    - The week picker is for looking at another week only; it no longer
+      changes anything for good. When another week is shown, a line says
+      "Showing Week 1. This week is Week 3." with a "Back to this week" link.
+    - **Setting the week (admin only):** when Boss picks the week that is
+      really being served and it differs from the app's count, a button
+      "Set Week N as this week" shows. After a confirmation it saves the new
+      starting point for the whole team, and the app counts on from there.
+      This is what to press after a holiday.
+    - Until Boss sets it for the first time, each device keeps the week it
+      has now and counts on from this week.
+    - (Decision 2) On Saturday and Sunday the menu shows the coming Monday
+      and its week.
+  - Test: unit tests for the week sum (same week, later weeks, wrap after
+    Week 4, a starting point in the past and in the future, the weekend),
+    for the admin-only button and for the save; Claude checks in a browser
+    as admin and as a member.
+  - Done (2026-11-14, built by Codex from .codex-tasks/step-107.md): The
+    menu now counts its four weeks from the team's saved starting week,
+    with a copy on each device and a one-time move from its old week choice.
+    Weekends show the coming Monday. Picking another week shows a clear
+    note and a Back to this week button; Today only also returns to this
+    week. Boss can confirm a new starting week for everyone, with a notice
+    if saving fails. Kept the step 106 day buttons and picker, and added
+    readable note buttons with 44px touch targets. No older CSS rules were
+    changed or removed. All 36 new checks pass, including clock changes,
+    team updates, admin access and successful, cancelled and failed saves.
+    Updated the step 106 checks while keeping their existing coverage.
+    Ran npm run test:ui: 46 of 47 test files pass; the only failure is the
+    known sandbox Netlify check for .aws and .codex. Browser review remains
+    with the reviewer.
+
+  - Reviewer's check (Claude, in a browser with the clock set): on Saturday
+    14 Nov the menu shows Monday of the coming week; as admin, picking Week 3
+    shows "Showing Week 3. This week is Week 1." with "Back to this week" and
+    "Set Week 3 as this week"; after the confirmation the team setting holds
+    `{week:3, monday:2026-11-16}` and the notice shows. Then: Mon 16 Nov and
+    Fri 20 Nov are Week 3 ("Today, ..."), Sat 21 Nov shows Monday of Week 4,
+    Tue 24 Nov Week 4, Wed 2 Dec Week 1, Mon 14 Dec Week 3. As a member
+    (not admin) the Set button never shows and Back returns to this week.
+    No page errors. 799 tests pass.
+
+- [x] **108. Change a task's status in one tap on iPhone** (added 14 Nov at Boss's request)
+  - Problem Boss reported: on the phone dragging a card to another status is
+    hard, and the card shows no status control; it only appears after "⋯" is
+    pressed.
+  - Finding: the status menu is on every card but hidden on the board; the
+    only visible copy is in the row that "⋯" opens (measured at 390px).
+  - Boss's choice (14 Nov): a status button on every card.
+  - Files: `index.html` (`taskCardHTML`), `assets/workspace-ui.css` (new
+    step 108 block), tests.
+  - Change: at 600px and under, and on any touch screen, every card on a
+    person's board ends with one row: Details (when the card has details)
+    and "⋯" at the left, the status menu at the right, in the status colour.
+    One tap opens the list of statuses. The copy inside the "⋯" row is
+    hidden there. Computers with a mouse are unchanged.
+  - Test: unit tests; Claude changes a status from the card at 390px in a
+    browser and compares the computer view before and after.
+  - Done (2026-11-14, built by Codex from .codex-tasks/step-108.md): On touch,
+    every board card now has one bottom bar with Details when present and
+    the single "⋯" button on the left, and its coloured status menu on the
+    right. Choosing a status uses the existing save and releases focus;
+    pressing the menu does not open or drag the card. The repeated status
+    inside the open actions row is hidden on touch; Move to and the icon
+    buttons stay. One shared bar serves both kinds of card. Cards without
+    details use a positioning wrapper to keep "⋯" beneath the tick, with
+    the same card height and keyboard order on computers; touch places
+    that bar below the role controls. Both person boards and the event
+    workspace board use this builder inside status columns, so both get
+    the touch menu. On computers both keep their existing status menu in
+    the open actions row. A card outside a column keeps its facts-row
+    status menu and hides the new one. Kept the existing status colours
+    in both themes and 44px touch targets. No older CSS rules were changed
+    or removed. All 14 new checks and all 140 layout checks pass, including
+    all six statuses and both board builders. Ran npm run test:ui: 47 of
+    48 test files pass; the only failure is the known sandbox Netlify
+    check for .aws and .codex. Browser review remains with the reviewer.
+
+  - Reviewer's check (Claude, in a browser): at 390px and 320px every board
+    card has exactly one status menu (128px by 44px, at the right of the row
+    with Details and "⋯") and one "⋯"; choosing Waiting on a Pending card
+    moves it to Waiting without opening the card; with "⋯" open the row no
+    longer repeats the status menu; no sideways scroll, no page errors; the
+    same on Dew's tab in dark mode. On computers every card, "⋯" and Details
+    button is at the same place and size as before (positions compared
+    before and after on Boss, Dew dark and O). 813 tests pass.
+
+- [x] **109. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390 with
+    the week view open; iPhone widths 320 to 440; screenshots for Boss.
+  - Done (Claude, 14 Nov): 814 tests pass. One correction after step 108:
+    the status menu's text for Pending, Waiting and On Hold uses the darker
+    status inks in the light theme (all six statuses now read at 4.6 to 1 or
+    better in both themes, measured). Contrast scans: zero failures on all
+    five tabs, light and dark, at 1440x900 and 390x844; the menu's week view
+    measured separately (6.08 to 1 or better). iPhone widths 320 to 440 on
+    all five tabs in both themes (70 pages): no sideways scroll, no page
+    errors. Dragging a card to another status on a computer still works and
+    the computer cards are at the same places as before step 108.
+
+## Decisions needed from Boss (plan 12)
+
+1. **Who sets the week:** recommended, Boss (admin) sets it once for the
+   whole team, since only an admin may save team settings in the database;
+   or each person sets it on their own device (no shared count).
+2. **Weekends:** recommended, Saturday and Sunday show the coming Monday's
+   menu; or they keep showing the week that has just ended.
+3. **The plan:** recommended, approve steps 106 to 108; or the colour fix
+   only (106).
+
+**Boss's answers (14 Nov):** 1. Boss sets the week for the whole team. 2.
+Saturday and Sunday show the coming Monday's menu. 3. All steps approved
+(106 to 108).
+4. Added 14 Nov: status on the iPhone card: a status button on every card
+   (step 108); the final check is now step 109.
