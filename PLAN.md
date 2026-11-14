@@ -3458,7 +3458,24 @@ again).
     (not admin) the Set button never shows and Back returns to this week.
     No page errors. 799 tests pass.
 
-- [ ] **108. Final check**
+- [ ] **108. Change a task's status in one tap on iPhone** (added 14 Nov at Boss's request)
+  - Problem Boss reported: on the phone dragging a card to another status is
+    hard, and the card shows no status control; it only appears after "⋯" is
+    pressed.
+  - Finding: the status menu is on every card but hidden on the board; the
+    only visible copy is in the row that "⋯" opens (measured at 390px).
+  - Boss's choice (14 Nov): a status button on every card.
+  - Files: `index.html` (`taskCardHTML`), `assets/workspace-ui.css` (new
+    step 108 block), tests.
+  - Change: at 600px and under, and on any touch screen, every card on a
+    person's board ends with one row: Details (when the card has details)
+    and "⋯" at the left, the status menu at the right, in the status colour.
+    One tap opens the list of statuses. The copy inside the "⋯" row is
+    hidden there. Computers with a mouse are unchanged.
+  - Test: unit tests; Claude changes a status from the card at 390px in a
+    browser and compares the computer view before and after.
+
+- [ ] **109. Final check**
   - Files: `PLAN.md`, tests.
   - Change: all tests; contrast scans in both themes at 1440 and 390 with
     the week view open; iPhone widths 320 to 440; screenshots for Boss.
@@ -3476,3 +3493,5 @@ again).
 **Boss's answers (14 Nov):** 1. Boss sets the week for the whole team. 2.
 Saturday and Sunday show the coming Monday's menu. 3. All steps approved
 (106 to 108).
+4. Added 14 Nov: status on the iPhone card: a status button on every card
+   (step 108); the final check is now step 109.
