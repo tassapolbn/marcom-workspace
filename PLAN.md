@@ -3348,3 +3348,87 @@ little gold, a gold ring round today's date on the calendars (decision 3).
 
 Not asked, chosen to match the background as Boss said: the app's icon is
 the white-and-gold emblem on navy (the app's own colour).
+
+# Plan 12 (14 Nov 2026): the lunch menu's day buttons and its week count
+
+Boss asked for two things on Today's Menu: fix the colour of the selected
+day, and make it possible to set the current week so the app counts on from
+there (after a school holiday the weeks shift and the menu must be set
+again).
+
+## Findings
+
+1. **The selected day cannot be read in the light theme.** `.menu-day-pill.act`
+   (line 329 of `index.html`) is `background:var(--gold);color:#3a2a00`. In
+   the light theme `--gold` is navy inside the panels, so the selected day is
+   dark brown text on navy: contrast 1.03 to 1 (measured), against the 4.5
+   needed. In the dark theme it reads (6.44) but is not one of the app's
+   colours. The contrast scans missed it because the day buttons only show
+   after "Whole week" is pressed inside the folded Resources section.
+2. **The day buttons are 29px tall on iPhone**, under the 44px touch size the
+   rest of the app uses since step 103.
+3. **The app does not count weeks at all today.** The week comes from the
+   picker and is kept on each device (`localStorage` key `bb_menu_week`,
+   Week 1 until someone changes it). So every Monday each person must change
+   the picker by hand, and two people can see different weeks.
+4. Team settings live in the database under `dept_settings/team`, which
+   everyone signed in can read and only an admin (Boss) can write
+   (`firestore.rules` line 209). The lunch-time banner already keeps its
+   settings there.
+
+## Steps
+
+- [ ] **106. The selected day reads clearly**
+  - Files: `assets/workspace-ui.css` (new step 106 block), `index.html`
+    (lines 326 to 330 at their source), tests.
+  - Change: the selected day is solid navy with white text (dark theme: the
+    pale blue with dark text that selected filter pills use), like the other
+    selected pills of step 103. Today's own button, when another day is
+    selected, has a gold border (the same gold as the ring round today on
+    the calendars). The buttons are 30px tall on computers and 44px on
+    iPhone, with the step 103 corner. The week picker takes the compact
+    control look of step 103.
+  - Test: unit tests for the rules; Claude measures the contrast in both
+    themes in a browser (4.5 to 1 or better) and the iPhone height.
+
+- [ ] **107. The app counts the menu weeks, and Boss can set the week**
+  - Files: `index.html` (`renderMenu`, `changeMenuWeek`, a small new helper,
+    the listener on `dept_settings/team`), `assets/workspace-ui.css`, tests.
+  - Change:
+    - The app works out this week's menu by itself: Week 1, 2, 3, 4, then 1
+      again, moving on every Monday. Everyone sees the same week.
+    - It counts from a starting point kept with the team settings: the week
+      number and the Monday it was set for (`menuWeek:{week,monday}` in
+      `dept_settings/team`, with a copy on the device so it works at once
+      and offline).
+    - The week picker is for looking at another week only; it no longer
+      changes anything for good. When another week is shown, a line says
+      "Showing Week 1. This week is Week 3." with a "Back to this week" link.
+    - **Setting the week (admin only):** when Boss picks the week that is
+      really being served and it differs from the app's count, a button
+      "Set Week N as this week" shows. After a confirmation it saves the new
+      starting point for the whole team, and the app counts on from there.
+      This is what to press after a holiday.
+    - Until Boss sets it for the first time, each device keeps the week it
+      has now and counts on from this week.
+    - (Decision 2) On Saturday and Sunday the menu shows the coming Monday
+      and its week.
+  - Test: unit tests for the week sum (same week, later weeks, wrap after
+    Week 4, a starting point in the past and in the future, the weekend),
+    for the admin-only button and for the save; Claude checks in a browser
+    as admin and as a member.
+
+- [ ] **108. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390 with
+    the week view open; iPhone widths 320 to 440; screenshots for Boss.
+
+## Decisions needed from Boss (plan 12)
+
+1. **Who sets the week:** recommended, Boss (admin) sets it once for the
+   whole team, since only an admin may save team settings in the database;
+   or each person sets it on their own device (no shared count).
+2. **Weekends:** recommended, Saturday and Sunday show the coming Monday's
+   menu; or they keep showing the week that has just ended.
+3. **The plan:** recommended, approve steps 106 to 108; or the colour fix
+   only (106).
