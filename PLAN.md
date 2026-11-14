@@ -3349,7 +3349,7 @@ little gold, a gold ring round today's date on the calendars (decision 3).
 Not asked, chosen to match the background as Boss said: the app's icon is
 the white-and-gold emblem on navy (the app's own colour).
 
-# Plan 12 (14 Nov 2026): the lunch menu's day buttons and its week count
+# Plan 12 (14 Nov 2026): the lunch menu's day buttons and its week count, approved by Boss
 
 Boss asked for two things on Today's Menu: fix the colour of the selected
 day, and make it possible to set the current week so the app counts on from
@@ -3432,3 +3432,7 @@ again).
    menu; or they keep showing the week that has just ended.
 3. **The plan:** recommended, approve steps 106 to 108; or the colour fix
    only (106).
+
+**Boss's answers (14 Nov):** 1. Boss sets the week for the whole team. 2.
+Saturday and Sunday show the coming Monday's menu. 3. All steps approved
+(106 to 108).
