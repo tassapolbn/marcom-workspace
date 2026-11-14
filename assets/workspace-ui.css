@@ -2070,3 +2070,23 @@ html.dark .menu-week-back{color:#cfe0f5;}
 @media(max-width:600px),(pointer:coarse){
   .menu-week-back,.menu-week-set{height:44px;min-height:44px;}
 }
+
+/* Step 108: one-tap board status on touch, beside Details and more actions. */
+/* A bare card's bar stays out of the desktop flow, anchored where its facts
+   begin. The hidden menu adds neither height nor a keyboard stop. */
+.task-card .tc-body{position:relative;}
+.task-card .tc-bar.tc-facts-end{left:0;margin:0;min-height:0;}
+.task-card .tc-quick-sel{display:none;}
+@media(max-width:600px),(pointer:coarse){
+  .kb-col .task-card .tc-body{display:flex;flex-direction:column;}
+  .kb-col .task-card .tc-bar{
+    display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:8px;
+    position:static;width:auto;min-width:0;margin:10px 0 0;
+  }
+  .kb-col .task-card .tc-bar.tc-facts-end{order:1;grid-template-columns:auto minmax(0,1fr);}
+  .kb-col .task-card select.tc-quick-sel{
+    display:inline-flex;justify-self:end;width:128px;min-width:min(108px,100%);max-width:100%;
+    height:var(--hs-ctl-h-sm);min-height:44px;border-radius:var(--hs-ctl-radius);font-size:13px;font-weight:700;
+  }
+  .kb-col .task-card .task-foot .tc-row-sel{display:none;}
+}

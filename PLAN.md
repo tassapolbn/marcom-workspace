@@ -3458,7 +3458,7 @@ again).
     (not admin) the Set button never shows and Back returns to this week.
     No page errors. 799 tests pass.
 
-- [ ] **108. Change a task's status in one tap on iPhone** (added 14 Nov at Boss's request)
+- [x] **108. Change a task's status in one tap on iPhone** (added 14 Nov at Boss's request)
   - Problem Boss reported: on the phone dragging a card to another status is
     hard, and the card shows no status control; it only appears after "⋯" is
     pressed.
@@ -3474,6 +3474,34 @@ again).
     hidden there. Computers with a mouse are unchanged.
   - Test: unit tests; Claude changes a status from the card at 390px in a
     browser and compares the computer view before and after.
+  - Done (2026-11-14, built by Codex from .codex-tasks/step-108.md): On touch,
+    every board card now has one bottom bar with Details when present and
+    the single "⋯" button on the left, and its coloured status menu on the
+    right. Choosing a status uses the existing save and releases focus;
+    pressing the menu does not open or drag the card. The repeated status
+    inside the open actions row is hidden on touch; Move to and the icon
+    buttons stay. One shared bar serves both kinds of card. Cards without
+    details use a positioning wrapper to keep "⋯" beneath the tick, with
+    the same card height and keyboard order on computers; touch places
+    that bar below the role controls. Both person boards and the event
+    workspace board use this builder inside status columns, so both get
+    the touch menu. On computers both keep their existing status menu in
+    the open actions row. A card outside a column keeps its facts-row
+    status menu and hides the new one. Kept the existing status colours
+    in both themes and 44px touch targets. No older CSS rules were changed
+    or removed. All 14 new checks and all 140 layout checks pass, including
+    all six statuses and both board builders. Ran npm run test:ui: 47 of
+    48 test files pass; the only failure is the known sandbox Netlify
+    check for .aws and .codex. Browser review remains with the reviewer.
+
+  - Reviewer's check (Claude, in a browser): at 390px and 320px every board
+    card has exactly one status menu (128px by 44px, at the right of the row
+    with Details and "⋯") and one "⋯"; choosing Waiting on a Pending card
+    moves it to Waiting without opening the card; with "⋯" open the row no
+    longer repeats the status menu; no sideways scroll, no page errors; the
+    same on Dew's tab in dark mode. On computers every card, "⋯" and Details
+    button is at the same place and size as before (positions compared
+    before and after on Boss, Dew dark and O). 813 tests pass.
 
 - [ ] **109. Final check**
   - Files: `PLAN.md`, tests.

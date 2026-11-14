@@ -1028,7 +1028,7 @@ test('at rest a card ends in one bar, Details and "⋯"; the action row and the 
   const html=card(sample);
   const bar=html.slice(html.indexOf('<div class="tc-bar">'),html.indexOf('<div class="task-foot">'));
   assert.match(bar,/^<div class="tc-bar"><button type="button" class="tc-more" aria-expanded="false" onclick="event\.stopPropagation\(\);tcToggleDetails\(this,'dew_t1'\)">/,'Details on the left');
-  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/div>$/,'"⋯" beside Details');
+  assert.match(bar,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><select class="tcard-sel tc-quick-sel"[^]*?<\/select><\/div>$/,'"⋯" beside Details, followed by the touch-only status menu');
   const foot=html.slice(html.indexOf('<div class="task-foot">'),html.indexOf('<div class="tc-details'));
   assert.match(foot,/^<div class="task-foot"><select class="tcard-sel tc-row-sel" title="Task status"/,'the row can carry the status menu for a status column');
   for(const call of [/moveCardTo\('dew','t1',this\.value\)/,/uxpTaskCalendar\('dew','t1'\)/,/duplicateTask\('dew','t1'\)/,/openEdit\('dew','t1'\)/,/deleteTask\('dew','t1'\)/])assert.match(foot,call);
@@ -1585,17 +1585,21 @@ test('folded Overview cards are excluded from the last-card grow rule',()=>{
   assert.doesNotMatch(desk,/>\.ov-card:last-child\{flex-grow:1;\}/);
 });
 
-test('"⋯" sits beside Details or below the tick without adding a row',()=>{
+test('on desktop "⋯" sits beside Details or below the tick without adding a row',()=>{
   const withDetails=card(sample);
   assert.match(withDetails,/<div class="tc-bar"><button type="button" class="tc-more"[^]*?<\/button><button type="button" class="tc-acts-btn"/,'Details and "⋯" share the bar');
   assert.doesNotMatch(withDetails.slice(withDetails.indexOf('<div class="task-meta">'),withDetails.indexOf('tc-open-hint')),/tc-acts-btn/);
   const bare=card({...sample,description:'',links:[]});
-  assert.doesNotMatch(bare,/class="tc-bar"/,'no footer row without details');
+  assert.doesNotMatch(bare,/class="tc-bar"/,'no in-flow desktop footer row without details');
   const meta=bare.slice(bare.indexOf('<div class="task-meta">'),bare.indexOf('<i class="ti ti-arrow-up-right tc-open-hint"'));
-  assert.match(meta,/<button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button><\/span><\/div><div class="role-x">/,'its keyboard position follows the facts');
+  assert.ok(bare.indexOf('tc-acts-btn')>bare.indexOf('task-meta')&&bare.indexOf('tc-acts-btn')<bare.indexOf('role-x'),'its keyboard position still follows the facts, before the role controls');
+  assert.match(bare,/<div class="tc-bar tc-facts-end"><button type="button" class="tc-acts-btn" aria-expanded="false" aria-label="More actions for this task" title="More actions" onclick="event\.stopPropagation\(\);tcToggleActs\(this,'dew_t1'\)"><i class="ti ti-dots"><\/i><\/button>/,'the same actions button moves with the bar');
   assert.equal((bare.match(/tc-acts-btn/g)||[]).length,1);
   const step68=stepBlock(68);
-  assert.match(meta,/<span class="tc-facts-end"><button/,'the bare card has an actions group in the tick column');
+  assert.match(bare,/<div class="tc-body"><div class="task-meta">/,'the bare card anchors its actions at the top of the facts');
+  assert.match(meta,/<\/select><\/div><div class="role-x">/,'the bar precedes the role controls in keyboard order');
+  assert.match(stepBlock(108),/\.task-card \.tc-body\{position:relative;\}/);
+  assert.match(stepBlock(108),/\.task-card \.tc-bar\.tc-facts-end\{left:0;margin:0;min-height:0;\}/,'the bar stays beneath the tick with no desktop height');
   assert.match(step68,/\.task-card \.tc-facts-end\{position:absolute;top:0;left:calc\(-1 \* var\(--tc-name-inset\)\);width:calc\(var\(--tc-name-inset\) - 10px\);display:flex;justify-content:center;\}/);
   assert.match(step68,/\.task-card \.task-meta\{position:relative;margin-left:var\(--tc-name-inset\);\}/);
   assert.doesNotMatch(step68,/flex-basis:100%/,'actions add no row of their own');
