@@ -3503,10 +3503,19 @@ again).
     button is at the same place and size as before (positions compared
     before and after on Boss, Dew dark and O). 813 tests pass.
 
-- [ ] **109. Final check**
+- [x] **109. Final check**
   - Files: `PLAN.md`, tests.
   - Change: all tests; contrast scans in both themes at 1440 and 390 with
     the week view open; iPhone widths 320 to 440; screenshots for Boss.
+  - Done (Claude, 14 Nov): 814 tests pass. One correction after step 108:
+    the status menu's text for Pending, Waiting and On Hold uses the darker
+    status inks in the light theme (all six statuses now read at 4.6 to 1 or
+    better in both themes, measured). Contrast scans: zero failures on all
+    five tabs, light and dark, at 1440x900 and 390x844; the menu's week view
+    measured separately (6.08 to 1 or better). iPhone widths 320 to 440 on
+    all five tabs in both themes (70 pages): no sideways scroll, no page
+    errors. Dragging a card to another status on a computer still works and
+    the computer cards are at the same places as before step 108.
 
 ## Decisions needed from Boss (plan 12)
 
