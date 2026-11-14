@@ -1002,6 +1002,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
         <div class="widget-body">
           <div class="menu-days" id="menu-days"></div>
           <div class="menu-date" id="menu-date"></div>
+          <div class="menu-week-note" id="menu-week-note"></div>
           <div class="menu-list" id="menu-list"></div>
         </div>
       </div>
@@ -2029,7 +2030,16 @@ try{
   // Editable team member names (synced + persistent)
   teamRef=db.collection('dept_settings').doc('team');
   teamRef.onSnapshot(d=>{
-    if(d&&d.exists){const v=d.data()||{};memberNames=Object.assign({boss:'Boss',dew:'Dew',o:'O',junior:'Eye'},v.names||{});}
+    if(d&&d.exists){
+      const v=d.data()||{};
+      memberNames=Object.assign({boss:'Boss',dew:'Dew',o:'O',junior:'Eye'},v.names||{});
+      // Wait for saved team settings so a refused write cannot change the count.
+      if(menuAnchorValid(v.menuWeek)&&!(d.metadata&&d.metadata.hasPendingWrites)){
+        menuAnchor={week:v.menuWeek.week,monday:v.menuWeek.monday};
+        menuCacheAnchor(menuAnchor);
+        renderMenu();
+      }
+    }
     applyMemberNames();
   },e=>syncErr(e));
   assetsRef=db.collection('dew_assets').doc('library');
@@ -3802,6 +3812,8 @@ const MENU_DAYS=['mon','tue','wed','thu','fri'];
 const MENU_DAY_NAMES={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri'};
 const MENU_DAY_FULL={mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday'};
 let menuSelectedDay=null;
+let menuViewWeek=null;
+let menuAnchor=menuLoadAnchor();
 
 const SNACKS={
   mon:{am:'Mini Banana Muffin & Milk or Soy Milk',pm:'Watermelon & Milk or Soy Milk'},
@@ -3882,18 +3894,71 @@ const MENU_TH={
   }
 };
 
+function menuAnchorValid(anchor){
+  return !!anchor&&Number.isInteger(anchor.week)&&anchor.week>=1&&anchor.week<=4
+    &&typeof anchor.monday==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(anchor.monday);
+}
+function menuMondayOf(date){
+  const monday=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  const dow=monday.getDay();
+  monday.setDate(monday.getDate()+(dow===0?1:dow===6?2:1-dow));
+  return String(monday.getFullYear()).padStart(4,'0')+'-'+String(monday.getMonth()+1).padStart(2,'0')+'-'+String(monday.getDate()).padStart(2,'0');
+}
+function menuWeekFor(anchor,date){
+  if(!menuAnchorValid(anchor))return 1;
+  const a=anchor.monday.split('-').map(Number),b=menuMondayOf(date).split('-').map(Number);
+  // Round the calendar-day difference so a clock change cannot lose a day.
+  const days=Math.round((new Date(b[0],b[1]-1,b[2])-new Date(a[0],a[1]-1,a[2]))/86400000);
+  if(!Number.isFinite(days))return 1;
+  const n=Math.round(days/7);
+  return ((anchor.week-1+n)%4+4)%4+1;
+}
+function menuCacheAnchor(anchor){
+  try{localStorage.setItem('bb_menu_anchor',JSON.stringify(anchor));}catch(e){}
+}
+function menuLoadAnchor(){
+  try{
+    const cached=JSON.parse(localStorage.getItem('bb_menu_anchor'));
+    if(menuAnchorValid(cached))return {week:cached.week,monday:cached.monday};
+  }catch(e){}
+  let week=1;
+  try{const old=Number(localStorage.getItem('bb_menu_week'));if(Number.isInteger(old)&&old>=1&&old<=4)week=old;}catch(e){}
+  const anchor={week,monday:menuMondayOf(new Date())};
+  menuCacheAnchor(anchor);
+  return anchor;
+}
 function renderMenu(){
-  const week=parseInt(localStorage.getItem('bb_menu_week')||'1');
+  const now=new Date(),thisWeek=menuWeekFor(menuAnchor,now);
+  const week=menuViewWeek||thisWeek;
   document.getElementById('menu-week').value=week;
-  const dow=new Date().getDay();
-  const todayDay=(dow>=1&&dow<=5)?MENU_DAYS[dow-1]:null;
-  if(!menuSelectedDay)menuSelectedDay=todayDay||'mon';
+  const dow=now.getDay();
+  const weekday=(dow>=1&&dow<=5)?MENU_DAYS[dow-1]:null;
+  const todayDay=week===thisWeek?weekday:null;
+  if(!menuSelectedDay)menuSelectedDay=weekday||'mon';
   const day=menuSelectedDay;
   document.getElementById('menu-days').innerHTML=MENU_DAYS.map(d=>
     `<div class="menu-day-pill ${d===day?'act':''} ${d===todayDay?'today-pill':''}" role="button" tabindex="0" aria-pressed="${d===day?'true':'false'}"${d===todayDay?' aria-current="date"':''} onclick="changeMenuDay('${d}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();changeMenuDay('${d}');}">${MENU_DAY_NAMES[d]}</div>`
   ).join('');
   const isToday=day===todayDay;
   document.getElementById('menu-date').textContent=(isToday?'Today, ':'')+MENU_DAY_FULL[day]+' \u00b7 Week '+week;
+  const note=document.getElementById('menu-week-note');
+  note.textContent='';
+  if(week!==thisWeek){
+    note.textContent='Showing Week '+week+'. This week is Week '+thisWeek+'.';
+    const actions=document.createElement('div');
+    actions.className='menu-week-actions';
+    const back=document.createElement('button');
+    back.type='button';back.className='menu-week-back';back.textContent='Back to this week';
+    back.onclick=function(){menuViewWeek=null;renderMenu();};
+    actions.appendChild(back);
+    if(window.__cur&&window.__cur.role==='admin'){
+      const set=document.createElement('button');
+      set.type='button';set.className='menu-week-set';set.textContent='Set Week '+week+' as this week';
+      set.onclick=function(){return setMenuWeek(week);};
+      actions.appendChild(set);
+    }
+    note.appendChild(actions);
+  }
   const m=MENU[week][day],s=SNACKS[day];
   const mt=(MENU_TH[week]&&MENU_TH[week][day])||{},st=SNACKS_TH[day]||{};
   const cats=[
@@ -3913,10 +3978,28 @@ function renderMenu(){
   ).join('');
 }
 function changeMenuWeek(){
-  localStorage.setItem('bb_menu_week',document.getElementById('menu-week').value);
+  const week=Number(document.getElementById('menu-week').value);
+  if(!Number.isInteger(week)||week<1||week>4)return;
+  menuViewWeek=week===menuWeekFor(menuAnchor,new Date())?null:week;
   renderMenu();
 }
 function changeMenuDay(d){menuSelectedDay=d;renderMenu();}
+async function setMenuWeek(week){
+  if(!window.__cur||window.__cur.role!=='admin'||!Number.isInteger(week)||week<1||week>4)return;
+  const yes=await uiConfirm({title:'Set the menu week',message:'Count from this week with Week '+week+'? Everyone on the team will see Week '+week+' this week, Week '+(week%4+1)+' next week, and so on.',okLabel:'Set Week '+week,icon:'ti-calendar-check'});
+  if(!yes||!window.__cur||window.__cur.role!=='admin')return;
+  const anchor={week,monday:menuMondayOf(new Date())};
+  try{
+    if(!teamRef)throw new Error('Team settings unavailable');
+    await teamRef.set({menuWeek:anchor},{merge:true});
+  }catch(e){uiToast('Could not save the menu week. Please try again.');return;}
+  menuAnchor=anchor;
+  menuCacheAnchor(anchor);
+  menuViewWeek=null;
+  renderMenu();
+  uiToast('Week '+week+' is now this week. The menu will count on from here.');
+}
+window.addEventListener('authchanged',function(){renderMenu();});
 
 // ===== WIDGET REORDERING =====
 function slugify(s){return (s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
@@ -5206,7 +5289,11 @@ html.dark #panel-overview .ov-res-go{color:#8fb4dc;}
       var open=!w.classList.contains('menu-week-open');
       w.classList.toggle('menu-week-open',open);
       b.setAttribute('aria-expanded',open?'true':'false'); b.textContent=open?'Today only':'Whole week';
-      if(!open&&typeof changeMenuDay==='function'){ var dw=new Date().getDay(); if(dw>=1&&dw<=5&&typeof MENU_DAYS!=='undefined')changeMenuDay(MENU_DAYS[dw-1]); }
+      if(!open&&typeof changeMenuDay==='function'){
+        menuViewWeek=null;
+        var dw=new Date().getDay();
+        changeMenuDay(dw>=1&&dw<=5?MENU_DAYS[dw-1]:'mon');
+      }
     });
     var sel=head.querySelector('#menu-week');
     if(sel)head.insertBefore(b,sel); else head.appendChild(b);

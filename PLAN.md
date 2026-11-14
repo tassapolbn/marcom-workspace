@@ -3407,7 +3407,7 @@ again).
     theme; the day buttons are 30px on computers and 44px on iPhone; the
     week picker is compact. 763 tests pass.
 
-- [ ] **107. The app counts the menu weeks, and Boss can set the week**
+- [x] **107. The app counts the menu weeks, and Boss can set the week**
   - Files: `index.html` (`renderMenu`, `changeMenuWeek`, a small new helper,
     the listener on `dept_settings/team`), `assets/workspace-ui.css`, tests.
   - Change:
@@ -3433,6 +3433,30 @@ again).
     Week 4, a starting point in the past and in the future, the weekend),
     for the admin-only button and for the save; Claude checks in a browser
     as admin and as a member.
+  - Done (2026-11-14, built by Codex from .codex-tasks/step-107.md): The
+    menu now counts its four weeks from the team's saved starting week,
+    with a copy on each device and a one-time move from its old week choice.
+    Weekends show the coming Monday. Picking another week shows a clear
+    note and a Back to this week button; Today only also returns to this
+    week. Boss can confirm a new starting week for everyone, with a notice
+    if saving fails. Kept the step 106 day buttons and picker, and added
+    readable note buttons with 44px touch targets. No older CSS rules were
+    changed or removed. All 36 new checks pass, including clock changes,
+    team updates, admin access and successful, cancelled and failed saves.
+    Updated the step 106 checks while keeping their existing coverage.
+    Ran npm run test:ui: 46 of 47 test files pass; the only failure is the
+    known sandbox Netlify check for .aws and .codex. Browser review remains
+    with the reviewer.
+
+  - Reviewer's check (Claude, in a browser with the clock set): on Saturday
+    14 Nov the menu shows Monday of the coming week; as admin, picking Week 3
+    shows "Showing Week 3. This week is Week 1." with "Back to this week" and
+    "Set Week 3 as this week"; after the confirmation the team setting holds
+    `{week:3, monday:2026-11-16}` and the notice shows. Then: Mon 16 Nov and
+    Fri 20 Nov are Week 3 ("Today, ..."), Sat 21 Nov shows Monday of Week 4,
+    Tue 24 Nov Week 4, Wed 2 Dec Week 1, Mon 14 Dec Week 3. As a member
+    (not admin) the Set button never shows and Back returns to this week.
+    No page errors. 799 tests pass.
 
 - [ ] **108. Final check**
   - Files: `PLAN.md`, tests.

@@ -7,7 +7,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
 const start=css.indexOf('/* Step 106:');
 assert.ok(start>=0,'step 106 block exists');
-const block=css.slice(start);
+const block=css.slice(start,css.indexOf('/* Step 107:'));
 const shared=css.slice(css.indexOf('/* Step 103:'),css.indexOf('/* Step 104:'));
 function rule(text,selector){
   const found=[...text.replace(/\/\*[\s\S]*?\*\//g,'').matchAll(/([^{}]+)\{([^{}]*)\}/g)]
@@ -79,9 +79,12 @@ test('old menu presentation rules are removed at source and no other layer resty
 });
 
 function menu(dow=1,selected=null){
-  const elements=Object.fromEntries(['menu-week','menu-days','menu-date','menu-list'].map(id=>[id,{}]));
+  const elements=Object.fromEntries(['menu-week','menu-days','menu-date','menu-week-note','menu-list'].map(id=>[id,{}]));
+  class MenuDate extends Date{
+    constructor(...parts){super(...(parts.length?parts:[2026,10,dow===0?15:8+dow]));}
+  }
   const context=vm.createContext({document:{getElementById:id=>elements[id]},
-    localStorage:{getItem:()=> '1'},Date:class{getDay(){return dow;}}});
+    window:{addEventListener(){}},localStorage:{getItem:()=> '1',setItem(){}},Date:MenuDate});
   const source=html.slice(html.indexOf('const MENU_DAYS='),html.indexOf('// ===== WIDGET REORDERING ====='));
   vm.runInContext(source,context);
   vm.runInContext(`menuSelectedDay=${JSON.stringify(selected)};renderMenu();`,context);
