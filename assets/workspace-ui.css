@@ -2090,3 +2090,7 @@ html.dark .menu-week-back{color:#cfe0f5;}
   }
   .kb-col .task-card .task-foot .tc-row-sel{display:none;}
 }
+/* The status menu's text reads at 4.5 to 1 in the light theme: the three lighter status colours use their darker inks. */
+html:not(.dark) .kb-col[data-status="pending"] select.tc-quick-sel{color:var(--st-pending-ink,#4a5866)!important;}
+html:not(.dark) .kb-col[data-status="waiting"] select.tc-quick-sel{color:var(--st-waiting-ink,#7d5406)!important;}
+html:not(.dark) .kb-col[data-status="on-hold"] select.tc-quick-sel{color:var(--st-hold-ink,#584079)!important;}

@@ -245,7 +245,7 @@ test('Today only resets the viewing week and day, including weekends',()=>{
   }
 });
 
-const block=css.slice(css.indexOf('/* Step 107:'));
+const block=css.slice(css.indexOf('/* Step 107:'),css.indexOf('/* Step 108:'));
 test('the empty note is hidden and new compact buttons wrap with full touch targets',()=>{
   assert.match(html,/<div class="menu-date" id="menu-date"><\/div>\s*<div class="menu-week-note" id="menu-week-note"><\/div>/);
   assert.match(block,/\.menu-week-note\{[^}]*font-size:12.5px;[^}]*color:var\(--muted\);[^}]*text-align:center;[^}]*margin-bottom:8px/);

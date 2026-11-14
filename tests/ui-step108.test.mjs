@@ -124,7 +124,8 @@ test('the quick menu uses compact dimensions and fits the remaining grid cell',(
   const menu=rule(touch,'.kb-col .task-card select.tc-quick-sel');
   assert.match(menu,/width:128px;min-width:min\(108px,100%\);max-width:100%;/,'at least 108px when it fits, bounded by the space after the left buttons');
   assert.match(menu,/height:var\(--hs-ctl-h-sm\);min-height:44px;border-radius:var\(--hs-ctl-radius\);font-size:13px;font-weight:700;/);
-  assert.doesNotMatch(block,/background:|background-color:|color:|!important|animation:|transition:/,'existing status colours, theme inks and motion are unchanged');
+  /* The reviewer's light-theme ink rules at the end of the block are checked by their own test. */
+  assert.doesNotMatch(block.split("/* The status menu's text reads")[0],/background:|background-color:|color:|!important|animation:|transition:/,'existing status colours and motion are unchanged');
 });
 
 test('touch hides only the duplicate footer status, leaving the rest of the actions intact',()=>{
@@ -150,4 +151,13 @@ test('both production card-builder callers draw board columns; outside columns t
   assert.match(outside,/\.task-card \.tc-quick-sel\{display:none;\}/);
   assert.match(css,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
   assert.doesNotMatch(touch,/(?:^|\})\s*\.task-card select\.tc-quick-sel\{/,'only the scoped board rule can reveal it');
+});
+
+// Found in the browser check: three status colours were under 4.5 to 1 as text on their own tint.
+test('the status menu uses the darker status inks in the light theme',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const block=readFileSync('assets/workspace-ui.css','utf8').split('/* Step 108:')[1];
+  for(const [status,ink] of [['pending','--st-pending-ink,#4a5866'],['waiting','--st-waiting-ink,#7d5406'],['on-hold','--st-hold-ink,#584079']]){
+    assert.ok(block.includes('html:not(.dark) .kb-col[data-status="'+status+'"] select.tc-quick-sel{color:var('+ink+')!important;}'),status);
+  }
 });
