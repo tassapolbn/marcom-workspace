@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
-const block=css.slice(css.indexOf('/* Step 110:'));
+const block=css.slice(css.indexOf('/* Step 110:'),css.indexOf('/* Step 111:'));
 function source(start,end){
   const a=html.indexOf(start),b=html.indexOf(end,a);
   assert.ok(a>=0&&b>a,start);
@@ -119,7 +119,7 @@ test('saved open shelves have Hide labels; each status pill forces its shelf ope
       assert.equal(forced.classes,'kb-col');
       assert.doesNotMatch(forced.content,/kb-fold-btn/);
       assert.match(forced.content,/class="task-card"/);
-      assert.equal(c.kbShelfFolded('boss',status,status),false);
+      assert.equal(c.kbShelfFolded('boss',status,status),null,'forced open also omits the fold button');
       assert.equal(c.kbFoldGet('boss',status),folded,'a pill does not save a new fold preference');
     }
   }

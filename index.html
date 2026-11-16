@@ -927,14 +927,18 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
           <div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="bs-done">0</div><div class="stat-lbl">Done</div></div></div>
         </div>
         <div class="filter-tabs">
+          <div class="kb-filter-pills">
           <button class="fpill act-navy" data-who="boss" data-f="all" onclick="setFilter('boss','all',this)">All</button>
           <button class="fpill" data-who="boss" data-f="pending" onclick="setFilter('boss','pending',this)">Pending</button>
           <button class="fpill" data-who="boss" data-f="in-progress" onclick="setFilter('boss','in-progress',this)">In Progress</button>
           <button class="fpill" data-who="boss" data-f="soon" onclick="setFilter('boss','soon',this)"><span class="pill-dot"></span>Due Soon</button>
           <button class="fpill" data-who="boss" data-f="done" onclick="setFilter('boss','done',this)">Done</button>
           <button class="fpill" data-who="boss" data-f="canceled" onclick="setFilter('boss','canceled',this)">Canceled</button>
+          </div>
+          <div class="kb-search" role="search"><i class="ti ti-search" aria-hidden="true"></i><input type="search" class="kb-search-input" id="boss-kb-search" placeholder="Search tasks" aria-label="Search the tasks on this board" autocomplete="off" spellcheck="false" enterkeyhint="search" oninput="kbSearchSet('boss',this.value)" onkeydown="kbSearchKey(event,'boss')"><button type="button" class="kb-search-clear" aria-label="Clear the search" title="Clear the search" onclick="kbSearchClear('boss')" hidden><i class="ti ti-x" aria-hidden="true"></i></button></div>
           <div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd('boss')"><i class="ti ti-plus"></i> Add Task</button></div>
         </div>
+        <div class="kb-search-note" id="boss-kb-search-note" role="status" aria-live="polite" hidden></div>
         <div id="boss-list"></div>
         <div class="empty-state" id="boss-empty" style="display:none;"><i class="ti ti-clipboard-list"></i><p>No tasks here.</p></div>
       </div>
@@ -1722,14 +1726,18 @@ function memberPanelHTML(w){
   +        '<div class="stat-box sb-green"><span class="stat-ic"><i class="ti ti-circle-check"></i></span><div class="stat-main"><div class="stat-num" style="color:var(--green);" id="'+w+'-s-done">0</div><div class="stat-lbl">Done</div></div></div>'
   +      '</div>'
   +      '<div class="filter-tabs">'
+  +        '<div class="kb-filter-pills">'
   +        '<button class="fpill act-accent" data-who="'+w+'" data-f="all" onclick="setFilter(\''+w+'\',\'all\',this)">All Tasks</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="pending" onclick="setFilter(\''+w+'\',\'pending\',this)">Pending</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="in-progress" onclick="setFilter(\''+w+'\',\'in-progress\',this)">In Progress</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="soon" onclick="setFilter(\''+w+'\',\'soon\',this)"><span class="pill-dot"></span>Due Soon</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="done" onclick="setFilter(\''+w+'\',\'done\',this)">Done</button>'
   +        '<button class="fpill" data-who="'+w+'" data-f="canceled" onclick="setFilter(\''+w+'\',\'canceled\',this)">Canceled</button>'
+  +        '</div>'
+  +        '<div class="kb-search" role="search"><i class="ti ti-search" aria-hidden="true"></i><input type="search" class="kb-search-input" id="'+w+'-kb-search" placeholder="Search tasks" aria-label="Search the tasks on this board" autocomplete="off" spellcheck="false" enterkeyhint="search" oninput="kbSearchSet(\''+w+'\',this.value)" onkeydown="kbSearchKey(event,\''+w+'\')"><button type="button" class="kb-search-clear" aria-label="Clear the search" title="Clear the search" onclick="kbSearchClear(\''+w+'\')" hidden><i class="ti ti-x" aria-hidden="true"></i></button></div>'
   +        '<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd(\''+w+'\')"><i class="ti ti-plus"></i> Add Task</button></div>'
   +      '</div>'
+  +      '<div class="kb-search-note" id="'+w+'-kb-search-note" role="status" aria-live="polite" hidden></div>'
   +      '<div id="'+w+'-list"></div>'
   +      '<div class="empty-state" id="'+w+'-empty" style="display:none;"><i class="ti ti-clipboard-list"></i><p>No tasks yet.</p></div>'
   +    '</div>'
@@ -3266,19 +3274,84 @@ function taskCardHTML(task,who){
     +'</div>';
 }
 function kanbanHTML(tasks,who,filter){
+  var search=kbSearchGet(who);
   return '<div class="kanban-board">'+KB_STATUS_ORDER.map(function(S){
     var sc=SC[S];var col=scColors(S);
-    var cards=tasks.filter(function(t){return (tcLingerFrom(t,who)||t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return !!tcLingerFrom(t,who)||kbFilterPass(t,filter);});
+    var cards=tasks.filter(function(t){return (tcLingerFrom(t,who)||t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return !!tcLingerFrom(t,who)||(kbFilterPass(t,filter)&&kbSearchPass(t,search));});
     if(S==='canceled'&&!cards.length)return '';
     cards.sort(function(a,b){return dueSortValue(a)-dueSortValue(b);});
-    var shelf=S==='done'||S==='canceled',folded=kbShelfFolded(who,S,filter);
+    var shelf=S==='done'||S==='canceled',folded=kbShelfFolded(who,S,filter,cards.length);
     var bodyId='kb-body-'+who+'-'+S,label=(folded?'Show':'Hide')+' the '+sc.l+' tasks';
-    var foldBtn=shelf&&filter!==S?'<button type="button" class="kb-fold-btn" id="kb-fold-'+who+'-'+S+'" aria-expanded="'+(!folded)+'" aria-controls="'+bodyId+'" aria-label="'+label+'" title="'+label+'" onclick="event.stopPropagation();kbFoldToggle(\''+who+'\',\''+S+'\')"><i class="ti ti-chevron-down" aria-hidden="true"></i></button>':'';
+    var foldBtn=shelf&&folded!==null?'<button type="button" class="kb-fold-btn" id="kb-fold-'+who+'-'+S+'" aria-expanded="'+(!folded)+'" aria-controls="'+bodyId+'" aria-label="'+label+'" title="'+label+'" onclick="event.stopPropagation();kbFoldToggle(\''+who+'\',\''+S+'\')"><i class="ti ti-chevron-down" aria-hidden="true"></i></button>':'';
     var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span>'+foldBtn+'</div>';
     var body=cards.map(function(t){var h=taskCardHTML(t,who),L=tcLingerRec(t,who);
       return (L&&L.h)?h.replace('<div class="task-card ','<div style="min-height:'+L.h+'px" class="task-card '):h;}).join(''); /* empty: the header's 0 says it (step 64) */
     return '<div class="kb-col'+(folded?' kb-col-folded':'')+'" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body"'+(shelf?' id="'+bodyId+'"':'')+'>'+body+'</div></div>';
   }).join('')+'</div>';
+}
+/* Step 111: board searches live only in memory, separately for each tab. */
+var __kbSearchText=Object.create(null),__kbSearchTimer=Object.create(null);
+function kbSearchGet(who){return (__kbSearchText[who]||'').trim();}
+function kbSearchPass(task,text){
+  var words=String(text||'').toLocaleLowerCase().normalize('NFC').trim().split(/\s+/).filter(Boolean);
+  if(!words.length)return true;
+  task=task||{};
+  var fields=[task.topic||task.title,task.description,task.eventName,task.eventLabel,task.category,task.requestRef,task.assignedBy];
+  if(Array.isArray(task.links))task.links.forEach(function(link){if(link)fields.push(link.title);});
+  fields=fields.map(function(value){return String(value==null?'':value).toLocaleLowerCase().normalize('NFC');});
+  return words.every(function(word){return fields.some(function(field){return field.includes(word);});});
+}
+function kbSearchSync(who){
+  var input=document.getElementById(who+'-kb-search');
+  if(!input)return;
+  var text=__kbSearchText[who]||'';
+  if(input.value!==text)input.value=text;
+  var clear=input.parentNode.querySelector('.kb-search-clear');
+  if(clear)clear.hidden=!text.length;
+}
+function kbSearchRender(who){
+  renderMember(who);
+  /* Use the existing busy-board guard, flushing only this tab's redraw delay. */
+  var listId=who+'-list';
+  clearTimeout(__boardTimer[listId]);
+  drawBoard(listId);
+}
+function kbSearchSet(who,text){
+  __kbSearchText[who]=String(text==null?'':text);
+  kbSearchSync(who);
+  clearTimeout(__kbSearchTimer[who]);
+  __kbSearchTimer[who]=setTimeout(function(){
+    delete __kbSearchTimer[who];
+    kbSearchRender(who);
+  },120);
+}
+function kbSearchClear(who){
+  kbSearchSet(who,'');
+  clearTimeout(__kbSearchTimer[who]);
+  delete __kbSearchTimer[who];
+  kbSearchRender(who);
+  var input=document.getElementById(who+'-kb-search');
+  if(input)input.focus({preventScroll:true});
+}
+function kbSearchKey(event,who){
+  if(event.key!=='Escape')return;
+  event.preventDefault();
+  event.stopPropagation();
+  kbSearchClear(who);
+}
+function kbSearchNote(who,count){
+  var note=document.getElementById(who+'-kb-search-note');
+  if(!note)return;
+  note.textContent='';
+  note.hidden=!kbSearchGet(who)||count==null;
+  if(note.hidden)return;
+  var label=document.createElement('span');
+  label.className='kb-search-count';
+  label.textContent=count===0?'No tasks match':count===1?'1 task matches':count+' tasks match';
+  var reset=document.createElement('button');
+  reset.type='button';reset.className='kb-search-reset';reset.textContent='Clear search';
+  reset.onclick=function(){kbSearchClear(who);};
+  note.appendChild(label);note.appendChild(reset);
 }
 /* Step 110: each person's finished shelves start folded on this device. */
 function kbFoldRead(){
@@ -3300,8 +3373,11 @@ function kbFoldSet(who,status,folded){
     localStorage.setItem('bb_kb_fold',JSON.stringify(saved));
   }catch(e){}
 }
-function kbShelfFolded(who,status,filter){
-  return (status==='done'||status==='canceled')&&filter!==status&&kbFoldGet(who,status);
+function kbShelfFolded(who,status,filter,matchCount){
+  if(status!=='done'&&status!=='canceled')return false;
+  /* null means temporarily open, so the head also omits its fold button. */
+  if(filter===status||(kbSearchGet(who)&&matchCount>0))return null;
+  return kbFoldGet(who,status);
 }
 function kbFoldToggle(who,status){
   kbFoldSet(who,status,!kbFoldGet(who,status));
@@ -3352,12 +3428,14 @@ function drawBoard(listId){
   if(boardBusy(list)){ __boardTimer[listId]=setTimeout(function(){drawBoard(listId);},150); return; }
   var empty=a.emptyId?document.getElementById(a.emptyId):null;
   if(empty)empty.style.display='none';
-  if(!loadedOf(a.who)){setBoardHTML(list,skeletonHTML());return;}
+  kbSearchSync(a.who);
+  if(!loadedOf(a.who)){setBoardHTML(list,skeletonHTML());kbSearchNote(a.who,null);return;}
   /* One board per tab: event-linked tasks are shown here too, tagged with
      their event, so nothing is hidden inside a second board. */
   var pool=a.tasks||[];
-  if(!pool.length&&empty){setBoardHTML(list,'');empty.style.display='';return;}
+  if(!pool.length&&empty&&!kbSearchGet(a.who)){setBoardHTML(list,'');empty.style.display='';kbSearchNote(a.who,null);return;}
   setBoardHTML(list,kanbanHTML(pool,a.who,a.filter));
+  kbSearchNote(a.who,list.querySelectorAll('.task-card').length);
 }
 function renderList(tasks,who,listId,emptyId,filter){
   if(!document.getElementById(listId))return;

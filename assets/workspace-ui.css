@@ -600,7 +600,7 @@ html:not(.dark) .myday-chip.warn,html:not(.dark) .myday-chip.warn b{color:#9a4a0
 html:not(.dark) body .menu-cat{color:#7f5704!important;}
 html:not(.dark) .meet-label{opacity:1;}
 html:not(.dark) .cmdk-trigger kbd{background:rgba(0,0,0,.24);color:#fff;}
-html:not(.dark) body:not(.request-mode) :is(input,textarea)::placeholder{color:#5f6b7a!important;opacity:1;}
+html:not(.dark) body:not(.request-mode) :is(input,textarea):not(.kb-search-input)::placeholder{color:#5f6b7a!important;opacity:1;}
 
 /* Step 22: phone-friendly layout */
 /* Columns may shrink below their content, so a long one-line title truncates instead of widening the page. */
@@ -650,7 +650,7 @@ html.dark #panel-overview .ov-pri.high{color:#f08a8a!important;}
 html.dark #evb-card .evb-g.unassigned .evb-g-h,html.dark #evb-card .evb-g.unassigned .evb-g-h i{color:#f59e0b;}
 
 /* Field hints. */
-html.dark body:not(.request-mode) :is(input,textarea)::placeholder{color:#9aa6b8!important;opacity:1;}
+html.dark body:not(.request-mode) :is(input,textarea):not(.kb-search-input)::placeholder{color:#9aa6b8!important;opacity:1;}
 
 /* Step 26: one quiet status strip */
 /* Payday and lunch share one line of plain text under the tab bar, aligned to the
@@ -1360,8 +1360,8 @@ html.dark .ev-ink-d{color:var(--evc-ink-d)!important;}
    row that scrolls, as on the Overview. */
 @media(max-width:600px){
   .tab-panel .addtask-bar{display:none;}
-  .tab-panel .filter-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
-  .tab-panel .filter-tabs::-webkit-scrollbar{display:none;}
+  .tab-panel .kb-filter-pills{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+  .tab-panel .kb-filter-pills::-webkit-scrollbar{display:none;}
   .tab-panel .filter-tabs .fpill{flex:0 0 auto;white-space:nowrap;}
 }
 /* The name card is one line: initial, name, the three counters (their icon and
@@ -1556,7 +1556,7 @@ html.dark #evb-card .evb-claim{background:transparent;color:#bdc7d5;}
 /* Step 71: desktop work on the first screen */
 @media(min-width:981px){
   .tab-panel .filter-tabs{align-items:center;}
-  .tab-panel .filter-tabs .addtask-bar{margin-left:auto;flex:0 0 auto;}
+  .tab-panel .filter-tabs .addtask-bar{margin-left:0;flex:0 0 auto;}
   html :is(#panel-boss,#panel-dew,#panel-o,#panel-junior) .filter-tabs .addtask-bar .btn{width:auto;white-space:nowrap;}
   .tab-panel .myday-row .md-title{flex:0 1 auto;min-width:0;}
   .tab-panel .myday-row .md-sub{margin-left:0;flex:0 0 auto;}
@@ -2112,3 +2112,47 @@ html:not(.dark) .kb-col[data-status="on-hold"] select.tc-quick-sel{color:var(--s
   .kb-fold-btn{width:44px;height:44px;}
 }
 @media(prefers-reduced-motion:reduce){.kb-fold-btn i{transition:none;}}
+
+/* Step 111: a search field for each person's task board. */
+.tab-panel .filter-tabs{flex-wrap:nowrap;align-items:center;column-gap:8px;}
+.kb-filter-pills{display:flex;gap:6px;flex:0 1 auto;min-width:0;overflow-x:auto;}
+.tab-panel .kb-filter-pills .fpill{flex:0 0 auto;}
+.tab-panel .filter-tabs .addtask-bar{flex:0 0 auto;}
+.kb-search{
+  display:flex;align-items:center;gap:6px;flex:0 1 220px;width:220px;min-width:160px;
+  height:var(--hs-ctl-h);margin-left:auto;padding:0 4px 0 10px;box-sizing:border-box;
+  border:1px solid var(--hs-btn-line);border-radius:var(--hs-ctl-radius);background:var(--surface);color:var(--text);
+}
+.kb-search>i{flex:0 0 auto;font-size:16px;color:var(--muted);}
+html body .kb-search-input{
+  flex:1 1 auto;min-width:0;width:100%;height:100%;padding:0;border:0;border-radius:0;
+  background:transparent;color:var(--text);font-family:inherit;font-size:13.5px;box-shadow:none;outline:none;
+}
+.kb-search-input::placeholder{color:var(--muted);opacity:1;}
+.kb-search-input::-webkit-search-cancel-button{display:none;}
+html body .kb-search-input:focus{border:0;box-shadow:none;outline:none;}
+.kb-search:focus-within{border-color:#003057;box-shadow:var(--hs-focus);outline:none;}
+html.dark .kb-search:focus-within{border-color:#8fb4dc;}
+.kb-search-clear{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:28px;height:28px;padding:0;border:0;border-radius:var(--hs-ctl-radius);
+  background:transparent;color:var(--muted);cursor:pointer;
+}
+.kb-search-clear i{font-size:16px;}
+.kb-search-clear:hover{background:var(--hs-btn-hover);color:var(--text);}
+.kb-search-clear[hidden],.kb-search-note[hidden],.kb-search-note:empty{display:none;}
+.kb-search-note{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:12.5px;color:var(--muted);}
+.kb-search-count{color:var(--text);font-weight:600;}
+.kb-search-reset{padding:0;border:0;background:transparent;color:#003057;font-family:inherit;font-size:inherit;font-weight:600;cursor:pointer;}
+.kb-search-reset:hover{text-decoration:underline;}
+html.dark .kb-search-reset{color:#cfe0f5;}
+@media(max-width:600px){
+  .tab-panel .filter-tabs{flex-wrap:wrap;gap:8px;margin-bottom:8px;}
+  .tab-panel .kb-filter-pills{flex:0 0 100%;width:100%;}
+  .kb-search{order:-1;flex:0 0 100%;width:100%;min-width:0;height:44px;margin-left:0;padding-right:0;}
+  html body .kb-search-input{font-size:16px;}
+}
+@media(max-width:600px),(pointer:coarse){
+  .kb-search-clear{width:44px;height:44px;}
+  .kb-search-reset{min-height:44px;}
+}

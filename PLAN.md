@@ -3588,7 +3588,7 @@ a search field to find a task on the board.
     after the drop it is Done and the count goes from 2 to 3. The same in
     dark mode. No page errors. 822 tests pass.
 
-- [ ] **111. A search field on each person's board**
+- [x] **111. A search field on each person's board**
   - Files: `index.html` (the pills row of the five tabs, `kanbanHTML`,
     `drawBoard`, a small match helper), `assets/workspace-ui.css` (new step
     111 block), tests.
@@ -3605,6 +3605,30 @@ a search field to find a task on the board.
     a reload. The header's search is unchanged.
   - Test: unit tests for the match and the drawn board; Claude types in a
     browser on computer and iPhone sizes, in both themes.
+  - Done (16 Nov 2026, built by Codex from .codex-tasks/step-111.md): Each
+    person's board now has its own search, with matching task counts and
+    Clear search, the cross button and Esc to clear it. Search works with
+    the status pills and temporarily opens matching finished shelves,
+    keeping their saved fold choices. One field sits beside Add Task on
+    computers and above a separate scrolling pills row on phones; the pills
+    can also scroll on narrow computers without changing size or wrapping.
+    Checked Thai and English matches, per-tab text, clearing and focus,
+    Undo cards, archives, zero matches and shelf folds. All 22 new tests
+    pass; 843 of 844 UI tests pass, with only the known Netlify sandbox
+    check for .aws and .codex failing. Browser checks remain for the
+    reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): on computers the field is 220px
+    by 36px at the right of the pills row, before Add Task, and the row stays
+    one line (160px wide at 1024px with the sidebar shown); on iPhone it is a
+    full-width 44px row above the pills with 16px text. Typing "SPORTS" shows
+    the 2 matching cards (one by its name, one by its event), the heads count
+    the matches and the line reads "2 tasks match"; "venue confirm" finds two
+    cards and opens the folded Done shelf that holds one of them; "zzzz"
+    reads "No tasks match" with the heads at 0 and no empty-state on top; Esc,
+    the cross and "Clear search" each clear it and keep the focus in the
+    field; the search and a pill apply together; each tab keeps its own
+    search; a Thai word matches Thai text. No page errors. 844 tests pass.
 
 - [ ] **112. Final check**
   - Files: `PLAN.md`, tests.
