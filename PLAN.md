@@ -3790,10 +3790,18 @@ assigned to them.
     keyboard focus fell back to the page after the press; the card now stays
     focusable until the focus moves on (test updated). 884 tests pass.
 
-- [ ] **115. Final check**
+- [x] **115. Final check**
   - Files: `PLAN.md`, tests.
   - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
     widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+  - Done (Claude, 16 Nov): 884 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844; the "New" label
+    and the "new" chip measured with new cards on the board at 320, 390 and
+    440 wide in both themes (9.34 to 1). iPhone widths 320 to 440 on all
+    five tabs in both themes (70 pages): no sideways scroll, no page errors.
+    Earlier features checked again: dragging a card to another status, the
+    board search, the folded Done shelf and the iPhone status menu.
+    Screenshots sent to Boss. Waiting for Boss's word before merging.
 
 ## Decisions needed from Boss (plan 14)
 
