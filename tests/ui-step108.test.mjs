@@ -21,7 +21,7 @@ function builder({acts=false,admin=true}={}){
     dewCardExtra:()=>'<div class="role-row">Design controls</div>',
     tcLingerFrom:()=>'',tcLingerRec:()=>null,isAutoArchived:()=>false,kbFilterPass:()=>true,dueSortValue:()=>0
   });
-  vm.runInContext(source('const SC=','function setTaskStatus(')
+  vm.runInContext(source('function myBoardKey(', 'function refOf(')+source('const SC=','function setTaskStatus(')
     +source('function moveSelectHTML(','function moveCardTo(')
     +source('const KB_STATUS_ORDER=','var _taskDrag=')
     +source('function evTagHTML(','/* The board is rebuilt')

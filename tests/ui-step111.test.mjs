@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8');
-const block=css.slice(css.indexOf('/* Step 111:'));
+const block=css.slice(css.indexOf('/* Step 111:'),css.indexOf('/* Step 113:'));
 function source(start,end){
   const a=html.indexOf(start),b=html.indexOf(end,a);
   assert.ok(a>=0&&b>a,start);

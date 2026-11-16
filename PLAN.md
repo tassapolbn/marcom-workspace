@@ -3654,3 +3654,167 @@ a search field to find a task on the board.
 
 **Boss's answers (16 Nov):** 1. The shelves start folded. 2. All steps
 approved (110 to 112); Canceled folds the same way as Done.
+
+# Plan 14 (16 Nov 2026): a "New" label on a card given to someone, approved by Boss
+
+Boss asked for a label on a newly created card: Boss sometimes adds a card
+to a member's board, and the member should know a new task has been
+assigned to them.
+
+## Findings
+
+1. A card records who created it (`createdBy`, an email) and when
+   (`createdAt`), but nothing says whether the person it was given to has
+   looked at it. A card Boss adds to Dew's board looks the same as any other
+   card there.
+2. The app knows who is signed in and which board is theirs
+   (`window.__cur.workspace`; the admin's board is Boss's).
+3. Cards reach another person's board in four ways: a new card saved on
+   their board (`saveTask`), a shared event task that names them, a card an
+   admin moves to them ("Move to…", `moveCardTo`), and a Request Centre
+   request turned into a task.
+4. A member may change their own cards and shared event tasks in the
+   database (`firestore.rules`), so the member's own app can record "seen"
+   on the card itself, and every device then agrees. No rule change needed.
+
+## Steps
+
+- [x] **113. Mark a card as new for the person it is given to, and show it**
+  - Files: `index.html` (the four ways above, the card builder, a small
+    "seen" helper), `assets/workspace-ui.css` (new step 113 block), tests.
+  - Change: when a card lands on a board that is not the board of the person
+    who put it there, the card remembers who has not seen it yet (a list of
+    people on the card, `newFor`). On that person's board the card shows a
+    "New" label at the start of its facts row, in both themes. Everyone who
+    can see the board sees the label, so Boss can tell at a glance whether
+    the member has looked yet. (Decision 2) The label goes away when that
+    member opens the card, changes its status or ticks it, or presses the
+    label; someone else looking at the board does not clear it. Cards made
+    before this change never show the label. (Decision 1) A card a person
+    adds to their own board gets no label.
+  - Test: unit tests for each of the four ways and for clearing; Claude adds
+    a card to Dew's board as Boss in a browser, then opens it as Dew.
+
+  - Done (2026-11-16, built by Codex from .codex-tasks/step-113.md): A
+    card given to someone else now shows a gold New pill first in its facts
+    row, visible to everyone viewing that person's board. Only the recipient
+    can dismiss it, by opening the card, changing its status, ticking it or
+    pressing New. Status changes save the label in the same write. Signing
+    in again redraws the correct button or plain label. Older cards stay
+    without a label until someone newly receives them. The pill keeps the
+    existing badge size, the shared keyboard focus ring and a 44px touch
+    area without adding row height. Gold and navy text pass 4.5 to 1.
+    Every route found was checked:
+    - New own cards in saveTask write newForOthers([board]); new shared
+      cards write newForOthers(assignees). SOP single tasks and Add All use
+      that same shared-card form and save.
+    - Editing shared recipients and changing between own and shared cards
+      keep unseen recipients still assigned, remove departed recipients
+      and add only newly assigned people through newForOthers. Moving back
+      to an own card now saves in that person's collection.
+    - Move to writes newForOthers([target]) for an own card. Shared Move to
+      reassignment keeps the target's existing unseen state or marks a
+      newly assigned target, removing departed people.
+    - Request Centre tasks write newForOthers([destination board]). Duplicate
+      opens the new-card form and writes the destination board's new array,
+      without copying the original label.
+    - Two extra creation routes, O's Use template and automatic recurring
+      tasks, both write newForOthers(['o']).
+    - Another assignment route, Assign or Claim on the Overview Event Board,
+      keeps unseen recipients still assigned and adds only new recipients
+      through newForOthers. Claiming for oneself adds no label.
+    - Historical task migration and deletion Undo already copy the stored
+      fields, so they preserve newFor without newly marking older cards.
+    Changed the older step 40 facts rule only to exclude the New pill from
+    its plain-text styling; no older CSS rules were removed. Kept older
+    test coverage and bounded step 111's CSS checks before step 113.
+    All 23 new tests pass. Ran npm run test:ui: 50 of 51 test files pass;
+    individual runs total 866 of 867 tests passing. The sole failure is
+    the known Netlify sandbox check for .aws and .codex. Browser review
+    remains with the reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): as Boss, a card added to Dew's
+    board saves `newFor:["dew"]` and shows the gold "New" pill first in its
+    facts row (21px tall, navy on gold), with "Not opened by Dew yet"; Boss
+    opening it or changing its status leaves it; a card Boss adds to Boss's
+    own board has no label. As Dew the pill is a button: pressing it clears
+    the label without opening the card; opening another new card clears it;
+    changing a third card's status clears it in the same write. The same
+    look on iPhone size in dark mode. No page errors.
+  - Reviewer's correction: the automatic recurring tasks on O's board no
+    longer get the label (the app makes them by itself, on whichever device
+    opens first, so they are not "given by someone"); "Use template" still
+    does. Test updated and one added. 868 tests pass.
+  - To note: while wiring the change of type, Codex also put right an older
+    slip: a shared card changed back to an own card was written to the
+    shared collection again instead of the person's own board.
+  - Found on the way, fixed in step 114: in the dark theme the "Show" and
+    "Undo" buttons of the small notice at the bottom are white on a
+    near-white notice (1.17 to 1, measured).
+
+- [x] **114. Make new cards hard to miss**
+  - Files: `index.html` (`myDayHTML`, the Today row), `assets/workspace-ui.css`
+    (new step 114 block), tests.
+  - Change: the Today row at the top of the person's tab shows a chip
+    "2 new" beside "overdue" and "due today" while that person has unseen
+    new cards; pressing it scrolls to the first new card and flashes it
+    once. (Decision 3) Nothing else is added.
+  - Test: unit tests; Claude presses the chip in a browser on computer and
+    iPhone sizes.
+
+  - Done (2026-11-16, built by Codex from .codex-tasks/step-114.md): Today
+    now shows a gold new-task count first beside its title, including when
+    the day is otherwise clear. Pressing it opens All Tasks, brings the
+    first visible new card into view and gives it a brief gold ring. If all
+    new cards are hidden, it selects All, clears that board's search and
+    remembers opening any finished shelf holding a new card. Keyboard focus
+    follows the card; reduced motion keeps the ring steady. Looking this way
+    leaves the New label intact and saves nothing to the database. The other
+    Today chips, rows and step 113 label stay as they were. Changed the older
+    dark-theme notice-button rule at its source to dark, bold, underlined
+    text; both themes pass the 4.5 to 1 contrast check. All 16 new tests pass.
+    Ran npm run test:ui: 51 of 52 test files pass, with only the known Netlify
+    sandbox failure for .aws and .codex. Browser review remains with the
+    reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): after Boss adds two cards to
+    Dew's board, the Today row shows a gold "2 new" chip first, the same
+    32px as the other chips; pressing it centres the first new card and
+    rings it in gold for 1.6 seconds, and the labels stay (nothing is marked
+    as seen). With the Done pill selected the press goes back to All and
+    shows the card; with a search on it clears the search. Once Dew has seen
+    both cards the chip and the labels are gone. The same on iPhone size and
+    in dark mode; no sideways scroll, no page errors. The notice's "Show"
+    and "Undo" in the dark theme now read at 14.94 to 1 (1.17 before).
+  - Reviewer's correction: for someone who is not the tab's person the
+    keyboard focus fell back to the page after the press; the card now stays
+    focusable until the focus moves on (test updated). 884 tests pass.
+
+- [x] **115. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+  - Done (Claude, 16 Nov): 884 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844; the "New" label
+    and the "new" chip measured with new cards on the board at 320, 390 and
+    440 wide in both themes (9.34 to 1). iPhone widths 320 to 440 on all
+    five tabs in both themes (70 pages): no sideways scroll, no page errors.
+    Earlier features checked again: dragging a card to another status, the
+    board search, the folded Done shelf and the iPhone status menu.
+    Screenshots sent to Boss. Waiting for Boss's word before merging.
+
+## Decisions needed from Boss (plan 14)
+
+1. **Which cards get the label:** recommended, only a card someone else
+   gives you; or every new card, including your own.
+2. **When the label goes away:** recommended, when the member opens the
+   card or changes its status; or also by itself after three days.
+3. **How else to announce it:** recommended, a "2 new" chip in the Today
+   row of the person's tab; or the chip and a small dot on the person's tab
+   button as well.
+4. **The plan:** approve steps 113 to 115, or the label only (113).
+
+**Boss's answers (16 Nov):** 1. Only a card someone else gives you. 2. The
+label goes when the member opens the card or changes its status (no
+three-day limit). 3. A chip in the Today row only. 4. All steps approved
+(113 to 115).
