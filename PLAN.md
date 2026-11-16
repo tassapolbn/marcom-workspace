@@ -3655,7 +3655,7 @@ a search field to find a task on the board.
 **Boss's answers (16 Nov):** 1. The shelves start folded. 2. All steps
 approved (110 to 112); Canceled folds the same way as Done.
 
-# Plan 14 (16 Nov 2026): a "New" label on a card given to someone
+# Plan 14 (16 Nov 2026): a "New" label on a card given to someone, approved by Boss
 
 Boss asked for a label on a newly created card: Boss sometimes adds a card
 to a member's board, and the member should know a new task has been
@@ -3720,3 +3720,8 @@ assigned to them.
    row of the person's tab; or the chip and a small dot on the person's tab
    button as well.
 4. **The plan:** approve steps 113 to 115, or the label only (113).
+
+**Boss's answers (16 Nov):** 1. Only a card someone else gives you. 2. The
+label goes when the member opens the card or changes its status (no
+three-day limit). 3. A chip in the Today row only. 4. All steps approved
+(113 to 115).
