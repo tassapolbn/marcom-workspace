@@ -3630,10 +3630,20 @@ a search field to find a task on the board.
     field; the search and a pill apply together; each tab keeps its own
     search; a Thai word matches Thai text. No page errors. 844 tests pass.
 
-- [ ] **112. Final check**
+- [x] **112. Final check**
   - Files: `PLAN.md`, tests.
   - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
     widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+  - Done (Claude, 16 Nov): 844 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844; the search field,
+    its placeholder, the count line, "Clear search" and the fold button
+    measured separately with a search on (5.62 to 1 or better in both
+    themes; 44px controls on iPhone). iPhone widths 320 to 440 on all five
+    tabs in both themes (70 pages): no sideways scroll, no page errors.
+    Dragging a card to another status and the iPhone status menu still work
+    (every card shown has its status menu; the cards without one are inside
+    the folded Done shelf). Screenshots sent to Boss. Waiting for Boss's word
+    before merging.
 
 ## Decisions needed from Boss (plan 13)
 
