@@ -3271,11 +3271,47 @@ function kanbanHTML(tasks,who,filter){
     var cards=tasks.filter(function(t){return (tcLingerFrom(t,who)||t.status||'pending')===S;}).filter(function(t){return !isAutoArchived(t);}).filter(function(t){return !!tcLingerFrom(t,who)||kbFilterPass(t,filter);});
     if(S==='canceled'&&!cards.length)return '';
     cards.sort(function(a,b){return dueSortValue(a)-dueSortValue(b);});
-    var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span></div>';
+    var shelf=S==='done'||S==='canceled',folded=kbShelfFolded(who,S,filter);
+    var bodyId='kb-body-'+who+'-'+S,label=(folded?'Show':'Hide')+' the '+sc.l+' tasks';
+    var foldBtn=shelf&&filter!==S?'<button type="button" class="kb-fold-btn" id="kb-fold-'+who+'-'+S+'" aria-expanded="'+(!folded)+'" aria-controls="'+bodyId+'" aria-label="'+label+'" title="'+label+'" onclick="event.stopPropagation();kbFoldToggle(\''+who+'\',\''+S+'\')"><i class="ti ti-chevron-down" aria-hidden="true"></i></button>':'';
+    var head='<div class="kb-col-head"><span class="kb-col-ic" style="background-color:'+col[0]+';color:'+col[1]+';"><i class="ti '+sc.i+'"></i></span><span class="kb-col-name">'+sc.l+'</span><span class="kb-col-count">'+cards.length+'</span>'+foldBtn+'</div>';
     var body=cards.map(function(t){var h=taskCardHTML(t,who),L=tcLingerRec(t,who);
       return (L&&L.h)?h.replace('<div class="task-card ','<div style="min-height:'+L.h+'px" class="task-card '):h;}).join(''); /* empty: the header's 0 says it (step 64) */
-    return '<div class="kb-col" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body">'+body+'</div></div>';
+    return '<div class="kb-col'+(folded?' kb-col-folded':'')+'" data-status="'+S+'" ondragover="taskColOver(event)" ondragleave="taskColLeave(event)" ondrop="taskColDrop(event,\''+who+'\',\''+S+'\')">'+head+'<div class="kb-col-body"'+(shelf?' id="'+bodyId+'"':'')+'>'+body+'</div></div>';
   }).join('')+'</div>';
+}
+/* Step 110: each person's finished shelves start folded on this device. */
+function kbFoldRead(){
+  try{
+    var saved=JSON.parse(localStorage.getItem('bb_kb_fold')||'{}');
+    if(saved&&typeof saved==='object'&&!Array.isArray(saved))return saved;
+  }catch(e){}
+  return {};
+}
+function kbFoldGet(who,status){
+  var person=kbFoldRead()[who];
+  return person&&typeof person[status]==='boolean'?person[status]:true;
+}
+function kbFoldSet(who,status,folded){
+  try{
+    var saved=kbFoldRead();
+    if(!saved[who]||typeof saved[who]!=='object'||Array.isArray(saved[who]))saved[who]={};
+    saved[who][status]=!!folded;
+    localStorage.setItem('bb_kb_fold',JSON.stringify(saved));
+  }catch(e){}
+}
+function kbShelfFolded(who,status,filter){
+  return (status==='done'||status==='canceled')&&filter!==status&&kbFoldGet(who,status);
+}
+function kbFoldToggle(who,status){
+  kbFoldSet(who,status,!kbFoldGet(who,status));
+  renderMember(who);
+  /* Flush this board's queued redraw before restoring focus to its new button. */
+  var listId=who+'-list';
+  clearTimeout(__boardTimer[listId]);
+  drawBoard(listId);
+  var button=document.getElementById('kb-fold-'+who+'-'+status);
+  if(button)button.focus({preventScroll:true});
 }
 /* The board is rebuilt by replacing its markup wholesale, so a rebuild that
    lands mid-interaction destroys the element being used: it cancels a drag,

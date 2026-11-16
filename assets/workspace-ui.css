@@ -2094,3 +2094,21 @@ html.dark .menu-week-back{color:#cfe0f5;}
 html:not(.dark) .kb-col[data-status="pending"] select.tc-quick-sel{color:var(--st-pending-ink,#4a5866)!important;}
 html:not(.dark) .kb-col[data-status="waiting"] select.tc-quick-sel{color:var(--st-waiting-ink,#7d5406)!important;}
 html:not(.dark) .kb-col[data-status="on-hold"] select.tc-quick-sel{color:var(--st-hold-ink,#584079)!important;}
+
+/* Step 110: remembered folds for each person's Done and Canceled shelves. */
+.kb-col.kb-col-folded{align-self:start;}
+.kb-col.kb-col-folded>.kb-col-body{display:none;}
+.kb-col.kb-col-folded.kb-over{min-height:56px;}
+.kb-fold-btn{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:30px;height:30px;padding:0;border:0;border-radius:var(--hs-ctl-radius);
+  background:transparent;color:var(--muted);cursor:pointer;
+}
+.kb-fold-btn:hover{background:var(--hs-btn-hover);color:var(--text);}
+.kb-fold-btn i{font-size:16px;transition:transform .18s;}
+.kb-col-folded .kb-fold-btn i{transform:rotate(-90deg);}
+/* The shared step 103 button focus ring applies to these buttons too. */
+@media(max-width:600px),(pointer:coarse){
+  .kb-fold-btn{width:44px;height:44px;}
+}
+@media(prefers-reduced-motion:reduce){.kb-fold-btn i{transition:none;}}

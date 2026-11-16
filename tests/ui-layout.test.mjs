@@ -1532,7 +1532,7 @@ test('an empty status column is its header and its 0, with a drop area only whil
   assert.doesNotMatch(slice('function kanbanHTML(','function renderList('),/kb-empty|>No tasks</);
   assert.match(step64,/\.kb-col-body:empty\{min-height:0;padding:0!important;\}/);
   assert.match(step64,/\.kb-col\.kb-over>\.kb-col-body:empty\{min-height:56px;\}/);
-  assert.match(source,/<div class="kb-col" data-status="'\+S\+'" ondragover="taskColOver\(event\)"/,'the whole column still takes a drop');
+  assert.match(slice('function kanbanHTML(','/* The board is rebuilt'),/<div class="kb-col'\+\(folded\?' kb-col-folded':''\)\+'" data-status="'\+S\+'" ondragover="taskColOver\(event\)"/,'the whole column still takes a drop');
   void html;
 });
 

@@ -3556,7 +3556,7 @@ a search field to find a task on the board.
 
 ## Steps
 
-- [ ] **110. The Done and Canceled shelves fold**
+- [x] **110. The Done and Canceled shelves fold**
   - Files: `index.html` (`kanbanHTML`, a small fold helper),
     `assets/workspace-ui.css` (new step 110 block), tests.
   - Change: the head of the Done shelf (and of Canceled, when it shows) gets
@@ -3569,6 +3569,24 @@ a search field to find a task on the board.
     most scrolling.
   - Test: unit tests; Claude folds and opens in a browser on computer and
     iPhone sizes, reloads, and drops a card on the folded shelf.
+  - Done (16 Nov 2026, built by Codex from .codex-tasks/step-110.md): Done
+    and Canceled start folded and remember each person's choice on this
+    device. Their status pills open them, and keyboard focus stays on the
+    fold button after use. Checked saved choices, labels, touch sizes,
+    reduced motion, drops and the count animation. All 8 new tests pass;
+    821 of 822 UI tests pass, with only the known Netlify sandbox check for
+    .aws and .codex failing. No older style rules changed. Browser checks
+    remain for the reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): on a tab never touched Done is
+    folded to one row (45px on computers, 59px on iPhone; the page is 138px
+    shorter on computers and 325px on iPhone with two Done cards); Enter on
+    the button opens it and the focus stays on the button; the choice is
+    saved as `{"boss":{"done":false}}` and holds after a reload; with the
+    Done pill the shelf is open with no button; a Pending card dragged onto
+    the folded shelf shows the highlight (56px tall) and "Move to Done", and
+    after the drop it is Done and the count goes from 2 to 3. The same in
+    dark mode. No page errors. 822 tests pass.
 
 - [ ] **111. A search field on each person's board**
   - Files: `index.html` (the pills row of the five tabs, `kanbanHTML`,
