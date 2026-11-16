@@ -243,7 +243,7 @@ test('authchanged redraws each person board so badge buttons follow the session'
 });
 
 test('gold badge retains pill sizing, both theme colours, shared focus and an out-of-flow touch target',()=>{
-  const block=css.slice(css.indexOf('/* Step 113:'));
+  const block=css.slice(css.indexOf('/* Step 113:'),css.indexOf('/* Step 114:'));
   assert.match(block,/padding:4px 9px;border-radius:99px;font-size:10\.5px;font-weight:700;/);
   assert.match(block,/background:#F0B323;color:#0b1a2b;border:0;/);
   assert.match(block,/\.mb-new i\{color:inherit;/);

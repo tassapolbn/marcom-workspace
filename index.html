@@ -1617,6 +1617,9 @@ function newForOthers(keys){
   return [...new Set((keys||[]).filter(function(key){return key&&key!==mine;}))];
 }
 function taskIsNewFor(task,who){return !!(task&&Array.isArray(task.newFor)&&task.newFor.includes(who));}
+function taskNewCount(who){
+  return (tasksOf(who)||[]).filter(function(t){return taskIsNewFor(t,who)&&!isAutoArchived(t);}).length;
+}
 function taskReassignedNewFor(task,before,after){
   var kept=Array.isArray(task&&task.newFor)?task.newFor.filter(function(key){return after.includes(key);}):[];
   return [...new Set(kept.concat(newForOthers(after.filter(function(key){return !before.includes(key);}))))];
@@ -3423,6 +3426,43 @@ function kbFoldToggle(who,status){
   drawBoard(listId);
   var button=document.getElementById('kb-fold-'+who+'-'+status);
   if(button)button.focus({preventScroll:true});
+}
+/* Step 114: reveal a new card without clearing its recipient's label. */
+function taskShowNew(who){
+  var list=document.getElementById(who+'-list');
+  if(!list||!taskNewCount(who))return;
+  var tasksTab=document.querySelector('#panel-'+who+' .sub-nav .st-tasks');
+  if(tasksTab&&!tasksTab.classList.contains('act'))switchSub(who,'tasks',tasksTab);
+  function firstDrawn(){
+    return Array.from(list.querySelectorAll('.task-card.tc-new')).find(function(card){return !card.closest('.kb-col-folded');});
+  }
+  var card=firstDrawn();
+  if(!card){
+    var all=document.querySelector('#panel-'+who+' .fpill[data-who="'+who+'"][data-f="all"]');
+    if(all)setFilter(who,'all',all);
+    kbSearchSet(who,'');
+    clearTimeout(__kbSearchTimer[who]);
+    delete __kbSearchTimer[who];
+    var unseen=(tasksOf(who)||[]).filter(function(t){return taskIsNewFor(t,who)&&!isAutoArchived(t);});
+    ['done','canceled'].forEach(function(status){
+      if(kbFoldGet(who,status)&&unseen.some(function(t){return (tcLingerFrom(t,who)||t.status)===status;}))kbFoldSet(who,status,false);
+    });
+    kbSearchRender(who);
+    card=firstDrawn();
+  }
+  if(!card)return;
+  card.scrollIntoView({block:'center',behavior:motionBehavior()});
+  clearTimeout(card.__newFlashTimer);
+  card.classList.remove('tc-new-flash');
+  void card.offsetWidth; /* Restart a single flash on a repeated press. */
+  card.classList.add('tc-new-flash');
+  var target=myBoardKey()===who?card.querySelector('button.mb-new'):null;
+  var temporary=!target&&!card.hasAttribute('tabindex');
+  if(temporary)card.setAttribute('tabindex','-1');
+  (target||card).focus({preventScroll:true});
+  /* Keep the card focusable until the focus moves on, or the focus would fall back to the page. */
+  if(temporary)card.addEventListener('blur',function(){card.removeAttribute('tabindex');},{once:true});
+  card.__newFlashTimer=setTimeout(function(){card.classList.remove('tc-new-flash');},1600);
 }
 /* The board is rebuilt by replacing its markup wholesale, so a rebuild that
    lands mid-interaction destroys the element being used: it cancels a drag,
@@ -12536,8 +12576,10 @@ html.dark .uxp-wh-drag:hover{color:#8fb4dc;}
     var sub=h>=17?(dueTmr.length?dueTmr.length+' task'+(dueTmr.length>1?'s':'')+' due tomorrow':'Tomorrow is clear so far'):'';
     var rc=window.__rcCounts||{};
     var myNew=(rc.unreadList||[]).filter(function(r){return r.ws===w;}).length;
+    var newTasks=taskNewCount(w);
     /* A count of zero is not drawn: only what is there takes room. */
     var chips=''
+      +(newTasks?'<button type="button" class="myday-chip new" onclick="taskShowNew(\''+w+'\')" aria-label="'+newTasks+' new task'+(newTasks===1?'':'s')+'. Show the first one."><i class="ti ti-sparkles" aria-hidden="true"></i><b>'+newTasks+'</b> new</button>':'')
       +(openOverdue?'<button type="button" class="myday-chip bad" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+openOverdue+'</b> overdue</button>':'')
       +(openToday?'<button type="button" class="myday-chip warn" onclick="uxpGoto(\'#'+w+'-list\')"><i class="ti ti-clock" aria-hidden="true"></i><b>'+openToday+'</b> due today</button>':'')
       +(finished?'<button type="button" class="myday-chip ok" onclick="uxpGoto(\'#'+w+'-list\')"><b>'+finished+'</b> done today</button>':'')

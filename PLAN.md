@@ -3752,7 +3752,7 @@ assigned to them.
     "Undo" buttons of the small notice at the bottom are white on a
     near-white notice (1.17 to 1, measured).
 
-- [ ] **114. Make new cards hard to miss**
+- [x] **114. Make new cards hard to miss**
   - Files: `index.html` (`myDayHTML`, the Today row), `assets/workspace-ui.css`
     (new step 114 block), tests.
   - Change: the Today row at the top of the person's tab shows a chip
@@ -3761,6 +3761,34 @@ assigned to them.
     once. (Decision 3) Nothing else is added.
   - Test: unit tests; Claude presses the chip in a browser on computer and
     iPhone sizes.
+
+  - Done (2026-11-16, built by Codex from .codex-tasks/step-114.md): Today
+    now shows a gold new-task count first beside its title, including when
+    the day is otherwise clear. Pressing it opens All Tasks, brings the
+    first visible new card into view and gives it a brief gold ring. If all
+    new cards are hidden, it selects All, clears that board's search and
+    remembers opening any finished shelf holding a new card. Keyboard focus
+    follows the card; reduced motion keeps the ring steady. Looking this way
+    leaves the New label intact and saves nothing to the database. The other
+    Today chips, rows and step 113 label stay as they were. Changed the older
+    dark-theme notice-button rule at its source to dark, bold, underlined
+    text; both themes pass the 4.5 to 1 contrast check. All 16 new tests pass.
+    Ran npm run test:ui: 51 of 52 test files pass, with only the known Netlify
+    sandbox failure for .aws and .codex. Browser review remains with the
+    reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): after Boss adds two cards to
+    Dew's board, the Today row shows a gold "2 new" chip first, the same
+    32px as the other chips; pressing it centres the first new card and
+    rings it in gold for 1.6 seconds, and the labels stay (nothing is marked
+    as seen). With the Done pill selected the press goes back to All and
+    shows the card; with a search on it clears the search. Once Dew has seen
+    both cards the chip and the labels are gone. The same on iPhone size and
+    in dark mode; no sideways scroll, no page errors. The notice's "Show"
+    and "Undo" in the dark theme now read at 14.94 to 1 (1.17 before).
+  - Reviewer's correction: for someone who is not the tab's person the
+    keyboard focus fell back to the page after the press; the card now stays
+    focusable until the focus moves on (test updated). 884 tests pass.
 
 - [ ] **115. Final check**
   - Files: `PLAN.md`, tests.

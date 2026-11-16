@@ -579,7 +579,8 @@ function myDay(w,{tasks=[],events=[],waiting=0,hour=11,unread=[],own=false}={}){
   const context=vm.createContext({window,Date:At,tdy:()=>TODAY,esc:s=>String(s),
     memberName:x=>x[0].toUpperCase()+x.slice(1),tasksOf:()=>tasks,eventsOf:()=>events,fmtDate:d=>d,daysUntil:()=>1,
     MEMBER_ORDER:['boss','dew','o','junior'],document:{}});
-  vm.runInContext(myDaySource+'\nthis.myDayHTML=myDayHTML;',context);
+  context.isAutoArchived=()=>false;
+  vm.runInContext(slice('function taskIsNewFor(', 'function taskReassignedNewFor(')+myDaySource+'\nthis.myDayHTML=myDayHTML;',context);
   return context.myDayHTML(w);
 }
 function myDayColumn(html,group){

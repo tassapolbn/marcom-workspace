@@ -1631,7 +1631,7 @@ html.dark .myday-chip.warn{background:#293343;border-color:transparent;}
 
 html.dark .note-pin-btn.pinned,html.dark #panel-overview .ov-ann-pinbadge{color:#bdc7d5!important;}
 html.dark .tab-panel,html.dark .salary-dock,html.dark #lunch-banner,html.dark #lunch-cfg{--gold:#93b4d5;--gold2:#bdc7d5;--gold-light:#293343;}
-html.dark .uxp-undo{color:#fff;}
+html.dark .uxp-undo{color:#0b1a2b;font-weight:800;text-decoration:underline;}
 html.dark .cd-urgent{background:transparent!important;border:1.5px solid #93b4d5;box-sizing:border-box;}
 html.dark #evb-card .evb-g,html.dark #evb-card .evb-row,
 html.dark #ov-cal-card .ov-cal-detail,html.dark .cal-detail{border:0!important;border-top:1px solid var(--border)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
@@ -2167,4 +2167,27 @@ html.dark .kb-search-reset{color:#cfe0f5;}
 .task-card button.mb-new:hover{background:#f7c948;}
 @media(max-width:600px),(pointer:coarse){
   .task-card button.mb-new::after{content:"";position:absolute;inset:50% 0 auto;height:44px;transform:translateY(-50%);}
+}
+
+/* Step 114: announce new cards in Today and briefly ring the revealed card. */
+.myday-chip.new{position:relative;background:#F0B323;color:#0b1a2b;font-weight:700;border:0;}
+.myday-chip.new b,.myday-chip.new i{color:#0b1a2b;font-weight:700;}
+.myday-chip.new:hover{background:#f7c948;}
+/* Keep the tile shadow in the light theme; the dark theme's tile has none.
+   A transparent shadow can be added to a ring, whereas the keyword none cannot. */
+.task-card.tc-new-flash{
+  --tc-new-shadow:var(--hs-shadow-tile);
+  box-shadow:0 0 0 3px #F0B323,var(--tc-new-shadow);
+  animation:tcNewFlash 1.6s ease-out;
+}
+html.dark .task-card.tc-new-flash{--tc-new-shadow:0 0 0 0 transparent;}
+@keyframes tcNewFlash{
+  from{box-shadow:0 0 0 3px #F0B323,var(--tc-new-shadow);}
+  to{box-shadow:0 0 0 3px transparent,var(--tc-new-shadow);}
+}
+@media(max-width:600px),(pointer:coarse){
+  .myday-chip.new::after{content:"";position:absolute;inset:50% 0 auto;height:44px;transform:translateY(-50%);}
+}
+@media(prefers-reduced-motion:reduce){
+  .task-card.tc-new-flash{animation:none;transition:none;}
 }
