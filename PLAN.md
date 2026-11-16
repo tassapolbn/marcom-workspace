@@ -3654,3 +3654,69 @@ a search field to find a task on the board.
 
 **Boss's answers (16 Nov):** 1. The shelves start folded. 2. All steps
 approved (110 to 112); Canceled folds the same way as Done.
+
+# Plan 14 (16 Nov 2026): a "New" label on a card given to someone
+
+Boss asked for a label on a newly created card: Boss sometimes adds a card
+to a member's board, and the member should know a new task has been
+assigned to them.
+
+## Findings
+
+1. A card records who created it (`createdBy`, an email) and when
+   (`createdAt`), but nothing says whether the person it was given to has
+   looked at it. A card Boss adds to Dew's board looks the same as any other
+   card there.
+2. The app knows who is signed in and which board is theirs
+   (`window.__cur.workspace`; the admin's board is Boss's).
+3. Cards reach another person's board in four ways: a new card saved on
+   their board (`saveTask`), a shared event task that names them, a card an
+   admin moves to them ("Move to…", `moveCardTo`), and a Request Centre
+   request turned into a task.
+4. A member may change their own cards and shared event tasks in the
+   database (`firestore.rules`), so the member's own app can record "seen"
+   on the card itself, and every device then agrees. No rule change needed.
+
+## Steps
+
+- [ ] **113. Mark a card as new for the person it is given to, and show it**
+  - Files: `index.html` (the four ways above, the card builder, a small
+    "seen" helper), `assets/workspace-ui.css` (new step 113 block), tests.
+  - Change: when a card lands on a board that is not the board of the person
+    who put it there, the card remembers who has not seen it yet (a list of
+    people on the card, `newFor`). On that person's board the card shows a
+    "New" label at the start of its facts row, in both themes. Everyone who
+    can see the board sees the label, so Boss can tell at a glance whether
+    the member has looked yet. (Decision 2) The label goes away when that
+    member opens the card, changes its status or ticks it, or presses the
+    label; someone else looking at the board does not clear it. Cards made
+    before this change never show the label. (Decision 1) A card a person
+    adds to their own board gets no label.
+  - Test: unit tests for each of the four ways and for clearing; Claude adds
+    a card to Dew's board as Boss in a browser, then opens it as Dew.
+
+- [ ] **114. Make new cards hard to miss**
+  - Files: `index.html` (`myDayHTML`, the Today row), `assets/workspace-ui.css`
+    (new step 114 block), tests.
+  - Change: the Today row at the top of the person's tab shows a chip
+    "2 new" beside "overdue" and "due today" while that person has unseen
+    new cards; pressing it scrolls to the first new card and flashes it
+    once. (Decision 3) Nothing else is added.
+  - Test: unit tests; Claude presses the chip in a browser on computer and
+    iPhone sizes.
+
+- [ ] **115. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+
+## Decisions needed from Boss (plan 14)
+
+1. **Which cards get the label:** recommended, only a card someone else
+   gives you; or every new card, including your own.
+2. **When the label goes away:** recommended, when the member opens the
+   card or changes its status; or also by itself after three days.
+3. **How else to announce it:** recommended, a "2 new" chip in the Today
+   row of the person's tab; or the chip and a small dot on the person's tab
+   button as well.
+4. **The plan:** approve steps 113 to 115, or the label only (113).
