@@ -3533,7 +3533,7 @@ Saturday and Sunday show the coming Monday's menu. 3. All steps approved
 4. Added 14 Nov: status on the iPhone card: a status button on every card
    (step 108); the final check is now step 109.
 
-# Plan 13 (16 Nov 2026): fold the Done shelf, and a search field on each person's board
+# Plan 13 (16 Nov 2026): fold the Done shelf, and a search field on each person's board, approved by Boss
 
 Boss asked for two things: the Done cards should fold away and open again,
 since they take a lot of room on the page; and each person's tab should have
@@ -3599,3 +3599,6 @@ a search field to find a task on the board.
    then remembered); or open until folded.
 2. **The plan:** recommended, approve steps 110 to 112 (Canceled folds the
    same way as Done); or Done only, without Canceled.
+
+**Boss's answers (16 Nov):** 1. The shelves start folded. 2. All steps
+approved (110 to 112); Canceled folds the same way as Done.
