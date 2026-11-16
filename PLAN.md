@@ -3818,3 +3818,47 @@ assigned to them.
 label goes when the member opens the card or changes its status (no
 three-day limit). 3. A chip in the Today row only. 4. All steps approved
 (113 to 115).
+
+# Plan 15 (16 Nov 2026): every card can be deleted from where it is opened
+
+Boss asked that each card have the option to delete it.
+
+## Findings
+
+1. A task card can be deleted today, but only one way: press "⋯" on the
+   card on a person's board, then the small bin icon at the end of the row
+   that opens (`deleteTask`, line 2975 of `index.html`, with a confirmation
+   and Undo). The icon has no word beside it.
+2. The card's own dialog, the one that opens when the card is pressed, has
+   Cancel, Save and Save + Calendar, and no Delete (line 1218).
+3. A shared event task shown in the Overview's Event Board, a row of the
+   Today panel and a search result all open that same dialog, so from those
+   places there is no way to delete at all; one must first find the card on
+   a person's board.
+
+## Steps
+
+- [ ] **116. Delete in the card's dialog**
+  - Files: `index.html` (the dialog's footer, `openEdit`, `openAdd`),
+    `assets/workspace-ui.css` (new step 116 block), tests.
+  - Change: when an existing card is open, the dialog's footer shows a
+    "Delete" button at its left end (a bin icon and the word, in red, quiet
+    until pressed). It does what the bin on the card does: the same
+    confirmation, the same Undo notice, the same handling of a shared task,
+    the calendar and the Google Sheet. The dialog closes when the card is
+    deleted. A new card being added has no Delete button. (Decision 1) The
+    bin inside "⋯" stays as it is.
+  - Test: unit tests; Claude deletes a card from the dialog in a browser on
+    computer and iPhone sizes, then presses Undo.
+
+- [ ] **117. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+
+## Decisions needed from Boss (plan 15)
+
+1. **Where Delete shows:** recommended, in the card's dialog (it opens from
+   every place a card is shown), keeping the bin inside "⋯"; or also a bin
+   on the face of every card at rest.
+2. **The plan:** approve steps 116 and 117.
