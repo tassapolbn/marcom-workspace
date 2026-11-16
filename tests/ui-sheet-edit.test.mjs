@@ -459,7 +459,7 @@ test('edit, move, menu and done hooks stay in the requested paths and preserve e
 
 test('delete hooks require a linked card and both Undo implementations accept the callback',()=>{
   const deletion=between('function deleteTask(','function duplicateTask(');
-  assert.match(deletion,/if\(!ok\)return;[\s\S]*if\(hasSheetLink\(t\)&&window.sheetSyncCancel\)sheetSyncCancel\(who,id,t\)/);
+  assert.match(deletion,/if\(!ok\)return false;[\s\S]*if\(hasSheetLink\(t\)&&window.sheetSyncCancel\)sheetSyncCancel\(who,id,t\)/);
   assert.match(deletion,/var afterUndo=hasSheetLink\(t\)\?function\(\)\{try\{if\(window.sheetSyncRestore\)sheetSyncRestore\(who,id,t\);\}catch\(e\)/);
   assert.equal((deletion.match(/deleteWithUndo\(_cref,id,t,'Task deleted',afterUndo\)/g)||[]).length,2);
   assert.match(baseDelete,/function deleteWithUndo\(colRef,id,item,label,afterUndo\)/);

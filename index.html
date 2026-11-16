@@ -1216,6 +1216,7 @@ html.dark .rev-badge{color:#f0a36a;background:#3a2a1a;}
       </div>
     </div>
     <div class="modal-footer">
+      <button type="button" class="btn btn-ghost modal-delete" id="modal-delete" onclick="modalDeleteTask()" aria-label="Delete this task" hidden><i class="ti ti-trash" aria-hidden="true"></i> Delete</button>
       <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="requestCloseModal()">Cancel</button>
       <button class="btn btn-navy" id="modal-save" style="flex:1;justify-content:center;" onclick="saveTask()"><i class="ti ti-check"></i> Save</button>
       <button class="btn btn-ghost" id="modal-save-cal" style="flex:0 0 auto;white-space:nowrap;" onclick="saveTaskAndCalendar()" title="Save this task and add it to the calendar"><i class="ti ti-calendar-plus"></i> Save + Calendar</button>
@@ -2678,8 +2679,23 @@ function resetRoleDetails(){
     toggleRoleDetails(document.getElementById(id).querySelector('.role-fold'),false);
   });
 }
+function syncModalDelete(){
+  document.getElementById('modal-delete').hidden=!modalState.editId;
+}
+var modalDeletePending=false;
+function modalDeleteTask(){
+  if(!modalState.editId||modalDeletePending||!document.getElementById('modal').classList.contains('open'))return;
+  modalDeletePending=true;
+  /* uiConfirm restores focus to its opener, including after a pointer press. */
+  document.getElementById('modal-delete').focus();
+  return deleteTask(modalState.who,modalState.editId).then(function(deleted){
+    if(deleted)closeModal();
+    return deleted;
+  }).finally(function(){modalDeletePending=false;});
+}
 function openAdd(who){
   modalState={who,editId:null};
+  syncModalDelete();
   resetRoleDetails();
   document.getElementById('m-dz-brand').setAttribute('data-auto','');
   if(!window.__sopBatchOpening)window.__sopBatch=null;
@@ -2714,6 +2730,7 @@ function openEdit(who,id){
   const task=(tasksOf(who)).find(t=>t.id===id)||(eventTasks||[]).find(t=>t.id===id);
   if(!task)return;
   modalState={who,editId:id};
+  syncModalDelete();
   taskForFill(who);
   resetRoleDetails();
   if(!window.__sopBatchOpening)window.__sopBatch=null;
@@ -2973,13 +2990,14 @@ function hasSheetLink(t){
   return !!(t.sheetRows&&typeof t.sheetRows==='object'&&Object.keys(t.sheetRows).length);
 }
 function deleteTask(who,id){
-  var t=(tasksOf(who)||[]).find(function(x){return x.id===id;});
+  var t=(tasksOf(who)||[]).find(function(x){return x.id===id;})||(eventTasks||[]).find(function(x){return x.id===id;});
+  if(!t)return Promise.resolve(false);
   var _shared=isEventTask(t);
   var _msg=_shared
     ? '"'+((t&&(t.topic||t.title))||'This task')+'" belongs to the shared event "'+((t&&(t.eventLabel||t.eventName))||'Event')+'".\n\nThis is a shared team task on the central Event Board. Deleting it removes it for everyone, including '+((t&&t.owner)?(memberName(t.owner)||t.owner):'the whole team')+'.'
     : '"'+((t&&(t.topic||t.title))||'This task')+'" will be deleted.';
-  uiConfirm({title:_shared?'Delete a shared event task':'Delete task',message:_msg,okLabel:'Delete',danger:true}).then(function(ok){
-    if(!ok)return;
+  return uiConfirm({title:_shared?'Delete a shared event task':'Delete task',message:_msg,okLabel:'Delete',danger:true}).then(function(ok){
+    if(!ok)return false;
     var _cref=taskRef(t,who);
     try{if(hasSheetLink(t)&&window.sheetSyncCancel)sheetSyncCancel(who,id,t);}catch(e){console.error('[sheet] step failed',e);}
     var afterUndo=hasSheetLink(t)?function(){try{if(window.sheetSyncRestore)sheetSyncRestore(who,id,t);}catch(e){console.error('[sheet] step failed',e);}}:undefined;
@@ -2989,6 +3007,7 @@ function deleteTask(who,id){
     } else {
       deleteWithUndo(_cref,id,t,'Task deleted',afterUndo);
     }
+    return true;
   });
 }
 function duplicateTask(who,id){

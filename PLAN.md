@@ -3838,7 +3838,7 @@ Boss asked that each card have the option to delete it.
 
 ## Steps
 
-- [ ] **116. Delete in the card's dialog**
+- [x] **116. Delete in the card's dialog**
   - Files: `index.html` (the dialog's footer, `openEdit`, `openAdd`),
     `assets/workspace-ui.css` (new step 116 block), tests.
   - Change: when an existing card is open, the dialog's footer shows a
@@ -3850,6 +3850,41 @@ Boss asked that each card have the option to delete it.
     bin inside "⋯" stays as it is.
   - Test: unit tests; Claude deletes a card from the dialog in a browser on
     computer and iPhone sizes, then presses Undo.
+  - Done (2026-11-16, built by Codex from .codex-tasks/step-116.md): saved
+    cards now show a red Delete button at the left of their dialog's footer.
+    Confirming uses the existing deletion, Google Sheet, calendar and Undo
+    handling, then closes the dialog. Cancelling keeps the typed changes and
+    returns focus to Delete; repeat presses cannot open another confirmation.
+    New cards, duplicates, templates and quick add hide Delete. On phones it
+    has its own left-aligned row above the existing buttons, with a 44px touch
+    target. No older style rules were changed or removed.
+    Board cards use their board in openEdit; Today uses its panel's board;
+    search passes the result's board through showTask to openEdit. The
+    Overview Event Board uses the first assignee, or Boss for an unassigned
+    card, through taskCardClick to openEdit. Deletion now also checks the
+    central event tasks, so a shared card is found even under a board that
+    does not hold it. The existing confirmation already sits above the card
+    dialog, so its stacking rules needed no change.
+    All 16 new tests pass, covering the real dialog and deletion functions,
+    saved values for Undo, focus, shared cards, both themes' text contrast
+    above 4.5 to 1 and the small-screen CSS. The full UI suite passes 52 of
+    53 test files; the only failure is the permitted sandbox Netlify check
+    for .aws and .codex. Browser review remains for the reviewer, as the
+    shared context requires. Step 116 remains unticked.
+
+  - Reviewer's check (Claude, in a browser): a new card's dialog has no
+    Delete; an existing card's dialog shows a red "Delete" first in the
+    footer on computers (96px by 36px, 6.57 to 1 on the white dialog; pale
+    red on the dark dialog). Pressing it shows the usual confirmation above
+    the dialog; Cancel leaves the dialog open with what was typed and the
+    focus back on Delete; confirming closes the dialog, removes the card and
+    shows "Task deleted" with Undo, and Undo brings the card back. A shared
+    task opened from the Overview's Event Board shows the shared-task
+    warning and deletes the same way. No page errors.
+  - Reviewer's correction: on iPhone the Delete button was put on a row of
+    its own above Cancel and Save, which pushed Save down; it is now the
+    last row, so Save keeps its place and the destructive button is the
+    furthest to reach (320px and 390px checked, no overflow). 900 tests pass.
 
 - [ ] **117. Final check**
   - Files: `PLAN.md`, tests.

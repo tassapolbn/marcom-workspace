@@ -49,6 +49,7 @@ function harness(cur=admin,task={id:'t1',topic:'Brief',status:'pending',dueDate:
     +source('function moveSelectHTML(','function moveCardTo(')
     +source('function moveCardTo(','function openLinksHub(')
     +source('function taskDoneFields(','/* Step 65:')
+    +source('function syncModalDelete(','var modalDeletePending=')
     +source('function openEdit(','function styleModal(')
     +source('function saveTask(){','/* Is this card in the Google Sheet?')
     +source('function duplicateTask(','// TASK RENDERING')
