@@ -3819,7 +3819,7 @@ label goes when the member opens the card or changes its status (no
 three-day limit). 3. A chip in the Today row only. 4. All steps approved
 (113 to 115).
 
-# Plan 15 (16 Nov 2026): every card can be deleted from where it is opened
+# Plan 15 (16 Nov 2026): every card can be deleted from where it is opened, approved by Boss
 
 Boss asked that each card have the option to delete it.
 
@@ -3862,3 +3862,7 @@ Boss asked that each card have the option to delete it.
    every place a card is shown), keeping the bin inside "⋯"; or also a bin
    on the face of every card at rest.
 2. **The plan:** approve steps 116 and 117.
+
+**Boss's answers (16 Nov):** 1. Delete in the card's dialog; the bin inside
+"⋯" stays; nothing is added to the face of the cards. 2. Approved (116 and
+117).
