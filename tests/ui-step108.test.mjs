@@ -100,7 +100,7 @@ test('opening actions keeps a single expanded button, the move menu and every ic
   }
 });
 
-const block=css.slice(css.indexOf('/* Step 108:'));
+const block=css.slice(css.indexOf('/* Step 108:'),css.indexOf('/* Step 110:'));
 const media='@media(max-width:600px),(pointer:coarse)';
 const outside=block.slice(0,block.indexOf(media)),touch=block.slice(block.indexOf(media));
 function rule(text,selector){
@@ -146,7 +146,7 @@ test('bare desktop cards retain the original absolute tick-column placement and 
 test('both production card-builder callers draw board columns; outside columns the extra menu stays hidden',()=>{
   assert.equal((html.match(/\btaskCardHTML\(/g)||[]).length,3,'the declaration and the two board callers');
   for(const code of [source('function kanbanHTML(','/* The board is rebuilt'),source('  function sharedKanbanHTML(tasks,w){','  window.evwsColDrop=')]){
-    assert.match(code,/class="kb-col"/);assert.match(code,/taskCardHTML\(t,/);
+    assert.match(code,/class="kb-col(?:"|'\+)/);assert.match(code,/taskCardHTML\(t,/);
   }
   assert.match(outside,/\.task-card \.tc-quick-sel\{display:none;\}/);
   assert.match(css,/\.kb-col \.task-card \.task-meta \.tcard-sel\{display:none;\}/);
@@ -156,7 +156,7 @@ test('both production card-builder callers draw board columns; outside columns t
 // Found in the browser check: three status colours were under 4.5 to 1 as text on their own tint.
 test('the status menu uses the darker status inks in the light theme',async()=>{
   const {readFileSync}=await import('node:fs');
-  const block=readFileSync('assets/workspace-ui.css','utf8').split('/* Step 108:')[1];
+  const block=readFileSync('assets/workspace-ui.css','utf8').split('/* Step 108:')[1].split('/* Step 110:')[0];
   for(const [status,ink] of [['pending','--st-pending-ink,#4a5866'],['waiting','--st-waiting-ink,#7d5406'],['on-hold','--st-hold-ink,#584079']]){
     assert.ok(block.includes('html:not(.dark) .kb-col[data-status="'+status+'"] select.tc-quick-sel{color:var('+ink+')!important;}'),status);
   }

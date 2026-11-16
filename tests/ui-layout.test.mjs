@@ -1360,7 +1360,7 @@ test('on iPhone: no Add Task bar, one row of filters, a one-line name card whose
   assert.match(source,/'<div class="addtask-bar"><button class="btn btn-accent" onclick="openAdd\(\\''\+w\+'\\'\)">/);
   const phone=media(step62,'max-width:600px');
   assert.match(phone,/\.tab-panel \.addtask-bar\{display:none;\}/,'the round "+" opens the same sheet');
-  assert.match(phone,/\.tab-panel \.filter-tabs\{flex-wrap:nowrap;overflow-x:auto;/);
+  assert.match(phone,/\.tab-panel \.kb-filter-pills\{flex-wrap:nowrap;overflow-x:auto;/);
   for(const l of ['active','due soon','done'])assert.match(source,new RegExp('<b>0</b> <span class="mh-l">'+l+'</span></button>'));
   const one=media(step62,'min-width:361px) and (max-width:600px');
   assert.match(one,/\.member-head \.member-head-stats\{order:1;flex:0 0 auto;margin-left:auto;gap:5px;\}/);
@@ -1532,7 +1532,7 @@ test('an empty status column is its header and its 0, with a drop area only whil
   assert.doesNotMatch(slice('function kanbanHTML(','function renderList('),/kb-empty|>No tasks</);
   assert.match(step64,/\.kb-col-body:empty\{min-height:0;padding:0!important;\}/);
   assert.match(step64,/\.kb-col\.kb-over>\.kb-col-body:empty\{min-height:56px;\}/);
-  assert.match(source,/<div class="kb-col" data-status="'\+S\+'" ondragover="taskColOver\(event\)"/,'the whole column still takes a drop');
+  assert.match(slice('function kanbanHTML(','/* The board is rebuilt'),/<div class="kb-col'\+\(folded\?' kb-col-folded':''\)\+'" data-status="'\+S\+'" ondragover="taskColOver\(event\)"/,'the whole column still takes a drop');
   void html;
 });
 
@@ -1653,7 +1653,7 @@ test('a task ticked done stays in its column for a moment, at its height, then m
   assert.match(source,/  tcLinger\(who,id,t\.status\|\|'pending'\);\n  rf\.doc\(id\)\.update/,'the tick starts it');
   const kb=slice('function kanbanHTML(','function renderList(');
   assert.match(kb,/tasks\.filter\(function\(t\)\{return \(tcLingerFrom\(t,who\)\|\|t\.status\|\|'pending'\)===S;\}\)/);
-  assert.match(kb,/filter\(function\(t\)\{return !!tcLingerFrom\(t,who\)\|\|kbFilterPass\(t,filter\);\}\)/,'a filter does not drop it mid-moment');
+  assert.match(kb,/filter\(function\(t\)\{return !!tcLingerFrom\(t,who\)\|\|\(kbFilterPass\(t,filter\)&&kbSearchPass\(t,search\)\);\}\)/,'a filter does not drop it mid-moment');
   assert.match(source,/function act\(w\)\{try\{return \(tasksOf\(w\)\|\|\[\]\)\.filter\(function\(t\)\{return \(t\.status!=='done'&&t\.status!=='canceled'\)\|\|\(typeof tcLingerFrom==='function'&&!!tcLingerFrom\(t,w\)\);\}\);/,'"Today" above the board waits too');
 });
 
@@ -1807,7 +1807,7 @@ test('desktop Add Task follows the filters and Today dates follow task names',()
   }
   const css=readFileSync(new URL('../assets/workspace-ui.css',import.meta.url),'utf8').split('/* Step 71:')[1];
   assert.match(css,/@media\(min-width:981px\)/);
-  assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:auto;flex:0 0 auto;/);
+  assert.match(css,/\.filter-tabs \.addtask-bar\{margin-left:0;flex:0 0 auto;/);
   assert.match(stepBlock(103),/html.dark \.tab-panel \.btn-accent\{background:#10243a;color:#fff;/);
   assert.match(css,/\.myday-row \.md-sub\{margin-left:0;flex:0 0 auto;/);
   assert.match(source,/dateLabel=new Date\(\)\.toLocaleDateString\('en-GB',\{weekday:'long',day:'numeric',month:'long',year:'numeric'\}\)/,'the shared payday line keeps the full British date');

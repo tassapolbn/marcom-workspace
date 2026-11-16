@@ -60,7 +60,7 @@ test('every column including Done and Canceled retains its head, count and drag 
   const {context}=board();
   const statuses=['pending','in-progress','waiting','on-hold','done','canceled'];
   const output=context.kanbanHTML(statuses.map(status=>({id:status,status})),'boss','all');
-  const columns=[...output.matchAll(/<div class="kb-col" data-status="([^"]+)"([^>]+)>/g)];
+  const columns=[...output.matchAll(/<div class="kb-col(?: kb-col-folded)?" data-status="([^"]+)"([^>]+)>/g)];
   assert.deepEqual(columns.map(m=>m[1]),statuses);
   for(const [,status,attrs] of columns){
     assert.ok(attrs.includes('ondragover="taskColOver(event)"'));
@@ -71,7 +71,7 @@ test('every column including Done and Canceled retains its head, count and drag 
   assert.equal((output.match(/class="kb-col-ic"/g)||[]).length,6);
   assert.equal((output.match(/class="kb-col-count">1</g)||[]).length,6);
   const empty=context.kanbanHTML([],'boss','all');
-  assert.match(empty,/data-status="done"[^>]*>[\s\S]*?class="kb-col-count">0<\/span><\/div><div class="kb-col-body"><\/div>/);
+  assert.match(empty,/data-status="done"[^>]*>[\s\S]*?class="kb-col-count">0<\/span><button[^>]*class="kb-fold-btn"[^>]*>[\s\S]*?<\/button><\/div><div class="kb-col-body" id="kb-body-boss-done"><\/div>/);
   assert.doesNotMatch(empty,/data-status="canceled"/);
 });
 

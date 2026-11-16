@@ -3532,3 +3532,125 @@ Saturday and Sunday show the coming Monday's menu. 3. All steps approved
 (106 to 108).
 4. Added 14 Nov: status on the iPhone card: a status button on every card
    (step 108); the final check is now step 109.
+
+# Plan 13 (16 Nov 2026): fold the Done shelf, and a search field on each person's board, approved by Boss
+
+Boss asked for two things: the Done cards should fold away and open again,
+since they take a lot of room on the page; and each person's tab should have
+a search field to find a task on the board.
+
+## Findings
+
+1. Since step 100 Done and Canceled are full-width shelves under the four
+   working columns (`kanbanHTML`, line 3268 of `index.html`); on iPhone they
+   are the last two groups of one long column. Every Done card is always
+   drawn in full, so a tab with many finished tasks is mostly Done cards.
+2. The Overview's cards already fold with a small chevron button and remember
+   their state on the device; the board has nothing like it.
+3. The board is filtered only by the status pills (`setFilter`,
+   `kbFilterPass`). The header's search (step 48) finds things across the
+   whole app and opens them; it does not narrow the board in front of you.
+4. The board is redrawn as a whole (`drawBoard`), and waits while the focus
+   is on a field inside it; the pills row is outside the board, so a search
+   field placed there does not hold the board back while typing.
+
+## Steps
+
+- [x] **110. The Done and Canceled shelves fold**
+  - Files: `index.html` (`kanbanHTML`, a small fold helper),
+    `assets/workspace-ui.css` (new step 110 block), tests.
+  - Change: the head of the Done shelf (and of Canceled, when it shows) gets
+    a chevron button at its right end. Folded, the shelf is its head only:
+    icon, name and count. The choice is remembered on the device for each
+    person's tab. (Decision 1) A tab that has never been touched starts with
+    both shelves folded. A folded shelf still accepts a dropped card, and its
+    count still ticks when a task is finished. When the Done or Canceled pill
+    is selected the shelf shows open. The same on iPhone, where it saves the
+    most scrolling.
+  - Test: unit tests; Claude folds and opens in a browser on computer and
+    iPhone sizes, reloads, and drops a card on the folded shelf.
+  - Done (16 Nov 2026, built by Codex from .codex-tasks/step-110.md): Done
+    and Canceled start folded and remember each person's choice on this
+    device. Their status pills open them, and keyboard focus stays on the
+    fold button after use. Checked saved choices, labels, touch sizes,
+    reduced motion, drops and the count animation. All 8 new tests pass;
+    821 of 822 UI tests pass, with only the known Netlify sandbox check for
+    .aws and .codex failing. No older style rules changed. Browser checks
+    remain for the reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): on a tab never touched Done is
+    folded to one row (45px on computers, 59px on iPhone; the page is 138px
+    shorter on computers and 325px on iPhone with two Done cards); Enter on
+    the button opens it and the focus stays on the button; the choice is
+    saved as `{"boss":{"done":false}}` and holds after a reload; with the
+    Done pill the shelf is open with no button; a Pending card dragged onto
+    the folded shelf shows the highlight (56px tall) and "Move to Done", and
+    after the drop it is Done and the count goes from 2 to 3. The same in
+    dark mode. No page errors. 822 tests pass.
+
+- [x] **111. A search field on each person's board**
+  - Files: `index.html` (the pills row of the five tabs, `kanbanHTML`,
+    `drawBoard`, a small match helper), `assets/workspace-ui.css` (new step
+    111 block), tests.
+  - Change: a "Search tasks" field in the row of the status pills (on
+    computers at the right, before Add Task; on iPhone a full-width row above
+    the pills). Typing narrows that tab's board at once to the cards that
+    contain every word typed, in the task's name, description, event,
+    category, request number, who assigned it or its link titles (Thai and
+    English, capitals ignored). The column counts show the matches; a line
+    under the row says "3 tasks match" with a Clear button; with no match it
+    says "No tasks match" and offers to clear. It works together with the
+    selected pill. A folded Done or Canceled shelf opens while it holds a
+    match. Esc or the × clears. The search is per tab and is not kept after
+    a reload. The header's search is unchanged.
+  - Test: unit tests for the match and the drawn board; Claude types in a
+    browser on computer and iPhone sizes, in both themes.
+  - Done (16 Nov 2026, built by Codex from .codex-tasks/step-111.md): Each
+    person's board now has its own search, with matching task counts and
+    Clear search, the cross button and Esc to clear it. Search works with
+    the status pills and temporarily opens matching finished shelves,
+    keeping their saved fold choices. One field sits beside Add Task on
+    computers and above a separate scrolling pills row on phones; the pills
+    can also scroll on narrow computers without changing size or wrapping.
+    Checked Thai and English matches, per-tab text, clearing and focus,
+    Undo cards, archives, zero matches and shelf folds. All 22 new tests
+    pass; 843 of 844 UI tests pass, with only the known Netlify sandbox
+    check for .aws and .codex failing. Browser checks remain for the
+    reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): on computers the field is 220px
+    by 36px at the right of the pills row, before Add Task, and the row stays
+    one line (160px wide at 1024px with the sidebar shown); on iPhone it is a
+    full-width 44px row above the pills with 16px text. Typing "SPORTS" shows
+    the 2 matching cards (one by its name, one by its event), the heads count
+    the matches and the line reads "2 tasks match"; "venue confirm" finds two
+    cards and opens the folded Done shelf that holds one of them; "zzzz"
+    reads "No tasks match" with the heads at 0 and no empty-state on top; Esc,
+    the cross and "Clear search" each clear it and keep the focus in the
+    field; the search and a pill apply together; each tab keeps its own
+    search; a Thai word matches Thai text. No page errors. 844 tests pass.
+
+- [x] **112. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+  - Done (Claude, 16 Nov): 844 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844; the search field,
+    its placeholder, the count line, "Clear search" and the fold button
+    measured separately with a search on (5.62 to 1 or better in both
+    themes; 44px controls on iPhone). iPhone widths 320 to 440 on all five
+    tabs in both themes (70 pages): no sideways scroll, no page errors.
+    Dragging a card to another status and the iPhone status menu still work
+    (every card shown has its status menu; the cards without one are inside
+    the folded Done shelf). Screenshots sent to Boss. Waiting for Boss's word
+    before merging.
+
+## Decisions needed from Boss (plan 13)
+
+1. **How the shelves start:** recommended, folded until opened (the choice is
+   then remembered); or open until folded.
+2. **The plan:** recommended, approve steps 110 to 112 (Canceled folds the
+   same way as Done); or Done only, without Canceled.
+
+**Boss's answers (16 Nov):** 1. The shelves start folded. 2. All steps
+approved (110 to 112); Canceled folds the same way as Done.

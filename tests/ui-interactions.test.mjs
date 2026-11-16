@@ -94,7 +94,8 @@ function board() {
     kanbanHTML: (tasks, who, filter) => JSON.stringify({ tasks, who, filter }),
     setTimeout: (fn, delay) => state.timers.push({ fn, delay }),
   });
-  vm.runInContext(boardScript, context);
+  const searchScript = source.slice(source.indexOf('/* Step 111: board searches'),source.indexOf('/* Step 110: each person'));
+  vm.runInContext(searchScript + boardScript, context);
   context.__boardArgs.board = { tasks: [{ id: 'task-1', status: 'pending' }], who: 'boss', emptyId: 'empty', filter: 'all' };
   return { context, document, list, empty, state, draw: () => context.drawBoard('board') };
 }
