@@ -3886,10 +3886,18 @@ Boss asked that each card have the option to delete it.
     last row, so Save keeps its place and the destructive button is the
     furthest to reach (320px and 390px checked, no overflow). 900 tests pass.
 
-- [ ] **117. Final check**
+- [x] **117. Final check**
   - Files: `PLAN.md`, tests.
   - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
     widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+  - Done (Claude, 16 Nov): 900 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844; the Delete
+    button measured in the open dialog (6.57 to 1 light; pale red on the
+    dark dialog). iPhone widths 320 to 440 on all five tabs in both themes
+    (70 pages): no sideways scroll, no page errors; the dialog's footer
+    checked at 320 and 390. Earlier features checked again: dragging a card
+    to another status and the "New" label. Screenshots sent to Boss.
+    Waiting for Boss's word before merging.
 
 ## Decisions needed from Boss (plan 15)
 
