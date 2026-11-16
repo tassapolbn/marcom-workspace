@@ -2191,3 +2191,29 @@ html.dark .task-card.tc-new-flash{--tc-new-shadow:0 0 0 0 transparent;}
 @media(prefers-reduced-motion:reduce){
   .task-card.tc-new-flash{animation:none;transition:none;}
 }
+
+/* Step 116: delete a saved card from its dialog, with the existing confirmation and Undo. */
+.btn.modal-delete{
+  margin-right:auto;flex:0 0 auto;background:var(--surface);
+  border:1px solid #f2b8b5;color:#b42318;font-weight:600;
+}
+.btn.modal-delete i{color:inherit;}
+.btn.modal-delete:hover{background:rgba(180,35,24,.06);color:#b42318;}
+html.dark .btn.modal-delete{border-color:#874747;color:#fda4a4;}
+html.dark .btn.modal-delete:hover{background:rgba(253,164,164,.08);color:#fda4a4;}
+.modal-delete[hidden]{display:none;}
+@media(max-width:600px){
+  /* Delete gets its own row; the existing save buttons retain their phone layout. */
+  #modal .modal-footer:has(>.modal-delete:not([hidden])){
+    display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  }
+  /* Last on the phone: Save keeps its place, and the destructive button is the furthest to reach. */
+  #modal .modal-delete{grid-column:1/-1;justify-self:start;order:3;}
+}
+@media(max-width:480px){
+  #modal:has(.modal-delete:not([hidden])) #modal-save{grid-column:2/-1;}
+  #modal:has(.modal-delete:not([hidden])) #modal-save-cal{grid-column:1/-1;}
+}
+@media(max-width:600px),(pointer:coarse){
+  .btn.modal-delete{height:44px;min-height:44px;}
+}

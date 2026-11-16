@@ -3818,3 +3818,94 @@ assigned to them.
 label goes when the member opens the card or changes its status (no
 three-day limit). 3. A chip in the Today row only. 4. All steps approved
 (113 to 115).
+
+# Plan 15 (16 Nov 2026): every card can be deleted from where it is opened, approved by Boss
+
+Boss asked that each card have the option to delete it.
+
+## Findings
+
+1. A task card can be deleted today, but only one way: press "⋯" on the
+   card on a person's board, then the small bin icon at the end of the row
+   that opens (`deleteTask`, line 2975 of `index.html`, with a confirmation
+   and Undo). The icon has no word beside it.
+2. The card's own dialog, the one that opens when the card is pressed, has
+   Cancel, Save and Save + Calendar, and no Delete (line 1218).
+3. A shared event task shown in the Overview's Event Board, a row of the
+   Today panel and a search result all open that same dialog, so from those
+   places there is no way to delete at all; one must first find the card on
+   a person's board.
+
+## Steps
+
+- [x] **116. Delete in the card's dialog**
+  - Files: `index.html` (the dialog's footer, `openEdit`, `openAdd`),
+    `assets/workspace-ui.css` (new step 116 block), tests.
+  - Change: when an existing card is open, the dialog's footer shows a
+    "Delete" button at its left end (a bin icon and the word, in red, quiet
+    until pressed). It does what the bin on the card does: the same
+    confirmation, the same Undo notice, the same handling of a shared task,
+    the calendar and the Google Sheet. The dialog closes when the card is
+    deleted. A new card being added has no Delete button. (Decision 1) The
+    bin inside "⋯" stays as it is.
+  - Test: unit tests; Claude deletes a card from the dialog in a browser on
+    computer and iPhone sizes, then presses Undo.
+  - Done (2026-11-16, built by Codex from .codex-tasks/step-116.md): saved
+    cards now show a red Delete button at the left of their dialog's footer.
+    Confirming uses the existing deletion, Google Sheet, calendar and Undo
+    handling, then closes the dialog. Cancelling keeps the typed changes and
+    returns focus to Delete; repeat presses cannot open another confirmation.
+    New cards, duplicates, templates and quick add hide Delete. On phones it
+    has its own left-aligned row above the existing buttons, with a 44px touch
+    target. No older style rules were changed or removed.
+    Board cards use their board in openEdit; Today uses its panel's board;
+    search passes the result's board through showTask to openEdit. The
+    Overview Event Board uses the first assignee, or Boss for an unassigned
+    card, through taskCardClick to openEdit. Deletion now also checks the
+    central event tasks, so a shared card is found even under a board that
+    does not hold it. The existing confirmation already sits above the card
+    dialog, so its stacking rules needed no change.
+    All 16 new tests pass, covering the real dialog and deletion functions,
+    saved values for Undo, focus, shared cards, both themes' text contrast
+    above 4.5 to 1 and the small-screen CSS. The full UI suite passes 52 of
+    53 test files; the only failure is the permitted sandbox Netlify check
+    for .aws and .codex. Browser review remains for the reviewer, as the
+    shared context requires. Step 116 remains unticked.
+
+  - Reviewer's check (Claude, in a browser): a new card's dialog has no
+    Delete; an existing card's dialog shows a red "Delete" first in the
+    footer on computers (96px by 36px, 6.57 to 1 on the white dialog; pale
+    red on the dark dialog). Pressing it shows the usual confirmation above
+    the dialog; Cancel leaves the dialog open with what was typed and the
+    focus back on Delete; confirming closes the dialog, removes the card and
+    shows "Task deleted" with Undo, and Undo brings the card back. A shared
+    task opened from the Overview's Event Board shows the shared-task
+    warning and deletes the same way. No page errors.
+  - Reviewer's correction: on iPhone the Delete button was put on a row of
+    its own above Cancel and Save, which pushed Save down; it is now the
+    last row, so Save keeps its place and the destructive button is the
+    furthest to reach (320px and 390px checked, no overflow). 900 tests pass.
+
+- [x] **117. Final check**
+  - Files: `PLAN.md`, tests.
+  - Change: all tests; contrast scans in both themes at 1440 and 390; iPhone
+    widths 320 to 440; screenshots for Boss; merge and deploy when Boss says.
+  - Done (Claude, 16 Nov): 900 tests pass. Contrast scans: zero failures on
+    all five tabs, light and dark, at 1440x900 and 390x844; the Delete
+    button measured in the open dialog (6.57 to 1 light; pale red on the
+    dark dialog). iPhone widths 320 to 440 on all five tabs in both themes
+    (70 pages): no sideways scroll, no page errors; the dialog's footer
+    checked at 320 and 390. Earlier features checked again: dragging a card
+    to another status and the "New" label. Screenshots sent to Boss.
+    Waiting for Boss's word before merging.
+
+## Decisions needed from Boss (plan 15)
+
+1. **Where Delete shows:** recommended, in the card's dialog (it opens from
+   every place a card is shown), keeping the bin inside "⋯"; or also a bin
+   on the face of every card at rest.
+2. **The plan:** approve steps 116 and 117.
+
+**Boss's answers (16 Nov):** 1. Delete in the card's dialog; the bin inside
+"⋯" stays; nothing is added to the face of the cards. 2. Approved (116 and
+117).
