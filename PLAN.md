@@ -3679,7 +3679,7 @@ assigned to them.
 
 ## Steps
 
-- [ ] **113. Mark a card as new for the person it is given to, and show it**
+- [x] **113. Mark a card as new for the person it is given to, and show it**
   - Files: `index.html` (the four ways above, the card builder, a small
     "seen" helper), `assets/workspace-ui.css` (new step 113 block), tests.
   - Change: when a card lands on a board that is not the board of the person
@@ -3694,6 +3694,63 @@ assigned to them.
     adds to their own board gets no label.
   - Test: unit tests for each of the four ways and for clearing; Claude adds
     a card to Dew's board as Boss in a browser, then opens it as Dew.
+
+  - Done (2026-11-16, built by Codex from .codex-tasks/step-113.md): A
+    card given to someone else now shows a gold New pill first in its facts
+    row, visible to everyone viewing that person's board. Only the recipient
+    can dismiss it, by opening the card, changing its status, ticking it or
+    pressing New. Status changes save the label in the same write. Signing
+    in again redraws the correct button or plain label. Older cards stay
+    without a label until someone newly receives them. The pill keeps the
+    existing badge size, the shared keyboard focus ring and a 44px touch
+    area without adding row height. Gold and navy text pass 4.5 to 1.
+    Every route found was checked:
+    - New own cards in saveTask write newForOthers([board]); new shared
+      cards write newForOthers(assignees). SOP single tasks and Add All use
+      that same shared-card form and save.
+    - Editing shared recipients and changing between own and shared cards
+      keep unseen recipients still assigned, remove departed recipients
+      and add only newly assigned people through newForOthers. Moving back
+      to an own card now saves in that person's collection.
+    - Move to writes newForOthers([target]) for an own card. Shared Move to
+      reassignment keeps the target's existing unseen state or marks a
+      newly assigned target, removing departed people.
+    - Request Centre tasks write newForOthers([destination board]). Duplicate
+      opens the new-card form and writes the destination board's new array,
+      without copying the original label.
+    - Two extra creation routes, O's Use template and automatic recurring
+      tasks, both write newForOthers(['o']).
+    - Another assignment route, Assign or Claim on the Overview Event Board,
+      keeps unseen recipients still assigned and adds only new recipients
+      through newForOthers. Claiming for oneself adds no label.
+    - Historical task migration and deletion Undo already copy the stored
+      fields, so they preserve newFor without newly marking older cards.
+    Changed the older step 40 facts rule only to exclude the New pill from
+    its plain-text styling; no older CSS rules were removed. Kept older
+    test coverage and bounded step 111's CSS checks before step 113.
+    All 23 new tests pass. Ran npm run test:ui: 50 of 51 test files pass;
+    individual runs total 866 of 867 tests passing. The sole failure is
+    the known Netlify sandbox check for .aws and .codex. Browser review
+    remains with the reviewer; the checkbox is left unticked.
+
+  - Reviewer's check (Claude, in a browser): as Boss, a card added to Dew's
+    board saves `newFor:["dew"]` and shows the gold "New" pill first in its
+    facts row (21px tall, navy on gold), with "Not opened by Dew yet"; Boss
+    opening it or changing its status leaves it; a card Boss adds to Boss's
+    own board has no label. As Dew the pill is a button: pressing it clears
+    the label without opening the card; opening another new card clears it;
+    changing a third card's status clears it in the same write. The same
+    look on iPhone size in dark mode. No page errors.
+  - Reviewer's correction: the automatic recurring tasks on O's board no
+    longer get the label (the app makes them by itself, on whichever device
+    opens first, so they are not "given by someone"); "Use template" still
+    does. Test updated and one added. 868 tests pass.
+  - To note: while wiring the change of type, Codex also put right an older
+    slip: a shared card changed back to an own card was written to the
+    shared collection again instead of the person's own board.
+  - Found on the way, fixed in step 114: in the dark theme the "Show" and
+    "Undo" buttons of the small notice at the bottom are white on a
+    near-white notice (1.17 to 1, measured).
 
 - [ ] **114. Make new cards hard to miss**
   - Files: `index.html` (`myDayHTML`, the Today row), `assets/workspace-ui.css`

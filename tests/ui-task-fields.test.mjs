@@ -134,7 +134,7 @@ function saveFixture() {
   field('m-dz-requestor').value = 'Requester';
   field('m-assignedby').value = 'Old requester';
   field('m-status').value = 'done';
-  vm.runInContext(extract('function saveTask(){', 'function deleteTask('), c);
+  vm.runInContext(extract('function myBoardKey(', 'function refOf(')+extract('function saveTask(){', 'function deleteTask('), c);
   vm.runInContext(extract('function setDesignStatus(', '\n'), c);
   return h;
 }

@@ -1091,7 +1091,7 @@ html.dark .tm-meet{color:#93c5fd;}
 /* Then one line of facts, read as text: the status as its own small menu, the
    due date, priority and the rest. An event keeps its coloured chip. */
 .task-card .task-meta{column-gap:10px;row-gap:5px;}
-.task-card .task-meta .mb:not(.mb-event):not(.mb-shared){padding:0;background:none;border-radius:0;font-size:12px;}
+.task-card .task-meta .mb:not(.mb-event):not(.mb-shared):not(.mb-new){padding:0;background:none;border-radius:0;font-size:12px;}
 /* The other actions wait in a quiet row at the foot. */
 .task-card .task-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
 .task-card .task-foot .task-acts{display:flex;align-items:center;gap:2px;margin-left:auto;}
@@ -2155,4 +2155,16 @@ html.dark .kb-search-reset{color:#cfe0f5;}
 @media(max-width:600px),(pointer:coarse){
   .kb-search-clear{width:44px;height:44px;}
   .kb-search-reset{min-height:44px;}
+}
+
+/* Step 113: a gold label for a card its recipient has not seen yet. */
+.task-card .task-meta .mb-new{
+  padding:4px 9px;border-radius:99px;font-size:10.5px;font-weight:700;
+  background:#F0B323;color:#0b1a2b;border:0;
+}
+.task-card .mb-new i{color:inherit;}
+.task-card button.mb-new{position:relative;font-family:inherit;line-height:inherit;cursor:pointer;}
+.task-card button.mb-new:hover{background:#f7c948;}
+@media(max-width:600px),(pointer:coarse){
+  .task-card button.mb-new::after{content:"";position:absolute;inset:50% 0 auto;height:44px;transform:translateY(-50%);}
 }

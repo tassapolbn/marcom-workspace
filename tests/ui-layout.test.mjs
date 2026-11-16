@@ -716,7 +716,7 @@ function card(task,{who='dew',admin=true,soon=false,acts=false,du=-1,events=null
     memberName:w=>(names&&names[w])||w,escHtml:esc,fmtDate:d=>d,fmtDue:()=>du===0?'Due today':du+' days left',safeUrl:u=>u,oCardExtra:()=>'',dewCardExtra:()=>'<div class="role-x">role</div>'});
   /* With events, the real colour helpers (step 63: the card draws the event's own tag). */
   if(events)vm.runInContext(slice('function evOkClr(','const EV_TEXT_COLORS'),context);
-  vm.runInContext(slice('function scColors(s){','function setTaskStatus(')+slice('function moveSelectHTML(who,task){','function moveCardTo(')
+  vm.runInContext(slice('function myBoardKey(', 'function refOf(')+slice('function scColors(s){','function setTaskStatus(')+slice('function moveSelectHTML(who,task){','function moveCardTo(')
     +slice('function evTagHTML(','function kanbanHTML(')+'\nthis.taskCardHTML=taskCardHTML;',context);
   return context.taskCardHTML(task,who);
 }
@@ -755,7 +755,7 @@ test('inside a status column a card has no coloured rail, and a long name may ta
   assert.match(step40,/\.kb-col \.task-card\{border-left-width:1px!important;border-left-color:var\(--border\)!important;\}/);
   assert.match(step40,/\.kb-col \.task-card \.task-topic\{-webkit-line-clamp:3;line-clamp:3;\}/);
   assert.match(step40,/\.task-card \.task-foot\{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var\(--border\);\}/);
-  assert.match(step40,/\.task-card \.task-meta \.mb:not\(\.mb-event\):not\(\.mb-shared\)\{padding:0;background:none;/,'facts read as text; an event keeps its coloured chip');
+  assert.match(step40,/\.task-card \.task-meta \.mb:not\(\.mb-event\):not\(\.mb-shared\):not\(\.mb-new\)\{padding:0;background:none;/,'facts read as text; an event keeps its coloured chip');
 });
 
 /* ===== Step 41: gold back to the brand; red only for trouble ===== */
@@ -1673,9 +1673,9 @@ test('the app opens on navy: the font and icon style sheets no longer hold back 
 function doneFixture(task){
   const writes=[],toasts=[],lingers=[];
   const c=vm.createContext({tasksOf:()=>[task],taskRef:()=>({doc:()=>({update:fields=>{writes.push({...fields});return Promise.resolve();}})}),
-    todayStr:()=> '2026-10-26',stampEdit:()=>({edited:true}),dbSaveFailed:()=>{},
+    window:{},todayStr:()=> '2026-10-26',stampEdit:()=>({edited:true}),dbSaveFailed:()=>{},
     tcLinger:(...args)=>lingers.push(args),uiToast:(msg,opts)=>toasts.push({msg,...opts})});
-  vm.runInContext(slice('function taskDoneFields(','/* Step 65: a task ticked done')+'\n'+slice('function setTaskStatus(','\n'),c);
+  vm.runInContext(slice('function myBoardKey(', 'function refOf(')+slice('function taskDoneFields(','/* Step 65: a task ticked done')+'\n'+slice('function setTaskStatus(','\n'),c);
   return {c,writes,toasts,lingers};
 }
 test('completion saves the earlier status and Undo restores it before or after the snapshot arrives',()=>{

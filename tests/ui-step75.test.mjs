@@ -12,7 +12,7 @@ function cards(){
     designSelectHTML:()=>'<select>Design status</select>',isUrl:()=>false,
     KB_STATUS_ORDER:['pending','done','canceled'],scColors:()=>[],tcLingerFrom:()=>null,tcLingerRec:()=>null,
     isAutoArchived:()=>false,kbFilterPass:()=>true,dueSortValue:()=>0});
-  vm.runInContext(source('function taskCardHTML(', '/* The board is rebuilt')+source('function oCardExtra(', '// QUICK LINKS'),ctx);
+  vm.runInContext(source('function myBoardKey(', 'function refOf(')+source('function taskCardHTML(', '/* The board is rebuilt')+source('function oCardExtra(', '// QUICK LINKS'),ctx);
   return ctx;
 }
 test('only the five existing toast-failure fallbacks retain browser alerts',()=>{

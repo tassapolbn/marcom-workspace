@@ -1607,6 +1607,31 @@ function stampEdit(){
   try{o.lastEditedAt=firebase.firestore.FieldValue.serverTimestamp();}catch(e){}
   return o;
 }
+/* Step 113: unseen recipients belong to the card, across devices. */
+function myBoardKey(){
+  var cur=window.__cur;
+  return cur?(cur.role==='admin'?'boss':(cur.workspace||'')):'';
+}
+function newForOthers(keys){
+  var mine=myBoardKey();
+  return [...new Set((keys||[]).filter(function(key){return key&&key!==mine;}))];
+}
+function taskIsNewFor(task,who){return !!(task&&Array.isArray(task.newFor)&&task.newFor.includes(who));}
+function taskReassignedNewFor(task,before,after){
+  var kept=Array.isArray(task&&task.newFor)?task.newFor.filter(function(key){return after.includes(key);}):[];
+  return [...new Set(kept.concat(newForOthers(after.filter(function(key){return !before.includes(key);}))))];
+}
+function taskSeenFields(task,who){
+  return myBoardKey()===who&&taskIsNewFor(task,who)?{newFor:task.newFor.filter(function(key){return key!==who;})}:{};
+}
+function taskMarkSeen(who,id){
+  if(myBoardKey()!==who)return;
+  var task=(tasksOf(who)||[]).find(function(t){return t.id===id;});
+  if(!taskIsNewFor(task,who))return;
+  var ref=taskRef(id,who);if(!ref)return;
+  ref.doc(id).update(Object.assign(taskSeenFields(task,who),stampEdit()))
+    .catch(function(e){dbSaveFailed(e,'the new label');});
+}
 function refOf(w){return w==='boss'?bossRef:(DATA[w]?DATA[w].ref:null);}
 function filterOf(w){return w==='boss'?bossFilter:(DATA[w]?DATA[w].filter:'all');}
 function setFilterVar(w,f){if(w==='boss')bossFilter=f;else if(DATA[w])DATA[w].filter=f;}
@@ -1629,6 +1654,7 @@ function eventsOf(w){
 function evRedrawCards(w){
   try{(w?[w]:MEMBER_ORDER).forEach(function(k){ if(k==='boss')renderBoss(); else renderMember(k); });}catch(e){}
 }
+try{window.addEventListener('authchanged',function(){evRedrawCards();});}catch(e){}
 /* The whole team shares ONE event hub, so the Team Overview must show each
    event ONCE, not once per member. This returns the shared events plus any
    legacy per-member events, de-duplicated by id and by name+date, so three
@@ -2276,8 +2302,8 @@ function dzColors(s){const m={'Waiting for Brief':['var(--purple-light)','var(--
    column immediately instead of waiting for a click elsewhere. */
 function statusSelectHTML(who,task){const cur=task.status||'pending';const c=scColors(cur);const opts=Object.keys(SC).map(s=>'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+SC[s].l+'</option>').join('');return '<select class="tcard-sel" title="Task status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setTaskStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
 function designSelectHTML(who,task){const cur=task.dzStatus||'Brief Received';const c=dzColors(cur);const opts=DZ_STATUSES.map(s=>'<option value="'+escHtml(s)+'"'+(s===cur?' selected':'')+'>'+escHtml(s)+'</option>').join('');return '<select class="tcard-sel tcard-sel-dz" title="Design status" style="background-color:'+c[0]+';color:'+c[1]+';" onchange="setDesignStatus(\''+who+'\',\''+task.id+'\',this.value);this.blur()" onclick="event.stopPropagation()">'+opts+'</select>';}
-function setTaskStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const fields=Object.assign(val==='done'?taskDoneFields(card||{},true):{status:val,done:false},stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the status change');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
-function setDesignStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);const fields=Object.assign({dzStatus:val,status:status,done:status==='done'},stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the design status');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
+function setTaskStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const fields=Object.assign(val==='done'?taskDoneFields(card||{},true):{status:val,done:false},taskSeenFields(card,who),stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the status change');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const _t=(tasksOf(who)||[]).find(x=>x.id===id);if(_t&&_t.requestId&&window.rcMirrorStatus)rcMirrorStatus(_t.requestId,val);}catch(e){}}
+function setDesignStatus(who,id,val){const card=(tasksOf(who)||[]).find(x=>x.id===id);const ref=taskRef(id,who);if(!ref)return;const status=dzToStatus(val);const fields=Object.assign({dzStatus:val,status:status,done:status==='done'},taskSeenFields(card,who),stampEdit());ref.doc(id).update(fields).catch(e=>{dbSaveFailed(e,'the design status');});try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,card,Object.assign({},card,fields),ref);}catch(e){console.error('[sheet] step failed',e);}try{const task=(tasksOf(who)||[]).find(x=>x.id===id);if(task&&task.requestId&&window.rcMirrorStatus)rcMirrorStatus(task.requestId,status);}catch(e){}}
 function moveSelectHTML(who,task){
   if(!(window.__cur&&window.__cur.role==='admin'))return '';
   var opts=MEMBER_ORDER.filter(function(w){return w!==who;});
@@ -2299,7 +2325,7 @@ function moveCardTo(fromWho,taskId,target){
       okLabel:'Reassign'}).then(function(ok){
       if(!ok)return;
       var er=eventTasksRef||db.collection('event_tasks');
-      er.doc(taskId).update(Object.assign({owner:target,assignees:[target]},stampEdit()))
+      er.doc(taskId).update(Object.assign({owner:target,assignees:[target],newFor:taskReassignedNewFor(t,taskAssignees(t),[target])},stampEdit()))
         .then(function(){try{uiToast('Reassigned to '+memberName(target));}catch(e){}})
         .catch(function(e){console.error(e);try{uiToast('Could not reassign: '+((e&&e.message)||''));}catch(_){}});
     });
@@ -2314,7 +2340,7 @@ function moveCardTo(fromWho,taskId,target){
   /* The event LABEL always travels with the task. Only the workspace-specific
      event id is dropped, because each workspace keeps its own event store. */
   if(!_sharedPair){data.eventId='';}
-  Object.assign(data,stampEdit());
+  Object.assign(data,{newFor:newForOthers([target])},stampEdit());
   try{
     var newRef=dstRef.doc();
     var batch=db.batch();
@@ -2680,6 +2706,7 @@ function openAdd(who){
   document.getElementById('m-topic').focus({preventScroll:true});
 }
 function openEdit(who,id){
+  taskMarkSeen(who,id);
   if(window.MarcomDraft)MarcomDraft.hideOffer();
   const task=(tasksOf(who)).find(t=>t.id===id)||(eventTasks||[]).find(t=>t.id===id);
   if(!task)return;
@@ -2864,8 +2891,12 @@ function saveTask(){
     data.assignees=_ppl;
     data.owner=_ppl.length?_ppl[0]:'';
   }
+  if(modalState.editId){
+    if(evtOn||wasEvent)data.newFor=taskReassignedNewFor(old,wasEvent?taskAssignees(old):[modalState.who],evtOn?data.assignees:[modalState.who]);
+    Object.assign(data,taskSeenFields(Object.assign({},old,data),modalState.who));
+  }else data.newFor=newForOthers(evtOn?data.assignees:[modalState.who]);
   Object.assign(data,stampEdit());
-  const ref=(evtOn||wasEvent)?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
+  const ref=evtOn?(eventTasksRef||db.collection('event_tasks')):refOf(modalState.who);
   if(modalState.editId&&wasEvent===evtOn){
     if(old&&old.dueDate!==data.dueDate)data.sortOrder=firebase.firestore.FieldValue.delete();
     ref.doc(modalState.editId).update(data).catch(function(e){
@@ -3053,7 +3084,7 @@ function toggleTaskDone(who,id){
   const completing=t.status!=='done',fields=taskDoneFields(t,completing);
   const rf=taskRef(t,who); if(!rf)return;
   tcLinger(who,id,t.status||'pending');
-  rf.doc(id).update(Object.assign({},fields,stampEdit()))
+  rf.doc(id).update(Object.assign({},fields,taskSeenFields(t,who),stampEdit()))
     .catch(function(e){dbSaveFailed(e,completing?'the completed task':'the reopened task');});
   try{if(window.sheetSyncEdit)sheetSyncEdit(who,id,t,Object.assign({},t,fields),rf);}catch(e){console.error('[sheet] step failed',e);}
   if(completing){
@@ -3195,6 +3226,10 @@ function evTagHTML(label,task,who){
 }
 function taskCardHTML(task,who){
   const status=task.status||'pending',sc=SC[status],topic=task.topic||task.title||'';
+  const isNew=taskIsNewFor(task,who);
+  const newBadge=!isNew?'':(myBoardKey()===who
+    ?'<button type="button" class="mb mb-new" aria-label="New task. Press to mark it as seen." title="Mark as seen" onclick="event.stopPropagation();taskMarkSeen(\''+who+'\',\''+task.id+'\')"><i class="ti ti-sparkles" aria-hidden="true"></i> New</button>'
+    :'<span class="mb mb-new" title="Not opened by '+escHtml(memberName(who))+' yet"><i class="ti ti-sparkles" aria-hidden="true"></i> New</span>');
   /* In the Google Sheet? (per-person sheetRows or the older single sheetRow).
      Worked out here so drawing a card needs no other helper. */
   const inSheet=!!(task.sheetRow&&typeof task.sheetRow==='object')||!!(task.sheetRows&&typeof task.sheetRows==='object'&&Object.keys(task.sheetRows).length);
@@ -3249,13 +3284,13 @@ function taskCardHTML(task,who){
   const barHTML='<div class="tc-bar'+(detHtml?'':' tc-facts-end')+'">'
     +(detHtml?'<button type="button" class="tc-more'+(detOpen?' open':'')+'" aria-expanded="'+(detOpen?'true':'false')+'" onclick="event.stopPropagation();tcToggleDetails(this,\''+who+'_'+task.id+'\')"><i class="ti ti-chevron-down"></i> Details</button>':'')
     +actsBtn+quickSel+'</div>';
-  return '<div class="task-card tc-'+status+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
+  return '<div class="task-card tc-'+status+(isNew?' tc-new':'')+(actsOpen?' acts-open':'')+'" draggable="true" data-id="'+task.id+'" onclick="taskCardClick(event,\''+who+'\',\''+task.id+'\')" ondragstart="taskDragStart(event,\''+who+'\',\''+task.id+'\')" ondragend="taskDragEnd(event)">'
     +'<div class="task-head">'
       +'<button class="task-check '+(status==='done'?'checked':'')+'" onclick="event.stopPropagation();toggleTaskDone(\''+who+'\',\''+task.id+'\')" title="'+doneLbl+'" aria-label="'+doneLbl+'"><i class="ti ti-check"></i></button>'
       +'<div class="task-topic '+(finished?'struck':'')+'" title="'+escHtml(topic)+'">'+escHtml(topic)+'</div>'
     +'</div>'
     +(detHtml?'':'<div class="tc-body">')
-    +'<div class="task-meta">'+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
+    +'<div class="task-meta">'+newBadge+statusSelectHTML(who,task)+dueLabel+prBadge+evBadge+reqBadge+byBadge
       +(task.category?'<span class="'+catClass+'">'+task.category+'</span>':'')
     +'</div>'+(detHtml?'':barHTML)+roleHtml
     +'<i class="ti ti-arrow-up-right tc-open-hint" aria-hidden="true"></i>'
@@ -6675,7 +6710,7 @@ html.dark .brand-asset a.brand-open{color:#8fb4dc;}
     tplClose();
   };
   window.tplUse=function(id){ var t=templates.find(function(x){return x.id===id;}); if(!t)return; var ref=refOfT('o'); if(!ref)return;
-    var task={topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:tdy(),createdAt:ts()};
+    var task={topic:t.name||'Photography',mdEvent:t.name||'',mdCategory:t.category||'',description:t.notes||'',status:'pending',priority:'medium',dueDate:tdy(),newFor:newForOthers(['o']),createdAt:ts()};
     var p=ref.add(task).then(function(doc){
       try{if(window.sheetSyncNew)sheetSyncNew('o',doc.id,task,ref);}catch(e){console.error('[sheet] step failed',e);}
     });
@@ -11250,7 +11285,7 @@ dlv_w:'กว้าง',dlv_h:'สูง',dlv_u:'หน่วย',dlv_req:'ก�
       assignedDate:(new Date()).toISOString().slice(0,10),
       notes:'Submitted via Request Centre · Ref '+(r.refNo||''),done:false,
       links:(r.links||[]).map(function(l){return {title:l.title||'Attachment',url:l.url};}),
-      requestId:r.id,requestRef:r.refNo||'',requestType:T.key,requestData:d};
+      requestId:r.id,requestRef:r.refNo||'',requestType:T.key,requestData:d,newFor:newForOthers([w])};
     if(T.key==='design'){task.dzType=d.deliverablesShort||d.designType||'';task.dzRequestor=(r.requester&&r.requester.name)||'';task.dzStatus='Brief Received';task.dzBrand=r.eventName||'';}
     if(T.key==='photo'){task.mdEvent=r.eventName||'';task.mdLocation=d.venue||'';task.mdCategory='Photos';
       task.mdTaken=r.eventDate||'';task.mdStart=d.startTime||'';task.mdEnd=d.endTime||'';}
@@ -12934,7 +12969,9 @@ html.dark .evb-own.has{background:rgba(96,150,210,.22);color:#93b8e8;}
   window.evbAssign=function(id,owner){
     var er=null;try{er=eventTasksRef||firebase.firestore().collection('event_tasks');}catch(e){}
     if(!er)return;
-    er.doc(id).update(Object.assign({owner:owner||'',assignees:owner?[owner]:[]},stampEdit()))
+    var task=evtList().find(function(t){return t.id===id;});if(!task)return;
+    var people=owner?[owner]:[];
+    er.doc(id).update(Object.assign({owner:owner||'',assignees:people,newFor:taskReassignedNewFor(task,taskAssignees(task),people)},stampEdit()))
       .then(function(){try{uiToast(owner?('Assigned to '+nm(owner)):'Set to unassigned');}catch(e){}})
       .catch(function(e){console.error(e);try{uiToast('Could not assign: '+((e&&e.message)||''));}catch(_){}});
   };
